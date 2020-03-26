@@ -13,7 +13,7 @@ type Id
 
 type alias Model =
     { board : Array (Array Int)
-    , players : List PlayerClass
+    , players : List Player
     , dragDropState : DragDrop.State Id MoveableCharacter
     }
 
@@ -68,8 +68,12 @@ type Enemy
     | TheGoom
 
 
-type EnemyIdentity
-    = Enemy Int
+type alias EnemyIdentity =
+    { enemy : Enemy
+    , id : Int
+    , x : Int
+    , y : Int
+    }
 
 
 type PlayerClass
@@ -81,9 +85,16 @@ type PlayerClass
     | Tinkerer
 
 
+type alias Player =
+    { class : PlayerClass
+    , x : Int
+    , y : Int
+    }
+
+
 type MoveableCharacter
-    = PlayerClass
-    | EnemyIdentity
+    = MoveablePlayer Player
+    | MoveableEnemy EnemyIdentity
 
 
 type Msg
@@ -102,7 +113,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (initialize 10 (always (initialize 10 (always 0)))) [ Brute, Spellweaver, Cragheart ] DragDrop.initialState, Cmd.none )
+    ( Model (initialize 10 (always (initialize 10 (always 0)))) [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -112,7 +123,7 @@ update _ model =
 
 view : Model -> Html.Html Msg
 view model =
-    div [ class "board" ] (toList (Array.indexedMap getBoardHtml model.board))
+    div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model.players) model.board))
 
 
 subscriptions : Model -> Sub Msg
@@ -120,6 +131,55 @@ subscriptions _ =
     Sub.none
 
 
-getBoardHtml : Int -> Array Int -> Html.Html Msg
-getBoardHtml y row =
-    div [ class "row" ] (toList (Array.indexedMap (\x _ -> div [ class "col" ] []) row))
+getBoardHtml : List Player -> Int -> Array Int -> Html.Html Msg
+getBoardHtml players y row =
+    div [ class "row" ] (toList (Array.indexedMap (getCellHtml players y) row))
+
+
+getCellHtml : List Player -> Int -> Int -> Int -> Html.Html Msg
+getCellHtml players y x cellValue =
+    div [ class ("cell-" ++ cellValueToString cellValue) ]
+        (case findPlayerByCell x y players of
+            Just p ->
+                [ div [ class ("player-" ++ String.toLower (playerToString p)) ] [] ]
+
+            Nothing ->
+                []
+        )
+
+
+cellValueToString : Int -> String
+cellValueToString val =
+    case val of
+        0 ->
+            "impassable"
+
+        _ ->
+            "passable"
+
+
+findPlayerByCell : Int -> Int -> List Player -> Maybe Player
+findPlayerByCell x y players =
+    List.head (List.filter (\p -> p.x == x && p.y == y) players)
+
+
+playerToString : Player -> String
+playerToString player =
+    case player.class of
+        Brute ->
+            "Brute"
+
+        Cragheart ->
+            "Cragheart"
+
+        Mindthief ->
+            "Mindthief"
+
+        Scoundrel ->
+            "Scoundrel"
+
+        Spellweaver ->
+            "Spellweaver"
+
+        Tinkerer ->
+            "Tinkerer"
