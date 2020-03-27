@@ -2,19 +2,16 @@ module Main exposing (main)
 
 import Array exposing (..)
 import Browser
+import Dom
 import Dom.DragDrop as DragDrop
 import Html exposing (div)
 import Html.Attributes exposing (class)
 
 
-type Id
-    = Id Int
-
-
 type alias Model =
-    { board : Array (Array Int)
+    { board : Array (Array Bool)
     , players : List Player
-    , dragDropState : DragDrop.State Id MoveableCharacter
+    , dragDropState : DragDrop.State MoveableCharacter ( Int, Int )
     }
 
 
@@ -98,7 +95,11 @@ type MoveableCharacter
 
 
 type Msg
-    = NoCommand
+    = Noop
+    | MoveStarted MoveableCharacter
+    | MoveTargetChanged ( Int, Int )
+    | MoveCanceled
+    | MoveCompleted MoveableCharacter ( Int, Int )
 
 
 main : Program () Model Msg
@@ -113,17 +114,19 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (initialize 10 (always (initialize 10 (always 0)))) [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
+    ( Model (initialize 10 (always (initialize 10 (always True)))) [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update _ model =
-    ( model, Cmd.none )
+update msg model =
+    case msg of
+        Noop ->
+            ( model, Cmd.none )
 
 
 view : Model -> Html.Html Msg
 view model =
-    div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model.players) model.board))
+    div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model) model.board))
 
 
 subscriptions : Model -> Sub Msg
@@ -131,31 +134,54 @@ subscriptions _ =
     Sub.none
 
 
-getBoardHtml : List Player -> Int -> Array Int -> Html.Html Msg
-getBoardHtml players y row =
-    div [ class "row" ] (toList (Array.indexedMap (getCellHtml players y) row))
+getBoardHtml : Model -> Int -> Array Bool -> Html.Html Msg
+getBoardHtml model y row =
+    div [ class "row" ] (toList (Array.indexedMap (getCellHtml model y) row))
 
 
-getCellHtml : List Player -> Int -> Int -> Int -> Html.Html Msg
-getCellHtml players y x cellValue =
-    div [ class ("cell-" ++ cellValueToString cellValue) ]
-        (case findPlayerByCell x y players of
-            Just p ->
-                [ div [ class ("player-" ++ String.toLower (playerToString p)) ] [] ]
+getCellHtml : Model -> Int -> Int -> Bool -> Html.Html Msg
+getCellHtml model y x cellValue =
+    let
+        dragDropMessages : DragDrop.Messages Msg MoveableCharacter ( Int, Int )
+        dragDropMessages =
+            { dragStarted = MoveStarted
+            , dropTargetChanged = MoveTargetChanged
+            , dragEnded = MoveCanceled
+            , dropped = MoveCompleted
+            }
 
-            Nothing ->
-                []
-        )
+        cellElement : Dom.Element Msg
+        cellElement =
+            Dom.element "div"
+                |> Dom.addClass ("cell-" ++ cellValueToString cellValue)
+                |> Dom.appendChildList
+                    (case findPlayerByCell x y model.players of
+                        Just p ->
+                            [ Dom.element "div"
+                                |> Dom.addClass ("player-" ++ String.toLower (playerToString p))
+                                |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
+                            ]
+
+                        Nothing ->
+                            []
+                    )
+    in
+    (if cellValue then
+        DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement
+
+     else
+        cellElement
+    )
+        |> Dom.render
 
 
-cellValueToString : Int -> String
+cellValueToString : Bool -> String
 cellValueToString val =
-    case val of
-        0 ->
-            "impassable"
+    if val then
+        "impassable"
 
-        _ ->
-            "passable"
+    else
+        "passable"
 
 
 findPlayerByCell : Int -> Int -> List Player -> Maybe Player
