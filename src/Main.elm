@@ -187,12 +187,12 @@ getCellHtml model y x cellValue =
         cellElement : Dom.Element Msg
         cellElement =
             Dom.element "div"
-                |> Dom.addClass ("cell-" ++ cellValueToString cellValue)
+                |> Dom.addClass ("cell " ++ cellValueToString cellValue)
                 |> Dom.appendChildList
                     (case findPlayerByCell x y model.players of
                         Just p ->
                             [ Dom.element "div"
-                                |> Dom.addClass ("player-" ++ String.toLower (playerToString p))
+                                |> Dom.addClass ("player " ++ String.toLower (playerToString p))
                                 |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
                             ]
 
@@ -212,10 +212,10 @@ getCellHtml model y x cellValue =
 cellValueToString : Bool -> String
 cellValueToString val =
     if val then
-        "impassable"
+        "passable"
 
     else
-        "passable"
+        "impassable"
 
 
 findPlayerByCell : Int -> Int -> List Player -> Maybe Player
