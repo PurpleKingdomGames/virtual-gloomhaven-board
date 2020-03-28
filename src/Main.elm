@@ -95,8 +95,7 @@ type MoveableCharacter
 
 
 type Msg
-    = Noop
-    | MoveStarted MoveableCharacter
+    = MoveStarted MoveableCharacter
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
     | MoveCompleted MoveableCharacter ( Int, Int )
@@ -120,8 +119,43 @@ init _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Noop ->
-            ( model, Cmd.none )
+        MoveStarted character ->
+            ( { model | dragDropState = DragDrop.startDragging model.dragDropState character }, Cmd.none )
+
+        MoveTargetChanged coords ->
+            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords }, Cmd.none )
+
+        MoveCanceled ->
+            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState }, Cmd.none )
+
+        MoveCompleted character ( x, y ) ->
+            let
+                playerList =
+                    model.players
+
+                charModel =
+                    case character of
+                        MoveablePlayer p ->
+                            { model
+                                | players =
+                                    List.map
+                                        (\o ->
+                                            if o.class == p.class then
+                                                { o | x = x, y = y }
+
+                                            else
+                                                o
+                                        )
+                                        playerList
+                            }
+
+                        MoveableEnemy e ->
+                            model
+
+                newModel =
+                    { charModel | dragDropState = DragDrop.initialState }
+            in
+            ( newModel, Cmd.none )
 
 
 view : Model -> Html.Html Msg
