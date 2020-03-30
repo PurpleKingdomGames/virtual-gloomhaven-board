@@ -1,3 +1,5 @@
+$hexRotation: 61deg;
+
 [draggable] {
     -moz-user-select: none;
     -khtml-user-select: none;
@@ -13,27 +15,57 @@
 }
 
 .row {
-    width:100%;
-    height: 100%;
-    float: left;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+
+
+    @for $var from 2 through 100 {
+        &:nth-child(#{$var}) {
+            top: -(25px * ($var - 1));
+        }
+    }
+
+    &:nth-child(even) {
+        left:41px;
+    }
 
     .cell {
-        width: 64px;
-        height: 64px;
-        float:left;
+        position: relative;
+        float: left;
+        width: 82px;
+        height: 98px;
+        transform: rotate(-$hexRotation) skewY($hexRotation/2);
+        overflow: hidden;
+        visibility: hidden;
 
-        &.impassable {
-            background-color: red;
+        * {
+            visibility: visible;
         }
 
-        &.passable {
-            background-color: blue;
-        }
-
-        .player {
+        .hexagon {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: yellow;
+            background: #fdbf00;
+            transform: skewY(-($hexRotation/2)) rotate($hexRotation);
+            overflow: hidden;
+
+            &.impassable {
+                background-color: red;
+            }
+
+            &.passable {
+                background-color: blue;
+            }
+
+            .player {
+                width: 100%;
+                height: 100%;
+                background-color: yellow;
+            }
         }
     }
 }

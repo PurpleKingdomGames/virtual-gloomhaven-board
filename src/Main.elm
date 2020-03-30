@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Array exposing (..)
+import BoardPieces exposing (BoardPiece, getGridByRef)
 import Browser
 import Dom
 import Dom.DragDrop as DragDrop
@@ -9,7 +10,8 @@ import Html.Attributes exposing (class)
 
 
 type alias Model =
-    { board : Array (Array Bool)
+    { board : Array (Array Int)
+    , backgroundRef : List BoardPiece
     , players : List Player
     , dragDropState : DragDrop.State MoveableCharacter ( Int, Int )
     }
@@ -113,7 +115,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (initialize 10 (always (initialize 10 (always True)))) [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
+    ( Model (getGridByRef "a1a") [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -168,12 +170,12 @@ subscriptions _ =
     Sub.none
 
 
-getBoardHtml : Model -> Int -> Array Bool -> Html.Html Msg
+getBoardHtml : Model -> Int -> Array Int -> Html.Html Msg
 getBoardHtml model y row =
     div [ class "row" ] (toList (Array.indexedMap (getCellHtml model y) row))
 
 
-getCellHtml : Model -> Int -> Int -> Bool -> Html.Html Msg
+getCellHtml : Model -> Int -> Int -> Int -> Html.Html Msg
 getCellHtml model y x cellValue =
     let
         dragDropMessages : DragDrop.Messages Msg MoveableCharacter ( Int, Int )
@@ -187,40 +189,62 @@ getCellHtml model y x cellValue =
         cellElement : Dom.Element Msg
         cellElement =
             Dom.element "div"
-                |> Dom.addClass ("cell " ++ cellValueToString cellValue)
+                |> Dom.addClass ("hexagon " ++ cellValueToString cellValue)
                 |> Dom.appendChildList
-                    (case findPlayerByCell x y model.players of
-                        Just p ->
-                            [ Dom.element "div"
-                                |> Dom.addClass ("player " ++ String.toLower (playerToString p))
-                                |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
-                            ]
+                    ((case findBoardPieceByCell x y model.backgroundRef of
+                        Just b ->
+                            [ Dom.element "img"
+                            |> Dom.addAttribute "src" ("/img/board/" ++ b.ref ++ ".png")
+                            |> Dom.addClassList ["board-piece", (if (b.rotated) then "rotated" else "")]
 
                         Nothing ->
                             []
+                     )
+                        ++ (case findPlayerByCell x y model.players of
+                                Just p ->
+                                    [ Dom.element "div"
+                                        |> Dom.addClass ("player " ++ String.toLower (playerToString p))
+                                        |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
+                                    ]
+
+                                Nothing ->
+                                    []
+                           )
                     )
     in
-    (if cellValue then
-        DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement
+    Dom.element "div"
+        |> Dom.addClass "cell"
+        |> Dom.appendChild
+            (if cellValue == 0 then
+                DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement
 
-     else
-        cellElement
-    )
+             else
+                cellElement
+            )
         |> Dom.render
 
 
-cellValueToString : Bool -> String
+cellValueToString : Int -> String
 cellValueToString val =
-    if val then
-        "passable"
+    case val of
+        0 ->
+            "impassable"
 
-    else
-        "impassable"
+        1 ->
+            "passable"
+
+        _ ->
+            "hidden"
 
 
 findPlayerByCell : Int -> Int -> List Player -> Maybe Player
 findPlayerByCell x y players =
     List.head (List.filter (\p -> p.x == x && p.y == y) players)
+
+
+findBoardPieceByCell : Int -> Int -> List BoardPiece -> Maybe BoardPiece
+findBoardPieceByCell x y pieces =
+    List.head (List.filter (\p -> p.x == x && p.y == y) pieces)
 
 
 playerToString : Player -> String
