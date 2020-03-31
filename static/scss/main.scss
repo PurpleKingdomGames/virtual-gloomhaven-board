@@ -27,7 +27,7 @@ $hexRotation: 60deg;
     }
 
     &:nth-child(even) {
-        left:41px;
+        left:38px;
     }
 
     .cell-wrapper {
@@ -39,50 +39,32 @@ $hexRotation: 60deg;
             &[data-board-ref="#{$tile}"]:before {
                 content:'';
                 position:absolute;
-                background-image: url('../img/map-tiles/#{$tile}.png');
+                background-image: url('/img/map-tiles/#{$tile}.png');
                 background-repeat: no-repeat;
                 width: 1024px;
                 height: 1024px;
                 top: 0;
-                left: 0;
+                left: -1px;
             }
         }
 
-        .cell {
-            position: relative;
-            float: left;
-            width: 80px;
-            height: 96px;
-            transform: rotate(-$hexRotation) skewY($hexRotation/2);
-            overflow: hidden;
-            visibility: hidden;
+        &[data-board-ref="a1a"]:before {
+            top: 46px;
+        }
 
-            * {
-                visibility: visible;
-            }
+        .cell {
+            width: 76px;
+            height: 94px;
 
             .hexagon {
-                position: absolute;
-                top: 0;
-                left: 0;
                 width: 100%;
                 height: 100%;
-                transform: skewY(-($hexRotation/2)) rotate($hexRotation);
-                overflow: hidden;
-                opacity: 0.5;
-
-                &.impassable {
-                    background-color: red;
-                }
-
-                &.passable {
-                    background-color: blue;
-                }
+                clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 
                 .player {
                     width: 100%;
                     height: 100%;
-                    background-color: yellow;
+                    clip-path:inherit;
                 }
             }
         }

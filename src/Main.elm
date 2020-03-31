@@ -6,7 +6,7 @@ import Browser
 import Dom
 import Dom.DragDrop as DragDrop
 import Html exposing (div)
-import Html.Attributes exposing (attribute, class)
+import Html.Attributes exposing (attribute, class, src)
 
 
 type alias Model =
@@ -193,8 +193,9 @@ getCellHtml model y x cellValue =
                 |> Dom.appendChildList
                     (case findPlayerByCell x y model.players of
                         Just p ->
-                            [ Dom.element "div"
+                            [ Dom.element "img"
                                 |> Dom.addClass ("player " ++ String.toLower (playerToString p))
+                                |> Dom.addAttribute (src ("/img/characters/portraits/" ++ String.toLower (playerToString p) ++ ".png"))
                                 |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
                             ]
 
@@ -222,7 +223,7 @@ getCellHtml model y x cellValue =
             (Dom.element "div"
                 |> Dom.addClass "cell"
                 |> Dom.appendChild
-                    (if cellValue == 0 then
+                    (if cellValue > 0 then
                         DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement
 
                      else
