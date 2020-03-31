@@ -203,7 +203,7 @@ getCellHtml model y x cellValue =
                     )
     in
     Dom.element "div"
-        |> Dom.addClass "cell"
+        |> Dom.addClass "cell-wrapper"
         |> Dom.addAttributeList
             (case findBoardPieceByCell x y model.backgroundRef of
                 Just b ->
@@ -219,11 +219,15 @@ getCellHtml model y x cellValue =
                     []
             )
         |> Dom.appendChild
-            (if cellValue == 0 then
-                DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement
+            (Dom.element "div"
+                |> Dom.addClass "cell"
+                |> Dom.appendChild
+                    (if cellValue == 0 then
+                        DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement
 
-             else
-                cellElement
+                     else
+                        cellElement
+                    )
             )
         |> Dom.render
 

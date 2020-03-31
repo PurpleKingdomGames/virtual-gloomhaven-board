@@ -1,4 +1,4 @@
-$hexRotation: 61deg;
+$hexRotation: 60deg;
 
 [draggable] {
     -moz-user-select: none;
@@ -30,41 +30,60 @@ $hexRotation: 61deg;
         left:41px;
     }
 
-    .cell {
-        position: relative;
-        float: left;
-        width: 82px;
-        height: 98px;
-        transform: rotate(-$hexRotation) skewY($hexRotation/2);
-        overflow: hidden;
-        visibility: hidden;
+    .cell-wrapper {
+        position:relative;
+        overflow: visible;
 
-        * {
-            visibility: visible;
+        $tiles: 'a1a';
+        @each $tile in $tiles {
+            &[data-board-ref="#{$tile}"]:before {
+                content:'';
+                position:absolute;
+                background-image: url('../img/map-tiles/#{$tile}.png');
+                background-repeat: no-repeat;
+                width: 1024px;
+                height: 1024px;
+                top: 0;
+                left: 0;
+            }
         }
 
-        .hexagon {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            transform: skewY(-($hexRotation/2)) rotate($hexRotation);
+        .cell {
+            position: relative;
+            float: left;
+            width: 80px;
+            height: 96px;
+            transform: rotate(-$hexRotation) skewY($hexRotation/2);
             overflow: hidden;
-            opacity: 0.5;
+            visibility: hidden;
 
-            &.impassable {
-                background-color: red;
+            * {
+                visibility: visible;
             }
 
-            &.passable {
-                background-color: blue;
-            }
-
-            .player {
+            .hexagon {
+                position: absolute;
+                top: 0;
+                left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: yellow;
+                transform: skewY(-($hexRotation/2)) rotate($hexRotation);
+                overflow: hidden;
+                opacity: 0.5;
+
+                &.impassable {
+                    background-color: red;
+                }
+
+                &.passable {
+                    background-color: blue;
+                }
+
+                .player {
+                    width: 100%;
+                    height: 100%;
+                    background-color: yellow;
+                }
             }
         }
     }
