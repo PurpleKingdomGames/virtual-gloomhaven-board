@@ -6,7 +6,7 @@ import Browser
 import Dom
 import Dom.DragDrop as DragDrop
 import Html exposing (div)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (attribute, class)
 
 
 type alias Model =
@@ -115,7 +115,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (getGridByRef "a1a") [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
+    ( Model (getGridByRef "a1a") [ BoardPiece "a1a" 0 0 False ] [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -191,29 +191,33 @@ getCellHtml model y x cellValue =
             Dom.element "div"
                 |> Dom.addClass ("hexagon " ++ cellValueToString cellValue)
                 |> Dom.appendChildList
-                    ((case findBoardPieceByCell x y model.backgroundRef of
-                        Just b ->
-                            [ Dom.element "img"
-                            |> Dom.addAttribute "src" ("/img/board/" ++ b.ref ++ ".png")
-                            |> Dom.addClassList ["board-piece", (if (b.rotated) then "rotated" else "")]
+                    (case findPlayerByCell x y model.players of
+                        Just p ->
+                            [ Dom.element "div"
+                                |> Dom.addClass ("player " ++ String.toLower (playerToString p))
+                                |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
+                            ]
 
                         Nothing ->
                             []
-                     )
-                        ++ (case findPlayerByCell x y model.players of
-                                Just p ->
-                                    [ Dom.element "div"
-                                        |> Dom.addClass ("player " ++ String.toLower (playerToString p))
-                                        |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
-                                    ]
-
-                                Nothing ->
-                                    []
-                           )
                     )
     in
     Dom.element "div"
         |> Dom.addClass "cell"
+        |> Dom.addAttributeList
+            (case findBoardPieceByCell x y model.backgroundRef of
+                Just b ->
+                    [ attribute "data-board-ref" b.ref ]
+                        ++ (if b.rotated then
+                                [ attribute "data-rotated" "" ]
+
+                            else
+                                []
+                           )
+
+                Nothing ->
+                    []
+            )
         |> Dom.appendChild
             (if cellValue == 0 then
                 DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement

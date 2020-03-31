@@ -49,9 +49,9 @@ $hexRotation: 61deg;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #fdbf00;
             transform: skewY(-($hexRotation/2)) rotate($hexRotation);
             overflow: hidden;
+            opacity: 0.5;
 
             &.impassable {
                 background-color: red;
