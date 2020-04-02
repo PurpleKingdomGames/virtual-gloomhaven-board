@@ -34,22 +34,43 @@ $hexRotation: 60deg;
         position:relative;
         overflow: visible;
 
-        $tiles: 'a1a';
-        @each $tile in $tiles {
-            &[data-board-ref="#{$tile}"]:before {
-                content:'';
-                position:absolute;
-                background-image: url('/img/map-tiles/#{$tile}.png');
-                background-repeat: no-repeat;
-                width: 1024px;
-                height: 1024px;
-                top: 0;
-                left: -1px;
-            }
+        &[data-board-ref]:before {
+            content:'';
+            position:absolute;
+            background-repeat: no-repeat;
+            width: 1024px;
+            height: 1024px;
         }
 
-        &[data-board-ref="a1a"]:before {
-            top: 46px;
+        $tiles:
+            ('a1a', -1px, 46px)
+            ('a1b', -19px, 46px)
+            ('a2a', -3px, 46px)
+            ('a2b', -18px, 46px)
+            ('a3a', -3px, 46px)
+            ('a3b', -18px, 46px)
+            ('a4a', -3px, 46px)
+            ('a4b', -18px, 46px)
+
+            ('b1a', -21px, -53px)
+            ('b1b', -21px, -53px)
+            ('b2a', -21px, -53px)
+            ('b2b', -21px, -53px)
+            ('b3a', -21px, -53px)
+            ('b3b', -21px, -53px)
+            ('b4a', -21px, -53px)
+            ('b4b', -21px, -53px)
+        ;
+        @each $tile in $tiles {
+            $key: nth($tile, 1);
+            $left: nth($tile, 2);
+            $top: nth($tile, 3);
+
+            &[data-board-ref='#{$key}']:before {
+                background-image: url('/img/map-tiles/#{$key}.png');
+                left: $left;
+                top: $top;
+            }
         }
 
         .cell {

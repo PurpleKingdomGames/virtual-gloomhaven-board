@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Array exposing (..)
-import BoardPieces exposing (BoardPiece, getGridByRef)
+import BoardPieces exposing (BoardPiece, BoardRef(..), getGridByRef, refToString)
 import Browser
 import Dom
 import Dom.DragDrop as DragDrop
@@ -115,7 +115,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (getGridByRef "a1a") [ BoardPiece "a1a" 0 0 False ] [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
+    ( Model (getGridByRef B1a) [ BoardPiece B1a 0 0 False ] [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -208,7 +208,7 @@ getCellHtml model y x cellValue =
         |> Dom.addAttributeList
             (case findBoardPieceByCell x y model.backgroundRef of
                 Just b ->
-                    [ attribute "data-board-ref" b.ref ]
+                    [ attribute "data-board-ref" (refToString b.ref) ]
                         ++ (if b.rotated then
                                 [ attribute "data-rotated" "" ]
 
