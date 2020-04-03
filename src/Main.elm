@@ -115,7 +115,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (getGridByRef H1a) [ BoardPiece H1a 0 0 False ] [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
+    ( Model (getGridByRef I1a) [ BoardPiece I1a 0 0 False ] [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

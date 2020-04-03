@@ -1,3 +1,4 @@
 elm-stuff/
 build/
 .temp-build/
+.metals/
