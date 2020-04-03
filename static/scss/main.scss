@@ -98,6 +98,11 @@ $hexRotation: 60deg;
             ('j1b', -24px, -49px)
             ('j2a', -25px, -52px)
             ('j2b', -24px, -49px)
+
+            ('k1a', -56px, -47px)
+            ('k1b', -71px, -47px)
+            ('k2a', -73px, -45px)
+            ('k2b', -56px, -47px)
         ;
         @each $tile in $tiles {
             $key: nth($tile, 1);

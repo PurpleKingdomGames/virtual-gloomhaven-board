@@ -50,6 +50,10 @@ type BoardRef
     | J1b
     | J2a
     | J2b
+    | K1a
+    | K1b
+    | K2a
+    | K2b
 
 
 type alias BoardPiece =
@@ -144,6 +148,15 @@ getGridByRef ref =
             , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 0 ]
             , Array.fromList [ 1, 1, 1, 1, 1, 1, 0, 0 ]
             , Array.fromList [ 1, 1, 1, 1, 1, 0, 0, 0 ]
+            ]
+
+        configK =
+            [ Array.fromList [ 0, 0, 1, 1, 1, 1, 0, 0 ]
+            , Array.fromList [ 0, 1, 1, 1, 1, 1, 0, 0 ]
+            , Array.fromList [ 0, 1, 1, 1, 1, 1, 1, 0 ]
+            , Array.fromList [ 1, 1, 1, 0, 1, 1, 1, 0 ]
+            , Array.fromList [ 1, 1, 1, 0, 0, 1, 1, 1 ]
+            , Array.fromList [ 1, 1, 0, 0, 0, 1, 1, 0 ]
             ]
     in
     Array.fromList
@@ -285,6 +298,18 @@ getGridByRef ref =
 
             J2b ->
                 List.reverse configJ
+
+            K1a ->
+                configK
+
+            K1b ->
+                configK
+
+            K2a ->
+                configK
+
+            K2b ->
+                configK
         )
 
 
@@ -428,3 +453,15 @@ refToString ref =
 
         J2b ->
             "j2b"
+
+        K1a ->
+            "k1a"
+
+        K1b ->
+            "k1b"
+
+        K2a ->
+            "k2a"
+
+        K2b ->
+            "k2b"
