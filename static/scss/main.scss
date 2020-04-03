@@ -22,7 +22,7 @@ $hexRotation: 60deg;
 
     @for $var from 2 through 100 {
         &:nth-child(#{$var}) {
-            top: -(25px * ($var - 1));
+            top: -(23px * ($var - 1));
         }
     }
 
@@ -61,18 +61,26 @@ $hexRotation: 60deg;
             ('b4a', -21px, -53px)
             ('b4b', -21px, -53px)
 
-            ('c1a', -61px, -42px)
-            ('c1b', -61px, -42px)
-            ('c2a', -61px, -42px)
-            ('c2b', -61px, -42px)
+            ('c1a', -61px, -45px)
+            ('c1b', -61px, -45px)
+            ('c2a', -61px, -45px)
+            ('c2b', -61px, -45px)
 
-            ('d1a', -59px, -44px)
-            ('d1b', -59px, -44px)
-            ('d2a', -59px, -44px)
-            ('d2b', -59px, -44px)
+            ('d1a', -59px, -50x)
+            ('d1b', -59px, -50x)
+            ('d2a', -59px, -50x)
+            ('d2b', -59px, -50x)
 
-            ('e1a', 14px, -38px)
-            ('e1b', 14px, -38px)
+            ('e1a', 12px, -44px)
+            ('e1b', 12px, -44px)
+
+            ('f1a', -24px, -45px)
+            ('f1b', -24px, -45px)
+
+            ('g1a', -22px, -48px)
+            ('g1b', -22px, -48px)
+            ('g2a', -22px, -48px)
+            ('g2b', -22px, -48px)
         ;
         @each $tile in $tiles {
             $key: nth($tile, 1);
@@ -88,7 +96,7 @@ $hexRotation: 60deg;
 
         .cell {
             width: 76px;
-            height: 94px;
+            height: 90px;
 
             .hexagon {
                 width: 100%;

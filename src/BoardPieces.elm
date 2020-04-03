@@ -30,6 +30,12 @@ type BoardRef
     | D2b
     | E1a
     | E1b
+    | F1a
+    | F1b
+    | G1a
+    | G1b
+    | G2a
+    | G2b
 
 
 type alias BoardPiece =
@@ -78,6 +84,24 @@ getGridByRef ref =
             , Array.fromList [ 0, 1, 1, 1, 1 ]
             , Array.fromList [ 1, 1, 1, 1, 1 ]
             , Array.fromList [ 0, 1, 1, 1, 1 ]
+            ]
+
+        configF =
+            [ Array.fromList [ 1, 1, 1 ]
+            , Array.fromList [ 1, 1, 0 ]
+            , Array.fromList [ 1, 1, 1 ]
+            , Array.fromList [ 1, 1, 0 ]
+            , Array.fromList [ 1, 1, 1 ]
+            , Array.fromList [ 1, 1, 0 ]
+            , Array.fromList [ 1, 1, 1 ]
+            , Array.fromList [ 1, 1, 0 ]
+            , Array.fromList [ 1, 1, 1 ]
+            ]
+
+        configG =
+            [ Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 1 ]
+            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 0 ]
+            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 1 ]
             ]
     in
     Array.fromList
@@ -159,6 +183,24 @@ getGridByRef ref =
 
             E1b ->
                 configE
+
+            F1a ->
+                configF
+
+            F1b ->
+                configF
+
+            G1a ->
+                configG
+
+            G1b ->
+                configG
+
+            G2a ->
+                configG
+
+            G2b ->
+                configG
         )
 
 
@@ -242,3 +284,21 @@ refToString ref =
 
         E1b ->
             "e1b"
+
+        F1a ->
+            "f1a"
+
+        F1b ->
+            "f1b"
+
+        G1a ->
+            "g1a"
+
+        G1b ->
+            "g1b"
+
+        G2a ->
+            "g2a"
+
+        G2b ->
+            "g2b"
