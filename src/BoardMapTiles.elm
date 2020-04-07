@@ -1,9 +1,9 @@
-module BoardPieces exposing (BoardPiece, BoardRef(..), getGridByRef, refToString)
+module BoardMapTiles exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
 
 import Array exposing (Array)
 
 
-type BoardRef
+type MapTileRef
     = A1a
     | A1b
     | A2a
@@ -66,15 +66,15 @@ type BoardRef
     | N1b
 
 
-type alias BoardPiece =
-    { ref : BoardRef
+type alias MapTile =
+    { ref : MapTileRef
     , x : Int
     , y : Int
-    , rotated : Bool
+    , angle : Int
     }
 
 
-getGridByRef : BoardRef -> Array (Array Int)
+getGridByRef : MapTileRef -> Array (Array Int)
 getGridByRef ref =
     let
         configA =
@@ -383,7 +383,7 @@ getGridByRef ref =
         )
 
 
-refToString : BoardRef -> String
+refToString : MapTileRef -> String
 refToString ref =
     case ref of
         A1a ->

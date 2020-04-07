@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Array exposing (..)
-import BoardPieces exposing (BoardPiece, BoardRef(..), getGridByRef, refToString)
+import BoardMapTiles exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
 import Browser
 import Dom
 import Dom.DragDrop as DragDrop
@@ -11,7 +11,7 @@ import Html.Attributes exposing (attribute, class, src)
 
 type alias Model =
     { board : Array (Array Int)
-    , backgroundRef : List BoardPiece
+    , backgroundRef : List MapTile
     , players : List Player
     , dragDropState : DragDrop.State MoveableCharacter ( Int, Int )
     }
@@ -115,7 +115,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (getGridByRef B1a) [ BoardPiece B1a 0 0 False ] [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
+    ( Model (getGridByRef B1a) [ MapTile B1a 0 0 0 ] [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -209,12 +209,6 @@ getCellHtml model y x cellValue =
             (case findBoardPieceByCell x y model.backgroundRef of
                 Just b ->
                     [ attribute "data-board-ref" (refToString b.ref) ]
-                        ++ (if b.rotated then
-                                [ attribute "data-rotated" "" ]
-
-                            else
-                                []
-                           )
 
                 Nothing ->
                     []
@@ -251,7 +245,7 @@ findPlayerByCell x y players =
     List.head (List.filter (\p -> p.x == x && p.y == y) players)
 
 
-findBoardPieceByCell : Int -> Int -> List BoardPiece -> Maybe BoardPiece
+findBoardPieceByCell : Int -> Int -> List MapTile -> Maybe MapTile
 findBoardPieceByCell x y pieces =
     List.head (List.filter (\p -> p.x == x && p.y == y) pieces)
 
