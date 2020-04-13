@@ -35,7 +35,7 @@ rotate origin radians point =
 
         -- Translate point back to origin
         newOrigin =
-            Point (origin.x - point.x) (origin.y - point.y)
+            Point (point.x - origin.x) (point.y - origin.y)
 
         -- Rotate point
         xnew =
@@ -45,4 +45,4 @@ rotate origin radians point =
             newOrigin.x * s + newOrigin.y * c
     in
     -- Translate point back
-    Point (xnew + point.x) (ynew + point.y)
+    Point (xnew + origin.x) (ynew + origin.y)
