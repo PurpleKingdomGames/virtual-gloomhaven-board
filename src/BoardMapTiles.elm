@@ -70,133 +70,134 @@ type alias MapTile =
     { ref : MapTileRef
     , x : Int
     , y : Int
-    , angle : Int
+    , passable : Bool
+    , hidden : Bool
     }
 
 
-getGridByRef : MapTileRef -> Array (Array Int)
+getGridByRef : MapTileRef -> Array (Array Bool)
 getGridByRef ref =
     let
         configA =
-            [ Array.fromList [ 0, 0, 0, 0, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 0, 0, 0, 0, 0 ]
+            [ Array.fromList [ False, False, False, False, False ]
+            , Array.fromList [ True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True ]
+            , Array.fromList [ False, False, False, False, False ]
             ]
 
         configB =
-            [ Array.fromList [ 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 0 ]
+            [ Array.fromList [ True, True, True, True ]
+            , Array.fromList [ True, True, True, False ]
+            , Array.fromList [ True, True, True, True ]
+            , Array.fromList [ True, True, True, False ]
             ]
 
         configC =
-            [ Array.fromList [ 0, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 0 ]
+            [ Array.fromList [ False, True, True, False ]
+            , Array.fromList [ True, True, True, False ]
+            , Array.fromList [ True, True, True, True ]
+            , Array.fromList [ True, True, True, False ]
             ]
 
         configD =
-            [ Array.fromList [ 0, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 0, 1, 1, 1, 0 ]
+            [ Array.fromList [ False, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, False ]
+            , Array.fromList [ False, True, True, True, False ]
             ]
 
         configE =
-            [ Array.fromList [ 0, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 0, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 0, 1, 1, 1, 1 ]
+            [ Array.fromList [ False, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True ]
+            , Array.fromList [ False, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True ]
+            , Array.fromList [ False, True, True, True, True ]
             ]
 
         configF =
-            [ Array.fromList [ 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1 ]
+            [ Array.fromList [ True, True, True ]
+            , Array.fromList [ True, True, False ]
+            , Array.fromList [ True, True, True ]
+            , Array.fromList [ True, True, False ]
+            , Array.fromList [ True, True, True ]
+            , Array.fromList [ True, True, False ]
+            , Array.fromList [ True, True, True ]
+            , Array.fromList [ True, True, False ]
+            , Array.fromList [ True, True, True ]
             ]
 
         configG =
-            [ Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 1 ]
+            [ Array.fromList [ True, True, True, True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True, True, True ]
             ]
 
         configH =
-            [ Array.fromList [ 0, 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 0, 0, 0, 1, 1, 0, 0 ]
-            , Array.fromList [ 0, 0, 1, 1, 1, 0, 0 ]
-            , Array.fromList [ 0, 0, 0, 1, 1, 0, 0 ]
-            , Array.fromList [ 0, 0, 1, 1, 1, 0, 0 ]
-            , Array.fromList [ 0, 0, 0, 1, 1, 0, 0 ]
+            [ Array.fromList [ False, True, True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True, True, True ]
+            , Array.fromList [ False, False, False, True, True, False, False ]
+            , Array.fromList [ False, False, True, True, True, False, False ]
+            , Array.fromList [ False, False, False, True, True, False, False ]
+            , Array.fromList [ False, False, True, True, True, False, False ]
+            , Array.fromList [ False, False, False, True, True, False, False ]
             ]
 
         configI =
-            [ Array.fromList [ 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1 ]
+            [ Array.fromList [ True, True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True ]
             ]
 
         configJ =
-            [ Array.fromList [ 0, 0, 0, 0, 0, 0, 1, 0 ]
-            , Array.fromList [ 0, 0, 0, 0, 0, 1, 1, 1 ]
-            , Array.fromList [ 0, 0, 0, 0, 0, 1, 1, 1 ]
-            , Array.fromList [ 0, 0, 0, 0, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 0, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 0, 0, 0 ]
+            [ Array.fromList [ False, False, False, False, False, False, True, False ]
+            , Array.fromList [ False, False, False, False, False, True, True, True ]
+            , Array.fromList [ False, False, False, False, False, True, True, True ]
+            , Array.fromList [ False, False, False, False, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True, False, False ]
+            , Array.fromList [ True, True, True, True, True, False, False, False ]
             ]
 
         configK =
-            [ Array.fromList [ 0, 0, 1, 1, 1, 1, 0, 0 ]
-            , Array.fromList [ 0, 1, 1, 1, 1, 1, 0, 0 ]
-            , Array.fromList [ 0, 1, 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 0, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 0, 0, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 0, 0, 0, 1, 1, 0 ]
+            [ Array.fromList [ False, False, True, True, True, True, False, False ]
+            , Array.fromList [ False, True, True, True, True, True, False, False ]
+            , Array.fromList [ False, True, True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, False, True, True, True, False ]
+            , Array.fromList [ True, True, True, False, False, True, True, True ]
+            , Array.fromList [ True, True, False, False, False, True, True, False ]
             ]
 
         configL =
-            [ Array.fromList [ 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1 ]
+            [ Array.fromList [ True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True ]
             ]
 
         configM =
-            [ Array.fromList [ 0, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 0, 1, 1, 1, 1, 0 ]
+            [ Array.fromList [ False, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True, False ]
+            , Array.fromList [ False, True, True, True, True, False ]
             ]
 
         configN =
-            [ Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 1 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 0 ]
-            , Array.fromList [ 1, 1, 1, 1, 1, 1, 1, 1 ]
+            [ Array.fromList [ True, True, True, True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True, True, True ]
+            , Array.fromList [ True, True, True, True, True, True, True, False ]
+            , Array.fromList [ True, True, True, True, True, True, True, True ]
             ]
     in
     Array.fromList
