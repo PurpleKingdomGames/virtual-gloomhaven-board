@@ -70,4 +70,25 @@ suite =
                         |> Array.toList
                         |> Expect.equalLists responseList
             ]
+        , describe "Point.rotateArray"
+            [ test "should rotate an array 1.57 radians around 0, 0" <|
+                \_ ->
+                    let
+                        testArr =
+                            Array.fromList [ Point 0 0, Point 1 0, Point 2 0, Point 0 1, Point 1 1, Point 2 1 ]
+
+                        responseList =
+                            [ ( 0, 0 )
+                            , ( 0, 1 )
+                            , ( 0, 2 )
+                            , ( -1, 0 )
+                            , ( -1, 1 )
+                            , ( -1, 2 )
+                            ]
+                    in
+                    Point.rotateArray (Point 0 0) 1.57 testArr
+                        |> Array.map (\p -> ( round p.x, round p.y ))
+                        |> Array.toList
+                        |> Expect.equalLists responseList
+            ]
         ]
