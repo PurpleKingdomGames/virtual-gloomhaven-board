@@ -3,7 +3,7 @@ module Scenario exposing (DoorData(..), MapTileData, Scenario, mapTileDataToList
 import Array exposing (Array, indexedMap, toList)
 import BoardMapTiles exposing (MapTile, MapTileRef, getGridByRef)
 import BoardOverlays exposing (BoardOverlay, DoorSubType)
-import Point exposing (Point, rotate)
+import Hexagon exposing (rotate)
 
 
 type alias MapTileData =
@@ -14,7 +14,7 @@ type alias MapTileData =
 
 
 type DoorData
-    = DoorLink DoorSubType Point Point Float MapTileData
+    = DoorLink DoorSubType ( Int, Int ) ( Int, Int ) Int MapTileData
 
 
 type alias Scenario =
@@ -43,25 +43,27 @@ mapTileDataToList data =
 mapDoorDataToList : DoorData -> List MapTile
 mapDoorDataToList doorData =
     case doorData of
-        DoorLink _ refPoint origin angle mapTileData ->
+        DoorLink _ refPoint origin turns mapTileData ->
             let
                 mapTiles =
                     mapTileDataToList mapTileData
-
-                radians =
-                    angle * (pi / 2)
             in
-            List.map (normaliseAndRotateMapTile radians refPoint origin) mapTiles
+            List.map (normaliseAndRotateMapTile turns refPoint origin) mapTiles
 
 
-normaliseAndRotateMapTile : Float -> Point -> Point -> MapTile -> MapTile
-normaliseAndRotateMapTile radians refPoint origin mapTile =
+normaliseAndRotateMapTile : Int -> ( Int, Int ) -> ( Int, Int ) -> MapTile -> MapTile
+normaliseAndRotateMapTile turns ( refPointX, refPointY ) ( originX, originY ) mapTile =
     let
-        newPoint =
-            Point (toFloat mapTile.x - origin.x + refPoint.x) (toFloat mapTile.y - origin.y + refPoint.y)
-                |> Point.rotate refPoint radians
+        initX =
+            mapTile.x - originX + refPointX
+
+        initY =
+            mapTile.y - originY + refPointY
+
+        ( rotatedX, rotatedY ) =
+            Hexagon.rotate ( initX, initY ) ( refPointX, refPointY ) turns
     in
-    { mapTile | x = round newPoint.x, y = round newPoint.y }
+    { mapTile | x = rotatedX, y = rotatedY }
 
 
 indexedArrayYToMapTile : MapTileRef -> Int -> Array Bool -> List MapTile
