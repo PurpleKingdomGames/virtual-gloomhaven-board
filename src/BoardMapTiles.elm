@@ -1,4 +1,4 @@
-module BoardMapTiles exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
+module BoardMapTiles exposing (MapTile, MapTileRef(..), getGridByRef, getMapTileListByRef, refToString)
 
 import Array exposing (Array)
 
@@ -73,6 +73,13 @@ type alias MapTile =
     , passable : Bool
     , hidden : Bool
     }
+
+
+getMapTileListByRef : MapTileRef -> List MapTile
+getMapTileListByRef ref =
+    Array.indexedMap (indexedArrayYToMapTile ref) (getGridByRef ref)
+        |> Array.toList
+        |> List.concat
 
 
 getGridByRef : MapTileRef -> Array (Array Bool)
@@ -566,3 +573,14 @@ refToString ref =
 
         N1b ->
             "n1b"
+
+
+indexedArrayYToMapTile : MapTileRef -> Int -> Array Bool -> List MapTile
+indexedArrayYToMapTile ref y arr =
+    Array.indexedMap (indexedArrayXToMapTile ref y) arr
+        |> Array.toList
+
+
+indexedArrayXToMapTile : MapTileRef -> Int -> Int -> Bool -> MapTile
+indexedArrayXToMapTile ref y x passable =
+    MapTile ref x y passable True

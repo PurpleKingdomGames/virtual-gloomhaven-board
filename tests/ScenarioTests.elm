@@ -2,9 +2,8 @@ module ScenarioTests exposing (suite)
 
 import BoardMapTiles exposing (MapTile, MapTileRef(..))
 import BoardOverlays exposing (DoorSubType(..))
-import Expect exposing (equalLists)
-import Point exposing (Point)
-import Scenario exposing (DoorData(..), MapTileData, Scenario, mapTileDataToList)
+import Expect exposing (equal, equalLists)
+import Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, mapTileDataToList)
 import Test exposing (Test, describe, test)
 
 
@@ -64,6 +63,7 @@ suite =
                             ]
                     in
                     Scenario.mapTileDataToList tileData
+                        |> Tuple.first
                         |> Expect.equalLists expectedResult
             , test "should output a converted grid for M1a with A1a underneath" <|
                 \_ ->
@@ -140,6 +140,7 @@ suite =
                             ]
                     in
                     Scenario.mapTileDataToList tileData
+                        |> Tuple.first
                         |> Expect.equalLists expectedResult
             , test "should output a converted grid for M1a with A1a to the left (see scenario #2 for example)" <|
                 \_ ->
@@ -216,6 +217,22 @@ suite =
                             ]
                     in
                     Scenario.mapTileDataToList tileData
+                        |> Tuple.first
                         |> Expect.equalLists expectedResult
+            , test "should output a the correct bounding box for complicated boards" <|
+                \_ ->
+                    let
+                        a1aData =
+                            MapTileData A1a [] []
+
+                        tileData =
+                            MapTileData M1a [ DoorLink Stone ( 0, 6 ) ( 1, 0 ) 1 a1aData ] []
+
+                        expectedResult =
+                            BoardBounds -3 5 0 11
+                    in
+                    Scenario.mapTileDataToList tileData
+                        |> Tuple.second
+                        |> Expect.equal expectedResult
             ]
         ]

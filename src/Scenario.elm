@@ -1,9 +1,16 @@
-module Scenario exposing (DoorData(..), MapTileData, Scenario, mapTileDataToList)
+module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, mapTileDataToList)
 
-import Array exposing (Array, indexedMap, toList)
-import BoardMapTiles exposing (MapTile, MapTileRef, getGridByRef)
+import BoardMapTiles exposing (MapTile, MapTileRef, getMapTileListByRef)
 import BoardOverlays exposing (BoardOverlay, DoorSubType)
 import Hexagon exposing (rotate)
+
+
+type alias BoardBounds =
+    { minX : Int
+    , maxX : Int
+    , minY : Int
+    , maxY : Int
+    }
 
 
 type alias MapTileData =
@@ -25,19 +32,26 @@ type alias Scenario =
     }
 
 
-mapTileDataToList : MapTileData -> List MapTile
+mapTileDataToList : MapTileData -> ( List MapTile, BoardBounds )
 mapTileDataToList data =
     let
         mapTiles =
-            Array.indexedMap (indexedArrayYToMapTile data.ref) (getGridByRef data.ref)
-                |> Array.toList
-                |> List.concat
+            getMapTileListByRef data.ref
 
         doorTiles =
             List.map mapDoorDataToList data.doors
                 |> List.concat
+
+        allTiles =
+            mapTiles ++ doorTiles
+
+        boundingBox =
+            List.map (\m -> BoardBounds m.x m.x m.y m.y) allTiles
+                |> List.foldl
+                    (\a b -> BoardBounds (min a.minX b.minX) (max a.maxX b.maxX) (min a.minY b.minY) (max a.maxY b.maxY))
+                    (BoardBounds 0 0 0 0)
     in
-    mapTiles ++ doorTiles
+    ( allTiles, boundingBox )
 
 
 mapDoorDataToList : DoorData -> List MapTile
@@ -45,7 +59,7 @@ mapDoorDataToList doorData =
     case doorData of
         DoorLink _ refPoint origin turns mapTileData ->
             let
-                mapTiles =
+                ( mapTiles, _ ) =
                     mapTileDataToList mapTileData
             in
             List.map (normaliseAndRotateMapTile turns refPoint origin) mapTiles
@@ -64,14 +78,3 @@ normaliseAndRotateMapTile turns ( refPointX, refPointY ) ( originX, originY ) ma
             Hexagon.rotate ( initX, initY ) ( refPointX, refPointY ) turns
     in
     { mapTile | x = rotatedX, y = rotatedY }
-
-
-indexedArrayYToMapTile : MapTileRef -> Int -> Array Bool -> List MapTile
-indexedArrayYToMapTile ref y arr =
-    Array.indexedMap (indexedArrayXToMapTile ref y) arr
-        |> Array.toList
-
-
-indexedArrayXToMapTile : MapTileRef -> Int -> Int -> Bool -> MapTile
-indexedArrayXToMapTile ref y x passable =
-    MapTile ref x y passable True
