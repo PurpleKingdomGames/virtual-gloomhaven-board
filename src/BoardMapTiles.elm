@@ -70,6 +70,8 @@ type alias MapTile =
     { ref : MapTileRef
     , x : Int
     , y : Int
+    , originalX : Int
+    , originalY : Int
     , passable : Bool
     , hidden : Bool
     }
@@ -583,4 +585,4 @@ indexedArrayYToMapTile ref y arr =
 
 indexedArrayXToMapTile : MapTileRef -> Int -> Int -> Bool -> MapTile
 indexedArrayXToMapTile ref y x passable =
-    MapTile ref x y passable True
+    MapTile ref x y x y passable True
