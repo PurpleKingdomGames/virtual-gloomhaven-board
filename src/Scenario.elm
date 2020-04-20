@@ -1,8 +1,9 @@
-module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, mapTileDataToList)
+module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, mapTileDataToList, mapTileDataToOverlayList)
 
 import BoardMapTiles exposing (MapTile, MapTileRef, getMapTileListByRef)
-import BoardOverlays exposing (BoardOverlay, DoorSubType)
+import BoardOverlays exposing (BoardOverlay, BoardOverlayType(..), DoorSubType)
 import Hexagon exposing (rotate)
+import Monster exposing (Monster)
 
 
 type alias BoardBounds =
@@ -17,6 +18,7 @@ type alias MapTileData =
     { ref : MapTileRef
     , doors : List DoorData
     , overlays : List BoardOverlay
+    , monsters : List Monster
     }
 
 
@@ -30,6 +32,35 @@ type alias Scenario =
     , mapTilesData : MapTileData
     , angle : Float
     }
+
+
+mapTileDataToOverlayList : MapTileData -> List ( MapTileRef, List BoardOverlay, List Monster )
+mapTileDataToOverlayList data =
+    let
+        initData =
+            ( data.ref
+            , data.overlays
+                ++ List.map
+                    (\d ->
+                        case d of
+                            DoorLink subType ( x, y ) _ _ _ ->
+                                BoardOverlay (Door subType) [ ( x, y ) ]
+                    )
+                    data.doors
+            , data.monsters
+            )
+
+        doorData =
+            List.map
+                (\d ->
+                    case d of
+                        DoorLink _ _ _ _ map ->
+                            mapTileDataToOverlayList map
+                )
+                data.doors
+                |> List.concat
+    in
+    initData :: doorData
 
 
 mapTileDataToList : MapTileData -> ( List MapTile, BoardBounds )
