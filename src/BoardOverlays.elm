@@ -1,4 +1,4 @@
-module BoardOverlays exposing (BoardOverlay, BoardOverlayType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..))
+module BoardOverlays exposing (BoardOverlay, BoardOverlayType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 
 
 type BoardOverlayType

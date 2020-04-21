@@ -1,4 +1,4 @@
-module Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..))
+module Monsters exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..))
 
 
 type MonsterType
@@ -68,9 +68,5 @@ type BossType
 type alias Monster =
     { monster : MonsterType
     , id : Int
-    , x : Int
-    , y : Int
-    , twoPlayer : MonsterLevel
-    , threePlayer : MonsterLevel
-    , fourPlayer : MonsterLevel
+    , level : MonsterLevel
     }

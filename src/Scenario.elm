@@ -1,9 +1,10 @@
-module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, mapTileDataToList, mapTileDataToOverlayList)
+module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
-import BoardMapTiles exposing (MapTile, MapTileRef, getMapTileListByRef)
+import BoardMapTiles exposing (MapTile, MapTileRef, getMapTileListByRef, refToString)
 import BoardOverlays exposing (BoardOverlay, BoardOverlayType(..), DoorSubType)
+import Dict exposing (Dict, empty, singleton, union)
 import Hexagon exposing (rotate)
-import Monster exposing (Monster)
+import Monsters exposing (Monster, MonsterLevel)
 
 
 type alias BoardBounds =
@@ -18,12 +19,22 @@ type alias MapTileData =
     { ref : MapTileRef
     , doors : List DoorData
     , overlays : List BoardOverlay
-    , monsters : List Monster
+    , monsters : List ScenarioMonster
     }
 
 
 type DoorData
     = DoorLink DoorSubType ( Int, Int ) ( Int, Int ) Int MapTileData
+
+
+type alias ScenarioMonster =
+    { monster : Monster
+    , initialX : Int
+    , initialY : Int
+    , twoPlayer : MonsterLevel
+    , threePlayer : MonsterLevel
+    , fourPlayer : MonsterLevel
+    }
 
 
 type alias Scenario =
@@ -34,12 +45,11 @@ type alias Scenario =
     }
 
 
-mapTileDataToOverlayList : MapTileData -> List ( MapTileRef, List BoardOverlay, List Monster )
+mapTileDataToOverlayList : MapTileData -> Dict String ( List BoardOverlay, List ScenarioMonster )
 mapTileDataToOverlayList data =
     let
         initData =
-            ( data.ref
-            , data.overlays
+            ( data.overlays
                 ++ List.map
                     (\d ->
                         case d of
@@ -49,6 +59,7 @@ mapTileDataToOverlayList data =
                     data.doors
             , data.monsters
             )
+                |> singleton (refToString data.ref)
 
         doorData =
             List.map
@@ -58,9 +69,9 @@ mapTileDataToOverlayList data =
                             mapTileDataToOverlayList map
                 )
                 data.doors
-                |> List.concat
+                |> List.foldl (\a b -> union a b) empty
     in
-    initData :: doorData
+    union initData doorData
 
 
 mapTileDataToList : MapTileData -> ( List MapTile, BoardBounds )
