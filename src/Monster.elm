@@ -1,4 +1,4 @@
-module Monsters exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..))
+module Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..))
 
 
 type MonsterType

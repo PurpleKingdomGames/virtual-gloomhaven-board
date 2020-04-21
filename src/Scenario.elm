@@ -1,10 +1,10 @@
 module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
-import BoardMapTiles exposing (MapTile, MapTileRef, getMapTileListByRef, refToString)
-import BoardOverlays exposing (BoardOverlay, BoardOverlayType(..), DoorSubType)
+import BoardMapTile exposing (MapTile, MapTileRef, getMapTileListByRef, refToString)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayType(..), DoorSubType)
 import Dict exposing (Dict, empty, singleton, union)
 import Hexagon exposing (rotate)
-import Monsters exposing (Monster, MonsterLevel)
+import Monster exposing (Monster, MonsterLevel)
 
 
 type alias BoardBounds =

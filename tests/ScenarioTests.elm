@@ -1,9 +1,9 @@
 module ScenarioTests exposing (suite)
 
-import BoardMapTiles exposing (MapTile, MapTileRef(..))
-import BoardOverlays exposing (DoorSubType(..))
+import BoardMapTile exposing (MapTile, MapTileRef(..))
+import BoardOverlay exposing (DoorSubType(..))
 import Expect exposing (equal, equalLists)
-import Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, mapTileDataToList)
+import Scenario exposing (BoardBounds, DoorData(..), MapTileData, mapTileDataToList)
 import Test exposing (Test, describe, test)
 
 

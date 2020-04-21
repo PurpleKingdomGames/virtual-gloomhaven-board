@@ -1,12 +1,12 @@
 module Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap)
 
 import Array exposing (Array, get, initialize, set)
-import BoardMapTiles exposing (MapTile, refToString)
-import BoardOverlays exposing (BoardOverlay)
-import Characters exposing (CharacterClass)
+import BoardMapTile exposing (MapTile, refToString)
+import BoardOverlay exposing (BoardOverlay)
+import Character exposing (CharacterClass)
 import Dict exposing (Dict, get)
 import List exposing (filter, head)
-import Monsters exposing (Monster, MonsterLevel(..))
+import Monster exposing (Monster, MonsterLevel(..))
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
 
@@ -147,13 +147,13 @@ filterMonsterLevel : NumPlayers -> ScenarioMonster -> Bool
 filterMonsterLevel numPlayers monster =
     case numPlayers of
         TwoPlayer ->
-            monster.twoPlayer /= Monsters.None
+            monster.twoPlayer /= Monster.None
 
         ThreePlayer ->
-            monster.threePlayer /= Monsters.None
+            monster.threePlayer /= Monster.None
 
         FourPlayer ->
-            monster.fourPlayer /= Monsters.None
+            monster.fourPlayer /= Monster.None
 
 
 getLevelForMonster : NumPlayers -> ScenarioMonster -> MonsterLevel

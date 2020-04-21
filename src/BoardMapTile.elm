@@ -1,4 +1,4 @@
-module BoardMapTiles exposing (MapTile, MapTileRef(..), getGridByRef, getMapTileListByRef, refToString)
+module BoardMapTile exposing (MapTile, MapTileRef(..), getGridByRef, getMapTileListByRef, refToString)
 
 import Array exposing (Array)
 

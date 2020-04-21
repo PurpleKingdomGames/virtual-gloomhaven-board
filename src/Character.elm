@@ -1,4 +1,4 @@
-module Characters exposing (CharacterClass)
+module Character exposing (CharacterClass(..))
 
 
 type CharacterClass
