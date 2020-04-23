@@ -34,12 +34,24 @@ $hexRotation: 60deg;
         position:relative;
         overflow: visible;
 
-        &[data-board-ref]:before {
-            content:'';
-            position:absolute;
-            background-repeat: no-repeat;
-            width: 1024px;
-            height: 1024px;
+        &[data-board-ref]
+        {
+            z-index: -1;
+
+            &:before {
+                content:'';
+                position:absolute;
+                background-repeat: no-repeat;
+                width: 1024px;
+                height: 1024px;
+            }
+
+            @for $i from 1 through 5
+            {
+                &.rotate-#{$i} {
+                    transform: rotate(60deg * $i);
+                }
+            }
         }
 
         $tiles:

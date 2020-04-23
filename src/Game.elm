@@ -28,7 +28,7 @@ type PieceType
 
 
 type alias Cell =
-    { rooms : List ( MapTileRef, Bool )
+    { rooms : List ( MapTileRef, Bool, Int )
     , hidden : Bool
     , passable : Bool
     , piece : PieceType
@@ -40,7 +40,7 @@ generateGameMap : Scenario -> NumPlayers -> Array (Array Cell)
 generateGameMap scenario numPlayers =
     let
         ( mapTiles, bounds ) =
-            mapTileDataToList scenario.mapTilesData
+            mapTileDataToList scenario.mapTilesData Nothing
 
         overlays =
             mapTileDataToOverlayList scenario.mapTilesData
@@ -120,7 +120,7 @@ setCellFromMapTile initialArr numPlayers overlays offsetX offsetY tile =
                     let
                         newCell =
                             { foundCell
-                                | rooms = ( tile.ref, tile.originalX == 0 && tile.originalY == 0 ) :: foundCell.rooms
+                                | rooms = ( tile.ref, tile.originalX == 0 && tile.originalY == 0, tile.turns ) :: foundCell.rooms
                                 , hidden =
                                     if foundCell.hidden then
                                         tile.hidden

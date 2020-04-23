@@ -1,7 +1,7 @@
 module GameTests exposing (suite)
 
-import Array exposing (Array, fromList, toList)
-import BoardMapTile exposing (MapTile, MapTileRef(..), refToString)
+import Array exposing (fromList, toList)
+import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayType(..), TrapSubType(..))
 import Expect exposing (equalLists)
 import Game exposing (Cell, NumPlayers(..), PieceType(..), generateGameMap)
@@ -17,7 +17,7 @@ suite =
                 \_ ->
                     let
                         scenario =
-                            Scenario 0 "Test" (MapTileData B3b [] [ BoardOverlay (Trap BearTrap) ( ( 0, 3 ), Nothing ), BoardOverlay (Trap BearTrap) ( ( 2, 3 ), Nothing ) ] []) 0
+                            Scenario 0 "Test" (MapTileData B3b [] [ BoardOverlay (Trap BearTrap) ( ( 0, 3 ), Nothing ), BoardOverlay (Trap BearTrap) ( ( 2, 3 ), Nothing ) ] [] 0) 0
 
                         expectedBoard =
                             [ fromList

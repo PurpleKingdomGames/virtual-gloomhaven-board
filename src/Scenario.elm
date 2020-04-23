@@ -20,11 +20,12 @@ type alias MapTileData =
     , doors : List DoorData
     , overlays : List BoardOverlay
     , monsters : List ScenarioMonster
+    , turns : Int
     }
 
 
 type DoorData
-    = DoorLink DoorSubType ( Int, Int ) ( Int, Int ) Int MapTileData
+    = DoorLink DoorSubType ( Int, Int ) ( Int, Int ) MapTileData
 
 
 type alias ScenarioMonster =
@@ -53,7 +54,7 @@ mapTileDataToOverlayList data =
                 ++ List.map
                     (\d ->
                         case d of
-                            DoorLink subType ( x, y ) _ _ _ ->
+                            DoorLink subType ( x, y ) _ _ ->
                                 BoardOverlay (Door subType) ( ( x, y ), Nothing )
                     )
                     data.doors
@@ -65,7 +66,7 @@ mapTileDataToOverlayList data =
             List.map
                 (\d ->
                     case d of
-                        DoorLink _ _ _ _ map ->
+                        DoorLink _ _ _ map ->
                             mapTileDataToOverlayList map
                 )
                 data.doors
@@ -74,11 +75,21 @@ mapTileDataToOverlayList data =
     union initData doorData
 
 
-mapTileDataToList : MapTileData -> ( List MapTile, BoardBounds )
-mapTileDataToList data =
+mapTileDataToList : MapTileData -> Maybe ( ( Int, Int ), ( Int, Int ) ) -> ( List MapTile, BoardBounds )
+mapTileDataToList data maybeTurnAxis =
     let
         mapTiles =
+            let
+                ( refPoint, origin ) =
+                    case maybeTurnAxis of
+                        Just ( r, o ) ->
+                            ( r, o )
+
+                        Nothing ->
+                            ( ( 0, 0 ), ( 0, 0 ) )
+            in
             getMapTileListByRef data.ref
+                |> List.map (normaliseAndRotateMapTile data.turns refPoint origin)
 
         doorTiles =
             List.map mapDoorDataToList data.doors
@@ -99,12 +110,8 @@ mapTileDataToList data =
 mapDoorDataToList : DoorData -> List MapTile
 mapDoorDataToList doorData =
     case doorData of
-        DoorLink _ refPoint origin turns mapTileData ->
-            let
-                ( mapTiles, _ ) =
-                    mapTileDataToList mapTileData
-            in
-            List.map (normaliseAndRotateMapTile turns refPoint origin) mapTiles
+        DoorLink _ refPoint origin mapTileData ->
+            Tuple.first (mapTileDataToList mapTileData (Just ( refPoint, origin )))
 
 
 normaliseAndRotateMapTile : Int -> ( Int, Int ) -> ( Int, Int ) -> MapTile -> MapTile
@@ -119,4 +126,4 @@ normaliseAndRotateMapTile turns ( refPointX, refPointY ) ( originX, originY ) ma
         ( rotatedX, rotatedY ) =
             Hexagon.rotate ( initX, initY ) ( refPointX, refPointY ) turns
     in
-    { mapTile | x = rotatedX, y = rotatedY }
+    { mapTile | x = rotatedX, y = rotatedY, turns = turns }
