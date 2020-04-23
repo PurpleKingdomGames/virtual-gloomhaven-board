@@ -13,7 +13,7 @@ type DoorSubType
 
 
 type TrapSubType
-    = Stun
+    = BearTrap
 
 
 type ObstacleSubType
@@ -27,5 +27,5 @@ type TreasureSubType
 
 type alias BoardOverlay =
     { ref : BoardOverlayType
-    , cells : List ( Int, Int )
+    , cells : ( ( Int, Int ), Maybe ( Int, Int ) )
     }
