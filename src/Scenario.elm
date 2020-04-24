@@ -78,21 +78,20 @@ mapTileDataToOverlayList data =
 mapTileDataToList : MapTileData -> Maybe ( ( Int, Int ), ( Int, Int ) ) -> ( List MapTile, BoardBounds )
 mapTileDataToList data maybeTurnAxis =
     let
-        mapTiles =
-            let
-                ( refPoint, origin ) =
-                    case maybeTurnAxis of
-                        Just ( r, o ) ->
-                            ( r, o )
+        ( refPoint, origin ) =
+            case maybeTurnAxis of
+                Just ( r, o ) ->
+                    ( r, o )
 
-                        Nothing ->
-                            ( ( 0, 0 ), ( 0, 0 ) )
-            in
+                Nothing ->
+                    ( ( 0, 0 ), ( 0, 0 ) )
+
+        mapTiles =
             getMapTileListByRef data.ref
                 |> List.map (normaliseAndRotateMapTile data.turns refPoint origin)
 
         doorTiles =
-            List.map mapDoorDataToList data.doors
+            List.map (mapDoorDataToList refPoint data.turns) data.doors
                 |> List.concat
 
         allTiles =
@@ -107,10 +106,14 @@ mapTileDataToList data maybeTurnAxis =
     ( allTiles, boundingBox )
 
 
-mapDoorDataToList : DoorData -> List MapTile
-mapDoorDataToList doorData =
+mapDoorDataToList : ( Int, Int ) -> Int -> DoorData -> List MapTile
+mapDoorDataToList o turns doorData =
     case doorData of
-        DoorLink _ refPoint origin mapTileData ->
+        DoorLink _ r origin mapTileData ->
+            let
+                refPoint =
+                    rotate r o turns
+            in
             Tuple.first (mapTileDataToList mapTileData (Just ( refPoint, origin )))
 
 

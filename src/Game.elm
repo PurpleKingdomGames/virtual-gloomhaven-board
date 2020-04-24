@@ -1,6 +1,7 @@
 module Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap)
 
 import Array exposing (Array, get, initialize, set)
+import Bitwise exposing (and)
 import BoardMapTile exposing (MapTile, MapTileRef, refToString)
 import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass)
@@ -45,13 +46,30 @@ generateGameMap scenario numPlayers =
         overlays =
             mapTileDataToOverlayList scenario.mapTilesData
 
+        -- Build a square array capable of holding the whole map
+        -- We add 2 to account for the zero index, and also row drift if the original started on a non-even row
         arrSize =
-            max (abs (bounds.maxX - bounds.minX)) (abs (bounds.maxY - bounds.minY)) + 1
+            max (abs (bounds.maxX - bounds.minX)) (abs (bounds.maxY - bounds.minY))
+                + 1
+                + (if Bitwise.and bounds.minY 1 == 1 then
+                    1
+
+                   else
+                    0
+                  )
+
+        -- The Y offset needs adjusting if the start of the original array was an odd row
+        offsetY =
+            if Bitwise.and bounds.minY 1 == 1 then
+                bounds.minY - 1
+
+            else
+                bounds.minY
 
         initMap =
             initialize arrSize (always (initialize arrSize (always (Cell [] True False None []))))
     in
-    setCellsFromMapTiles mapTiles numPlayers overlays bounds.minX bounds.minY initMap
+    setCellsFromMapTiles mapTiles numPlayers overlays bounds.minX offsetY initMap
 
 
 setCellsFromMapTiles : List MapTile -> NumPlayers -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> Array (Array Cell) -> Array (Array Cell)

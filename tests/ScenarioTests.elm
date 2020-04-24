@@ -219,6 +219,83 @@ suite =
                     Scenario.mapTileDataToList tileData Nothing
                         |> Tuple.first
                         |> Expect.equalLists expectedResult
+            , test "should output a converted grid for M1a with A1a to the left, rotated by 3 turns" <|
+                \_ ->
+                    let
+                        a1aData =
+                            MapTileData A1a [] [] [] 4
+
+                        tileData =
+                            MapTileData M1a [ DoorLink Stone ( 0, 6 ) ( 1, 0 ) a1aData ] [] [] 3
+
+                        expectedResult =
+                            [ MapTile M1a 0 0 3 0 0 False True
+                            , MapTile M1a -1 0 3 1 0 True True
+                            , MapTile M1a -2 0 3 2 0 True True
+                            , MapTile M1a -3 0 3 3 0 True True
+                            , MapTile M1a -4 0 3 4 0 True True
+                            , MapTile M1a -5 0 3 5 0 False True
+                            , MapTile M1a -1 -1 3 0 1 True True
+                            , MapTile M1a -2 -1 3 1 1 True True
+                            , MapTile M1a -3 -1 3 2 1 True True
+                            , MapTile M1a -4 -1 3 3 1 True True
+                            , MapTile M1a -5 -1 3 4 1 True True
+                            , MapTile M1a -6 -1 3 5 1 False True
+                            , MapTile M1a 0 -2 3 0 2 True True
+                            , MapTile M1a -1 -2 3 1 2 True True
+                            , MapTile M1a -2 -2 3 2 2 True True
+                            , MapTile M1a -3 -2 3 3 2 True True
+                            , MapTile M1a -4 -2 3 4 2 True True
+                            , MapTile M1a -5 -2 3 5 2 True True
+                            , MapTile M1a -1 -3 3 0 3 True True
+                            , MapTile M1a -2 -3 3 1 3 True True
+                            , MapTile M1a -3 -3 3 2 3 True True
+                            , MapTile M1a -4 -3 3 3 3 True True
+                            , MapTile M1a -5 -3 3 4 3 True True
+                            , MapTile M1a -6 -3 3 5 3 False True
+                            , MapTile M1a 0 -4 3 0 4 True True
+                            , MapTile M1a -1 -4 3 1 4 True True
+                            , MapTile M1a -2 -4 3 2 4 True True
+                            , MapTile M1a -3 -4 3 3 4 True True
+                            , MapTile M1a -4 -4 3 4 4 True True
+                            , MapTile M1a -5 -4 3 5 4 True True
+                            , MapTile M1a -1 -5 3 0 5 True True
+                            , MapTile M1a -2 -5 3 1 5 True True
+                            , MapTile M1a -3 -5 3 2 5 True True
+                            , MapTile M1a -4 -5 3 3 5 True True
+                            , MapTile M1a -5 -5 3 4 5 True True
+                            , MapTile M1a -6 -5 3 5 5 False True
+                            , MapTile M1a 0 -6 3 0 6 False True
+                            , MapTile M1a -1 -6 3 1 6 True True
+                            , MapTile M1a -2 -6 3 2 6 True True
+                            , MapTile M1a -3 -6 3 3 6 True True
+                            , MapTile M1a -4 -6 3 4 6 True True
+                            , MapTile M1a -5 -6 3 5 6 False True
+                            , MapTile A1a 0 -5 4 0 0 False True
+                            , MapTile A1a 0 -6 4 1 0 False True
+                            , MapTile A1a -1 -7 4 2 0 False True
+                            , MapTile A1a -1 -8 4 3 0 False True
+                            , MapTile A1a -2 -9 4 4 0 False True
+                            , MapTile A1a 1 -6 4 0 1 True True
+                            , MapTile A1a 0 -7 4 1 1 True True
+                            , MapTile A1a 0 -8 4 2 1 True True
+                            , MapTile A1a -1 -9 4 3 1 True True
+                            , MapTile A1a -1 -10 4 4 1 False True
+                            , MapTile A1a 2 -6 4 0 2 True True
+                            , MapTile A1a 1 -7 4 1 2 True True
+                            , MapTile A1a 1 -8 4 2 2 True True
+                            , MapTile A1a 0 -9 4 3 2 True True
+                            , MapTile A1a 0 -10 4 4 2 True True
+                            , MapTile A1a 2 -7 4 0 3 False True
+                            , MapTile A1a 2 -8 4 1 3 False True
+                            , MapTile A1a 1 -9 4 2 3 False True
+                            , MapTile A1a 1 -10 4 3 3 False True
+                            , MapTile A1a 0 -11 4 4 3 False True
+                            ]
+                    in
+                    Scenario.mapTileDataToList tileData Nothing
+                        |> Tuple.first
+                        |> Expect.equalLists expectedResult
             , test "should output a the correct bounding box for complicated boards" <|
                 \_ ->
                     let
