@@ -1,106 +1,30 @@
 module Main exposing (main)
 
 import Array exposing (..)
-import BoardMapTiles exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
+import BoardMapTile exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayType(..), DoorSubType(..), TrapSubType(..))
 import Browser
 import Dom
 import Dom.DragDrop as DragDrop
+import Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap)
 import Html exposing (div)
 import Html.Attributes exposing (attribute, class, src)
+import List exposing (filter, head)
+import Monster exposing (Monster)
+import Scenario exposing (DoorData(..), MapTileData, Scenario)
 
 
 type alias Model =
-    { board : Array (Array Int)
-    , backgroundRef : List MapTile
-    , players : List Player
-    , dragDropState : DragDrop.State MoveableCharacter ( Int, Int )
+    { board : Array (Array Cell)
+    , dragDropState : DragDrop.State PieceType ( Int, Int )
     }
-
-
-type Enemy
-    = BanditGuard
-    | BanditArcher
-    | CityGuard
-    | CityArcher
-    | InoxGuard
-    | InoxArcher
-    | InoxShaman
-    | VermlingScout
-    | VermlingShaman
-    | LivingBones
-    | LivingCorpse
-    | LivingSpirit
-    | Cultist
-    | FlameDemon
-    | FrostDemon
-    | EarthDemon
-    | WindDemon
-    | NightDemon
-    | SunDemon
-    | Ooze
-    | GiantViper
-    | ForestImp
-    | Hound
-    | CaveBear
-    | StoneGolem
-    | AncientArtillery
-    | ViciousDrake
-    | SpittingDrake
-    | Lurker
-    | SavvasIcestorm
-    | SavvaLavaflow
-    | HarrowerInfester
-    | DeepTerror
-    | BlackImp
-    | BanditCommander
-    | MercilessOverseer
-    | InoxBodyguard
-    | CaptainOfTheGuard
-    | Jekserah
-    | PrimeDemon
-    | ElderDrake
-    | TheBetrayer
-    | TheColorless
-    | TheSightlessEye
-    | DarkRider
-    | WingedHorror
-    | TheGoom
-
-
-type alias EnemyIdentity =
-    { enemy : Enemy
-    , id : Int
-    , x : Int
-    , y : Int
-    }
-
-
-type PlayerClass
-    = Brute
-    | Cragheart
-    | Mindthief
-    | Scoundrel
-    | Spellweaver
-    | Tinkerer
-
-
-type alias Player =
-    { class : PlayerClass
-    , x : Int
-    , y : Int
-    }
-
-
-type MoveableCharacter
-    = MoveablePlayer Player
-    | MoveableEnemy EnemyIdentity
 
 
 type Msg
-    = MoveStarted MoveableCharacter
+    = MoveStarted PieceType
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
-    | MoveCompleted MoveableCharacter ( Int, Int )
+    | MoveCompleted PieceType ( Int, Int )
 
 
 main : Program () Model Msg
@@ -115,7 +39,33 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (getGridByRef B1a) [ MapTile B1a 0 0 0 ] [ Player Brute 0 0, Player Spellweaver 0 0, Player Cragheart 0 0 ] DragDrop.initialState, Cmd.none )
+    let
+        scenario =
+            Scenario
+                2
+                "Barrow Lair"
+                (MapTileData B3b
+                    [ DoorLink Stone
+                        ( 1, -1 )
+                        ( 2, 7 )
+                        (MapTileData M1a
+                            [ DoorLink Stone ( 0, 0 ) ( 3, 0 ) (MapTileData A4b [] [] [] 5)
+                            , DoorLink Stone ( 5, 0 ) ( 1, 0 ) (MapTileData A2a [] [] [] 1)
+                            , DoorLink Stone ( -1, 3 ) ( 4, 1 ) (MapTileData A1a [] [] [] 3)
+                            , DoorLink Stone ( 5, 3 ) ( -1, 1 ) (MapTileData A3b [] [] [] 3)
+                            ]
+                            []
+                            []
+                            3
+                        )
+                    ]
+                    [ BoardOverlay (Trap BearTrap) ( ( 0, 1 ), Nothing ), BoardOverlay (Trap BearTrap) ( ( 2, 1 ), Nothing ) ]
+                    []
+                    3
+                )
+                0
+    in
+    ( Model (generateGameMap scenario ThreePlayer) DragDrop.initialState, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -131,33 +81,36 @@ update msg model =
             ( { model | dragDropState = DragDrop.stopDragging model.dragDropState }, Cmd.none )
 
         MoveCompleted character ( x, y ) ->
-            let
-                playerList =
-                    model.players
+            {-
+               let
+                   playerList =
+                       model.players
 
-                charModel =
-                    case character of
-                        MoveablePlayer p ->
-                            { model
-                                | players =
-                                    List.map
-                                        (\o ->
-                                            if o.class == p.class then
-                                                { o | x = x, y = y }
+                   charModel =
+                       case character of
+                           MoveablePlayer p ->
+                               { model
+                                   | players =
+                                       List.map
+                                           (\o ->
+                                               if o.class == p.class then
+                                                   { o | x = x, y = y }
 
-                                            else
-                                                o
-                                        )
-                                        playerList
-                            }
+                                               else
+                                                   o
+                                           )
+                                           playerList
+                               }
 
-                        MoveableEnemy e ->
-                            model
+                           MoveableEnemy e ->
+                               model
 
-                newModel =
-                    { charModel | dragDropState = DragDrop.initialState }
-            in
-            ( newModel, Cmd.none )
+                   newModel =
+                       { charModel | dragDropState = DragDrop.initialState }
+               in
+               ( newModel, Cmd.none )
+            -}
+            ( model, Cmd.none )
 
 
 view : Model -> Html.Html Msg
@@ -170,15 +123,15 @@ subscriptions _ =
     Sub.none
 
 
-getBoardHtml : Model -> Int -> Array Int -> Html.Html Msg
+getBoardHtml : Model -> Int -> Array Cell -> Html.Html Msg
 getBoardHtml model y row =
     div [ class "row" ] (toList (Array.indexedMap (getCellHtml model y) row))
 
 
-getCellHtml : Model -> Int -> Int -> Int -> Html.Html Msg
+getCellHtml : Model -> Int -> Int -> Cell -> Html.Html Msg
 getCellHtml model y x cellValue =
     let
-        dragDropMessages : DragDrop.Messages Msg MoveableCharacter ( Int, Int )
+        dragDropMessages : DragDrop.Messages Msg PieceType ( Int, Int )
         dragDropMessages =
             { dragStarted = MoveStarted
             , dropTargetChanged = MoveTargetChanged
@@ -190,25 +143,30 @@ getCellHtml model y x cellValue =
         cellElement =
             Dom.element "div"
                 |> Dom.addClass ("hexagon " ++ cellValueToString cellValue)
-                |> Dom.appendChildList
-                    (case findPlayerByCell x y model.players of
-                        Just p ->
-                            [ Dom.element "img"
-                                |> Dom.addClass ("player " ++ String.toLower (playerToString p))
-                                |> Dom.addAttribute (src ("/img/characters/portraits/" ++ String.toLower (playerToString p) ++ ".png"))
-                                |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
-                            ]
 
-                        Nothing ->
-                            []
-                    )
+        {-
+           |> Dom.appendChildList
+               (case findPlayerByCell x y model.players of
+                   Just p ->
+                       [ Dom.element "img"
+                           |> Dom.addClass ("player " ++ String.toLower (playerToString p))
+                           |> Dom.addAttribute (src ("/img/characters/portraits/" ++ String.toLower (playerToString p) ++ ".png"))
+                           |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
+                       ]
+
+                   Nothing ->
+                       []
+               )
+        -}
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
         |> Dom.addAttributeList
-            (case findBoardPieceByCell x y model.backgroundRef of
-                Just b ->
-                    [ attribute "data-board-ref" (refToString b.ref) ]
+            (case head (List.filter (\( _, o, _ ) -> o) cellValue.rooms) of
+                Just ( ref, _, turns ) ->
+                    [ attribute "data-board-ref" (refToString ref)
+                    , class ("rotate-" ++ String.fromInt turns)
+                    ]
 
                 Nothing ->
                     []
@@ -217,7 +175,7 @@ getCellHtml model y x cellValue =
             (Dom.element "div"
                 |> Dom.addClass "cell"
                 |> Dom.appendChild
-                    (if cellValue > 0 then
+                    (if cellValue.passable && cellValue.hidden == False then
                         DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement
 
                      else
@@ -227,46 +185,54 @@ getCellHtml model y x cellValue =
         |> Dom.render
 
 
-cellValueToString : Int -> String
+cellValueToString : Cell -> String
 cellValueToString val =
-    case val of
-        0 ->
-            "impassable"
+    {- if val.hidden then
+           "hidden"
 
-        1 ->
-            "passable"
+       else
+    -}
+    if val.passable then
+        "passable"
 
-        _ ->
-            "hidden"
-
-
-findPlayerByCell : Int -> Int -> List Player -> Maybe Player
-findPlayerByCell x y players =
-    List.head (List.filter (\p -> p.x == x && p.y == y) players)
+    else
+        "impassable"
 
 
-findBoardPieceByCell : Int -> Int -> List MapTile -> Maybe MapTile
-findBoardPieceByCell x y pieces =
-    List.head (List.filter (\p -> p.x == x && p.y == y) pieces)
+
+{-
+   findPlayerByCell : Int -> Int -> List Player -> Maybe Player
+   findPlayerByCell x y players =
+       List.head (List.filter (\p -> p.x == x && p.y == y) players)
 
 
-playerToString : Player -> String
-playerToString player =
-    case player.class of
-        Brute ->
-            "Brute"
+   findBoardPieceByCell : Int -> Int -> List MapTile -> Maybe MapTile
+   findBoardPieceByCell x y pieces =
+       List.head (List.filter (\p -> p.x == x && p.y == y) pieces)
 
-        Cragheart ->
-            "Cragheart"
 
-        Mindthief ->
-            "Mindthief"
+   playerToString : Player -> String
+   playerToString player =
+       case player.class of
+           Brute ->
+               "Brute"
 
-        Scoundrel ->
-            "Scoundrel"
+           Cragheart ->
+               "Cragheart"
 
-        Spellweaver ->
-            "Spellweaver"
+           Mindthief ->
+               "Mindthief"
 
-        Tinkerer ->
-            "Tinkerer"
+           Scoundrel ->
+               "Scoundrel"
+
+           Spellweaver ->
+               "Spellweaver"
+
+           Tinkerer ->
+               "Tinkerer"
+
+-}
+--initScenario : Scenario -> GameData
+--initScenario scenario =
+--GameData (Array.fromList [])
