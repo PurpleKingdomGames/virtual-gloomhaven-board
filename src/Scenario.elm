@@ -91,7 +91,7 @@ mapTileDataToList data maybeTurnAxis =
                 |> List.map (normaliseAndRotateMapTile data.turns refPoint origin)
 
         doorTiles =
-            List.map (mapDoorDataToList refPoint data.turns) data.doors
+            List.map (mapDoorDataToList refPoint origin data.turns) data.doors
                 |> List.concat
 
         allTiles =
@@ -106,27 +106,33 @@ mapTileDataToList data maybeTurnAxis =
     ( allTiles, boundingBox )
 
 
-mapDoorDataToList : ( Int, Int ) -> Int -> DoorData -> List MapTile
-mapDoorDataToList o turns doorData =
+mapDoorDataToList : ( Int, Int ) -> ( Int, Int ) -> Int -> DoorData -> List MapTile
+mapDoorDataToList initRef initOrigin initTurns doorData =
     case doorData of
         DoorLink _ r origin mapTileData ->
             let
                 refPoint =
-                    rotate r o turns
+                    normaliseAndRotatePoint initTurns initRef initOrigin r
             in
             Tuple.first (mapTileDataToList mapTileData (Just ( refPoint, origin )))
 
 
 normaliseAndRotateMapTile : Int -> ( Int, Int ) -> ( Int, Int ) -> MapTile -> MapTile
-normaliseAndRotateMapTile turns ( refPointX, refPointY ) ( originX, originY ) mapTile =
+normaliseAndRotateMapTile turns refPoint origin mapTile =
     let
-        initX =
-            mapTile.x - originX + refPointX
-
-        initY =
-            mapTile.y - originY + refPointY
-
         ( rotatedX, rotatedY ) =
-            Hexagon.rotate ( initX, initY ) ( refPointX, refPointY ) turns
+            normaliseAndRotatePoint turns refPoint origin ( mapTile.x, mapTile.y )
     in
     { mapTile | x = rotatedX, y = rotatedY, turns = turns }
+
+
+normaliseAndRotatePoint : Int -> ( Int, Int ) -> ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
+normaliseAndRotatePoint turns ( refPointX, refPointY ) ( originX, originY ) ( x, y ) =
+    let
+        initX =
+            x - originX + refPointX
+
+        initY =
+            y - originY + refPointY
+    in
+    Hexagon.rotate ( initX, initY ) ( refPointX, refPointY ) turns
