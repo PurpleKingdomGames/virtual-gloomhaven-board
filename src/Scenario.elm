@@ -1,7 +1,7 @@
 module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
 import BoardMapTile exposing (MapTile, MapTileRef, getMapTileListByRef, refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayType(..), DoorSubType)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType)
 import Dict exposing (Dict, empty, singleton, union)
 import Hexagon exposing (rotate)
 import Monster exposing (Monster, MonsterLevel)
@@ -55,7 +55,11 @@ mapTileDataToOverlayList data =
                     (\d ->
                         case d of
                             DoorLink subType ( x, y ) _ _ ->
-                                BoardOverlay (Door subType) ( ( x, y ), Nothing )
+                                let
+                                    dir =
+                                        Default
+                                in
+                                BoardOverlay (Door subType) dir ( ( x, y ), Nothing )
                     )
                     data.doors
             , data.monsters
@@ -91,7 +95,7 @@ mapTileDataToList data maybeTurnAxis =
                 |> List.map (normaliseAndRotateMapTile data.turns refPoint origin)
 
         doorTiles =
-            List.map (mapDoorDataToList refPoint origin data.turns) data.doors
+            List.map (mapDoorDataToList data.ref refPoint origin data.turns) data.doors
                 |> List.concat
 
         allTiles =
@@ -106,15 +110,20 @@ mapTileDataToList data maybeTurnAxis =
     ( allTiles, boundingBox )
 
 
-mapDoorDataToList : ( Int, Int ) -> ( Int, Int ) -> Int -> DoorData -> List MapTile
-mapDoorDataToList initRef initOrigin initTurns doorData =
+mapDoorDataToList : MapTileRef -> ( Int, Int ) -> ( Int, Int ) -> Int -> DoorData -> List MapTile
+mapDoorDataToList prevRef initRefPoint initOrigin initTurns doorData =
     case doorData of
         DoorLink _ r origin mapTileData ->
             let
                 refPoint =
-                    normaliseAndRotatePoint initTurns initRef initOrigin r
+                    normaliseAndRotatePoint initTurns initRefPoint initOrigin r
+
+                doorTile =
+                    MapTile prevRef (Tuple.first refPoint) (Tuple.second refPoint) 0 (Tuple.first refPoint) (Tuple.second refPoint) True True
             in
             Tuple.first (mapTileDataToList mapTileData (Just ( refPoint, origin )))
+                |> List.append
+                    [ doorTile, { doorTile | ref = mapTileData.ref } ]
 
 
 normaliseAndRotateMapTile : Int -> ( Int, Int ) -> ( Int, Int ) -> MapTile -> MapTile

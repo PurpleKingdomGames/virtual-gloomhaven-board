@@ -2,9 +2,9 @@ module Main exposing (main)
 
 import Array exposing (..)
 import BoardMapTile exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayType(..), DoorSubType(..), TrapSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
-import Dom
+import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap)
 import Html exposing (div)
@@ -59,7 +59,7 @@ init _ =
                             3
                         )
                     ]
-                    [ BoardOverlay (Trap BearTrap) ( ( 0, 1 ), Nothing ), BoardOverlay (Trap BearTrap) ( ( 2, 1 ), Nothing ) ]
+                    [ BoardOverlay (Trap BearTrap) Default ( ( 0, 1 ), Nothing ), BoardOverlay (Trap BearTrap) Default ( ( 2, 1 ), Nothing ) ]
                     []
                     3
                 )
@@ -143,6 +143,25 @@ getCellHtml model y x cellValue =
         cellElement =
             Dom.element "div"
                 |> Dom.addClass ("hexagon " ++ cellValueToString cellValue)
+                |> Dom.appendChildList
+                    (List.map overlayToHtml
+                        (List.filter
+                            (\o ->
+                                case o.ref of
+                                    Treasure t ->
+                                        case t of
+                                            Chest _ ->
+                                                True
+
+                                            _ ->
+                                                False
+
+                                    _ ->
+                                        True
+                            )
+                            cellValue.overlays
+                        )
+                    )
 
         {-
            |> Dom.appendChildList
@@ -233,6 +252,24 @@ cellValueToString val =
                "Tinkerer"
 
 -}
---initScenario : Scenario -> GameData
---initScenario scenario =
---GameData (Array.fromList [])
+
+
+overlayToHtml : BoardOverlay -> Element msg
+overlayToHtml overlay =
+    Dom.element "img"
+        |> Dom.addClass "overlay"
+        |> Dom.addClass
+            (case overlay.ref of
+                Treasure _ ->
+                    "treasure"
+
+                Obstacle _ ->
+                    "obstacle"
+
+                Door _ ->
+                    "door"
+
+                Trap _ ->
+                    "trap"
+            )
+        |> Dom.addAttribute (attribute "src" ("/img/overlays/" ++ getBoardOverlayName overlay.ref ++ ".png"))
