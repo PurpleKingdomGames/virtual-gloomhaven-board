@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Array exposing (..)
 import BoardMapTile exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
@@ -49,12 +49,15 @@ init _ =
                         ( 1, -1 )
                         ( 2, 7 )
                         (MapTileData M1a
-                            [ DoorLink Stone ( 0, 0 ) ( 3, 0 ) (MapTileData A4b [] [] [] 5)
+                            [ DoorLink Stone ( 0, 0 ) ( 3, 0 ) (MapTileData A4b [] [ BoardOverlay (Treasure (Chest 67)) Default ( ( 0, 2 ), Nothing ) ] [] 5)
                             , DoorLink Stone ( 5, 0 ) ( 1, 0 ) (MapTileData A2a [] [] [] 1)
                             , DoorLink Stone ( -1, 3 ) ( 4, 1 ) (MapTileData A1a [] [] [] 3)
                             , DoorLink Stone ( 5, 3 ) ( -1, 1 ) (MapTileData A3b [] [] [] 3)
                             ]
-                            []
+                            [ BoardOverlay (Obstacle Sarcophagus) Default ( ( 3, 2 ), Just ( 2, 2 ) )
+                            , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft ( ( 1, 5 ), Just ( 1, 4 ) )
+                            , BoardOverlay (Obstacle Sarcophagus) DiagonalRight ( ( 4, 4 ), Just ( 3, 5 ) )
+                            ]
                             []
                             3
                         )

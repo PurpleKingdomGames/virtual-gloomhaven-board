@@ -119,11 +119,10 @@ mapDoorDataToList prevRef initRefPoint initOrigin initTurns doorData =
                     normaliseAndRotatePoint initTurns initRefPoint initOrigin r
 
                 doorTile =
-                    MapTile prevRef (Tuple.first refPoint) (Tuple.second refPoint) 0 (Tuple.first refPoint) (Tuple.second refPoint) True True
+                    MapTile prevRef (Tuple.first refPoint) (Tuple.second refPoint) initTurns (Tuple.first r) (Tuple.second r) True True
             in
             Tuple.first (mapTileDataToList mapTileData (Just ( refPoint, origin )))
-                |> List.append
-                    [ doorTile, { doorTile | ref = mapTileData.ref } ]
+                |> List.append [ doorTile ]
 
 
 normaliseAndRotateMapTile : Int -> ( Int, Int ) -> ( Int, Int ) -> MapTile -> MapTile

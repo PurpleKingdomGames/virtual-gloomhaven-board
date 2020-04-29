@@ -2,7 +2,7 @@ module GameTests exposing (suite)
 
 import Array exposing (fromList, toList)
 import BoardMapTile exposing (MapTileRef(..))
-import BoardOverlay exposing (BoardOverlay, BoardOverlayType(..), TrapSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), TrapSubType(..))
 import Expect exposing (equalLists)
 import Game exposing (Cell, NumPlayers(..), PieceType(..), generateGameMap)
 import Scenario exposing (MapTileData, Scenario)
@@ -17,7 +17,7 @@ suite =
                 \_ ->
                     let
                         scenario =
-                            Scenario 0 "Test" (MapTileData B3b [] [ BoardOverlay (Trap BearTrap) ( ( 0, 3 ), Nothing ), BoardOverlay (Trap BearTrap) ( ( 2, 3 ), Nothing ) ] [] 0) 0
+                            Scenario 0 "Test" (MapTileData B3b [] [ BoardOverlay (Trap BearTrap) Default ( ( 0, 3 ), Nothing ), BoardOverlay (Trap BearTrap) Default ( ( 2, 3 ), Nothing ) ] [] 0) 0
 
                         expectedBoard =
                             [ fromList
@@ -39,9 +39,9 @@ suite =
                                 , Cell [ ( B3b, False, 0 ) ] True True None []
                                 ]
                             , fromList
-                                [ Cell [ ( B3b, False, 0 ) ] True True None [ BoardOverlay (Trap BearTrap) ( ( 0, 3 ), Nothing ) ]
+                                [ Cell [ ( B3b, False, 0 ) ] True True None [ BoardOverlay (Trap BearTrap) Default ( ( 0, 3 ), Nothing ) ]
                                 , Cell [ ( B3b, False, 0 ) ] True True None []
-                                , Cell [ ( B3b, False, 0 ) ] True True None [ BoardOverlay (Trap BearTrap) ( ( 2, 3 ), Nothing ) ]
+                                , Cell [ ( B3b, False, 0 ) ] True True None [ BoardOverlay (Trap BearTrap) Default ( ( 2, 3 ), Nothing ) ]
                                 , Cell [ ( B3b, False, 0 ) ] True False None []
                                 ]
                             ]
