@@ -2,7 +2,8 @@ module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 
 
 type BoardOverlayType
-    = Door DoorSubType
+    = StartingLocation
+    | Door DoorSubType
     | Trap TrapSubType
     | Obstacle ObstacleSubType
     | Treasure TreasureSubType
@@ -44,6 +45,9 @@ type alias BoardOverlay =
 getBoardOverlayName : BoardOverlayType -> String
 getBoardOverlayName overlay =
     case overlay of
+        StartingLocation ->
+            "starting-location"
+
         Door d ->
             case d of
                 Stone ->

@@ -46,23 +46,31 @@ init _ =
                 "Barrow Lair"
                 (MapTileData B3b
                     [ DoorLink Stone
+                        Default
                         ( 1, -1 )
                         ( 2, 7 )
                         (MapTileData M1a
-                            [ DoorLink Stone ( 0, 0 ) ( 3, 0 ) (MapTileData A4b [] [ BoardOverlay (Treasure (Chest 67)) Default ( ( 0, 2 ), Nothing ) ] [] 5)
-                            , DoorLink Stone ( 5, 0 ) ( 1, 0 ) (MapTileData A2a [] [] [] 1)
-                            , DoorLink Stone ( -1, 3 ) ( 4, 1 ) (MapTileData A1a [] [] [] 3)
-                            , DoorLink Stone ( 5, 3 ) ( -1, 1 ) (MapTileData A3b [] [] [] 3)
+                            [ DoorLink Stone DiagonalRight ( 0, 0 ) ( 3, 0 ) (MapTileData A4b [] [ BoardOverlay (Treasure (Chest 67)) Default ( ( 0, 2 ), Nothing ) ] [] 5)
+                            , DoorLink Stone DiagonalLeft ( 5, 0 ) ( 1, 0 ) (MapTileData A2a [] [] [] 1)
+                            , DoorLink Stone Vertical ( -1, 3 ) ( 4, 1 ) (MapTileData A1a [] [] [] 3)
+                            , DoorLink Stone Vertical ( 5, 3 ) ( -1, 1 ) (MapTileData A3b [] [] [] 3)
                             ]
                             [ BoardOverlay (Obstacle Sarcophagus) Default ( ( 3, 2 ), Just ( 2, 2 ) )
                             , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft ( ( 1, 5 ), Just ( 1, 4 ) )
-                            , BoardOverlay (Obstacle Sarcophagus) DiagonalRight ( ( 4, 4 ), Just ( 3, 5 ) )
+                            , BoardOverlay (Obstacle Sarcophagus) DiagonalRight ( ( 3, 5 ), Just ( 4, 4 ) )
                             ]
                             []
                             3
                         )
                     ]
-                    [ BoardOverlay (Trap BearTrap) Default ( ( 0, 1 ), Nothing ), BoardOverlay (Trap BearTrap) Default ( ( 2, 1 ), Nothing ) ]
+                    [ BoardOverlay (Trap BearTrap) Default ( ( 0, 1 ), Nothing )
+                    , BoardOverlay (Trap BearTrap) Default ( ( 2, 1 ), Nothing )
+                    , BoardOverlay StartingLocation Default ( ( 0, 3 ), Nothing )
+                    , BoardOverlay StartingLocation Default ( ( 1, 3 ), Nothing )
+                    , BoardOverlay StartingLocation Default ( ( 2, 3 ), Nothing )
+                    , BoardOverlay StartingLocation Default ( ( 1, 2 ), Nothing )
+                    , BoardOverlay StartingLocation Default ( ( 2, 2 ), Nothing )
+                    ]
                     []
                     3
                 )
@@ -147,7 +155,7 @@ getCellHtml model y x cellValue =
             Dom.element "div"
                 |> Dom.addClass ("hexagon " ++ cellValueToString cellValue)
                 |> Dom.appendChildList
-                    (List.map overlayToHtml
+                    (List.map (overlayToHtml x y)
                         (List.filter
                             (\o ->
                                 case o.ref of
@@ -257,12 +265,15 @@ cellValueToString val =
 -}
 
 
-overlayToHtml : BoardOverlay -> Element msg
-overlayToHtml overlay =
+overlayToHtml : Int -> Int -> BoardOverlay -> Element msg
+overlayToHtml x y overlay =
     Dom.element "img"
         |> Dom.addClass "overlay"
         |> Dom.addClass
             (case overlay.ref of
+                StartingLocation ->
+                    "start-location"
+
                 Treasure _ ->
                     "treasure"
 
@@ -275,4 +286,67 @@ overlayToHtml overlay =
                 Trap _ ->
                     "trap"
             )
-        |> Dom.addAttribute (attribute "src" ("/img/overlays/" ++ getBoardOverlayName overlay.ref ++ ".png"))
+        |> Dom.addClass
+            (case overlay.direction of
+                Default ->
+                    ""
+
+                Vertical ->
+                    "vertical"
+
+                Horizontal ->
+                    "horizontal"
+
+                DiagonalRight ->
+                    "diagonal-right"
+
+                DiagonalLeft ->
+                    "diagonal-left"
+            )
+        |> Dom.addAttribute (attribute "src" (getOverlayImageName overlay x y))
+
+
+getOverlayImageName : BoardOverlay -> Int -> Int -> String
+getOverlayImageName overlay x y =
+    let
+        path =
+            "/img/overlays/"
+
+        overlayName =
+            getBoardOverlayName overlay.ref
+
+        extension =
+            ".png"
+
+        extendedOverlayName =
+            case overlay.ref of
+                Door d ->
+                    case d of
+                        Stone ->
+                            if overlay.direction == Vertical then
+                                "-vert"
+
+                            else
+                                ""
+
+                Obstacle o ->
+                    case o of
+                        Sarcophagus ->
+                            ""
+
+                _ ->
+                    ""
+
+        segmentPart =
+            case Tuple.second overlay.cells of
+                Just ( overlayX, overlayY ) ->
+                    if overlayX == x && overlayY == y then
+                        "-2"
+
+                    else
+                        ""
+
+                Nothing ->
+                    ""
+    in
+    path ++ overlayName ++ extendedOverlayName ++ segmentPart ++ extension

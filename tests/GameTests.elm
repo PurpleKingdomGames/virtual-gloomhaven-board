@@ -48,5 +48,40 @@ suite =
                     in
                     toList (Game.generateGameMap scenario ThreePlayer)
                         |> Expect.equalLists expectedBoard
+            , test "should output a rotated single board" <|
+                \_ ->
+                    let
+                        scenario =
+                            Scenario 0 "Test" (MapTileData B3b [] [ BoardOverlay (Trap BearTrap) Default ( ( 0, 3 ), Just ( 1, 3 ) ), BoardOverlay (Trap BearTrap) Default ( ( 2, 3 ), Nothing ) ] [] 3) 0
+
+                        expectedBoard =
+                            [ fromList
+                                [ Cell [ ( B3b, False, 0 ) ] True False None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None [ BoardOverlay (Trap BearTrap) Default ( ( 2, 3 ), Nothing ) ]
+                                , Cell [ ( B3b, False, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None [ BoardOverlay (Trap BearTrap) Default ( ( 0, 3 ), Nothing ) ]
+                                ]
+                            , fromList
+                                [ Cell [ ( B3b, True, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None []
+                                ]
+                            , fromList
+                                [ Cell [ ( B3b, False, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True False None []
+                                ]
+                            , fromList
+                                [ Cell [ ( B3b, False, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None []
+                                , Cell [ ( B3b, False, 0 ) ] True True None []
+                                ]
+                            ]
+                    in
+                    toList (Game.generateGameMap scenario ThreePlayer)
+                        |> Expect.equalLists expectedBoard
             ]
         ]

@@ -25,7 +25,7 @@ type alias MapTileData =
 
 
 type DoorData
-    = DoorLink DoorSubType ( Int, Int ) ( Int, Int ) MapTileData
+    = DoorLink DoorSubType BoardOverlayDirectionType ( Int, Int ) ( Int, Int ) MapTileData
 
 
 type alias ScenarioMonster =
@@ -54,11 +54,7 @@ mapTileDataToOverlayList data =
                 ++ List.map
                     (\d ->
                         case d of
-                            DoorLink subType ( x, y ) _ _ ->
-                                let
-                                    dir =
-                                        Default
-                                in
+                            DoorLink subType dir ( x, y ) _ _ ->
                                 BoardOverlay (Door subType) dir ( ( x, y ), Nothing )
                     )
                     data.doors
@@ -70,7 +66,7 @@ mapTileDataToOverlayList data =
             List.map
                 (\d ->
                     case d of
-                        DoorLink _ _ _ map ->
+                        DoorLink _ _ _ _ map ->
                             mapTileDataToOverlayList map
                 )
                 data.doors
@@ -113,7 +109,7 @@ mapTileDataToList data maybeTurnAxis =
 mapDoorDataToList : MapTileRef -> ( Int, Int ) -> ( Int, Int ) -> Int -> DoorData -> List MapTile
 mapDoorDataToList prevRef initRefPoint initOrigin initTurns doorData =
     case doorData of
-        DoorLink _ r origin mapTileData ->
+        DoorLink _ _ r origin mapTileData ->
             let
                 refPoint =
                     normaliseAndRotatePoint initTurns initRefPoint initOrigin r

@@ -1,7 +1,7 @@
 module ScenarioTests exposing (suite)
 
 import BoardMapTile exposing (MapTile, MapTileRef(..))
-import BoardOverlay exposing (DoorSubType(..))
+import BoardOverlay exposing (BoardOverlayDirectionType(..), DoorSubType(..))
 import Expect exposing (equal, equalLists)
 import Scenario exposing (BoardBounds, DoorData(..), MapTileData, mapTileDataToList)
 import Test exposing (Test, describe, test)
@@ -72,7 +72,7 @@ suite =
                             MapTileData A1a [] [] [] 0
 
                         tileData =
-                            MapTileData M1a [ DoorLink Stone ( 2, 7 ) ( 1, 0 ) a1aData ] [] [] 0
+                            MapTileData M1a [ DoorLink Stone Default ( 2, 7 ) ( 1, 0 ) a1aData ] [] [] 0
 
                         expectedResult =
                             [ MapTile M1a 0 0 0 0 0 False True
@@ -117,6 +117,7 @@ suite =
                             , MapTile M1a 3 6 0 3 6 True True
                             , MapTile M1a 4 6 0 4 6 True True
                             , MapTile M1a 5 6 0 5 6 False True
+                            , MapTile M1a 2 7 0 2 7 True True
                             , MapTile A1a 1 7 0 0 0 False True
                             , MapTile A1a 2 7 0 1 0 False True
                             , MapTile A1a 3 7 0 2 0 False True
@@ -149,7 +150,7 @@ suite =
                             MapTileData A1a [] [] [] 1
 
                         tileData =
-                            MapTileData M1a [ DoorLink Stone ( 0, 6 ) ( 1, 0 ) a1aData ] [] [] 0
+                            MapTileData M1a [ DoorLink Stone Default ( 0, 6 ) ( 1, 0 ) a1aData ] [] [] 0
 
                         expectedResult =
                             [ MapTile M1a 0 0 0 0 0 False True
@@ -194,6 +195,7 @@ suite =
                             , MapTile M1a 3 6 0 3 6 True True
                             , MapTile M1a 4 6 0 4 6 True True
                             , MapTile M1a 5 6 0 5 6 False True
+                            , MapTile M1a 0 6 0 0 6 True True
                             , MapTile A1a -1 5 1 0 0 False True
                             , MapTile A1a 0 6 1 1 0 False True
                             , MapTile A1a 0 7 1 2 0 False True
@@ -226,7 +228,7 @@ suite =
                             MapTileData A1a [] [] [] 4
 
                         tileData =
-                            MapTileData M1a [ DoorLink Stone ( 0, 6 ) ( 1, 0 ) a1aData ] [] [] 3
+                            MapTileData M1a [ DoorLink Stone Default ( 0, 6 ) ( 1, 0 ) a1aData ] [] [] 3
 
                         expectedResult =
                             [ MapTile M1a 0 0 3 0 0 False True
@@ -271,6 +273,7 @@ suite =
                             , MapTile M1a -3 -6 3 3 6 True True
                             , MapTile M1a -4 -6 3 4 6 True True
                             , MapTile M1a -5 -6 3 5 6 False True
+                            , MapTile M1a 0 -6 3 0 6 True True -- Door tile
                             , MapTile A1a 0 -5 4 0 0 False True
                             , MapTile A1a 0 -6 4 1 0 False True
                             , MapTile A1a -1 -7 4 2 0 False True
@@ -303,7 +306,7 @@ suite =
                             MapTileData A1a [] [] [] 1
 
                         tileData =
-                            MapTileData M1a [ DoorLink Stone ( 0, 6 ) ( 1, 0 ) a1aData ] [] [] 0
+                            MapTileData M1a [ DoorLink Stone Default ( 0, 6 ) ( 1, 0 ) a1aData ] [] [] 0
 
                         expectedResult =
                             BoardBounds -3 5 0 11

@@ -6,7 +6,7 @@ import BoardMapTile exposing (MapTile, MapTileRef, refToString)
 import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass)
 import Dict exposing (Dict, get)
-import List exposing (filter, head)
+import List exposing (filter, head, map)
 import Monster exposing (Monster, MonsterLevel(..))
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
@@ -105,6 +105,7 @@ setCellFromMapTile initialArr numPlayers overlays offsetX offsetY tile =
 
         filteredOverlays =
             filter (filterByCoord tile.originalX tile.originalY) boardOverlays
+                |> map (mapOverlayCoord tile.originalX tile.originalY x y)
 
         piece =
             let
@@ -212,3 +213,25 @@ filterByCoord x y overlay =
 
             Nothing ->
                 False
+
+
+mapOverlayCoord : Int -> Int -> Int -> Int -> BoardOverlay -> BoardOverlay
+mapOverlayCoord originalX originalY newX newY overlay =
+    let
+        ( firstX, firstY ) =
+            Tuple.first overlay.cells
+    in
+    if originalX == firstX && originalY == firstY then
+        { overlay | cells = ( ( newX, newY ), Tuple.second overlay.cells ) }
+
+    else
+        case Tuple.second overlay.cells of
+            Just ( secondX, secondY ) ->
+                if originalX == secondX && originalY == secondY then
+                    { overlay | cells = ( Tuple.first overlay.cells, Just ( newX, newY ) ) }
+
+                else
+                    overlay
+
+            Nothing ->
+                overlay

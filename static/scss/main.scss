@@ -172,6 +172,14 @@ $hexRotation: 60deg;
                     height: 100%;
                     position:relative;
                     clip-path:inherit;
+
+                    &.diagonal-right {
+                        transform: rotate(120deg);
+                    }
+
+                    &.diagonal-left {
+                        transform: rotate(60deg);
+                    }
                 }
             }
         }
