@@ -6,12 +6,12 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Browser
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap)
+import Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap, getPieceName, getPieceType)
 import Html exposing (div)
 import Html.Attributes exposing (attribute, class, src)
 import List exposing (filter, head)
-import Monster exposing (Monster)
-import Scenario exposing (DoorData(..), MapTileData, Scenario)
+import Monster exposing (Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), getMonsterName)
+import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
 
 
 type alias Model =
@@ -59,7 +59,8 @@ init _ =
                             , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft ( ( 1, 5 ), Just ( 1, 4 ) )
                             , BoardOverlay (Obstacle Sarcophagus) DiagonalRight ( ( 3, 5 ), Just ( 4, 4 ) )
                             ]
-                            []
+                            [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 0 0 Normal Normal Normal
+                            ]
                             3
                         )
                     ]
@@ -71,7 +72,11 @@ init _ =
                     , BoardOverlay StartingLocation Default ( ( 1, 2 ), Nothing )
                     , BoardOverlay StartingLocation Default ( ( 2, 2 ), Nothing )
                     ]
-                    []
+                    [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 0 0 Normal Normal Normal
+                    , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 1 0 Monster.None Monster.None Normal
+                    , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 2 0 Monster.None Normal Normal
+                    , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 3 0 Normal Normal Normal
+                    ]
                     3
                 )
                 0
@@ -173,6 +178,14 @@ getCellHtml model y x cellValue =
                             cellValue.overlays
                         )
                     )
+                |> Dom.appendChildList
+                    (case cellValue.piece of
+                        Game.None ->
+                            []
+
+                        p ->
+                            [ pieceToHtml p ]
+                    )
 
         {-
            |> Dom.appendChildList
@@ -263,6 +276,61 @@ cellValueToString val =
                "Tinkerer"
 
 -}
+
+
+pieceToHtml : PieceType -> Element msg
+pieceToHtml piece =
+    Dom.element "div"
+        |> Dom.addClass (getPieceType piece)
+        |> Dom.addClass (getPieceName piece)
+        |> (case piece of
+                Player _ ->
+                    Dom.appendChild (Dom.element "div")
+
+                AI t ->
+                    case t of
+                        Enemy m ->
+                            enemyToHtml m
+
+                        Summons _ ->
+                            Dom.appendChild (Dom.element "div")
+
+                Game.None ->
+                    Dom.addClass "none"
+           )
+
+
+enemyToHtml : Monster -> Element msg -> Element msg
+enemyToHtml monster element =
+    let
+        class =
+            case monster.monster of
+                NormalType _ ->
+                    case monster.level of
+                        Elite ->
+                            "elite"
+
+                        Normal ->
+                            "normal"
+
+                        Monster.None ->
+                            ""
+
+                BossType _ ->
+                    "boss"
+    in
+    element
+        |> Dom.addClass class
+        |> Dom.appendChild
+            (Dom.element "img"
+                |> Dom.addAttribute
+                    (attribute "src"
+                        ("/img/monsters/"
+                            ++ getMonsterName monster.monster
+                            ++ ".png"
+                        )
+                    )
+            )
 
 
 overlayToHtml : Int -> Int -> BoardOverlay -> Element msg

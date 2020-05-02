@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap)
+module Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap, getPieceName, getPieceType)
 
 import Array exposing (Array, get, initialize, set)
 import Bitwise exposing (and)
@@ -7,7 +7,7 @@ import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass)
 import Dict exposing (Dict, get)
 import List exposing (filter, head, map)
-import Monster exposing (Monster, MonsterLevel(..))
+import Monster exposing (Monster, MonsterLevel(..), getMonsterName)
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
 
@@ -35,6 +35,42 @@ type alias Cell =
     , piece : PieceType
     , overlays : List BoardOverlay
     }
+
+
+getPieceType : PieceType -> String
+getPieceType piece =
+    case piece of
+        Player _ ->
+            "player"
+
+        AI t ->
+            case t of
+                Summons _ ->
+                    "summons"
+
+                Enemy _ ->
+                    "monster"
+
+        None ->
+            ""
+
+
+getPieceName : PieceType -> String
+getPieceName piece =
+    case piece of
+        Player p ->
+            ""
+
+        AI t ->
+            case t of
+                Summons p ->
+                    ""
+
+                Enemy e ->
+                    getMonsterName e.monster
+
+        None ->
+            ""
 
 
 generateGameMap : Scenario -> NumPlayers -> Array (Array Cell)
