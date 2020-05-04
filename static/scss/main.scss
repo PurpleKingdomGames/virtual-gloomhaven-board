@@ -1,7 +1,7 @@
 $hexRotation: 60deg;
 
 @font-face {
-    font-family: 'PirataOne';
+    font-family: 'PirateOne';
     src: url('/fonts/PirataOne-Gloomhaven.eot');
     src: url('/fonts/PirataOne-Gloomhaven.woff2') format('woff2'),url('/fonts/PirataOne-Gloomhaven.woff') format('woff'), url('/fonts/PirataOne-Gloomhaven.ttf') format('truetype'), url('/fonts/PirataOne-Gloomhaven.svg') format('svg');
 }
@@ -203,9 +203,13 @@ $hexRotation: 60deg;
 
                         span {
                             position: absolute;
-                            top: 70px;
-                            left: 33px;
+                            top: 69px;
+                            left: 34px;
                             z-index: 2;
+                        }
+
+                        &.boss span {
+                            color: white;
                         }
 
                         &:after {
@@ -214,13 +218,22 @@ $hexRotation: 60deg;
                             height: 100%;
                             position: absolute;
                             display: block;
-                            top: 0;
+                            top: 1px;
                             left: 0;
                             background-size: contain;
+                            background-repeat: no-repeat;
                         }
 
                         &.normal:after {
                             background-image: url("/img/monsters/normal-border.png");
+                        }
+
+                        &.elite:after {
+                            background-image: url("/img/monsters/elite-border.png");
+                        }
+
+                        &.boss:after {
+                            background-image: url("/img/monsters/boss-border.png");
                         }
                     }
                 }
