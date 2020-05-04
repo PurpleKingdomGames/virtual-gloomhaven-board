@@ -10,7 +10,7 @@ import Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateG
 import Html exposing (div)
 import Html.Attributes exposing (attribute, class, src)
 import List exposing (filter, head)
-import Monster exposing (Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), getMonsterName)
+import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), getMonsterName)
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
 
 
@@ -59,7 +59,9 @@ init _ =
                             , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft ( ( 1, 5 ), Just ( 1, 4 ) )
                             , BoardOverlay (Obstacle Sarcophagus) DiagonalRight ( ( 3, 5 ), Just ( 4, 4 ) )
                             ]
-                            [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 0 0 Normal Normal Normal
+                            [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 1 1 Elite Elite Elite
+                            , ScenarioMonster (Monster (BossType BanditCommander) 0 Normal) 2 1 Normal Normal Normal
+                            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 3 1 Monster.None Normal Elite
                             ]
                             3
                         )
@@ -321,8 +323,8 @@ enemyToHtml monster element =
     in
     element
         |> Dom.addClass class
-        |> Dom.appendChild
-            (Dom.element "img"
+        |> Dom.appendChildList
+            [ Dom.element "img"
                 |> Dom.addAttribute
                     (attribute "src"
                         ("/img/monsters/"
@@ -330,7 +332,9 @@ enemyToHtml monster element =
                             ++ ".png"
                         )
                     )
-            )
+            , Dom.element "span"
+                |> Dom.appendText (String.fromInt monster.id)
+            ]
 
 
 overlayToHtml : Int -> Int -> BoardOverlay -> Element msg
