@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap, getPieceName, getPieceType)
+module Game exposing (AIType(..), Game, GameState, NumPlayers(..), PieceType(..), generateGameMap, getPieceName, getPieceType)
 
 import Array exposing (Array, get, initialize, set)
 import Bitwise exposing (and)
@@ -6,6 +6,7 @@ import BoardMapTile exposing (MapTile, MapTileRef, refToString)
 import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass)
 import Dict exposing (Dict, get)
+import Hexagon exposing (cubeToOddRow, oddRowToCube)
 import List exposing (filter, head, map)
 import Monster exposing (Monster, MonsterLevel(..), getMonsterName)
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
@@ -28,12 +29,25 @@ type PieceType
     | AI AIType
 
 
-type alias Cell =
-    { rooms : List ( MapTileRef, Bool, Int )
-    , hidden : Bool
-    , passable : Bool
-    , piece : PieceType
+type alias Piece =
+    { ref : PieceType
+    , x : Int
+    , y : Int
+    }
+
+
+type alias Game =
+    { state : GameState
+    , staticBoard : Array (Array Bool)
+    }
+
+
+type alias GameState =
+    { scenario : Int
+    , numPlayers : NumPlayers
+    , visibleRooms : List MapTileRef
     , overlays : List BoardOverlay
+    , pieces : List Piece
     }
 
 
@@ -73,17 +87,25 @@ getPieceName piece =
             ""
 
 
-generateGameMap : Scenario -> NumPlayers -> Array (Array Cell)
+generateGameMap : Scenario -> NumPlayers -> Game
 generateGameMap scenario numPlayers =
     let
         ( mapTiles, bounds ) =
             mapTileDataToList scenario.mapTilesData Nothing
 
-        overlays =
+        initGameState =
+            GameState scenario.id
+                numPlayers
+                []
+                []
+                []
+
+        initOverlays =
             mapTileDataToOverlayList scenario.mapTilesData
 
-        -- Build a square array capable of holding the whole map
-        -- We add 2 to account for the zero index, and also row drift if the original started on a non-even row
+        {- Build a square array capable of holding the whole map
+           We add 2 to account for the zero index, and also row drift if the original started on a non-even row
+        -}
         arrSize =
             max (abs (bounds.maxX - bounds.minX)) (abs (bounds.maxY - bounds.minY))
                 + 1
@@ -103,27 +125,28 @@ generateGameMap scenario numPlayers =
                 bounds.minY
 
         initMap =
-            initialize arrSize (always (initialize arrSize (always (Cell [] True False None []))))
+            initialize arrSize (always (initialize arrSize (always False)))
     in
-    setCellsFromMapTiles mapTiles numPlayers overlays bounds.minX offsetY initMap
+    setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY ( initGameState, initMap )
 
 
-setCellsFromMapTiles : List MapTile -> NumPlayers -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> Array (Array Cell) -> Array (Array Cell)
-setCellsFromMapTiles mapTileList numPlayers overlays offsetX offsetY cellArr =
+setCellsFromMapTiles : List MapTile -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> ( GameState, Array (Array Bool) ) -> Game
+setCellsFromMapTiles mapTileList overlays offsetX offsetY ( gamestate, cellArr ) =
     case mapTileList of
         [] ->
-            cellArr
+            Game gamestate cellArr
 
         [ last ] ->
-            setCellFromMapTile cellArr numPlayers overlays offsetX offsetY last
+            setCellFromMapTile cellArr gamestate overlays offsetX offsetY last
+                |> setCellsFromMapTiles [] overlays offsetX offsetY
 
         head :: rest ->
-            setCellFromMapTile cellArr numPlayers overlays offsetX offsetY head
-                |> setCellsFromMapTiles rest numPlayers overlays offsetX offsetY
+            setCellFromMapTile cellArr gamestate overlays offsetX offsetY head
+                |> setCellsFromMapTiles rest overlays offsetX offsetY
 
 
-setCellFromMapTile : Array (Array Cell) -> NumPlayers -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> MapTile -> Array (Array Cell)
-setCellFromMapTile initialArr numPlayers overlays offsetX offsetY tile =
+setCellFromMapTile : Array (Array Bool) -> GameState -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> MapTile -> ( GameState, Array (Array Bool) )
+setCellFromMapTile initialArr gamestate overlays offsetX offsetY tile =
     let
         x =
             tile.x - offsetX
@@ -131,80 +154,64 @@ setCellFromMapTile initialArr numPlayers overlays offsetX offsetY tile =
         y =
             tile.y - offsetY
 
-        ( boardOverlays, monsters ) =
+        ( boardOverlays, piece ) =
             case Dict.get (refToString tile.ref) overlays of
-                Just v ->
-                    v
+                Just ( o, m ) ->
+                    ( filter (filterByCoord tile.originalX tile.originalY) o
+                        |> map (mapOverlayCoord tile.originalX tile.originalY x y)
+                    , filter (filterMonsterLevel gamestate.numPlayers) m
+                        |> filter (\f -> f.initialX == tile.originalX && f.initialY == tile.originalY)
+                        |> head
+                        |> getPieceFromMonster gamestate.numPlayers
+                        |> map (mapPieceCoord tile.originalX tile.originalY x y)
+                    )
 
                 Nothing ->
                     ( [], [] )
 
-        filteredOverlays =
-            filter (filterByCoord tile.originalX tile.originalY) boardOverlays
-                |> map (mapOverlayCoord tile.originalX tile.originalY x y)
+        newGameState =
+            { gamestate
+                | overlays = gamestate.overlays ++ boardOverlays
+                , pieces =
+                    gamestate.pieces
+                        ++ (case piece of
+                                None ->
+                                    []
 
-        piece =
-            let
-                maybePiece =
-                    filter (filterMonsterLevel numPlayers) monsters
-                        |> filter (\m -> m.initialX == tile.originalX && m.initialY == tile.originalY)
-                        |> head
-            in
-            case maybePiece of
-                Just p ->
-                    let
-                        m =
-                            p.monster
-                    in
-                    AI (Enemy { m | level = getLevelForMonster numPlayers p })
-
-                Nothing ->
-                    None
+                                p ->
+                                    [ p ]
+                           )
+            }
 
         rowArr =
             Array.get y initialArr
-    in
-    case rowArr of
-        Just yRow ->
-            let
-                cell =
-                    Array.get x yRow
-            in
-            case cell of
-                Just foundCell ->
-                    let
-                        newCell =
-                            { foundCell
-                                | rooms = ( tile.ref, tile.originalX == 0 && tile.originalY == 0, tile.turns ) :: foundCell.rooms
-                                , hidden =
-                                    if foundCell.hidden then
-                                        tile.hidden
 
-                                    else
-                                        False
-                                , passable =
-                                    if foundCell.passable == False then
+        newBoard =
+            case rowArr of
+                Just yRow ->
+                    let
+                        cell =
+                            Array.get x yRow
+                    in
+                    case cell of
+                        Just foundCell ->
+                            let
+                                newCell =
+                                    if foundCell == False then
                                         tile.passable
 
                                     else
                                         True
-                                , overlays =
-                                    foundCell.overlays ++ filteredOverlays
-                                , piece =
-                                    if foundCell.piece == None then
-                                        piece
+                            in
+                            set y (set x newCell yRow) initialArr
 
-                                    else
-                                        foundCell.piece
-                            }
-                    in
-                    set y (set x newCell yRow) initialArr
+                        Nothing ->
+                            initialArr
 
                 Nothing ->
                     initialArr
-
-        Nothing ->
-            initialArr
+    in
+    ( newGameState, newBoard )
 
 
 filterMonsterLevel : NumPlayers -> ScenarioMonster -> Bool
@@ -233,41 +240,60 @@ getLevelForMonster numPlayers monster =
             monster.fourPlayer
 
 
+getPieceFromMonster : NumPlayers -> Maybe ScenarioMonster -> Piece
+getPieceFromMonster numPlayers monster =
+    case monster of
+        Just p ->
+            let
+                m =
+                    p.monster
+            in
+            Piece (AI (Enemy { m | level = getLevelForMonster numPlayers p })) p.initialX p.initialY
+
+        Nothing ->
+            None
+
+
 filterByCoord : Int -> Int -> BoardOverlay -> Bool
 filterByCoord x y overlay =
     let
-        ( ( overlayX, overlayY ), maybeSecondCoords ) =
+        ( ( overlayX, overlayY ), _ ) =
             overlay.cells
     in
-    if overlayX == x && overlayY == y then
-        True
+    overlayX == x && overlayY == y
 
-    else
-        case maybeSecondCoords of
-            Just ( otherX, otherY ) ->
-                otherX == x && otherY == y
 
-            Nothing ->
-                False
+mapPieceCoord : Int -> Int -> Int -> Int -> Piece -> Piece
+mapPieceCoord originalX originalY newX newY piece =
+    piece
 
 
 mapOverlayCoord : Int -> Int -> Int -> Int -> BoardOverlay -> BoardOverlay
 mapOverlayCoord originalX originalY newX newY overlay =
     let
-        ( firstX, firstY ) =
-            Tuple.first overlay.cells
+        ( oX, oY, oZ ) =
+            oddRowToCube ( originalX, originalY )
+
+        ( nX, nY, nZ ) =
+            cubeToOddRow ( newX, newY )
+
+        diffX =
+            nX - oX
+
+        diffY =
+            nY - oY
+
+        diffZ =
+            nZ - oZ
     in
-    if originalX == firstX && originalY == firstY then
-        { overlay | cells = ( ( newX, newY ), Tuple.second overlay.cells ) }
-
-    else
-        case Tuple.second overlay.cells of
-            Just ( secondX, secondY ) ->
-                if originalX == secondX && originalY == secondY then
-                    { overlay | cells = ( Tuple.first overlay.cells, Just ( newX, newY ) ) }
-
-                else
-                    overlay
-
-            Nothing ->
-                overlay
+    { overlay
+        | cells =
+            map
+                (\c ->
+                    let
+                        ( x1, y1, z1 ) =
+                            oddRowToCube c
+                    in
+                    cubeToOddRow ( diffX + x1, diffY + y1, diffZ + z1 )
+                )
+    }

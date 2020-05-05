@@ -1,4 +1,4 @@
-module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 
 
 type BoardOverlayType
@@ -22,9 +22,14 @@ type ObstacleSubType
 
 
 type TreasureSubType
-    = Chest Int
+    = Chest ChestType
     | Coin
     | Loot Int
+
+
+type ChestType
+    = NormalChest Int
+    | Goal
 
 
 type BoardOverlayDirectionType
@@ -38,7 +43,7 @@ type BoardOverlayDirectionType
 type alias BoardOverlay =
     { ref : BoardOverlayType
     , direction : BoardOverlayDirectionType
-    , cells : ( ( Int, Int ), Maybe ( Int, Int ) )
+    , cells : List ( Int, Int )
     }
 
 

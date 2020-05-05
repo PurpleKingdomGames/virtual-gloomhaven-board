@@ -55,7 +55,7 @@ mapTileDataToOverlayList data =
                     (\d ->
                         case d of
                             DoorLink subType dir ( x, y ) _ _ ->
-                                BoardOverlay (Door subType) dir ( ( x, y ), Nothing )
+                                BoardOverlay (Door subType) dir [ ( x, y ) ]
                     )
                     data.doors
             , data.monsters

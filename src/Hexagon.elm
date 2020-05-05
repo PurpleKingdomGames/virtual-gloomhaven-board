@@ -1,4 +1,4 @@
-module Hexagon exposing (rotate)
+module Hexagon exposing (cubeToOddRow, oddRowToCube, rotate)
 
 import Bitwise exposing (and)
 
@@ -57,18 +57,3 @@ oddRowToCube ( x, y ) =
     , -newX - y
     , y
     )
-
-
-
-{-
-   function cube_to_oddr(cube):
-          var col = cube.x + (cube.z - (cube.z&1)) / 2
-          var row = cube.z
-          return OffsetCoord(col, row)
-
-      function oddr_to_cube(hex):
-          var x = hex.col - (hex.row - (hex.row&1)) / 2
-          var z = hex.row
-          var y = -x-z
-          return Cube(x, y, z)
--}

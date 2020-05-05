@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Array exposing (..)
 import BoardMapTile exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
@@ -50,18 +50,65 @@ init _ =
                         ( 1, -1 )
                         ( 2, 7 )
                         (MapTileData M1a
-                            [ DoorLink Stone DiagonalRight ( 0, 0 ) ( 3, 0 ) (MapTileData A4b [] [ BoardOverlay (Treasure (Chest 67)) Default ( ( 0, 2 ), Nothing ) ] [] 5)
-                            , DoorLink Stone DiagonalLeft ( 5, 0 ) ( 1, 0 ) (MapTileData A2a [] [] [] 1)
-                            , DoorLink Stone Vertical ( -1, 3 ) ( 4, 1 ) (MapTileData A1a [] [] [] 3)
-                            , DoorLink Stone Vertical ( 5, 3 ) ( -1, 1 ) (MapTileData A3b [] [] [] 3)
+                            [ DoorLink Stone
+                                DiagonalRight
+                                ( 0, 0 )
+                                ( 3, 0 )
+                                (MapTileData A4b
+                                    []
+                                    [ BoardOverlay (Treasure (Chest (NormalChest 67))) Default ( ( 0, 2 ), Nothing )
+                                    ]
+                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 3 Normal) 0 1 Monster.None Normal Elite
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 1 Normal) 1 2 Elite Elite Elite
+                                    ]
+                                    5
+                                )
+                            , DoorLink Stone
+                                DiagonalLeft
+                                ( 5, 0 )
+                                ( 1, 0 )
+                                (MapTileData A2a
+                                    []
+                                    []
+                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 6 Normal) 3 1 Monster.None Normal Elite
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 2 Normal) 3 2 Elite Elite Elite
+                                    ]
+                                    1
+                                )
+                            , DoorLink Stone
+                                Vertical
+                                ( -1, 3 )
+                                ( 4, 1 )
+                                (MapTileData A1a
+                                    []
+                                    []
+                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 1 Normal) 1 1 Monster.None Normal Elite
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 3 Normal) 1 2 Normal Normal Normal
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 6 Normal) 2 2 Normal Normal Normal
+                                    ]
+                                    3
+                                )
+                            , DoorLink Stone
+                                Vertical
+                                ( 5, 3 )
+                                ( -1, 1 )
+                                (MapTileData A3b
+                                    []
+                                    []
+                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 3 Normal) 2 1 Monster.None Normal Elite
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 2 Normal) 2 2 Normal Normal Normal
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 5 Normal) 3 2 Normal Normal Normal
+                                    ]
+                                    3
+                                )
                             ]
                             [ BoardOverlay (Obstacle Sarcophagus) Default ( ( 3, 2 ), Just ( 2, 2 ) )
                             , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft ( ( 1, 5 ), Just ( 1, 4 ) )
                             , BoardOverlay (Obstacle Sarcophagus) DiagonalRight ( ( 3, 5 ), Just ( 4, 4 ) )
                             ]
-                            [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 1 1 Elite Elite Elite
-                            , ScenarioMonster (Monster (BossType BanditCommander) 0 Normal) 2 1 Normal Normal Normal
-                            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 3 1 Monster.None Normal Elite
+                            [ ScenarioMonster (Monster (NormalType BanditArcher) 6 Normal) 1 1 Elite Elite Elite
+                            , ScenarioMonster (Monster (BossType BanditCommander) 1 Normal) 2 1 Normal Normal Normal
+                            , ScenarioMonster (Monster (NormalType BanditArcher) 4 Normal) 3 1 Monster.None Normal Elite
                             ]
                             3
                         )
@@ -74,10 +121,10 @@ init _ =
                     , BoardOverlay StartingLocation Default ( ( 1, 2 ), Nothing )
                     , BoardOverlay StartingLocation Default ( ( 2, 2 ), Nothing )
                     ]
-                    [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 0 0 Normal Normal Normal
-                    , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 1 0 Monster.None Monster.None Normal
-                    , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 2 0 Monster.None Normal Normal
-                    , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 3 0 Normal Normal Normal
+                    [ ScenarioMonster (Monster (NormalType BanditArcher) 5 Monster.None) 0 0 Normal Normal Normal
+                    , ScenarioMonster (Monster (NormalType BanditArcher) 2 Monster.None) 1 0 Monster.None Monster.None Normal
+                    , ScenarioMonster (Monster (NormalType BanditArcher) 3 Monster.None) 2 0 Monster.None Normal Normal
+                    , ScenarioMonster (Monster (NormalType BanditArcher) 1 Monster.None) 3 0 Normal Normal Normal
                     ]
                     3
                 )
@@ -339,7 +386,7 @@ enemyToHtml monster element =
 
 overlayToHtml : Int -> Int -> BoardOverlay -> Element msg
 overlayToHtml x y overlay =
-    Dom.element "img"
+    Dom.element "div"
         |> Dom.addClass "overlay"
         |> Dom.addClass
             (case overlay.ref of
@@ -375,7 +422,30 @@ overlayToHtml x y overlay =
                 DiagonalLeft ->
                     "diagonal-left"
             )
-        |> Dom.addAttribute (attribute "src" (getOverlayImageName overlay x y))
+        |> Dom.addAttribute
+            (attribute "data-index"
+                (case overlay.ref of
+                    Treasure t ->
+                        case t of
+                            Chest c ->
+                                case c of
+                                    NormalChest i ->
+                                        String.fromInt i
+
+                                    Goal ->
+                                        "Goal"
+
+                            _ ->
+                                ""
+
+                    _ ->
+                        ""
+                )
+            )
+        |> Dom.appendChild
+            (Dom.element "img"
+                |> Dom.addAttribute (attribute "src" (getOverlayImageName overlay x y))
+            )
 
 
 getOverlayImageName : BoardOverlay -> Int -> Int -> String
