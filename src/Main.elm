@@ -6,16 +6,16 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Browser
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, NumPlayers(..), PieceType(..), generateGameMap, getPieceName, getPieceType)
+import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType)
 import Html exposing (div)
 import Html.Attributes exposing (attribute, class, src)
-import List exposing (filter, head)
+import List exposing (filter, head, tail, take)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), getMonsterName)
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
 
 
 type alias Model =
-    { board : Array (Array Cell)
+    { game : Game
     , dragDropState : DragDrop.State PieceType ( Int, Int )
     }
 
@@ -56,7 +56,7 @@ init _ =
                                 ( 3, 0 )
                                 (MapTileData A4b
                                     []
-                                    [ BoardOverlay (Treasure (Chest (NormalChest 67))) Default ( ( 0, 2 ), Nothing )
+                                    [ BoardOverlay (Treasure (Chest (NormalChest 67))) Default [ ( 0, 2 ) ]
                                     ]
                                     [ ScenarioMonster (Monster (NormalType LivingCorpse) 3 Normal) 0 1 Monster.None Normal Elite
                                     , ScenarioMonster (Monster (NormalType LivingCorpse) 1 Normal) 1 2 Elite Elite Elite
@@ -102,9 +102,9 @@ init _ =
                                     3
                                 )
                             ]
-                            [ BoardOverlay (Obstacle Sarcophagus) Default ( ( 3, 2 ), Just ( 2, 2 ) )
-                            , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft ( ( 1, 5 ), Just ( 1, 4 ) )
-                            , BoardOverlay (Obstacle Sarcophagus) DiagonalRight ( ( 3, 5 ), Just ( 4, 4 ) )
+                            [ BoardOverlay (Obstacle Sarcophagus) Default [ ( 3, 2 ), ( 2, 2 ) ]
+                            , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft [ ( 1, 5 ), ( 1, 4 ) ]
+                            , BoardOverlay (Obstacle Sarcophagus) DiagonalRight [ ( 3, 5 ), ( 4, 4 ) ]
                             ]
                             [ ScenarioMonster (Monster (NormalType BanditArcher) 6 Normal) 1 1 Elite Elite Elite
                             , ScenarioMonster (Monster (BossType BanditCommander) 1 Normal) 2 1 Normal Normal Normal
@@ -113,13 +113,13 @@ init _ =
                             3
                         )
                     ]
-                    [ BoardOverlay (Trap BearTrap) Default ( ( 0, 1 ), Nothing )
-                    , BoardOverlay (Trap BearTrap) Default ( ( 2, 1 ), Nothing )
-                    , BoardOverlay StartingLocation Default ( ( 0, 3 ), Nothing )
-                    , BoardOverlay StartingLocation Default ( ( 1, 3 ), Nothing )
-                    , BoardOverlay StartingLocation Default ( ( 2, 3 ), Nothing )
-                    , BoardOverlay StartingLocation Default ( ( 1, 2 ), Nothing )
-                    , BoardOverlay StartingLocation Default ( ( 2, 2 ), Nothing )
+                    [ BoardOverlay (Trap BearTrap) Default [ ( 0, 1 ) ]
+                    , BoardOverlay (Trap BearTrap) Default [ ( 2, 1 ) ]
+                    , BoardOverlay StartingLocation Default [ ( 0, 3 ) ]
+                    , BoardOverlay StartingLocation Default [ ( 1, 3 ) ]
+                    , BoardOverlay StartingLocation Default [ ( 2, 3 ) ]
+                    , BoardOverlay StartingLocation Default [ ( 1, 2 ) ]
+                    , BoardOverlay StartingLocation Default [ ( 2, 2 ) ]
                     ]
                     [ ScenarioMonster (Monster (NormalType BanditArcher) 5 Monster.None) 0 0 Normal Normal Normal
                     , ScenarioMonster (Monster (NormalType BanditArcher) 2 Monster.None) 1 0 Monster.None Monster.None Normal
@@ -180,7 +180,7 @@ update msg model =
 
 view : Model -> Html.Html Msg
 view model =
-    div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model) model.board))
+    div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model) model.game.staticBoard))
 
 
 subscriptions : Model -> Sub Msg
@@ -209,8 +209,8 @@ getCellHtml model y x cellValue =
             Dom.element "div"
                 |> Dom.addClass ("hexagon " ++ cellValueToString cellValue)
                 |> Dom.appendChildList
-                    (List.map (overlayToHtml x y)
-                        (List.filter
+                    (List.filter (filterOverlaysForCoord x y) model.game.state.overlays
+                        |> List.filter
                             (\o ->
                                 case o.ref of
                                     Treasure t ->
@@ -224,16 +224,15 @@ getCellHtml model y x cellValue =
                                     _ ->
                                         True
                             )
-                            cellValue.overlays
-                        )
+                        |> List.map (overlayToHtml x y)
                     )
                 |> Dom.appendChildList
-                    (case cellValue.piece of
-                        Game.None ->
+                    (case getPieceForCoord x y model.game.state.pieces of
+                        Nothing ->
                             []
 
-                        p ->
-                            [ pieceToHtml p ]
+                        Just p ->
+                            [ pieceToHtml p.ref ]
                     )
 
         {-
@@ -267,7 +266,7 @@ getCellHtml model y x cellValue =
             (Dom.element "div"
                 |> Dom.addClass "cell"
                 |> Dom.appendChild
-                    (if cellValue.passable && cellValue.hidden == False then
+                    (if cellValue.passable == True then
                         DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement
 
                      else
@@ -284,7 +283,7 @@ cellValueToString val =
 
        else
     -}
-    if val.passable then
+    if val.passable == True then
         "passable"
 
     else
@@ -325,6 +324,22 @@ cellValueToString val =
                "Tinkerer"
 
 -}
+
+
+filterOverlaysForCoord : Int -> Int -> BoardOverlay -> Bool
+filterOverlaysForCoord x y overlay =
+    case head overlay.cells of
+        Just ( oX, oY ) ->
+            oX == x && oY == y
+
+        Nothing ->
+            False
+
+
+getPieceForCoord : Int -> Int -> List Piece -> Maybe Piece
+getPieceForCoord x y pieces =
+    List.filter (\p -> p.x == x && p.y == y) pieces
+        |> head
 
 
 pieceToHtml : PieceType -> Element msg
@@ -480,15 +495,15 @@ getOverlayImageName overlay x y =
                     ""
 
         segmentPart =
-            case Tuple.second overlay.cells of
-                Just ( overlayX, overlayY ) ->
+            case overlay.cells of
+                _ :: ( overlayX, overlayY ) :: _ ->
                     if overlayX == x && overlayY == y then
                         "-2"
 
                     else
                         ""
 
-                Nothing ->
+                _ ->
                     ""
     in
     path ++ overlayName ++ extendedOverlayName ++ segmentPart ++ extension
