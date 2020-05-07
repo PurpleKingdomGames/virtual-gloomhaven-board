@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType)
+port module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, pushGameState, receiveGameState)
 
 import Array exposing (Array, get, initialize, set)
 import Bitwise exposing (and)
@@ -7,9 +7,17 @@ import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass)
 import Dict exposing (Dict, get)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
-import List exposing (filter, head, map)
+import Json.Decode
+import Json.Encode
+import List exposing (any, filter, head, map)
 import Monster exposing (Monster, MonsterLevel(..), getMonsterName)
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
+
+
+port pushGameState : Json.Encode.Value -> Cmd msg
+
+
+port receiveGameState : (Json.Decode.Value -> msg) -> Sub msg
 
 
 type NumPlayers
@@ -309,3 +317,62 @@ mapOverlayCoord originalX originalY newX newY overlay =
                 )
                 overlay.cells
     }
+
+
+movePiece : Piece -> ( Int, Int ) -> Game -> ( Game, Piece )
+movePiece piece ( toX, toY ) game =
+    let
+        newPiece =
+            { piece | x = toX, y = toY }
+
+        gamestate =
+            game.state
+
+        newGamestate =
+            { gamestate | pieces = filter (removePiece piece) gamestate.pieces }
+    in
+    if canMoveTo ( toX, toY ) { game | state = newGamestate } then
+        ( { game | state = { newGamestate | pieces = newPiece :: newGamestate.pieces } }
+        , newPiece
+        )
+
+    else
+        ( game, piece )
+
+
+moveOverlay : BoardOverlay -> ( Int, Int ) -> ( Int, Int ) -> Game -> ( Game, BoardOverlay )
+moveOverlay overlay ( fromX, fromY ) ( toX, toY ) game =
+    ( game, overlay )
+
+
+removePiece : Piece -> Piece -> Bool
+removePiece pieceToRemove comparePiece =
+    pieceToRemove.ref
+        /= comparePiece.ref
+        || pieceToRemove.x
+        /= comparePiece.x
+        || pieceToRemove.y
+        /= comparePiece.y
+
+
+canMoveTo : ( Int, Int ) -> Game -> Bool
+canMoveTo ( toX, toY ) game =
+    case Array.get toY game.staticBoard of
+        Just row ->
+            case Array.get toX row of
+                Just cell ->
+                    if cell.passable then
+                        if any (\p -> p.x == toX && p.y == toY) game.state.pieces then
+                            False
+
+                        else
+                            True
+
+                    else
+                        False
+
+                Nothing ->
+                    False
+
+        Nothing ->
+            False

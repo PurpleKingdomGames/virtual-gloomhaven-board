@@ -6,7 +6,7 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Browser
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType)
+import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece)
 import Html exposing (div)
 import Html.Attributes exposing (attribute, class, src)
 import List exposing (filter, head, tail, take)
@@ -16,15 +16,28 @@ import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
 
 type alias Model =
     { game : Game
-    , dragDropState : DragDrop.State PieceType ( Int, Int )
+    , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
+    , currentDraggable : Maybe MoveablePiece
+    }
+
+
+type MoveablePieceType
+    = OverlayType BoardOverlay
+    | PieceType Piece
+
+
+type alias MoveablePiece =
+    { ref : MoveablePieceType
+    , x : Int
+    , y : Int
     }
 
 
 type Msg
-    = MoveStarted PieceType
+    = MoveStarted MoveablePiece
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
-    | MoveCompleted PieceType ( Int, Int )
+    | MoveCompleted MoveablePiece ( Int, Int )
 
 
 main : Program () Model Msg
@@ -130,52 +143,77 @@ init _ =
                 )
                 0
     in
-    ( Model (generateGameMap scenario ThreePlayer) DragDrop.initialState, Cmd.none )
+    ( Model (generateGameMap scenario ThreePlayer) DragDrop.initialState Nothing, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        MoveStarted character ->
-            ( { model | dragDropState = DragDrop.startDragging model.dragDropState character }, Cmd.none )
+        MoveStarted piece ->
+            ( { model | dragDropState = DragDrop.startDragging model.dragDropState piece, currentDraggable = Just piece }, Cmd.none )
 
         MoveTargetChanged coords ->
-            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords }, Cmd.none )
+            let
+                ( game, newDraggable ) =
+                    case model.currentDraggable of
+                        Just m ->
+                            case m.ref of
+                                OverlayType o ->
+                                    let
+                                        ( newGame, newOverlay ) =
+                                            moveOverlay o ( m.x, m.y ) coords model.game
+                                    in
+                                    ( newGame, Just (MoveablePiece (OverlayType newOverlay) m.x m.y) )
+
+                                PieceType p ->
+                                    let
+                                        ( newGame, newPiece ) =
+                                            movePiece p coords model.game
+                                    in
+                                    ( newGame, Just (MoveablePiece (PieceType newPiece) m.x m.y) )
+
+                        Nothing ->
+                            ( model.game, model.currentDraggable )
+            in
+            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, game = game, currentDraggable = newDraggable }, Cmd.none )
 
         MoveCanceled ->
-            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState }, Cmd.none )
+            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
 
         MoveCompleted character ( x, y ) ->
-            {-
-               let
-                   playerList =
-                       model.players
+            ( { model | dragDropState = DragDrop.initialState, currentDraggable = Nothing }, Cmd.none )
 
-                   charModel =
-                       case character of
-                           MoveablePlayer p ->
-                               { model
-                                   | players =
-                                       List.map
-                                           (\o ->
-                                               if o.class == p.class then
-                                                   { o | x = x, y = y }
 
-                                               else
-                                                   o
-                                           )
-                                           playerList
-                               }
 
-                           MoveableEnemy e ->
-                               model
+{-
+   let
+       playerList =
+           model.players
 
-                   newModel =
-                       { charModel | dragDropState = DragDrop.initialState }
-               in
-               ( newModel, Cmd.none )
-            -}
-            ( model, Cmd.none )
+       charModel =
+           case character of
+               MoveablePlayer p ->
+                   { model
+                       | players =
+                           List.map
+                               (\o ->
+                                   if o.class == p.class then
+                                       { o | x = x, y = y }
+
+                                   else
+                                       o
+                               )
+                               playerList
+                   }
+
+               MoveableEnemy e ->
+                   model
+
+       newModel =
+           { charModel | dragDropState = DragDrop.initialState }
+   in
+   ( newModel, Cmd.none )
+-}
 
 
 view : Model -> Html.Html Msg
@@ -196,7 +234,7 @@ getBoardHtml model y row =
 getCellHtml : Model -> Int -> Int -> Cell -> Html.Html Msg
 getCellHtml model y x cellValue =
     let
-        dragDropMessages : DragDrop.Messages Msg PieceType ( Int, Int )
+        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
         dragDropMessages =
             { dragStarted = MoveStarted
             , dropTargetChanged = MoveTargetChanged
@@ -208,6 +246,14 @@ getCellHtml model y x cellValue =
         cellElement =
             Dom.element "div"
                 |> Dom.addClass ("hexagon " ++ cellValueToString cellValue)
+                |> Dom.appendChildList
+                    (case getPieceForCoord x y model.game.state.pieces of
+                        Nothing ->
+                            []
+
+                        Just p ->
+                            [ pieceToHtml model x y p ]
+                    )
                 |> Dom.appendChildList
                     (List.filter (filterOverlaysForCoord x y) model.game.state.overlays
                         |> List.filter
@@ -225,14 +271,6 @@ getCellHtml model y x cellValue =
                                         True
                             )
                         |> List.map (overlayToHtml x y)
-                    )
-                |> Dom.appendChildList
-                    (case getPieceForCoord x y model.game.state.pieces of
-                        Nothing ->
-                            []
-
-                        Just p ->
-                            [ pieceToHtml p.ref ]
                     )
 
         {-
@@ -342,12 +380,21 @@ getPieceForCoord x y pieces =
         |> head
 
 
-pieceToHtml : PieceType -> Element msg
-pieceToHtml piece =
+pieceToHtml : Model -> Int -> Int -> Piece -> Element Msg
+pieceToHtml model x y piece =
+    let
+        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
+        dragDropMessages =
+            { dragStarted = MoveStarted
+            , dropTargetChanged = MoveTargetChanged
+            , dragEnded = MoveCanceled
+            , dropped = MoveCompleted
+            }
+    in
     Dom.element "div"
-        |> Dom.addClass (getPieceType piece)
-        |> Dom.addClass (getPieceName piece)
-        |> (case piece of
+        |> Dom.addClass (getPieceType piece.ref)
+        |> Dom.addClass (getPieceName piece.ref)
+        |> (case piece.ref of
                 Player _ ->
                     Dom.appendChild (Dom.element "div")
 
@@ -362,6 +409,7 @@ pieceToHtml piece =
                 Game.None ->
                     Dom.addClass "none"
            )
+        |> DragDrop.makeDraggable model.dragDropState (MoveablePiece (PieceType piece) x y) dragDropMessages
 
 
 enemyToHtml : Monster -> Element msg -> Element msg
