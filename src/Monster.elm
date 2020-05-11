@@ -1,4 +1,66 @@
-module Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), getMonsterName)
+module Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
+
+import Dict exposing (Dict, filter, fromList, get, toList)
+import List exposing (head)
+
+
+normalDict : Dict String NormalMonsterType
+normalDict =
+    fromList
+        [ ( "bandit-guard", BanditGuard )
+        , ( "bandit-archer", BanditArcher )
+        , ( "city-guard", CityGuard )
+        , ( "city-archer", CityArcher )
+        , ( "inox-guard", InoxGuard )
+        , ( "inox-archer", InoxArcher )
+        , ( "inox-shaman", InoxShaman )
+        , ( "vermling-scout", VermlingScout )
+        , ( "vermling-shaman", VermlingShaman )
+        , ( "living-bones", LivingBones )
+        , ( "living-corpse", LivingCorpse )
+        , ( "living-spirit", LivingSpirit )
+        , ( "cultist", Cultist )
+        , ( "flame-demon", FlameDemon )
+        , ( "frost-demon", FrostDemon )
+        , ( "earth-demon", EarthDemon )
+        , ( "wind-demon", WindDemon )
+        , ( "night-demon", NightDemon )
+        , ( "sun-demon", SunDemon )
+        , ( "ooze", Ooze )
+        , ( "giant-viper", GiantViper )
+        , ( "fores-timp", ForestImp )
+        , ( "hound", Hound )
+        , ( "cave-bear", CaveBear )
+        , ( "stone-golem", StoneGolem )
+        , ( "ancient-artillery", AncientArtillery )
+        , ( "vicious-drake", ViciousDrake )
+        , ( "spitting-drake", SpittingDrake )
+        , ( "lurker", Lurker )
+        , ( "savvas-icestorm", SavvasIcestorm )
+        , ( "savva-lavaflow", SavvaLavaflow )
+        , ( "harrower-infester", HarrowerInfester )
+        , ( "deep-terror", DeepTerror )
+        , ( "black-imp", BlackImp )
+        ]
+
+
+bossDict : Dict String BossType
+bossDict =
+    fromList
+        [ ( "bandit-commander", BanditCommander )
+        , ( "merciless-overseer", MercilessOverseer )
+        , ( "inox-bodyguard", InoxBodyguard )
+        , ( "captain-of-the-guard", CaptainOfTheGuard )
+        , ( "jekserah", Jekserah )
+        , ( "prime-demon", PrimeDemon )
+        , ( "elder-drake", ElderDrake )
+        , ( "the-betrayer", TheBetrayer )
+        , ( "the-colorless", TheColorless )
+        , ( "the-sightless-eye", TheSightlessEye )
+        , ( "dark-rider", DarkRider )
+        , ( "winged-horror", WingedHorror )
+        , ( "the-gloom", TheGloom )
+        ]
 
 
 type MonsterType
@@ -62,7 +124,7 @@ type BossType
     | TheSightlessEye
     | DarkRider
     | WingedHorror
-    | TheGoom
+    | TheGloom
 
 
 type alias Monster =
@@ -72,150 +134,29 @@ type alias Monster =
     }
 
 
-getMonsterName : MonsterType -> String
-getMonsterName monster =
+stringToMonsterType : String -> Maybe MonsterType
+stringToMonsterType monster =
+    case get (String.toLower monster) normalDict of
+        Just m ->
+            Just (NormalType m)
+
+        Nothing ->
+            Maybe.map (\v -> BossType v) (get (String.toLower monster) bossDict)
+
+
+monsterTypeToString : MonsterType -> Maybe String
+monsterTypeToString monster =
     case monster of
         NormalType m ->
-            case m of
-                BanditGuard ->
-                    "bandit-guard"
-
-                BanditArcher ->
-                    "bandit-archer"
-
-                CityGuard ->
-                    "city-guard"
-
-                CityArcher ->
-                    "city-archer"
-
-                InoxGuard ->
-                    "inox-guard"
-
-                InoxArcher ->
-                    "inox-archer"
-
-                InoxShaman ->
-                    "inox-shaman"
-
-                VermlingScout ->
-                    "vermling-scout"
-
-                VermlingShaman ->
-                    "vermling-shaman"
-
-                LivingBones ->
-                    "living-bones"
-
-                LivingCorpse ->
-                    "living-corpse"
-
-                LivingSpirit ->
-                    "living-spirit"
-
-                Cultist ->
-                    "cultist"
-
-                FlameDemon ->
-                    "flame-demon"
-
-                FrostDemon ->
-                    "frost-demon"
-
-                EarthDemon ->
-                    "earth-demon"
-
-                WindDemon ->
-                    "wind-demon"
-
-                NightDemon ->
-                    "night-demon"
-
-                SunDemon ->
-                    "sun-demon"
-
-                Ooze ->
-                    "ooze"
-
-                GiantViper ->
-                    "giant-viper"
-
-                ForestImp ->
-                    "fores-timp"
-
-                Hound ->
-                    "hound"
-
-                CaveBear ->
-                    "cave-bear"
-
-                StoneGolem ->
-                    "stone-golem"
-
-                AncientArtillery ->
-                    "ancient-artillery"
-
-                ViciousDrake ->
-                    "vicious-drake"
-
-                SpittingDrake ->
-                    "spitting-drake"
-
-                Lurker ->
-                    "lurker"
-
-                SavvasIcestorm ->
-                    "savvas-icestorm"
-
-                SavvaLavaflow ->
-                    "savva-lavaflow"
-
-                HarrowerInfester ->
-                    "harrower-infester"
-
-                DeepTerror ->
-                    "deep-terror"
-
-                BlackImp ->
-                    "black-imp"
+            let
+                maybeKey =
+                    head (toList (filter (\_ v -> v == m) normalDict))
+            in
+            Maybe.map (\( k, _ ) -> k) maybeKey
 
         BossType b ->
-            case b of
-                BanditCommander ->
-                    "bandit-commander"
-
-                MercilessOverseer ->
-                    "merciless-overseer"
-
-                InoxBodyguard ->
-                    "inox-bodyguard"
-
-                CaptainOfTheGuard ->
-                    "captain-of-the-guard"
-
-                Jekserah ->
-                    "jekserah"
-
-                PrimeDemon ->
-                    "prime-demon"
-
-                ElderDrake ->
-                    "elder-drake"
-
-                TheBetrayer ->
-                    "the-betrayer"
-
-                TheColorless ->
-                    "the-colorless"
-
-                TheSightlessEye ->
-                    "the-sightless-eye"
-
-                DarkRider ->
-                    "dark-rider"
-
-                WingedHorror ->
-                    "winged-horror"
-
-                TheGoom ->
-                    "the-goom"
+            let
+                maybeKey =
+                    head (toList (filter (\_ v -> v == b) bossDict))
+            in
+            Maybe.map (\( k, _ ) -> k) maybeKey

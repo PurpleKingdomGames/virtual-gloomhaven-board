@@ -181,7 +181,7 @@ update msg model =
             ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
 
         MoveCompleted character ( x, y ) ->
-            ( { model | dragDropState = DragDrop.initialState, currentDraggable = Nothing }, Cmd.none )
+            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
 
 
 

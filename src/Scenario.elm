@@ -50,17 +50,22 @@ mapTileDataToOverlayList : MapTileData -> Dict String ( List BoardOverlay, List 
 mapTileDataToOverlayList data =
     let
         initData =
-            ( data.overlays
-                ++ List.map
-                    (\d ->
-                        case d of
-                            DoorLink subType dir ( x, y ) _ _ ->
-                                BoardOverlay (Door subType) dir [ ( x, y ) ]
+            case refToString data.ref of
+                Just ref ->
+                    ( data.overlays
+                        ++ List.map
+                            (\d ->
+                                case d of
+                                    DoorLink subType dir ( x, y ) _ _ ->
+                                        BoardOverlay (Door subType) dir [ ( x, y ) ]
+                            )
+                            data.doors
+                    , data.monsters
                     )
-                    data.doors
-            , data.monsters
-            )
-                |> singleton (refToString data.ref)
+                        |> singleton ref
+
+                Nothing ->
+                    empty
 
         doorData =
             List.map

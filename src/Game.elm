@@ -1,4 +1,4 @@
-port module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, pushGameState, receiveGameState)
+module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece)
 
 import Array exposing (Array, get, initialize, set)
 import Bitwise exposing (and)
@@ -7,17 +7,9 @@ import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass)
 import Dict exposing (Dict, get)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
-import Json.Decode
-import Json.Encode
 import List exposing (any, filter, head, map)
-import Monster exposing (Monster, MonsterLevel(..), getMonsterName)
+import Monster exposing (Monster, MonsterLevel(..), monsterTypeToString)
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
-
-
-port pushGameState : Json.Encode.Value -> Cmd msg
-
-
-port receiveGameState : (Json.Decode.Value -> msg) -> Sub msg
 
 
 type NumPlayers
@@ -28,7 +20,7 @@ type NumPlayers
 
 type AIType
     = Enemy Monster
-    | Summons CharacterClass
+    | Summons Int CharacterClass
 
 
 type PieceType
@@ -73,7 +65,7 @@ getPieceType piece =
 
         AI t ->
             case t of
-                Summons _ ->
+                Summons _ _ ->
                     "summons"
 
                 Enemy _ ->
@@ -91,11 +83,16 @@ getPieceName piece =
 
         AI t ->
             case t of
-                Summons p ->
+                Summons _ _ ->
                     ""
 
                 Enemy e ->
-                    getMonsterName e.monster
+                    case monsterTypeToString e.monster of
+                        Just m ->
+                            m
+
+                        Nothing ->
+                            ""
 
         None ->
             ""
@@ -168,8 +165,16 @@ setCellFromMapTile initialArr gamestate overlays offsetX offsetY tile =
         y =
             tile.y - offsetY
 
+        refString =
+            case refToString tile.ref of
+                Just s ->
+                    s
+
+                Nothing ->
+                    ""
+
         ( boardOverlays, piece ) =
-            case Dict.get (refToString tile.ref) overlays of
+            case Dict.get refString overlays of
                 Just ( o, m ) ->
                     ( filter (filterByCoord tile.originalX tile.originalY) o
                         |> map (mapOverlayCoord tile.originalX tile.originalY x y)
@@ -362,6 +367,7 @@ canMoveTo ( toX, toY ) game =
             case Array.get toX row of
                 Just cell ->
                     if cell.passable then
+                        -- TODO : Account for obstacles, account for hidden rooms
                         if any (\p -> p.x == toX && p.y == toY) game.state.pieces then
                             False
 
