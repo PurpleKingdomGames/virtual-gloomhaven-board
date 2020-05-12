@@ -9,6 +9,11 @@ type BoardOverlayType
     | Treasure TreasureSubType
 
 
+
+-- DifficultTerrain
+-- Corridors
+
+
 type DoorSubType
     = Stone
 

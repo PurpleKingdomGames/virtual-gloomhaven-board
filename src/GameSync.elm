@@ -6,14 +6,14 @@ import Character exposing (CharacterClass, stringToCharacter)
 import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
 import Json.Decode exposing (Decoder, andThen, fail, field, index, int, list, map2, map3, map5, string, succeed)
 import Json.Encode
-import List exposing (any, map)
+import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
 
 
-port pushGameState : Json.Encode.Value -> Cmd msg
+port pushGameStatePort : Json.Encode.Value -> Cmd msg
 
 
-port receiveGameState : (Json.Decode.Value -> msg) -> Sub msg
+port receiveGameStatePort : (Json.Decode.Value -> msg) -> Sub msg
 
 
 decodeGameState : Decoder GameState
@@ -32,11 +32,11 @@ decodeMapRefList refs =
         decodedRefs =
             map (\ref -> stringToRef ref) refs
     in
-    if any (\s -> s == Nothing) decodedRefs then
+    if all (\s -> s /= Nothing) decodedRefs then
         succeed (map (\r -> Maybe.withDefault A1a r) decodedRefs)
 
     else
-        fail "Could not decode all maptile references"
+        fail "Could not decode all map tile references"
 
 
 decodeNumPlayers : Int -> Decoder NumPlayers
@@ -58,7 +58,7 @@ decodeNumPlayers numPlayers =
 decodePiece : Decoder Piece
 decodePiece =
     map3 Piece
-        (field "type" decodePieceType)
+        (field "ref" decodePieceType)
         (field "x" int)
         (field "y" int)
 
@@ -110,7 +110,7 @@ decodeSummons =
 decodeMonster : Decoder Monster
 decodeMonster =
     map3 Monster
-        (field "type" string |> andThen decodeMonsterType)
+        (field "class" string |> andThen decodeMonsterType)
         (field "id" int)
         (field "level" string |> andThen decodeMonsterLevel)
 
@@ -235,7 +235,7 @@ decodeTreasure =
                 _ ->
                     fail ("Unknown treasure type: " ++ typeName)
     in
-    field "type" string
+    field "subType" string
         |> andThen decodeType
 
 
@@ -276,10 +276,10 @@ decodeBoardOverlayDirection dir =
         "vertical" ->
             succeed Vertical
 
-        "diagonalleft" ->
+        "diagonal-left" ->
             succeed DiagonalLeft
 
-        "diagonalright" ->
+        "diagonal-right" ->
             succeed DiagonalRight
 
         _ ->
