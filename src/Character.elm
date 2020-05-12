@@ -1,4 +1,4 @@
-module Character exposing (CharacterClass(..), stringToCharacter)
+module Character exposing (CharacterClass(..), characterToString, stringToCharacter)
 
 import Dict exposing (filter, fromList, get, toList)
 import List exposing (head)
