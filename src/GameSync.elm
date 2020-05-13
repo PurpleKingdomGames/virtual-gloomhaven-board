@@ -393,8 +393,8 @@ encodeOverlayType overlay =
 
         Treasure t ->
             object
-                ([ ( "type", Encode.string "treasure" ) ]
-                    ++ encodeTreasure t
+                (( "type", Encode.string "treasure" )
+                    :: encodeTreasure t
                 )
 
 
