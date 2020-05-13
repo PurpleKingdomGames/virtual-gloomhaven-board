@@ -7,10 +7,12 @@ import Browser
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece)
+import GameSync exposing (pushGameState, receiveGameState)
 import Html exposing (div)
 import Html.Attributes exposing (attribute, class, src)
+import Json.Decode exposing (decodeValue, errorToString)
 import List exposing (filter, head, tail, take)
-import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), getMonsterName)
+import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString)
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
 
 
@@ -38,6 +40,7 @@ type Msg
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
     | MoveCompleted MoveablePiece ( Int, Int )
+    | GameStatePushed Json.Decode.Value
 
 
 main : Program () Model Msg
@@ -175,13 +178,36 @@ update msg model =
                         Nothing ->
                             ( model.game, model.currentDraggable )
             in
-            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, game = game, currentDraggable = newDraggable }, Cmd.none )
+            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, game = game, currentDraggable = newDraggable }, pushGameState game.state )
 
         MoveCanceled ->
             ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
 
         MoveCompleted character ( x, y ) ->
             ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
+
+        GameStatePushed val ->
+            let
+                gameState =
+                    case decodeValue GameSync.decodeGameState val of
+                        Ok s ->
+                            if s.scenario == model.game.state.scenario && s.numPlayers == model.game.state.numPlayers then
+                                s
+
+                            else
+                                model.game.state
+
+                        Err err ->
+                            Debug.log
+                                (errorToString err)
+                                model.game.state
+
+                game =
+                    model.game
+            in
+            Debug.log
+                "State received"
+                ( { model | game = { game | state = gameState } }, Cmd.none )
 
 
 
@@ -223,7 +249,7 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    receiveGameState GameStatePushed
 
 
 getBoardHtml : Model -> Int -> Array Cell -> Html.Html Msg
@@ -293,7 +319,7 @@ getCellHtml model y x cellValue =
         |> Dom.addAttributeList
             (case head (List.filter (\( _, o, _ ) -> o) cellValue.rooms) of
                 Just ( ref, _, turns ) ->
-                    [ attribute "data-board-ref" (refToString ref)
+                    [ attribute "data-board-ref" (Maybe.withDefault "" (refToString ref))
                     , class ("rotate-" ++ String.fromInt turns)
                     ]
 
@@ -403,7 +429,7 @@ pieceToHtml model x y piece =
                         Enemy m ->
                             enemyToHtml m
 
-                        Summons _ ->
+                        Summons _ _ ->
                             Dom.appendChild (Dom.element "div")
 
                 Game.None ->
@@ -438,7 +464,7 @@ enemyToHtml monster element =
                 |> Dom.addAttribute
                     (attribute "src"
                         ("/img/monsters/"
-                            ++ getMonsterName monster.monster
+                            ++ Maybe.withDefault "" (monsterTypeToString monster.monster)
                             ++ ".png"
                         )
                     )

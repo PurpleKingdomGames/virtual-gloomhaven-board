@@ -1,4 +1,4 @@
-port module GameSync exposing (decodeGameState, encodeGameState)
+port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, receiveGameState)
 
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
@@ -13,7 +13,12 @@ import Monster exposing (Monster, MonsterLevel(..), MonsterType, monsterTypeToSt
 port pushGameStatePort : Encode.Value -> Cmd msg
 
 
-port receiveGameStatePort : (Decode.Value -> msg) -> Sub msg
+port receiveGameState : (Decode.Value -> msg) -> Sub msg
+
+
+pushGameState : GameState -> Cmd msg
+pushGameState gameState =
+    pushGameStatePort (encodeGameState gameState)
 
 
 decodeGameState : Decoder GameState

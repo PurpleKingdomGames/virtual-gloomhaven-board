@@ -21,8 +21,14 @@
             return false;
         });
 
-        Elm.Main.init({
+        const app = Elm.Main.init({
             node: document.getElementById("elm-node")
+        });
+
+        app.ports.pushGameStatePort.subscribe(function(message) {
+            console.log("Port called!");
+            console.log(message);
+            app.ports.receiveGameState.send(message);
         });
     </script>
 </body>
