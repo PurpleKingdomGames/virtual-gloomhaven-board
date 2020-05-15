@@ -28,7 +28,7 @@ fi
 rm -rf ./.temp-build/scss
 echo "Done!"
 
-echo "Compiling scripts..."
+echo "Compiling client scripts..."
 if [ "$1" = "--release" ] ; then
     if !(elm make client/src/Main.elm --output=./.temp-build/client/js/main.js --optimize) then
         exit 1

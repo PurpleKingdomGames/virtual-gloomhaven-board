@@ -2,3 +2,6 @@ elm-stuff/
 build/
 .temp-build/
 .metals/
+.vscode
+obj/
+bin/
