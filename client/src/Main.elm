@@ -197,17 +197,13 @@ update msg model =
                             else
                                 model.game.state
 
-                        Err err ->
-                            Debug.log
-                                (errorToString err)
-                                model.game.state
+                        Err _ ->
+                            model.game.state
 
                 game =
                     model.game
             in
-            Debug.log
-                "State received"
-                ( { model | game = { game | state = gameState } }, Cmd.none )
+            ( { model | game = { game | state = gameState } }, Cmd.none )
 
 
 

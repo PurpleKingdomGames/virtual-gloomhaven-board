@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gloomhaven Board Helper</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/main.min.js"></script>
+</head>
+<body>
+    <div id="elm-node"></div>
+    <script>
+        document.body.addEventListener("dragstart", event => {
+            if (event.target && event.target.draggable) {
+                // absurdly, this is needed for Firefox; see https://medium.com/elm-shorts/elm-drag-and-drop-game-630205556d2
+                event.dataTransfer.setData("text/html", "blank");
+            }
+        });
+
+        document.body.addEventListener("dragover", event => {
+            // this is needed in order to make dragging work
+            return false;
+        });
+
+        const app = Elm.Main.init({
+            node: document.getElementById("elm-node")
+        });
+
+        app.ports.pushGameStatePort.subscribe(function(message) {
+            console.log("Port called!");
+            console.log(message);
+            app.ports.receiveGameState.send(message);
+        });
+
+        /** NOTE THIS IS A CLIENT IMPLEMENTATION **/
+        const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
+        const peerConnection = new RTCPeerConnection(configuration);
+
+        async function aa() {
+        const offer = await peerConnection.createOffer();
+        offer.dest = "192.168.0.1";
+        console.log(offer);
+        }
+
+        aa();
+        /*await peerConnection.setLocalDescription(offer);
+        // When an answer is recieved set the description
+        signalingChannel.addEventListener('message', async message => {
+            if (message.answer) {
+                console.log('Client: Answer received from peer')
+                const remoteDesc = new RTCSessionDescription(message.answer);
+                await peerConnection.setRemoteDescription(remoteDesc);
+            }
+        });
+
+        console.log('Client: sending offer');
+        // Send an offer to the server
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        signalingChannel.send({'offer': offer});
+
+        // Listen for local ICE candidates on the local RTCPeerConnection
+        peerConnection.addEventListener('icecandidate', event => {
+            if (event.candidate) {
+                console.log('Client: New ICE candidate')
+                signalingChannel.send({'new-ice-candidate': event.candidate});
+            }
+        });
+
+        // Listen for remote ICE candidates and add them to the local RTCPeerConnection
+        signalingChannel.addEventListener('message', async message => {
+            if (message.iceCandidate) {
+                try {
+                    console.log('Client: Signal Message Recieved')
+                    await peerConnection.addIceCandidate(message.iceCandidate);
+                } catch (e) {
+                    console.error('Error adding received ice candidate', e);
+                }
+            }
+        });
+
+        peerConnection.addEventListener('connectionstatechange', event => {
+            if (peerConnection.connectionState === 'connected') {
+                console.log('Client: Connected!')
+            }
+        });
+
+*/
+    </script>
+</body>
+</html>
