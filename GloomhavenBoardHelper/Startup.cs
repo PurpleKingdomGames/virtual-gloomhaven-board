@@ -29,28 +29,29 @@ namespace GloomhavenBoardHelper
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
+            if (!env.IsDevelopment())
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-            }
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-            app.UseRouting();
+            app.Use(async (context, next) => {
+                if (context.Request.Path == "/ws")
+                    if (context.WebSockets.IsWebSocketRequest)
+                    {
+                        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                        await SignallingHandler.Init(context, webSocket);
+                    }
+                    else
+                        context.Response.StatusCode = 400;
+                else
+                    await next();
+            });
 
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+            app.UseWebSockets(new WebSocketOptions {
+                KeepAliveInterval = TimeSpan.FromSeconds(Configuration.GetValue<int>("KeepAlive")),
+                ReceiveBufferSize = Configuration.GetValue<int>("BufferSizeKb") * 1024
             });
         }
     }

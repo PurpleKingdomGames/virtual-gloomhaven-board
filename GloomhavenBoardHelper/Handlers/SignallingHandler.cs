@@ -6,7 +6,7 @@ namespace SocketSignaller
 {
     public class SignallingHandler
     {
-        public async Task Init(HttpContext context, WebSocket websocket) {
+        public static async Task Init(HttpContext context, WebSocket websocket) {
 
         }
     }
