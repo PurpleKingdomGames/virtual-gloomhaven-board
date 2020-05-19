@@ -2,7 +2,7 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace SocketSignaller
+namespace GloomhavenBoardHelper.Handlers
 {
     public class SignallingHandler
     {

@@ -5,3 +5,5 @@ build/
 .vscode
 obj/
 bin/
+**/wwwroot/js/main*
+**/wwwroot/css/

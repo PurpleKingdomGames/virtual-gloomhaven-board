@@ -34,7 +34,7 @@
         /** NOTE THIS IS A CLIENT IMPLEMENTATION **/
         const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
         const peerConnection = new RTCPeerConnection(configuration);
-        const signalSocket = new WebSocket('wss://localhost:5000');
+        const signalSocket = new WebSocket('ws://localhost:5000/ws');
 
         async function aa() {
             const offer = await peerConnection.createOffer();
