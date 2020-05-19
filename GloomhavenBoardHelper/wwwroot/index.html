@@ -34,18 +34,30 @@
         /** NOTE THIS IS A CLIENT IMPLEMENTATION **/
         const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
         const peerConnection = new RTCPeerConnection(configuration);
-        const signalSocket = new WebSocket('ws://localhost:5000/ws');
+        const signalSocket = new WebSocket('wss://localhost:5001/ws');
 
         async function aa() {
             const offer = await peerConnection.createOffer();
             offer.dest = "localhost";
-            offer.password = "pass"
+            offer.password = "pass";
 
-            signalSocket.send("OFFER " + offer.dest + " " + JSON.stringify(offer));
+            signalSocket.send("OFFER " + offer.dest + " " + JSON.stringify(offer) + "\r\n");
         }
 
+        var pingInterval = null;
         signalSocket.onopen = function() {
             aa();
+            pingInterval = setInterval(ping, 4000);
+        }
+
+        signalSocket.onclose = function() {
+            clearInteval(pingInterval)
+            pingInterval = null;
+        }
+
+        function ping() {
+            if (pingInterval != null)
+                signalSocket.send("PING\r\n");
         }
         /*await peerConnection.setLocalDescription(offer);
         // When an answer is recieved set the description

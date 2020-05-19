@@ -1,15 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Net.WebSockets;
 using GloomhavenBoardHelper.Handlers;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace GloomhavenBoardHelper
 {
@@ -25,7 +22,7 @@ namespace GloomhavenBoardHelper
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services.AddDistributedMemoryCache();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -37,23 +34,27 @@ namespace GloomhavenBoardHelper
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseDefaultFiles();
+
+            int keepAlive = Configuration.GetValue<int>("KeepAlive");
+            int bufferSize = Configuration.GetValue<int>("BufferSizeKb") * 1024;
+
+            app.UseWebSockets(new WebSocketOptions {
+                KeepAliveInterval = TimeSpan.FromSeconds(keepAlive),
+                ReceiveBufferSize = bufferSize
+            });
 
             app.Use(async (context, next) => {
                 if (context.Request.Path == "/ws")
                     if (context.WebSockets.IsWebSocketRequest)
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                        await SignallingHandler.Init(context, webSocket);
+                        await SignallingHandler.Init(context, webSocket, bufferSize, keepAlive, context.RequestServices.GetRequiredService<IDistributedCache>());
                     }
                     else
                         context.Response.StatusCode = 400;
                 else
                     await next();
-            });
-
-            app.UseWebSockets(new WebSocketOptions {
-                KeepAliveInterval = TimeSpan.FromSeconds(Configuration.GetValue<int>("KeepAlive")),
-                ReceiveBufferSize = Configuration.GetValue<int>("BufferSizeKb") * 1024
             });
         }
     }
