@@ -12,7 +12,6 @@ namespace GloomhavenBoardHelper.Handlers
     public class SignallingHandler
     {
         private const string ESCAPE_SEQUENCE = "\r\n";
-
         private const string PONG_RESPONSE = "PONG";
         private const string PING_COMMAND = "PING";
         private const string OFFER_COMMAND = "OFFER";
