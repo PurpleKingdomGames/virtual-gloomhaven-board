@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Net.WebSockets;
 using GloomhavenBoardHelper.Handlers;
-using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace GloomhavenBoardHelper
 {
@@ -22,7 +22,9 @@ namespace GloomhavenBoardHelper
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDistributedMemoryCache();
+            services.AddScoped((s) => {
+                return ConnectionMultiplexer.Connect("localhost").GetSubscriber();
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -32,7 +34,7 @@ namespace GloomhavenBoardHelper
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseDefaultFiles();
 
@@ -49,7 +51,7 @@ namespace GloomhavenBoardHelper
                     if (context.WebSockets.IsWebSocketRequest)
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                        await SignallingHandler.Init(context, webSocket, bufferSize, keepAlive, context.RequestServices.GetRequiredService<IDistributedCache>());
+                        await SignallingHandler.Init(context, webSocket, bufferSize, keepAlive, context.RequestServices.GetRequiredService<ISubscriber>());
                     }
                     else
                         context.Response.StatusCode = 400;

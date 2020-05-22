@@ -13,14 +13,30 @@ namespace GloomhavenBoardHelper
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            CreateHostBuilder(args)
+                .Build()
+                .Run()
+            ;
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            IConfiguration config = new ConfigurationBuilder()
+                .AddCommandLine(args)
+                .Build()
+            ;
+
+            string hostUrl = config["hosturl"];
+            if (string.IsNullOrEmpty(hostUrl))
+                hostUrl = "http://0.0.0.0:5000";
+
+            return Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.UseUrls(hostUrl);
                     webBuilder.UseStartup<Startup>();
-                });
+                })
+            ;
+        }
     }
 }

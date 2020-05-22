@@ -25,49 +25,52 @@
             node: document.getElementById("elm-node")
         });
 
+        /** NOTE THIS IS A SERVER (Remote) IMPLEMENTATION **/
+
+        // For each offer, add the IP to a list of users and distribute
+
+        const signalSocket = new WebSocket('ws://localhost:5000/ws');
+        let arrClients = [];
+
         app.ports.pushGameStatePort.subscribe(function(message) {
-            console.log("Port called!");
-            console.log(message);
-            app.ports.receiveGameState.send(message);
+            updateClients(message);
         });
 
-        /** NOTE THIS IS A SERVER IMPLEMENTATION **/// Listen for local ICE candidates on the local RTCPeerConnection
-        const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
-        const peerConnection = new RTCPeerConnection(configuration);
-        signalingChannel.addEventListener('message', async message => {
-            if (message.offer) {
-                console.log('Server: Got offer, sending answer')
-                peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-                signalingChannel.send({'answer': answer});
-            }
-        });
+        var pingInterval = null;
+        signalSocket.onopen = function() {
+            pingInterval = setInterval(ping, 10000);
+        }
 
-        peerConnection.addEventListener('icecandidate', event => {
-            if (event.candidate) {
-                console.log('Server: New ICE candidate')
-                signalingChannel.send({'new-ice-candidate': event.candidate});
-            }
-        });
+        signalSocket.onclose = function() {
+            clearInterval(pingInterval)
+            pingInterval = null;
+        }
 
-        // Listen for remote ICE candidates and add them to the local RTCPeerConnection
-        signalingChannel.addEventListener('message', async message => {
-            if (message.iceCandidate) {
-                try {
-                    console.log('Server: Signal Message Recieved')
-                    await peerConnection.addIceCandidate(message.iceCandidate);
-                } catch (e) {
-                    console.error('Error adding received ice candidate', e);
-                }
-            }
-        });
+        signalSocket.onmessage = async function(m) {
+            let splitData = m.data.replace('\r\n', '').split(' ')
+            let cmd = splitData.shift();
+            let ip = splitData.shift();
+            let data = splitData.join(' ');
 
-        peerConnection.addEventListener('connectionstatechange', event => {
-            if (peerConnection.connectionState === 'connected') {
-                console.log('Server: Connected!')
+            if (cmd == 'OFFER') {
+                signalSocket.send('ANSWER ' + ip + " {}\r\n");
+                arrClients.push(ip);
+            } else if (cmd == 'UPDATE') {
+                let message = JSON.parse(data);
+                app.ports.receiveGameState.send(message);
+                updateClients(message)
             }
-        });
+        }
+
+        function ping() {
+            if (pingInterval != null)
+                signalSocket.send("PING\r\n");
+        }
+
+        function updateClients(message) {
+            for (let i = 0; i < arrClients.length; i++)
+                signalSocket.send("UPDATE " + arrClients[i] + " " + JSON.stringify(message) + "\r\n");
+        }
     </script>
 </body>
 </html>

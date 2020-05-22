@@ -3,6 +3,16 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
     </PropertyGroup>
+    <ItemGroup>
+        <!-- extends watching group to include *.js files -->
+        <Watch
+        Include="**\*.cs;**\*.js;**\*.json;**\*.html;**\*.elm;**\*.scss"
+        Exclude="bin\**\*;obj\**\*;Elm\tests\*;wwwroot\js\main.min.js"
+        />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="StackExchange.Redis" Version="2.1.39" />
+    </ItemGroup>
 
     <Target Name="BuildDebug" BeforeTargets="Build" Condition="'$(Configuration)'=='Debug'">
         <!-- build elm normally (in dev)-->

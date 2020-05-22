@@ -25,83 +25,47 @@
             node: document.getElementById("elm-node")
         });
 
+        const signalSocket = new WebSocket('ws://88.98.84.156:5000/ws');
+        let offerTimeout = null;
         app.ports.pushGameStatePort.subscribe(function(message) {
-            console.log("Port called!");
-            console.log(message);
-            app.ports.receiveGameState.send(message);
+            signalSocket.send("UPDATE 127.0.0.1 " + JSON.stringify(message) + "\r\n");
+            signalSocket.send("UPDATE ::1 " + JSON.stringify(message) + "\r\n");
         });
 
-        /** NOTE THIS IS A CLIENT IMPLEMENTATION **/
-        const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
-        const peerConnection = new RTCPeerConnection(configuration);
-        const signalSocket = new WebSocket('wss://localhost:5001/ws');
-
-        async function aa() {
-            const offer = await peerConnection.createOffer();
-            offer.dest = "localhost";
-            offer.password = "pass";
-
-            signalSocket.send("OFFER " + offer.dest + " " + JSON.stringify(offer) + "\r\n");
+        async function sendOffer() {
+            // Send 2, one IPV6 and 1 IPV4
+            signalSocket.send("OFFER 127.0.0.1 {}\r\n");
+            signalSocket.send("OFFER ::1 {}\r\n");
         }
 
         var pingInterval = null;
         signalSocket.onopen = function() {
-            aa();
-            pingInterval = setInterval(ping, 4000);
+            sendOffer();
+            pingInterval = setInterval(ping, 10000);
+            offerTimeout = setInterval(sendOffer, 5000);
         }
 
         signalSocket.onclose = function() {
-            clearInteval(pingInterval)
+            clearInterval(pingInterval)
             pingInterval = null;
+        }
+
+        signalSocket.onmessage = async function(m) {
+            let splitData = m.data.replace('\r\n', '').split(' ')
+            let cmd = splitData.shift();
+            let ip = splitData.shift();
+            let data = splitData.join(' ');
+
+            if (cmd == 'ANSWER')
+                clearInterval(offerTimeout);
+            else if (cmd == 'UPDATE')
+                app.ports.receiveGameState.send(JSON.parse(data));
         }
 
         function ping() {
             if (pingInterval != null)
                 signalSocket.send("PING\r\n");
         }
-        /*await peerConnection.setLocalDescription(offer);
-        // When an answer is recieved set the description
-        signalingChannel.addEventListener('message', async message => {
-            if (message.answer) {
-                console.log('Client: Answer received from peer')
-                const remoteDesc = new RTCSessionDescription(message.answer);
-                await peerConnection.setRemoteDescription(remoteDesc);
-            }
-        });
-
-        console.log('Client: sending offer');
-        // Send an offer to the server
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-        signalingChannel.send({'offer': offer});
-
-        // Listen for local ICE candidates on the local RTCPeerConnection
-        peerConnection.addEventListener('icecandidate', event => {
-            if (event.candidate) {
-                console.log('Client: New ICE candidate')
-                signalingChannel.send({'new-ice-candidate': event.candidate});
-            }
-        });
-
-        // Listen for remote ICE candidates and add them to the local RTCPeerConnection
-        signalingChannel.addEventListener('message', async message => {
-            if (message.iceCandidate) {
-                try {
-                    console.log('Client: Signal Message Recieved')
-                    await peerConnection.addIceCandidate(message.iceCandidate);
-                } catch (e) {
-                    console.error('Error adding received ice candidate', e);
-                }
-            }
-        });
-
-        peerConnection.addEventListener('connectionstatechange', event => {
-            if (peerConnection.connectionState === 'connected') {
-                console.log('Client: Connected!')
-            }
-        });
-
-*/
     </script>
 </body>
 </html>
