@@ -8,8 +8,9 @@ import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece)
 import GameSync exposing (pushGameState, receiveGameState)
-import Html exposing (div)
+import Html exposing (div, li, nav, text, ul)
 import Html.Attributes exposing (attribute, class, src)
+import Html.Events exposing (onClick)
 import Json.Decode exposing (decodeValue, errorToString)
 import List exposing (filter, head, tail, take)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString)
@@ -52,6 +53,7 @@ type Msg
     | GameStatePushed Json.Decode.Value
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
+    | ChangeMode GameModeType
 
 
 main : Program () Model Msg
@@ -242,47 +244,52 @@ update msg model =
             in
             ( { model | game = { game | state = newState } }, Cmd.none )
 
-
-
-{-
-   let
-       playerList =
-           model.players
-
-       charModel =
-           case character of
-               MoveablePlayer p ->
-                   { model
-                       | players =
-                           List.map
-                               (\o ->
-                                   if o.class == p.class then
-                                       { o | x = x, y = y }
-
-                                   else
-                                       o
-                               )
-                               playerList
-                   }
-
-               MoveableEnemy e ->
-                   model
-
-       newModel =
-           { charModel | dragDropState = DragDrop.initialState }
-   in
-   ( newModel, Cmd.none )
--}
+        ChangeMode mode ->
+            ( { model | currentMode = mode }, Cmd.none )
 
 
 view : Model -> Html.Html Msg
 view model =
-    div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model) model.game.staticBoard))
+    div [ class "content" ]
+        [ div [ class "action-list" ] [ getNavHtml model ]
+        , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model) model.game.staticBoard))
+        ]
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     receiveGameState GameStatePushed
+
+
+getNavHtml : Model -> Html.Html Msg
+getNavHtml model =
+    Dom.element "nav"
+        |> Dom.appendChild
+            (Dom.element "ul"
+                |> Dom.appendChildList
+                    [ Dom.element "li"
+                        |> Dom.addAction ( "click", ChangeMode MovePiece )
+                        |> Dom.addClass "move-piece"
+                        |> Dom.addClassConditional "active" (model.currentMode == MovePiece)
+                        |> Dom.appendText "Move Piece"
+                    , Dom.element "li"
+                        |> Dom.addAction ( "click", ChangeMode KillPiece )
+                        |> Dom.addClass "kill-piece"
+                        |> Dom.addClassConditional "active" (model.currentMode == KillPiece)
+                        |> Dom.appendText "Kill Piece"
+                    , Dom.element "li"
+                        |> Dom.addAction ( "click", ChangeMode MoveOverlay )
+                        |> Dom.addClass "move-overlay"
+                        |> Dom.addClassConditional "active" (model.currentMode == MoveOverlay)
+                        |> Dom.appendText "Move Overlay"
+                    , Dom.element "li"
+                        |> Dom.addAction ( "click", ChangeMode DestroyOverlay )
+                        |> Dom.addClass "destroy-overlay"
+                        |> Dom.addClassConditional "active" (model.currentMode == DestroyOverlay)
+                        |> Dom.appendText "Destroy Overlay"
+                    ]
+            )
+        |> Dom.render
 
 
 getBoardHtml : Model -> Int -> Array Cell -> Html.Html Msg
@@ -331,21 +338,6 @@ getCellHtml model y x cellValue =
                             )
                         |> List.map (overlayToHtml model x y)
                     )
-
-        {-
-           |> Dom.appendChildList
-               (case findPlayerByCell x y model.players of
-                   Just p ->
-                       [ Dom.element "img"
-                           |> Dom.addClass ("player " ++ String.toLower (playerToString p))
-                           |> Dom.addAttribute (src ("/img/characters/portraits/" ++ String.toLower (playerToString p) ++ ".png"))
-                           |> DragDrop.makeDraggable model.dragDropState (MoveablePlayer p) dragDropMessages
-                       ]
-
-                   Nothing ->
-                       []
-               )
-        -}
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
