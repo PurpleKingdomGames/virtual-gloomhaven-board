@@ -20,12 +20,21 @@ type alias Model =
     { game : Game
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
+    , currentMode : GameModeType
     }
 
 
 type MoveablePieceType
     = OverlayType BoardOverlay
     | PieceType Piece
+
+
+type GameModeType
+    = MovePiece
+    | KillPiece
+    | MoveOverlay
+    | DestroyOverlay
+    | LootCell
 
 
 type alias MoveablePiece =
@@ -41,6 +50,8 @@ type Msg
     | MoveCanceled
     | MoveCompleted MoveablePiece ( Int, Int )
     | GameStatePushed Json.Decode.Value
+    | RemoveOverlay BoardOverlay
+    | RemovePiece Piece
 
 
 main : Program () Model Msg
@@ -146,7 +157,7 @@ init _ =
                 )
                 0
     in
-    ( Model (generateGameMap scenario ThreePlayer) DragDrop.initialState Nothing, Cmd.none )
+    ( Model (generateGameMap scenario ThreePlayer) DragDrop.initialState Nothing MovePiece, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -204,6 +215,32 @@ update msg model =
                     model.game
             in
             ( { model | game = { game | state = gameState } }, Cmd.none )
+
+        RemoveOverlay overlay ->
+            let
+                gameState =
+                    model.game.state
+
+                game =
+                    model.game
+
+                newState =
+                    { gameState | overlays = List.filter (\o -> o.cells /= overlay.cells || o.ref /= overlay.ref) gameState.overlays }
+            in
+            ( { model | game = { game | state = newState } }, Cmd.none )
+
+        RemovePiece piece ->
+            let
+                gameState =
+                    model.game.state
+
+                game =
+                    model.game
+
+                newState =
+                    { gameState | pieces = List.filter (\p -> p.x /= piece.x || p.y /= piece.y || p.ref /= piece.ref) gameState.pieces }
+            in
+            ( { model | game = { game | state = newState } }, Cmd.none )
 
 
 
@@ -292,7 +329,7 @@ getCellHtml model y x cellValue =
                                     _ ->
                                         True
                             )
-                        |> List.map (overlayToHtml x y)
+                        |> List.map (overlayToHtml model x y)
                     )
 
         {-
@@ -350,42 +387,6 @@ cellValueToString val =
         "impassable"
 
 
-
-{-
-   findPlayerByCell : Int -> Int -> List Player -> Maybe Player
-   findPlayerByCell x y players =
-       List.head (List.filter (\p -> p.x == x && p.y == y) players)
-
-
-   findBoardPieceByCell : Int -> Int -> List MapTile -> Maybe MapTile
-   findBoardPieceByCell x y pieces =
-       List.head (List.filter (\p -> p.x == x && p.y == y) pieces)
-
-
-   playerToString : Player -> String
-   playerToString player =
-       case player.class of
-           Brute ->
-               "Brute"
-
-           Cragheart ->
-               "Cragheart"
-
-           Mindthief ->
-               "Mindthief"
-
-           Scoundrel ->
-               "Scoundrel"
-
-           Spellweaver ->
-               "Spellweaver"
-
-           Tinkerer ->
-               "Tinkerer"
-
--}
-
-
 filterOverlaysForCoord : Int -> Int -> BoardOverlay -> Bool
 filterOverlaysForCoord x y overlay =
     case head overlay.cells of
@@ -431,7 +432,18 @@ pieceToHtml model x y piece =
                 Game.None ->
                     Dom.addClass "none"
            )
-        |> DragDrop.makeDraggable model.dragDropState (MoveablePiece (PieceType piece) x y) dragDropMessages
+        |> (if model.currentMode == MovePiece then
+                DragDrop.makeDraggable model.dragDropState (MoveablePiece (PieceType piece) x y) dragDropMessages
+
+            else
+                Dom.addAttribute (attribute "draggable" "false")
+           )
+        |> (if model.currentMode == KillPiece then
+                Dom.addAction ( "click", RemovePiece piece )
+
+            else
+                \e -> e
+           )
 
 
 enemyToHtml : Monster -> Element msg -> Element msg
@@ -469,8 +481,17 @@ enemyToHtml monster element =
             ]
 
 
-overlayToHtml : Int -> Int -> BoardOverlay -> Element msg
-overlayToHtml x y overlay =
+overlayToHtml : Model -> Int -> Int -> BoardOverlay -> Element Msg
+overlayToHtml model x y overlay =
+    let
+        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
+        dragDropMessages =
+            { dragStarted = MoveStarted
+            , dropTargetChanged = MoveTargetChanged
+            , dragEnded = MoveCanceled
+            , dropped = MoveCompleted
+            }
+    in
     Dom.element "div"
         |> Dom.addClass "overlay"
         |> Dom.addClass
@@ -530,7 +551,36 @@ overlayToHtml x y overlay =
         |> Dom.appendChild
             (Dom.element "img"
                 |> Dom.addAttribute (attribute "src" (getOverlayImageName overlay x y))
+                |> Dom.addAttribute (attribute "draggable" "false")
             )
+        |> (if model.currentMode == MoveOverlay then
+                case overlay.ref of
+                    Obstacle _ ->
+                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) x y) dragDropMessages
+
+                    Trap _ ->
+                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) x y) dragDropMessages
+
+                    _ ->
+                        Dom.addAttribute (attribute "draggable" "false")
+
+            else
+                Dom.addAttribute (attribute "draggable" "false")
+           )
+        |> (if model.currentMode == DestroyOverlay then
+                case overlay.ref of
+                    Obstacle _ ->
+                        Dom.addAction ( "click", RemoveOverlay overlay )
+
+                    Trap _ ->
+                        Dom.addAction ( "click", RemoveOverlay overlay )
+
+                    _ ->
+                        \e -> e
+
+            else
+                \e -> e
+           )
 
 
 getOverlayImageName : BoardOverlay -> Int -> Int -> String

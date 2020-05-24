@@ -6,7 +6,7 @@ $hexRotation: 60deg;
     src: url('/fonts/PirataOne-Gloomhaven.woff2') format('woff2'),url('/fonts/PirataOne-Gloomhaven.woff') format('woff'), url('/fonts/PirataOne-Gloomhaven.ttf') format('truetype'), url('/fonts/PirataOne-Gloomhaven.svg') format('svg');
 }
 
-[draggable] {
+[draggable="true"] {
     -moz-user-select: none;
     -khtml-user-select: none;
     -webkit-user-select: none;
@@ -14,6 +14,10 @@ $hexRotation: 60deg;
     /* Required to make elements draggable in old WebKit */
     -khtml-user-drag: element;
     -webkit-user-drag: element;
+
+    &:hover {
+        cursor: move;
+    }
 
     &.being-dragged {
         opacity: 0.5;
@@ -28,7 +32,6 @@ $hexRotation: 60deg;
         display: flex;
         flex-direction: row;
         position: relative;
-
 
         @for $var from 2 through 100 {
             &:nth-child(#{$var}) {
