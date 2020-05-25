@@ -36,6 +36,7 @@ type GameModeType
     | MoveOverlay
     | DestroyOverlay
     | LootCell
+    | RevealRoom
 
 
 type alias MoveablePiece =
@@ -278,6 +279,11 @@ getNavHtml model =
                         |> Dom.addClassConditional "active" (model.currentMode == KillPiece)
                         |> Dom.appendText "Kill Piece"
                     , Dom.element "li"
+                        |> Dom.addAction ( "click", ChangeMode LootCell )
+                        |> Dom.addClass "loot"
+                        |> Dom.addClassConditional "active" (model.currentMode == LootCell)
+                        |> Dom.appendText "Loot"
+                    , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeMode MoveOverlay )
                         |> Dom.addClass "move-overlay"
                         |> Dom.addClassConditional "active" (model.currentMode == MoveOverlay)
@@ -287,6 +293,11 @@ getNavHtml model =
                         |> Dom.addClass "destroy-overlay"
                         |> Dom.addClassConditional "active" (model.currentMode == DestroyOverlay)
                         |> Dom.appendText "Destroy Overlay"
+                    , Dom.element "li"
+                        |> Dom.addAction ( "click", ChangeMode RevealRoom )
+                        |> Dom.addClass "reveal-room"
+                        |> Dom.addClassConditional "active" (model.currentMode == RevealRoom)
+                        |> Dom.appendText "Reveal Room"
                     ]
             )
         |> Dom.render
@@ -559,19 +570,18 @@ overlayToHtml model x y overlay =
             else
                 Dom.addAttribute (attribute "draggable" "false")
            )
-        |> (if model.currentMode == DestroyOverlay then
-                case overlay.ref of
-                    Obstacle _ ->
-                        Dom.addAction ( "click", RemoveOverlay overlay )
+        |> (case ( model.currentMode, overlay.ref ) of
+                ( DestroyOverlay, Obstacle _ ) ->
+                    Dom.addAction ( "click", RemoveOverlay overlay )
 
-                    Trap _ ->
-                        Dom.addAction ( "click", RemoveOverlay overlay )
+                ( DestroyOverlay, Trap _ ) ->
+                    Dom.addAction ( "click", RemoveOverlay overlay )
 
-                    _ ->
-                        \e -> e
+                ( LootCell, Treasure _ ) ->
+                    Dom.addAction ( "click", RemoveOverlay overlay )
 
-            else
-                \e -> e
+                _ ->
+                    \e -> e
            )
 
 
