@@ -46,6 +46,12 @@ $hexRotation: 60deg;
         .cell-wrapper {
             position:relative;
             overflow: visible;
+            visibility: visible;
+
+            &.hidden {
+                opacity: 0;
+                visibility: hidden;
+            }
 
             &[data-board-ref]
             {

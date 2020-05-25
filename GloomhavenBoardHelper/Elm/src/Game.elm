@@ -3,7 +3,7 @@ module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, 
 import Array exposing (Array, get, initialize, set)
 import Bitwise exposing (and)
 import BoardMapTile exposing (MapTile, MapTileRef, refToString)
-import BoardOverlay exposing (BoardOverlay)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayType(..))
 import Character exposing (CharacterClass)
 import Dict exposing (Dict, get)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
@@ -200,6 +200,12 @@ setCellFromMapTile initialArr gamestate overlays offsetX offsetY tile =
                                 _ ->
                                     [ piece ]
                            )
+                , visibleRooms =
+                    if any (\r -> r.ref == StartingLocation) boardOverlays then
+                        tile.ref :: gamestate.visibleRooms
+
+                    else
+                        gamestate.visibleRooms
             }
 
         rowArr =

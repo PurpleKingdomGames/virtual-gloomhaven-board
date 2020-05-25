@@ -12,7 +12,8 @@ import Html exposing (div, li, nav, text, ul)
 import Html.Attributes exposing (attribute, class, src)
 import Html.Events exposing (onClick)
 import Json.Decode exposing (decodeValue, errorToString)
-import List exposing (filter, head, tail, take)
+import List exposing (any, filter, head, tail, take)
+import List.Extra exposing (uniqueBy)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString)
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
 
@@ -55,6 +56,7 @@ type Msg
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
     | ChangeMode GameModeType
+    | RevealRoomMsg (List MapTileRef)
 
 
 main : Program () Model Msg
@@ -248,6 +250,19 @@ update msg model =
         ChangeMode mode ->
             ( { model | currentMode = mode }, Cmd.none )
 
+        RevealRoomMsg rooms ->
+            let
+                gameState =
+                    model.game.state
+
+                game =
+                    model.game
+
+                newState =
+                    { gameState | visibleRooms = uniqueBy (\r -> Maybe.withDefault "" (refToString r)) (rooms ++ gameState.visibleRooms) }
+            in
+            ( { model | game = { game | state = newState } }, Cmd.none )
+
 
 view : Model -> Html.Html Msg
 view model =
@@ -322,7 +337,7 @@ getCellHtml model y x cellValue =
         cellElement : Dom.Element Msg
         cellElement =
             Dom.element "div"
-                |> Dom.addClass ("hexagon " ++ cellValueToString cellValue)
+                |> Dom.addClass "hexagon "
                 |> Dom.appendChildList
                     (case getPieceForCoord x y model.game.state.pieces of
                         Nothing ->
@@ -347,11 +362,12 @@ getCellHtml model y x cellValue =
                                     _ ->
                                         True
                             )
-                        |> List.map (overlayToHtml model x y)
+                        |> List.map (overlayToHtml cellValue model x y)
                     )
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
+        |> Dom.addClass (cellValueToString model cellValue)
         |> Dom.addAttributeList
             (case head (List.filter (\( _, o, _ ) -> o) cellValue.rooms) of
                 Just ( ref, _, turns ) ->
@@ -376,18 +392,17 @@ getCellHtml model y x cellValue =
         |> Dom.render
 
 
-cellValueToString : Cell -> String
-cellValueToString val =
-    {- if val.hidden then
-           "hidden"
+cellValueToString : Model -> Cell -> String
+cellValueToString model val =
+    if any (\( r, _, _ ) -> any (\x -> x == r) model.game.state.visibleRooms) val.rooms then
+        if val.passable == True then
+            "passable"
 
-       else
-    -}
-    if val.passable == True then
-        "passable"
+        else
+            "impassable"
 
     else
-        "impassable"
+        "hidden"
 
 
 filterOverlaysForCoord : Int -> Int -> BoardOverlay -> Bool
@@ -484,8 +499,8 @@ enemyToHtml monster element =
             ]
 
 
-overlayToHtml : Model -> Int -> Int -> BoardOverlay -> Element Msg
-overlayToHtml model x y overlay =
+overlayToHtml : Cell -> Model -> Int -> Int -> BoardOverlay -> Element Msg
+overlayToHtml cell model x y overlay =
     let
         dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
         dragDropMessages =
@@ -579,6 +594,9 @@ overlayToHtml model x y overlay =
 
                 ( LootCell, Treasure _ ) ->
                     Dom.addAction ( "click", RemoveOverlay overlay )
+
+                ( RevealRoom, Door _ ) ->
+                    Dom.addAction ( "click", RevealRoomMsg (List.map (\( r, _, _ ) -> r) cell.rooms) )
 
                 _ ->
                     \e -> e
