@@ -10,9 +10,15 @@
     <div id="elm-node"></div>
     <script>
         document.body.addEventListener("dragstart", event => {
+            console.log(event);
             if (event.target && event.target.draggable) {
                 // absurdly, this is needed for Firefox; see https://medium.com/elm-shorts/elm-drag-and-drop-game-630205556d2
                 event.dataTransfer.setData("text/html", "blank");
+                var emptyImage = document.createElement('img');
+                // Set the src to be a 0x0 gif
+                emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+                event.dataTransfer.setDragImage(emptyImage, 0, 0);
+                console.log('drag');
             }
         });
 

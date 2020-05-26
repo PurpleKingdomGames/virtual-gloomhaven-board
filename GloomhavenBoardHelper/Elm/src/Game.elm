@@ -330,8 +330,8 @@ mapOverlayCoord originalX originalY newX newY overlay =
     }
 
 
-movePiece : Piece -> ( Int, Int ) -> Game -> ( Game, Piece )
-movePiece piece ( toX, toY ) game =
+movePiece : Piece -> ( Int, Int ) -> ( Int, Int ) -> Game -> ( Game, Piece )
+movePiece piece ( fromX, fromY ) ( toX, toY ) game =
     let
         newPiece =
             { piece | x = toX, y = toY }
@@ -340,7 +340,7 @@ movePiece piece ( toX, toY ) game =
             game.state
 
         newGamestate =
-            { gamestate | pieces = filter (removePiece piece) gamestate.pieces }
+            { gamestate | pieces = filter (removePiece { piece | x = fromX, y = fromY }) gamestate.pieces }
     in
     if canMoveTo ( toX, toY ) { game | state = newGamestate } then
         ( { game | state = { newGamestate | pieces = newPiece :: newGamestate.pieces } }

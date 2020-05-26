@@ -173,34 +173,48 @@ update msg model =
 
         MoveTargetChanged coords ->
             let
-                ( game, newDraggable ) =
+                newDraggable =
                     case model.currentDraggable of
                         Just m ->
                             case m.ref of
                                 OverlayType o ->
                                     let
-                                        ( newGame, newOverlay ) =
-                                            moveOverlay o ( m.x, m.y ) coords model.game
+                                        newOverlay =
+                                            Tuple.second (moveOverlay o ( m.x, m.y ) coords model.game)
                                     in
-                                    ( newGame, Just (MoveablePiece (OverlayType newOverlay) m.x m.y) )
+                                    Just (MoveablePiece (OverlayType newOverlay) m.x m.y)
 
                                 PieceType p ->
                                     let
-                                        ( newGame, newPiece ) =
-                                            movePiece p coords model.game
+                                        newPiece =
+                                            Tuple.second (movePiece p ( m.x, m.y ) coords model.game)
                                     in
-                                    ( newGame, Just (MoveablePiece (PieceType newPiece) m.x m.y) )
+                                    Just (MoveablePiece (PieceType newPiece) m.x m.y)
 
                         Nothing ->
-                            ( model.game, model.currentDraggable )
+                            model.currentDraggable
             in
-            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, game = game, currentDraggable = newDraggable }, pushGameState game.state )
+            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, currentDraggable = newDraggable }, Cmd.none )
 
         MoveCanceled ->
             ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
 
-        MoveCompleted character ( x, y ) ->
-            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
+        MoveCompleted _ coords ->
+            let
+                game =
+                    case model.currentDraggable of
+                        Just m ->
+                            case m.ref of
+                                OverlayType o ->
+                                    Tuple.first (moveOverlay o ( m.x, m.y ) coords model.game)
+
+                                PieceType p ->
+                                    Tuple.first (movePiece p ( m.x, m.y ) coords model.game)
+
+                        Nothing ->
+                            model.game
+            in
+            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = game, currentDraggable = Nothing }, pushGameState game.state )
 
         GameStatePushed val ->
             let
@@ -337,15 +351,7 @@ getCellHtml model y x cellValue =
         cellElement : Dom.Element Msg
         cellElement =
             Dom.element "div"
-                |> Dom.addClass "hexagon "
-                |> Dom.appendChildList
-                    (case getPieceForCoord x y model.game.state.pieces of
-                        Nothing ->
-                            []
-
-                        Just p ->
-                            [ pieceToHtml model x y p ]
-                    )
+                |> Dom.addClass "hexagon"
                 |> Dom.appendChildList
                     (List.filter (filterOverlaysForCoord x y) model.game.state.overlays
                         |> List.filter
@@ -364,6 +370,30 @@ getCellHtml model y x cellValue =
                             )
                         |> List.map (overlayToHtml cellValue model x y)
                     )
+                |> Dom.appendChildList
+                    (case getPieceForCoord x y model.game.state.pieces of
+                        Nothing ->
+                            []
+
+                        Just p ->
+                            [ pieceToHtml model x y p ]
+                    )
+                |> (case model.currentDraggable of
+                        Just m ->
+                            case m.ref of
+                                PieceType p ->
+                                    if p.x == x && p.y == y then
+                                        Dom.appendChild (pieceToHtml model x y p)
+
+                                    else
+                                        \e -> e
+
+                                OverlayType o ->
+                                    Dom.appendChild (overlayToHtml cellValue model x y o)
+
+                        Nothing ->
+                            \e -> e
+                   )
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
