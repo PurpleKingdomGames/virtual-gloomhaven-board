@@ -92,7 +92,11 @@ encodedJson =
         {
             "ref": {
                 "type": "door",
-                "subType": "stone"
+                "subType": "stone",
+                "links": [
+                    "a1a",
+                    "a2a"
+                ]
             },
             "direction": "horizontal",
             "cells": [
@@ -196,7 +200,7 @@ decodedState =
         , BoardOverlay (Treasure (Chest (NormalChest 1))) DiagonalRight [ ( 2, 2 ) ]
         , BoardOverlay (Treasure (Loot 2)) DiagonalLeft [ ( 2, 3 ) ]
         , BoardOverlay (Treasure Coin) DiagonalLeft [ ( 2, 4 ) ]
-        , BoardOverlay (Door Stone) Horizontal [ ( 6, 5 ) ]
+        , BoardOverlay (Door Stone [A1a, A2a]) Horizontal [ ( 6, 5 ) ]
         , BoardOverlay (Trap BearTrap) Vertical [ ( 7, 5 ) ]
         , BoardOverlay (Obstacle Sarcophagus) Horizontal [ ( 6, 5 ), ( 7, 5 ) ]
         ]

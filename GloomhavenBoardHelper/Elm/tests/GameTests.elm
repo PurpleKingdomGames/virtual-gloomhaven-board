@@ -21,28 +21,28 @@ suite =
 
                         expectedBoard =
                             [ fromList
-                                [ Cell [ ( B3b, True, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
+                                [ Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
                                 ]
                             , fromList
-                                [ Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] False
+                                [ Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] False
                                 ]
                             , fromList
-                                [ Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
+                                [ Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
                                 ]
                             , fromList
-                                [ Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] True
-                                , Cell [ ( B3b, False, 0 ) ] False
+                                [ Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] False
                                 ]
                             ]
                     in
@@ -64,35 +64,35 @@ suite =
                                 , Cell [] False
                                 ]
                             , fromList
-                                [ Cell [ ( B3b, False, 3 ) ] False
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, False, 3 ) ] True
+                                [ Cell [ B3b ] False
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
                                 , Cell [] False
                                 , Cell [] False
                                 ]
                             , fromList
                                 [ Cell [] False
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, False, 3 ) ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
                                 , Cell [] False
                                 ]
                             , fromList
-                                [ Cell [ ( B3b, False, 3 ) ] False
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, False, 3 ) ] True
+                                [ Cell [ B3b ] False
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
                                 , Cell [] False
                                 , Cell [] False
                                 ]
                             , fromList
                                 [ Cell [] False
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, False, 3 ) ] True
-                                , Cell [ ( B3b, True, 3 ) ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
+                                , Cell [ B3b ] True
                                 , Cell [] False
                                 ]
                             , fromList
