@@ -36,7 +36,7 @@ encodeGameState gameState =
     object
         [ ( "scenario", Encode.int gameState.scenario )
         , ( "numPlayers", Encode.int (encodeNumPlayers gameState.numPlayers) )
-        , ( "visibleRooms", Encode.list Encode.string (encodeVisibleRooms gameState.visibleRooms) )
+        , ( "visibleRooms", Encode.list Encode.string (encodeMapTileRefList gameState.visibleRooms) )
         , ( "overlays", Encode.list Encode.object (encodeOverlays gameState.overlays) )
         , ( "pieces", Encode.list Encode.object (encodePieces gameState.pieces) )
         ]
@@ -175,6 +175,7 @@ decodeBoardOverlayType =
 
                 "door" ->
                     decodeDoor
+                        |> andThen decodeDoorRefs
 
                 "trap" ->
                     decodeTrap
@@ -192,18 +193,25 @@ decodeBoardOverlayType =
         |> andThen decodeType
 
 
-decodeDoor : Decoder BoardOverlayType
+decodeDoor : Decoder DoorSubType
 decodeDoor =
     field "subType" Decode.string
         |> andThen
             (\s ->
                 case String.toLower s of
                     "stone" ->
-                        succeed (Door Stone)
+                        succeed Stone
 
                     _ ->
                         fail (s ++ " is not a door sub-type")
             )
+
+
+decodeDoorRefs : DoorSubType -> Decoder BoardOverlayType
+decodeDoorRefs subType =
+    field "links" (Decode.list Decode.string)
+        |> andThen decodeMapRefList
+        |> andThen (\refs -> succeed (Door subType refs))
 
 
 decodeTrap : Decoder BoardOverlayType
@@ -329,8 +337,8 @@ encodeNumPlayers numPlayers =
             4
 
 
-encodeVisibleRooms : List MapTileRef -> List String
-encodeVisibleRooms refs =
+encodeMapTileRefList : List MapTileRef -> List String
+encodeMapTileRefList refs =
     List.map (\r -> refToString r) refs
         |> List.filter (\r -> r /= Nothing)
         |> List.map (\r -> Maybe.withDefault "" r)
@@ -378,10 +386,11 @@ encodeOverlayType overlay =
         StartingLocation ->
             object [ ( "type", Encode.string "starting-location" ) ]
 
-        Door s ->
+        Door s refs ->
             object
                 [ ( "type", Encode.string "door" )
                 , ( "subType", Encode.string (encodeDoor s) )
+                , ( "links", Encode.list Encode.string (encodeMapTileRefList refs) )
                 ]
 
         Trap t ->

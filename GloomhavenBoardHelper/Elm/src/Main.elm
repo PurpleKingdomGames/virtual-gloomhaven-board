@@ -558,7 +558,7 @@ overlayToHtml cell model x y overlay =
                 Obstacle _ ->
                     "obstacle"
 
-                Door _ ->
+                Door _ _ ->
                     "door"
 
                 Trap _ ->
@@ -630,8 +630,8 @@ overlayToHtml cell model x y overlay =
                 ( LootCell, Treasure _ ) ->
                     Dom.addAction ( "click", RemoveOverlay overlay )
 
-                ( RevealRoom, Door _ ) ->
-                    Dom.addAction ( "click", RevealRoomMsg cell.rooms )
+                ( RevealRoom, Door _ refs ) ->
+                    Dom.addAction ( "click", RevealRoomMsg refs )
 
                 _ ->
                     \e -> e
@@ -652,7 +652,7 @@ getOverlayImageName overlay x y =
 
         extendedOverlayName =
             case overlay.ref of
-                Door d ->
+                Door d _ ->
                     case d of
                         Stone ->
                             if overlay.direction == Vertical then

@@ -1,9 +1,11 @@
 module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 
+import BoardMapTile exposing (MapTileRef)
+
 
 type BoardOverlayType
     = StartingLocation
-    | Door DoorSubType
+    | Door DoorSubType (List MapTileRef)
     | Trap TrapSubType
     | Obstacle ObstacleSubType
     | Treasure TreasureSubType
@@ -58,7 +60,7 @@ getBoardOverlayName overlay =
         StartingLocation ->
             "starting-location"
 
-        Door d ->
+        Door d _ ->
             case d of
                 Stone ->
                     "door-stone"
