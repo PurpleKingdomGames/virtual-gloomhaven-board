@@ -32,10 +32,6 @@ $hexRotation: 60deg;
         -moz-user-drag: none;
         -o-user-drag: none;
         user-drag: none;
-
-        &:hover {
-           cursor: move;
-        }
     }
 
     &.being-dragged {

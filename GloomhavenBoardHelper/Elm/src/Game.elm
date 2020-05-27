@@ -37,13 +37,15 @@ type alias Piece =
 
 
 type alias Cell =
-    { rooms : List ( MapTileRef, Bool, Int )
+    { rooms : List MapTileRef
     , passable : Bool
     }
 
 
 type alias Game =
     { state : GameState
+    , roomOrigins : Dict String ( Int, Int )
+    , roomTurns : Dict String Int
     , staticBoard : Array (Array Cell)
     }
 
@@ -138,26 +140,26 @@ generateGameMap scenario numPlayers =
         initMap =
             initialize arrSize (always (initialize arrSize (always (Cell [] False))))
     in
-    setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY ( initGameState, initMap )
+    setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY (Game initGameState Dict.empty Dict.empty initMap)
 
 
-setCellsFromMapTiles : List MapTile -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> ( GameState, Array (Array Cell) ) -> Game
-setCellsFromMapTiles mapTileList overlays offsetX offsetY ( gamestate, cellArr ) =
+setCellsFromMapTiles : List MapTile -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> Game -> Game
+setCellsFromMapTiles mapTileList overlays offsetX offsetY game =
     case mapTileList of
         [] ->
-            Game gamestate cellArr
+            game
 
         [ last ] ->
-            setCellFromMapTile cellArr gamestate overlays offsetX offsetY last
+            setCellFromMapTile game overlays offsetX offsetY last
                 |> setCellsFromMapTiles [] overlays offsetX offsetY
 
         head :: rest ->
-            setCellFromMapTile cellArr gamestate overlays offsetX offsetY head
+            setCellFromMapTile game overlays offsetX offsetY head
                 |> setCellsFromMapTiles rest overlays offsetX offsetY
 
 
-setCellFromMapTile : Array (Array Cell) -> GameState -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> MapTile -> ( GameState, Array (Array Cell) )
-setCellFromMapTile initialArr gamestate overlays offsetX offsetY tile =
+setCellFromMapTile : Game -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> MapTile -> Game
+setCellFromMapTile game overlays offsetX offsetY tile =
     let
         x =
             tile.x - offsetX
@@ -173,15 +175,25 @@ setCellFromMapTile initialArr gamestate overlays offsetX offsetY tile =
                 Nothing ->
                     ""
 
+        newOrigins =
+            if tile.originalX == 0 && tile.originalY == 0 then
+                Dict.insert refString ( x, y ) game.roomOrigins
+
+            else
+                game.roomOrigins
+
+        state =
+            game.state
+
         ( boardOverlays, piece ) =
             case Dict.get refString overlays of
                 Just ( o, m ) ->
                     ( filter (filterByCoord tile.originalX tile.originalY) o
                         |> map (mapOverlayCoord tile.originalX tile.originalY x y)
-                    , filter (filterMonsterLevel gamestate.numPlayers) m
+                    , filter (filterMonsterLevel game.state.numPlayers) m
                         |> filter (\f -> f.initialX == tile.originalX && f.initialY == tile.originalY)
                         |> head
-                        |> getPieceFromMonster gamestate.numPlayers
+                        |> getPieceFromMonster game.state.numPlayers
                         |> mapPieceCoord tile.originalX tile.originalY x y
                     )
 
@@ -189,10 +201,10 @@ setCellFromMapTile initialArr gamestate overlays offsetX offsetY tile =
                     ( [], Piece None 0 0 )
 
         newGameState =
-            { gamestate
-                | overlays = gamestate.overlays ++ boardOverlays
+            { state
+                | overlays = game.state.overlays ++ boardOverlays
                 , pieces =
-                    gamestate.pieces
+                    game.state.pieces
                         ++ (case piece.ref of
                                 None ->
                                     []
@@ -202,14 +214,14 @@ setCellFromMapTile initialArr gamestate overlays offsetX offsetY tile =
                            )
                 , visibleRooms =
                     if any (\r -> r.ref == StartingLocation) boardOverlays then
-                        tile.ref :: gamestate.visibleRooms
+                        tile.ref :: game.state.visibleRooms
 
                     else
-                        gamestate.visibleRooms
+                        game.state.visibleRooms
             }
 
         rowArr =
-            Array.get y initialArr
+            Array.get y game.staticBoard
 
         newBoard =
             case rowArr of
@@ -229,18 +241,18 @@ setCellFromMapTile initialArr gamestate overlays offsetX offsetY tile =
 
                                             else
                                                 True
-                                        , rooms = ( tile.ref, tile.originalX == 0 && tile.originalY == 0, tile.turns ) :: foundCell.rooms
+                                        , rooms = tile.ref :: foundCell.rooms
                                     }
                             in
-                            set y (set x newCell yRow) initialArr
+                            set y (set x newCell yRow) game.staticBoard
 
                         Nothing ->
-                            initialArr
+                            game.staticBoard
 
                 Nothing ->
-                    initialArr
+                    game.staticBoard
     in
-    ( newGameState, newBoard )
+    { game | state = newGameState, staticBoard = newBoard, roomOrigins = newOrigins, roomTurns = Dict.insert refString tile.turns game.roomTurns }
 
 
 filterMonsterLevel : NumPlayers -> ScenarioMonster -> Bool

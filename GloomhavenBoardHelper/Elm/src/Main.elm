@@ -4,6 +4,7 @@ import Array exposing (..)
 import BoardMapTile exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
+import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece)
@@ -398,16 +399,20 @@ getCellHtml model y x cellValue =
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
         |> Dom.addClass (cellValueToString model cellValue)
-        |> Dom.addAttributeList
-            (case head (List.filter (\( _, o, _ ) -> o) cellValue.rooms) of
-                Just ( ref, _, turns ) ->
-                    [ attribute "data-board-ref" (Maybe.withDefault "" (refToString ref))
-                    , class ("rotate-" ++ String.fromInt turns)
-                    ]
+        |> (case
+                Dict.toList model.game.roomOrigins
+                    |> List.filter (\( _, ( tx, ty ) ) -> tx == x && ty == y)
+                    |> head
+            of
+                Just ( ref, _ ) ->
+                    Dom.addAttributeList
+                        [ attribute "data-board-ref" ref
+                        , class ("rotate-" ++ String.fromInt (Maybe.withDefault 0 (Dict.get ref model.game.roomTurns)))
+                        ]
 
                 Nothing ->
-                    []
-            )
+                    \e -> e
+           )
         |> Dom.appendChild
             (Dom.element "div"
                 |> Dom.addClass "cell"
@@ -424,7 +429,7 @@ getCellHtml model y x cellValue =
 
 cellValueToString : Model -> Cell -> String
 cellValueToString model val =
-    if any (\( r, _, _ ) -> any (\x -> x == r) model.game.state.visibleRooms) val.rooms then
+    if any (\r -> any (\x -> x == r) model.game.state.visibleRooms) val.rooms then
         if val.passable == True then
             "passable"
 
@@ -626,7 +631,7 @@ overlayToHtml cell model x y overlay =
                     Dom.addAction ( "click", RemoveOverlay overlay )
 
                 ( RevealRoom, Door _ ) ->
-                    Dom.addAction ( "click", RevealRoomMsg (List.map (\( r, _, _ ) -> r) cell.rooms) )
+                    Dom.addAction ( "click", RevealRoomMsg cell.rooms )
 
                 _ ->
                     \e -> e
