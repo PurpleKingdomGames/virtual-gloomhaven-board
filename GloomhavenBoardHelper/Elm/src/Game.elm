@@ -189,7 +189,7 @@ setCellFromMapTile game overlays offsetX offsetY tile =
             case Dict.get refString overlays of
                 Just ( o, m ) ->
                     ( filter (filterByCoord tile.originalX tile.originalY) o
-                        |> map (mapOverlayCoord tile.originalX tile.originalY x y)
+                        |> map (mapOverlayCoord tile.originalX tile.originalY x y tile.turns)
                     , filter (filterMonsterLevel game.state.numPlayers) m
                         |> filter (\f -> f.initialX == tile.originalX && f.initialY == tile.originalY)
                         |> head
@@ -310,8 +310,8 @@ mapPieceCoord _ _ newX newY piece =
     { piece | x = newX, y = newY }
 
 
-mapOverlayCoord : Int -> Int -> Int -> Int -> BoardOverlay -> BoardOverlay
-mapOverlayCoord originalX originalY newX newY overlay =
+mapOverlayCoord : Int -> Int -> Int -> Int -> Int -> BoardOverlay -> BoardOverlay
+mapOverlayCoord originalX originalY newX newY turns overlay =
     let
         ( oX, oY, oZ ) =
             oddRowToCube ( originalX, originalY )
@@ -334,7 +334,8 @@ mapOverlayCoord originalX originalY newX newY overlay =
                 (\c ->
                     let
                         ( x1, y1, z1 ) =
-                            oddRowToCube c
+                            Hexagon.rotate c ( originalX, originalY ) turns
+                                |> oddRowToCube
                     in
                     cubeToOddRow ( diffX + x1, diffY + y1, diffZ + z1 )
                 )

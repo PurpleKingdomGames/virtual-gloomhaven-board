@@ -10,7 +10,6 @@
     <div id="elm-node"></div>
     <script>
         document.body.addEventListener("dragstart", event => {
-            console.log(event);
             if (event.target && event.target.draggable) {
                 // absurdly, this is needed for Firefox; see https://medium.com/elm-shorts/elm-drag-and-drop-game-630205556d2
                 event.dataTransfer.setData("text/html", "blank");
@@ -33,6 +32,7 @@
         const signalSocket = new WebSocket('ws://88.98.84.156:5000/ws');
         let offerTimeout = null;
         app.ports.pushGameStatePort.subscribe(function(message) {
+            console.log(message);
             signalSocket.send("UPDATE 127.0.0.1 " + JSON.stringify(message) + "\r\n");
             signalSocket.send("UPDATE ::1 " + JSON.stringify(message) + "\r\n");
         });

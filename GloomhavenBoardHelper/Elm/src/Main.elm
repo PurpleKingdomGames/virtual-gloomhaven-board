@@ -353,6 +353,7 @@ getCellHtml model y x cellValue =
         cellElement =
             Dom.element "div"
                 |> Dom.addClass "hexagon"
+                -- Treasure chests, obstacles, doors, traps etc.
                 |> Dom.appendChildList
                     (List.filter (filterOverlaysForCoord x y) model.game.state.overlays
                         |> List.filter
@@ -369,8 +370,9 @@ getCellHtml model y x cellValue =
                                     _ ->
                                         True
                             )
-                        |> List.map (overlayToHtml cellValue model x y)
+                        |> List.map (overlayToHtml model x y)
                     )
+                -- Players / Monsters / Summons
                 |> Dom.appendChildList
                     (case getPieceForCoord x y model.game.state.pieces of
                         Nothing ->
@@ -379,6 +381,26 @@ getCellHtml model y x cellValue =
                         Just p ->
                             [ pieceToHtml model x y p ]
                     )
+                -- Loot / Coins
+                |> Dom.appendChildList
+                    (List.filter (filterOverlaysForCoord x y) model.game.state.overlays
+                        |> List.filter
+                            (\o ->
+                                case o.ref of
+                                    Treasure t ->
+                                        case t of
+                                            Chest _ ->
+                                                False
+
+                                            _ ->
+                                                True
+
+                                    _ ->
+                                        False
+                            )
+                        |> List.map (overlayToHtml model x y)
+                    )
+                -- The current draggable piece
                 |> (case model.currentDraggable of
                         Just m ->
                             case m.ref of
@@ -390,7 +412,7 @@ getCellHtml model y x cellValue =
                                         \e -> e
 
                                 OverlayType o ->
-                                    Dom.appendChild (overlayToHtml cellValue model x y o)
+                                    Dom.appendChild (overlayToHtml model x y o)
 
                         Nothing ->
                             \e -> e
@@ -442,9 +464,9 @@ cellValueToString model val =
 
 filterOverlaysForCoord : Int -> Int -> BoardOverlay -> Bool
 filterOverlaysForCoord x y overlay =
-    case head overlay.cells of
-        Just ( oX, oY ) ->
-            oX == x && oY == y
+    case head (List.filter (\( oX, oY ) -> oX == x && oY == y) overlay.cells) of
+        Just _ ->
+            True
 
         Nothing ->
             False
@@ -534,8 +556,8 @@ enemyToHtml monster element =
             ]
 
 
-overlayToHtml : Cell -> Model -> Int -> Int -> BoardOverlay -> Element Msg
-overlayToHtml cell model x y overlay =
+overlayToHtml : Model -> Int -> Int -> BoardOverlay -> Element Msg
+overlayToHtml model x y overlay =
     let
         dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
         dragDropMessages =

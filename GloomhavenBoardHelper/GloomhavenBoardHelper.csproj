@@ -7,7 +7,7 @@
         <!-- extends watching group to include *.js files -->
         <Watch
         Include="**\*.cs;**\*.js;**\*.json;**\*.html;**\*.elm;**\*.scss"
-        Exclude="bin\**\*;obj\**\*;Elm\tests\*;wwwroot\js\main.min.js"
+        Exclude="bin\**\*;obj\**\*;Elm\tests\*;Elm\elm-stuff;\*;wwwroot\js\main.min.js"
         />
     </ItemGroup>
     <ItemGroup>
@@ -16,13 +16,13 @@
 
     <Target Name="BuildDebug" BeforeTargets="Build" Condition="'$(Configuration)'=='Debug'">
         <!-- build elm normally (in dev)-->
-        <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=./wwwroot/js/main.min.js" />
+        <Exec Command="cd $(MSBuildProjectDirectory)/Elm &amp;&amp; elm make src/Main.elm --output=../wwwroot/js/main.min.js" />
         <Exec Command="sass wwwroot/scss:wwwroot/css --update --stop-on-error" />
     </Target>
 
     <Target Name="BuildElmRelease" BeforeTargets="Build" Condition="'$(Configuration)'=='Release'">
         <!-- build elm optomised (in release)-->
-        <Exec Command="cd Elm &amp;&amp; elm make Elm/src/Main.elm --output=./wwwroot/js/main.js --optimize" />
+        <Exec Command="cd  $(MSBuildProjectDirectory)/Elm &amp;&amp; elm make Elm/src/Main.elm --output=../wwwroot/js/main.js --optimize" />
         <Exec Command="uglifyjs wwwroot//js/main.js --compress 'pure_funcs=&quot;F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9&quot;,pure_getters,keep_fargs=false,unsafe_comps,unsafe' | uglifyjs --mangle --output=wwwroot/js/main.min.js" />
         <Exec Command="sass wwwroot/scss:wwwroot/css --update --stop-on-error --style compressed" />
     </Target>

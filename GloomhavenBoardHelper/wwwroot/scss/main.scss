@@ -6,6 +6,23 @@ $hexRotation: 60deg;
     src: url('/fonts/PirataOne-Gloomhaven.woff2') format('woff2'),url('/fonts/PirataOne-Gloomhaven.woff') format('woff'), url('/fonts/PirataOne-Gloomhaven.ttf') format('truetype'), url('/fonts/PirataOne-Gloomhaven.svg') format('svg');
 }
 
+.action-list {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+
+    ul {
+        list-style: none;
+        padding: 5px;
+        background-color: white;
+
+        li {
+            display: inline-block;
+            padding: 5px 10px;
+        }
+    }
+}
+
 [draggable] {
     -moz-user-select: none;
     -khtml-user-select: none;
