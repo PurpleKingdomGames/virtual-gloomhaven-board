@@ -692,15 +692,15 @@ getOverlayImageName overlay x y =
                     ""
 
         segmentPart =
-            case overlay.cells of
-                _ :: ( overlayX, overlayY ) :: _ ->
-                    if overlayX == x && overlayY == y then
-                        "-2"
+            case head (List.filter (\( _, ( oX, oY ) ) -> oX == x && oY == y) (toIndexedList (fromList overlay.cells))) of
+                Just ( segment, _ ) ->
+                    if segment > 0 then
+                        "-" ++ String.fromInt (segment + 1)
 
                     else
                         ""
 
-                _ ->
+                Nothing ->
                     ""
     in
     path ++ overlayName ++ extendedOverlayName ++ segmentPart ++ extension
