@@ -1,14 +1,15 @@
-module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece)
+module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, revealRooms)
 
-import Array exposing (Array, get, initialize, set)
+import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
 import BoardMapTile exposing (MapTile, MapTileRef, refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayType(..))
-import Character exposing (CharacterClass)
-import Dict exposing (Dict, get)
+import Character exposing (CharacterClass, characterToString)
+import Dict exposing (Dict, get, insert)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
-import List exposing (any, filter, head, map)
-import Monster exposing (Monster, MonsterLevel(..), monsterTypeToString)
+import List exposing (any, filter, filterMap, head, map, member)
+import Monster exposing (Monster, MonsterLevel(..), getMonsterBucketSize, monsterTypeToString)
+import Random exposing (Seed)
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
 
@@ -56,6 +57,7 @@ type alias GameState =
     , visibleRooms : List MapTileRef
     , overlays : List BoardOverlay
     , pieces : List Piece
+    , availableMonsters : Dict String (Array Int)
     }
 
 
@@ -81,7 +83,7 @@ getPieceName : PieceType -> String
 getPieceName piece =
     case piece of
         Player p ->
-            ""
+            Maybe.withDefault "" (characterToString p)
 
         AI t ->
             case t of
@@ -89,22 +91,23 @@ getPieceName piece =
                     ""
 
                 Enemy e ->
-                    case monsterTypeToString e.monster of
-                        Just m ->
-                            m
-
-                        Nothing ->
-                            ""
+                    Maybe.withDefault "" (monsterTypeToString e.monster)
 
         None ->
             ""
 
 
-generateGameMap : Scenario -> NumPlayers -> Game
-generateGameMap scenario numPlayers =
+generateGameMap : Scenario -> NumPlayers -> Seed -> Game
+generateGameMap scenario numPlayers seed =
     let
         ( mapTiles, bounds ) =
             mapTileDataToList scenario.mapTilesData Nothing
+
+        availableMonsters =
+            map (\m -> ( Maybe.withDefault "" (monsterTypeToString m), initialize (getMonsterBucketSize m) identity )) scenario.additionalMonsters
+                |> filter (\( k, _ ) -> k /= "")
+                |> map (\( k, v ) -> ( k, Tuple.first (orderRandomArrElement Array.empty seed v) ))
+                |> Dict.fromList
 
         initGameState =
             GameState scenario.id
@@ -112,6 +115,7 @@ generateGameMap scenario numPlayers =
                 []
                 []
                 []
+                availableMonsters
 
         initOverlays =
             mapTileDataToOverlayList scenario.mapTilesData
@@ -139,27 +143,41 @@ generateGameMap scenario numPlayers =
 
         initMap =
             initialize arrSize (always (initialize arrSize (always (Cell [] False))))
+
+        initGame =
+            setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY seed (Game initGameState Dict.empty Dict.empty initMap)
+
+        startRooms =
+            filterMap
+                (\o ->
+                    case o.ref of
+                        StartingLocation ->
+                            Just o.cells
+
+                        _ ->
+                            Nothing
+                )
+                initGame.state.overlays
+                |> List.foldl (++) []
+                |> filterMap (getRoomsByCoord initGame.staticBoard)
+                |> List.foldl (++) []
     in
-    setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY (Game initGameState Dict.empty Dict.empty initMap)
+    revealRooms initGame startRooms
 
 
-setCellsFromMapTiles : List MapTile -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> Game -> Game
-setCellsFromMapTiles mapTileList overlays offsetX offsetY game =
+setCellsFromMapTiles : List MapTile -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> Seed -> Game -> Game
+setCellsFromMapTiles mapTileList overlays offsetX offsetY seed game =
     case mapTileList of
-        [] ->
+        head :: rest ->
+            setCellFromMapTile game overlays offsetX offsetY head seed
+                |> setCellsFromMapTiles rest overlays offsetX offsetY seed
+
+        _ ->
             game
 
-        [ last ] ->
-            setCellFromMapTile game overlays offsetX offsetY last
-                |> setCellsFromMapTiles [] overlays offsetX offsetY
 
-        head :: rest ->
-            setCellFromMapTile game overlays offsetX offsetY head
-                |> setCellsFromMapTiles rest overlays offsetX offsetY
-
-
-setCellFromMapTile : Game -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> MapTile -> Game
-setCellFromMapTile game overlays offsetX offsetY tile =
+setCellFromMapTile : Game -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> MapTile -> Seed -> Game
+setCellFromMapTile game overlays offsetX offsetY tile seed =
     let
         x =
             tile.x - offsetX
@@ -200,6 +218,16 @@ setCellFromMapTile game overlays offsetX offsetY tile =
                 Nothing ->
                     ( [], Piece None 0 0 )
 
+        ( monsterBucket, newSeed ) =
+            case piece.ref of
+                AI (Enemy m) ->
+                    initialize (getMonsterBucketSize m.monster) identity
+                        |> orderRandomArrElement Array.empty seed
+                        |> (\( a, s ) -> ( Just ( Maybe.withDefault "" (monsterTypeToString m.monster), a ), s ))
+
+                _ ->
+                    ( Nothing, seed )
+
         newGameState =
             { state
                 | overlays = game.state.overlays ++ boardOverlays
@@ -212,12 +240,16 @@ setCellFromMapTile game overlays offsetX offsetY tile =
                                 _ ->
                                     [ piece ]
                            )
-                , visibleRooms =
-                    if any (\r -> r.ref == StartingLocation) boardOverlays then
-                        tile.ref :: game.state.visibleRooms
+                , availableMonsters =
+                    case monsterBucket of
+                        Just b ->
+                            b
+                                :: Dict.toList game.state.availableMonsters
+                                |> filter (\( k, _ ) -> k /= "")
+                                |> Dict.fromList
 
-                    else
-                        game.state.visibleRooms
+                        _ ->
+                            game.state.availableMonsters
             }
 
         rowArr =
@@ -295,6 +327,21 @@ getPieceFromMonster numPlayers monster =
             Piece None 0 0
 
 
+getRoomsByCoord : Array (Array Cell) -> ( Int, Int ) -> Maybe (List MapTileRef)
+getRoomsByCoord cells ( x, y ) =
+    case Array.get y cells of
+        Just colCell ->
+            case Array.get x colCell of
+                Just cell ->
+                    Just cell.rooms
+
+                Nothing ->
+                    Nothing
+
+        Nothing ->
+            Nothing
+
+
 filterByCoord : Int -> Int -> BoardOverlay -> Bool
 filterByCoord x y overlay =
     case overlay.cells of
@@ -364,6 +411,126 @@ movePiece piece ( fromX, fromY ) ( toX, toY ) game =
         ( game, piece )
 
 
+revealRooms : Game -> List MapTileRef -> Game
+revealRooms game rooms =
+    case rooms of
+        room :: rest ->
+            revealRooms (revealRoom room game) rest
+
+        _ ->
+            game
+
+
+revealRoom : MapTileRef -> Game -> Game
+revealRoom room game =
+    if member room game.state.visibleRooms then
+        game
+
+    else
+        let
+            roomCells =
+                indexedMap (\y arr -> indexedMap (\x cell -> ( cell.rooms, ( x, y ) )) arr) game.staticBoard
+                    |> Array.foldl (\a b -> fromList (toList a ++ toList b)) Array.empty
+                    |> toList
+                    |> filter (\( rooms, _ ) -> member room rooms)
+                    |> map (\( _, c ) -> c)
+
+            ( assignedMonsters, availableMonsters ) =
+                filterMap
+                    (\p ->
+                        case p.ref of
+                            AI (Enemy _) ->
+                                if member ( p.x, p.y ) roomCells then
+                                    Just p
+
+                                else
+                                    Nothing
+
+                            _ ->
+                                Nothing
+                    )
+                    game.state.pieces
+                    |> assignIdentifiers game.state.availableMonsters []
+                    |> (\( m, a ) ->
+                            ( filterMap
+                                (\p ->
+                                    case p.ref of
+                                        AI (Enemy e) ->
+                                            if e.id /= 0 then
+                                                Just p
+
+                                            else
+                                                Nothing
+
+                                        _ ->
+                                            Nothing
+                                )
+                                m
+                            , a
+                            )
+                       )
+
+            ignoredPieces =
+                filterMap
+                    (\p ->
+                        case p.ref of
+                            AI (Enemy _) ->
+                                if member ( p.x, p.y ) roomCells then
+                                    Nothing
+
+                                else
+                                    Just p
+
+                            _ ->
+                                Just p
+                    )
+                    game.state.pieces
+
+            state =
+                game.state
+        in
+        { game | state = { state | visibleRooms = room :: state.visibleRooms, availableMonsters = availableMonsters, pieces = ignoredPieces ++ assignedMonsters } }
+
+
+assignIdentifiers : Dict String (Array Int) -> List Piece -> List Piece -> ( List Piece, Dict String (Array Int) )
+assignIdentifiers availableMonsters processed monsters =
+    case monsters of
+        m :: rest ->
+            let
+                ( newM, newBucket ) =
+                    assignIdentifier availableMonsters m
+            in
+            assignIdentifiers newBucket (newM :: processed) rest
+
+        _ ->
+            ( processed, availableMonsters )
+
+
+assignIdentifier : Dict String (Array Int) -> Piece -> ( Piece, Dict String (Array Int) )
+assignIdentifier availableMonsters p =
+    case p.ref of
+        AI (Enemy monster) ->
+            case monsterTypeToString monster.monster of
+                Just key ->
+                    case Dict.get key availableMonsters of
+                        Just bucket ->
+                            case Array.get 0 bucket of
+                                Just id ->
+                                    ( { p | ref = AI (Enemy { monster | id = id + 1 }) }, insert key (slice 1 (length bucket) bucket) availableMonsters )
+
+                                Nothing ->
+                                    ( { p | ref = AI (Enemy { monster | id = 0 }) }, availableMonsters )
+
+                        Nothing ->
+                            ( { p | ref = AI (Enemy { monster | id = 0 }) }, availableMonsters )
+
+                Nothing ->
+                    ( { p | ref = AI (Enemy { monster | id = 0 }) }, availableMonsters )
+
+        _ ->
+            ( p, availableMonsters )
+
+
 moveOverlay : BoardOverlay -> ( Int, Int ) -> ( Int, Int ) -> Game -> ( Game, BoardOverlay )
 moveOverlay overlay ( fromX, fromY ) ( toX, toY ) game =
     ( game, overlay )
@@ -401,3 +568,27 @@ canMoveTo ( toX, toY ) game =
 
         Nothing ->
             False
+
+
+orderRandomArrElement : Array a -> Seed -> Array a -> ( Array a, Seed )
+orderRandomArrElement bucket seed original =
+    if length original == 0 then
+        ( bucket, seed )
+
+    else
+        let
+            ( index, newSeed ) =
+                Random.step (Random.int 0 (length original - 1)) seed
+
+            slice1 =
+                toList (slice 0 index original)
+
+            slice2 =
+                toList (slice (index + 1) (length original) original)
+        in
+        case Array.get index original of
+            Just o ->
+                orderRandomArrElement (push o bucket) newSeed (fromList (slice1 ++ slice2))
+
+            Nothing ->
+                ( bucket, seed )

@@ -1,4 +1,4 @@
-module Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
+module Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), getMonsterBucketSize, monsterTypeToString, stringToMonsterType)
 
 import Dict exposing (Dict, filter, fromList, get, toList)
 import List exposing (head)
@@ -160,3 +160,114 @@ monsterTypeToString monster =
                     head (toList (filter (\_ v -> v == b) bossDict))
             in
             Maybe.map (\( k, _ ) -> k) maybeKey
+
+
+getMonsterBucketSize : MonsterType -> Int
+getMonsterBucketSize monster =
+    case monster of
+        BossType _ ->
+            1
+
+        NormalType t ->
+            case t of
+                BanditGuard ->
+                    6
+
+                BanditArcher ->
+                    6
+
+                CityGuard ->
+                    6
+
+                CityArcher ->
+                    6
+
+                InoxGuard ->
+                    6
+
+                InoxArcher ->
+                    6
+
+                InoxShaman ->
+                    4
+
+                VermlingScout ->
+                    10
+
+                VermlingShaman ->
+                    6
+
+                LivingBones ->
+                    10
+
+                LivingCorpse ->
+                    6
+
+                LivingSpirit ->
+                    6
+
+                Cultist ->
+                    6
+
+                FlameDemon ->
+                    6
+
+                FrostDemon ->
+                    6
+
+                EarthDemon ->
+                    6
+
+                WindDemon ->
+                    6
+
+                NightDemon ->
+                    6
+
+                SunDemon ->
+                    6
+
+                Ooze ->
+                    10
+
+                GiantViper ->
+                    10
+
+                ForestImp ->
+                    10
+
+                Hound ->
+                    6
+
+                CaveBear ->
+                    4
+
+                StoneGolem ->
+                    6
+
+                AncientArtillery ->
+                    6
+
+                ViciousDrake ->
+                    6
+
+                SpittingDrake ->
+                    6
+
+                Lurker ->
+                    6
+
+                SavvasIcestorm ->
+                    4
+
+                SavvaLavaflow ->
+                    4
+
+                HarrowerInfester ->
+                    4
+
+                DeepTerror ->
+                    10
+
+                BlackImp ->
+                    10

@@ -4,7 +4,7 @@ import BoardMapTile exposing (MapTile, MapTileRef, getMapTileListByRef, refToStr
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType)
 import Dict exposing (Dict, empty, singleton, union)
 import Hexagon exposing (rotate)
-import Monster exposing (Monster, MonsterLevel)
+import Monster exposing (Monster, MonsterLevel, MonsterType)
 
 
 type alias BoardBounds =
@@ -43,6 +43,7 @@ type alias Scenario =
     , title : String
     , mapTilesData : MapTileData
     , angle : Float
+    , additionalMonsters : List MonsterType
     }
 
 

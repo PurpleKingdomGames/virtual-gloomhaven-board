@@ -26,7 +26,8 @@
         });
 
         const app = Elm.Main.init({
-            node: document.getElementById("elm-node")
+            node: document.getElementById("elm-node"),
+            flags: Math.floor(Math.random() * Math.floor(4000))
         });
 
         const signalSocket = new WebSocket('ws://88.98.84.156:5000/ws');

@@ -22,7 +22,8 @@
         });
 
         const app = Elm.Main.init({
-            node: document.getElementById("elm-node")
+            node: document.getElementById("elm-node"),
+            flags: Math.floor(Math.random() * Math.floor(4000))
         });
 
         /** NOTE THIS IS A SERVER (Remote) IMPLEMENTATION **/

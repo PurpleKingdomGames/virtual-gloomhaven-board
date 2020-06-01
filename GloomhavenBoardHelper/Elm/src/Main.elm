@@ -7,7 +7,7 @@ import Browser
 import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece)
+import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, revealRooms)
 import GameSync exposing (pushGameState, receiveGameState)
 import Html exposing (div, li, nav, text, ul)
 import Html.Attributes exposing (attribute, class, src)
@@ -16,6 +16,7 @@ import Json.Decode exposing (decodeValue, errorToString)
 import List exposing (any, filter, head, tail, take)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString)
+import Random
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
 
 
@@ -60,7 +61,7 @@ type Msg
     | RevealRoomMsg (List MapTileRef)
 
 
-main : Program () Model Msg
+main : Program Int Model Msg
 main =
     Browser.element
         { init = init
@@ -70,8 +71,8 @@ main =
         }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
+init : Int -> ( Model, Cmd Msg )
+init seed =
     let
         scenario =
             Scenario
@@ -91,8 +92,8 @@ init _ =
                                     []
                                     [ BoardOverlay (Treasure (Chest (NormalChest 67))) Default [ ( 0, 2 ) ]
                                     ]
-                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 3 Normal) 0 1 Monster.None Normal Elite
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 1 Normal) 1 2 Elite Elite Elite
+                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 0 1 Monster.None Normal Elite
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 1 2 Elite Elite Elite
                                     ]
                                     5
                                 )
@@ -103,8 +104,8 @@ init _ =
                                 (MapTileData A2a
                                     []
                                     []
-                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 6 Normal) 3 1 Monster.None Normal Elite
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 2 Normal) 3 2 Elite Elite Elite
+                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 3 1 Monster.None Normal Elite
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 3 2 Elite Elite Elite
                                     ]
                                     1
                                 )
@@ -115,9 +116,9 @@ init _ =
                                 (MapTileData A1a
                                     []
                                     []
-                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 1 Normal) 1 1 Monster.None Normal Elite
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 3 Normal) 1 2 Normal Normal Normal
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 6 Normal) 2 2 Normal Normal Normal
+                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 1 1 Monster.None Normal Elite
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 1 2 Normal Normal Normal
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 2 2 Normal Normal Normal
                                     ]
                                     3
                                 )
@@ -128,9 +129,9 @@ init _ =
                                 (MapTileData A3b
                                     []
                                     []
-                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 3 Normal) 2 1 Monster.None Normal Elite
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 2 Normal) 2 2 Normal Normal Normal
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 5 Normal) 3 2 Normal Normal Normal
+                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 2 1 Monster.None Normal Elite
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 2 2 Normal Normal Normal
+                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 3 2 Normal Normal Normal
                                     ]
                                     3
                                 )
@@ -139,9 +140,9 @@ init _ =
                             , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft [ ( 1, 5 ), ( 1, 4 ) ]
                             , BoardOverlay (Obstacle Sarcophagus) DiagonalRight [ ( 3, 5 ), ( 4, 4 ) ]
                             ]
-                            [ ScenarioMonster (Monster (NormalType BanditArcher) 6 Normal) 1 1 Elite Elite Elite
+                            [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 1 1 Elite Elite Elite
                             , ScenarioMonster (Monster (BossType BanditCommander) 1 Normal) 2 1 Normal Normal Normal
-                            , ScenarioMonster (Monster (NormalType BanditArcher) 4 Normal) 3 1 Monster.None Normal Elite
+                            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 3 1 Monster.None Normal Elite
                             ]
                             3
                         )
@@ -162,8 +163,9 @@ init _ =
                     3
                 )
                 0
+                []
     in
-    ( Model (generateGameMap scenario ThreePlayer) DragDrop.initialState Nothing MovePiece, Cmd.none )
+    ( Model (generateGameMap scenario ThreePlayer (Random.initialSeed seed)) DragDrop.initialState Nothing MovePiece, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -266,17 +268,7 @@ update msg model =
             ( { model | currentMode = mode }, Cmd.none )
 
         RevealRoomMsg rooms ->
-            let
-                gameState =
-                    model.game.state
-
-                game =
-                    model.game
-
-                newState =
-                    { gameState | visibleRooms = uniqueBy (\r -> Maybe.withDefault "" (refToString r)) (rooms ++ gameState.visibleRooms) }
-            in
-            ( { model | game = { game | state = newState } }, Cmd.none )
+            ( { model | game = revealRooms model.game rooms }, Cmd.none )
 
 
 view : Model -> Html.Html Msg

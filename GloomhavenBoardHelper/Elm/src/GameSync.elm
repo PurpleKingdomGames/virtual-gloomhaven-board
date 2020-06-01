@@ -1,10 +1,12 @@
 port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, receiveGameState)
 
+import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
+import Dict
 import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
-import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, int, list, map2, map3, map5, string, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, int, list, map2, map3, map5, map6, string, succeed)
 import Json.Encode as Encode exposing (int, list, object, string)
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, monsterTypeToString, stringToMonsterType)
@@ -23,12 +25,13 @@ pushGameState gameState =
 
 decodeGameState : Decoder GameState
 decodeGameState =
-    map5 GameState
+    map6 GameState
         (field "scenario" Decode.int)
         (field "numPlayers" Decode.int |> andThen decodeNumPlayers)
         (field "visibleRooms" (Decode.list Decode.string) |> andThen decodeMapRefList)
         (field "overlays" (Decode.list decodeBoardOverlay))
         (field "pieces" (Decode.list decodePiece))
+        (field "availableMonsters" (Decode.list decodeAvailableMonsters) |> andThen (\a -> succeed (Dict.fromList a)))
 
 
 encodeGameState : GameState -> Encode.Value
@@ -321,6 +324,19 @@ decodeCharacter =
 
                     Nothing ->
                         fail (c ++ " is not a valid player class")
+            )
+
+
+decodeAvailableMonsters : Decoder ( String, Array Int )
+decodeAvailableMonsters =
+    field "ref" Decode.string
+        |> andThen
+            (\m ->
+                field "bucket" (Decode.array Decode.int)
+                    |> andThen
+                        (\b ->
+                            succeed ( m, b )
+                        )
             )
 
 
