@@ -108,21 +108,10 @@ decodePieceType =
 
 decodeSummons : Decoder AIType
 decodeSummons =
-    map2 Tuple.pair
-        (field "id" Decode.int)
-        (field "owner" Decode.string)
+    field "id" Decode.int
         |> andThen
-            (\( i, o ) ->
-                let
-                    class =
-                        stringToCharacter o
-                in
-                case class of
-                    Just c ->
-                        succeed (Summons i c)
-
-                    Nothing ->
-                        fail (o ++ " is not a valid character class owner for summons")
+            (\i ->
+                succeed (Summons i)
             )
 
 
@@ -493,9 +482,8 @@ encodePieceType pieceType =
             , ( "class", Encode.string (Maybe.withDefault "" (characterToString p)) )
             ]
 
-        AI (Summons id owner) ->
+        AI (Summons id) ->
             [ ( "type", Encode.string "summons" )
-            , ( "owner", Encode.string (Maybe.withDefault "" (characterToString owner)) )
             , ( "id", Encode.int id )
             ]
 

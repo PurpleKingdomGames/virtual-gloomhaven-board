@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), assignIdentifier, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
@@ -21,7 +21,7 @@ type NumPlayers
 
 type AIType
     = Enemy Monster
-    | Summons Int CharacterClass
+    | Summons Int
 
 
 type PieceType
@@ -69,7 +69,7 @@ getPieceType piece =
 
         AI t ->
             case t of
-                Summons _ _ ->
+                Summons _ ->
                     "summons"
 
                 Enemy _ ->
@@ -87,8 +87,8 @@ getPieceName piece =
 
         AI t ->
             case t of
-                Summons _ _ ->
-                    ""
+                Summons _ ->
+                    "summons"
 
                 Enemy e ->
                     Maybe.withDefault "" (monsterTypeToString e.monster)

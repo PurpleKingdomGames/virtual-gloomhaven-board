@@ -7,7 +7,7 @@ import Browser
 import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), assignIdentifier, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (pushGameState, receiveGameState)
 import Html exposing (div, li, nav, text, ul)
 import Html.Attributes exposing (attribute, class, src)
@@ -212,7 +212,27 @@ update msg model =
                                     Tuple.first (moveOverlay o m.coords coords model.game)
 
                                 PieceType p ->
-                                    Tuple.first (movePiece p m.coords coords model.game)
+                                    case p.ref of
+                                        AI (Enemy monster) ->
+                                            (if monster.id == 0 then
+                                                assignIdentifier model.game.state.availableMonsters p
+
+                                             else
+                                                ( p, model.game.state.availableMonsters )
+                                            )
+                                                |> (\( p2, d ) ->
+                                                        let
+                                                            newGame =
+                                                                Tuple.first (movePiece p2 m.coords coords model.game)
+
+                                                            newState =
+                                                                newGame.state
+                                                        in
+                                                        { newGame | state = { newState | availableMonsters = d } }
+                                                   )
+
+                                        _ ->
+                                            Tuple.first (movePiece p m.coords coords model.game)
 
                         Nothing ->
                             model.game
@@ -352,6 +372,11 @@ getNavHtml model =
                         |> Dom.addClass "reveal-room"
                         |> Dom.addClassConditional "active" (model.currentMode == RevealRoom)
                         |> Dom.appendText "Reveal Room"
+                    , Dom.element "li"
+                        |> Dom.addAction ( "click", ChangeMode AddPiece )
+                        |> Dom.addClass "add-piece"
+                        |> Dom.addClassConditional "active" (model.currentMode == AddPiece)
+                        |> Dom.appendText "Add Piece"
                     ]
             )
         |> Dom.render
@@ -525,13 +550,16 @@ pieceToHtml model coords piece =
                         Enemy m ->
                             enemyToHtml m
 
-                        Summons _ _ ->
-                            Dom.appendChild (Dom.element "div")
+                        Summons i ->
+                            Dom.appendChild
+                                (Dom.element "img"
+                                    |> Dom.addAttribute (attribute "src" ("/img/summons-" ++ String.fromInt (modBy i 3) ++ ".png"))
+                                )
 
                 Game.None ->
                     Dom.addClass "none"
            )
-        |> (if model.currentMode == MovePiece then
+        |> (if (model.currentMode == MovePiece && coords /= Nothing) || (model.currentMode == AddPiece && coords == Nothing) then
                 DragDrop.makeDraggable model.dragDropState (MoveablePiece (PieceType piece) coords) dragDropMessages
 
             else

@@ -8230,9 +8230,9 @@ var $author$project$GameSync$receiveGameState = _Platform_incomingPort('receiveG
 var $author$project$Main$subscriptions = function (_v0) {
 	return $author$project$GameSync$receiveGameState($author$project$Main$GameStatePushed);
 };
-var $author$project$Main$MoveablePiece = F3(
-	function (ref, x, y) {
-		return {ref: ref, x: x, y: y};
+var $author$project$Main$MoveablePiece = F2(
+	function (ref, coords) {
+		return {coords: coords, ref: ref};
 	});
 var $author$project$Main$OverlayType = function (a) {
 	return {$: 'OverlayType', a: a};
@@ -8574,29 +8574,16 @@ var $author$project$GameSync$decodeMonster = A4(
 		$elm$json$Json$Decode$andThen,
 		$author$project$GameSync$decodeMonsterLevel,
 		A2($elm$json$Json$Decode$field, 'level', $elm$json$Json$Decode$string)));
-var $author$project$Game$Summons = F2(
-	function (a, b) {
-		return {$: 'Summons', a: a, b: b};
-	});
+var $author$project$Game$Summons = function (a) {
+	return {$: 'Summons', a: a};
+};
 var $author$project$GameSync$decodeSummons = A2(
 	$elm$json$Json$Decode$andThen,
-	function (_v0) {
-		var i = _v0.a;
-		var o = _v0.b;
-		var _class = $author$project$Character$stringToCharacter(o);
-		if (_class.$ === 'Just') {
-			var c = _class.a;
-			return $elm$json$Json$Decode$succeed(
-				A2($author$project$Game$Summons, i, c));
-		} else {
-			return $elm$json$Json$Decode$fail(o + ' is not a valid character class owner for summons');
-		}
+	function (i) {
+		return $elm$json$Json$Decode$succeed(
+			$author$project$Game$Summons(i));
 	},
-	A3(
-		$elm$json$Json$Decode$map2,
-		$elm$core$Tuple$pair,
-		A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int),
-		A2($elm$json$Json$Decode$field, 'owner', $elm$json$Json$Decode$string)));
+	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int));
 var $author$project$GameSync$decodePieceType = function () {
 	var decodeType = function (typeName) {
 		var _v0 = $elm$core$String$toLower(typeName);
@@ -8677,11 +8664,9 @@ var $author$project$GameSync$decodeGameState = A7(
 			$elm$json$Json$Decode$list($author$project$GameSync$decodeAvailableMonsters))));
 var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $author$project$Game$moveOverlay = F4(
-	function (overlay, _v0, _v1, game) {
-		var fromX = _v0.a;
-		var fromY = _v0.b;
-		var toX = _v1.a;
-		var toY = _v1.b;
+	function (overlay, fromCoords, _v0, game) {
+		var toX = _v0.a;
+		var toY = _v0.b;
 		return _Utils_Tuple2(game, overlay);
 	});
 var $author$project$Game$canMoveTo = F2(
@@ -8712,26 +8697,33 @@ var $author$project$Game$removePiece = F2(
 		return (!_Utils_eq(pieceToRemove.ref, comparePiece.ref)) || ((!_Utils_eq(pieceToRemove.x, comparePiece.x)) || (!_Utils_eq(pieceToRemove.y, comparePiece.y)));
 	});
 var $author$project$Game$movePiece = F4(
-	function (piece, _v0, _v1, game) {
-		var fromX = _v0.a;
-		var fromY = _v0.b;
-		var toX = _v1.a;
-		var toY = _v1.b;
+	function (piece, fromCoords, _v0, game) {
+		var toX = _v0.a;
+		var toY = _v0.b;
 		var newPiece = _Utils_update(
 			piece,
 			{x: toX, y: toY});
 		var gamestate = game.state;
-		var newGamestate = _Utils_update(
-			gamestate,
-			{
-				pieces: A2(
-					$elm$core$List$filter,
-					$author$project$Game$removePiece(
-						_Utils_update(
-							piece,
-							{x: fromX, y: fromY})),
-					gamestate.pieces)
-			});
+		var newGamestate = function () {
+			if (fromCoords.$ === 'Just') {
+				var _v2 = fromCoords.a;
+				var fromX = _v2.a;
+				var fromY = _v2.b;
+				return _Utils_update(
+					gamestate,
+					{
+						pieces: A2(
+							$elm$core$List$filter,
+							$author$project$Game$removePiece(
+								_Utils_update(
+									piece,
+									{x: fromX, y: fromY})),
+							gamestate.pieces)
+					});
+			} else {
+				return gamestate;
+			}
+		}();
 		return A2(
 			$author$project$Game$canMoveTo,
 			_Utils_Tuple2(toX, toY),
@@ -9008,21 +9000,12 @@ var $author$project$GameSync$encodePieceType = function (pieceType) {
 				]);
 		default:
 			if (pieceType.a.$ === 'Summons') {
-				var _v1 = pieceType.a;
-				var id = _v1.a;
-				var owner = _v1.b;
+				var id = pieceType.a.a;
 				return _List_fromArray(
 					[
 						_Utils_Tuple2(
 						'type',
 						$elm$json$Json$Encode$string('summons')),
-						_Utils_Tuple2(
-						'owner',
-						$elm$json$Json$Encode$string(
-							A2(
-								$elm$core$Maybe$withDefault,
-								'',
-								$author$project$Character$characterToString(owner)))),
 						_Utils_Tuple2(
 						'id',
 						$elm$json$Json$Encode$int(id))
@@ -9258,32 +9241,20 @@ var $author$project$Main$update = F2(
 						var _v2 = m.ref;
 						if (_v2.$ === 'OverlayType') {
 							var o = _v2.a;
-							var newOverlay = A4(
-								$author$project$Game$moveOverlay,
-								o,
-								_Utils_Tuple2(m.x, m.y),
-								coords,
-								model.game).b;
+							var newOverlay = A4($author$project$Game$moveOverlay, o, m.coords, coords, model.game).b;
 							return $elm$core$Maybe$Just(
-								A3(
+								A2(
 									$author$project$Main$MoveablePiece,
 									$author$project$Main$OverlayType(newOverlay),
-									m.x,
-									m.y));
+									m.coords));
 						} else {
 							var p = _v2.a;
-							var newPiece = A4(
-								$author$project$Game$movePiece,
-								p,
-								_Utils_Tuple2(m.x, m.y),
-								coords,
-								model.game).b;
+							var newPiece = A4($author$project$Game$movePiece, p, m.coords, coords, model.game).b;
 							return $elm$core$Maybe$Just(
-								A3(
+								A2(
 									$author$project$Main$MoveablePiece,
 									$author$project$Main$PieceType(newPiece),
-									m.x,
-									m.y));
+									m.coords));
 						}
 					} else {
 						return model.currentDraggable;
@@ -9315,20 +9286,29 @@ var $author$project$Main$update = F2(
 						var _v4 = m.ref;
 						if (_v4.$ === 'OverlayType') {
 							var o = _v4.a;
-							return A4(
-								$author$project$Game$moveOverlay,
-								o,
-								_Utils_Tuple2(m.x, m.y),
-								coords,
-								model.game).a;
+							return A4($author$project$Game$moveOverlay, o, m.coords, coords, model.game).a;
 						} else {
 							var p = _v4.a;
-							return A4(
-								$author$project$Game$movePiece,
-								p,
-								_Utils_Tuple2(m.x, m.y),
-								coords,
-								model.game).a;
+							var _v5 = p.ref;
+							if ((_v5.$ === 'AI') && (_v5.a.$ === 'Enemy')) {
+								var monster = _v5.a.a;
+								return function (_v6) {
+									var p2 = _v6.a;
+									var d = _v6.b;
+									var newGame = A4($author$project$Game$movePiece, p2, m.coords, coords, model.game).a;
+									var newState = newGame.state;
+									return _Utils_update(
+										newGame,
+										{
+											state: _Utils_update(
+												newState,
+												{availableMonsters: d})
+										});
+								}(
+									(!monster.id) ? A2($author$project$Game$assignIdentifier, model.game.state.availableMonsters, p) : _Utils_Tuple2(p, model.game.state.availableMonsters));
+							} else {
+								return A4($author$project$Game$movePiece, p, m.coords, coords, model.game).a;
+							}
 						}
 					} else {
 						return model.game;
@@ -9346,9 +9326,9 @@ var $author$project$Main$update = F2(
 			case 'GameStatePushed':
 				var val = msg.a;
 				var gameState = function () {
-					var _v5 = A2($elm$json$Json$Decode$decodeValue, $author$project$GameSync$decodeGameState, val);
-					if (_v5.$ === 'Ok') {
-						var s = _v5.a;
+					var _v7 = A2($elm$json$Json$Decode$decodeValue, $author$project$GameSync$decodeGameState, val);
+					if (_v7.$ === 'Ok') {
+						var s = _v7.a;
 						return (_Utils_eq(s.scenario, model.game.state.scenario) && _Utils_eq(s.numPlayers, model.game.state.numPlayers)) ? s : model.game.state;
 					} else {
 						return model.game.state;
@@ -9851,24 +9831,31 @@ var $elm$core$Array$toIndexedList = function (array) {
 		_Utils_Tuple2(len - 1, _List_Nil),
 		array).b;
 };
-var $author$project$Main$getOverlayImageName = F3(
-	function (overlay, x, y) {
+var $author$project$Main$getOverlayImageName = F2(
+	function (overlay, coords) {
 		var segmentPart = function () {
-			var _v3 = $elm$core$List$head(
-				A2(
-					$elm$core$List$filter,
-					function (_v4) {
-						var _v5 = _v4.b;
-						var oX = _v5.a;
-						var oY = _v5.b;
-						return _Utils_eq(oX, x) && _Utils_eq(oY, y);
-					},
-					$elm$core$Array$toIndexedList(
-						$elm$core$Array$fromList(overlay.cells))));
-			if (_v3.$ === 'Just') {
-				var _v6 = _v3.a;
-				var segment = _v6.a;
-				return (segment > 0) ? ('-' + $elm$core$String$fromInt(segment + 1)) : '';
+			if (coords.$ === 'Just') {
+				var _v4 = coords.a;
+				var x = _v4.a;
+				var y = _v4.b;
+				var _v5 = $elm$core$List$head(
+					A2(
+						$elm$core$List$filter,
+						function (_v6) {
+							var _v7 = _v6.b;
+							var oX = _v7.a;
+							var oY = _v7.b;
+							return _Utils_eq(oX, x) && _Utils_eq(oY, y);
+						},
+						$elm$core$Array$toIndexedList(
+							$elm$core$Array$fromList(overlay.cells))));
+				if (_v5.$ === 'Just') {
+					var _v8 = _v5.a;
+					var segment = _v8.a;
+					return (segment > 0) ? ('-' + $elm$core$String$fromInt(segment + 1)) : '';
+				} else {
+					return '';
+				}
 			} else {
 				return '';
 			}
@@ -9960,55 +9947,55 @@ var $arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable = F4(
 			}
 		}
 	});
-var $author$project$Main$overlayToHtml = F4(
-	function (model, x, y, overlay) {
+var $author$project$Main$overlayToHtml = F3(
+	function (model, coords, overlay) {
 		var dragDropMessages = {dragEnded: $author$project$Main$MoveCanceled, dragStarted: $author$project$Main$MoveStarted, dropTargetChanged: $author$project$Main$MoveTargetChanged, dropped: $author$project$Main$MoveCompleted};
 		return function () {
-			var _v7 = _Utils_Tuple2(model.currentMode, overlay.ref);
-			_v7$4:
+			var _v10 = _Utils_Tuple2(model.currentMode, overlay.ref);
+			_v10$4:
 			while (true) {
-				switch (_v7.a.$) {
+				switch (_v10.a.$) {
 					case 'DestroyOverlay':
-						switch (_v7.b.$) {
+						switch (_v10.b.$) {
 							case 'Obstacle':
-								var _v8 = _v7.a;
+								var _v11 = _v10.a;
 								return $visotype$elm_dom$Dom$addAction(
 									_Utils_Tuple2(
 										'click',
 										$author$project$Main$RemoveOverlay(overlay)));
 							case 'Trap':
-								var _v9 = _v7.a;
+								var _v12 = _v10.a;
 								return $visotype$elm_dom$Dom$addAction(
 									_Utils_Tuple2(
 										'click',
 										$author$project$Main$RemoveOverlay(overlay)));
 							default:
-								break _v7$4;
+								break _v10$4;
 						}
 					case 'LootCell':
-						if (_v7.b.$ === 'Treasure') {
-							var _v10 = _v7.a;
+						if (_v10.b.$ === 'Treasure') {
+							var _v13 = _v10.a;
 							return $visotype$elm_dom$Dom$addAction(
 								_Utils_Tuple2(
 									'click',
 									$author$project$Main$RemoveOverlay(overlay)));
 						} else {
-							break _v7$4;
+							break _v10$4;
 						}
 					case 'RevealRoom':
-						if (_v7.b.$ === 'Door') {
-							var _v11 = _v7.a;
-							var _v12 = _v7.b;
-							var refs = _v12.b;
+						if (_v10.b.$ === 'Door') {
+							var _v14 = _v10.a;
+							var _v15 = _v10.b;
+							var refs = _v15.b;
 							return $visotype$elm_dom$Dom$addAction(
 								_Utils_Tuple2(
 									'click',
 									$author$project$Main$RevealRoomMsg(refs)));
 						} else {
-							break _v7$4;
+							break _v10$4;
 						}
 					default:
-						break _v7$4;
+						break _v10$4;
 				}
 			}
 			return function (e) {
@@ -10016,36 +10003,69 @@ var $author$project$Main$overlayToHtml = F4(
 			};
 		}()(
 			function () {
-				if (_Utils_eq(model.currentMode, $author$project$Main$MoveOverlay)) {
-					var _v6 = overlay.ref;
-					switch (_v6.$) {
-						case 'Obstacle':
-							return A3(
-								$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
-								model.dragDropState,
-								A3(
-									$author$project$Main$MoveablePiece,
-									$author$project$Main$OverlayType(overlay),
-									x,
-									y),
-								dragDropMessages);
-						case 'Trap':
-							return A3(
-								$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
-								model.dragDropState,
-								A3(
-									$author$project$Main$MoveablePiece,
-									$author$project$Main$OverlayType(overlay),
-									x,
-									y),
-								dragDropMessages);
-						default:
-							return $visotype$elm_dom$Dom$addAttribute(
-								A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
+				if (coords.$ === 'Just') {
+					var _v7 = coords.a;
+					var x = _v7.a;
+					var y = _v7.b;
+					if (_Utils_eq(model.currentMode, $author$project$Main$MoveOverlay)) {
+						var _v8 = overlay.ref;
+						switch (_v8.$) {
+							case 'Obstacle':
+								return A3(
+									$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
+									model.dragDropState,
+									A2(
+										$author$project$Main$MoveablePiece,
+										$author$project$Main$OverlayType(overlay),
+										coords),
+									dragDropMessages);
+							case 'Trap':
+								return A3(
+									$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
+									model.dragDropState,
+									A2(
+										$author$project$Main$MoveablePiece,
+										$author$project$Main$OverlayType(overlay),
+										coords),
+									dragDropMessages);
+							default:
+								return $visotype$elm_dom$Dom$addAttribute(
+									A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
+						}
+					} else {
+						return $visotype$elm_dom$Dom$addAttribute(
+							A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
 					}
 				} else {
-					return $visotype$elm_dom$Dom$addAttribute(
-						A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
+					if (_Utils_eq(model.currentMode, $author$project$Main$MoveOverlay)) {
+						var _v9 = overlay.ref;
+						switch (_v9.$) {
+							case 'Obstacle':
+								return A3(
+									$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
+									model.dragDropState,
+									A2(
+										$author$project$Main$MoveablePiece,
+										$author$project$Main$OverlayType(overlay),
+										coords),
+									dragDropMessages);
+							case 'Trap':
+								return A3(
+									$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
+									model.dragDropState,
+									A2(
+										$author$project$Main$MoveablePiece,
+										$author$project$Main$OverlayType(overlay),
+										coords),
+									dragDropMessages);
+							default:
+								return $visotype$elm_dom$Dom$addAttribute(
+									A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
+						}
+					} else {
+						return $visotype$elm_dom$Dom$addAttribute(
+							A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
+					}
 				}
 			}()(
 				function () {
@@ -10073,7 +10093,7 @@ var $author$project$Main$overlayToHtml = F4(
 								A2(
 									$elm$html$Html$Attributes$attribute,
 									'src',
-									A3($author$project$Main$getOverlayImageName, overlay, x, y)),
+									A2($author$project$Main$getOverlayImageName, overlay, coords)),
 								$visotype$elm_dom$Dom$element('img'))),
 						A2(
 							$visotype$elm_dom$Dom$addAttribute,
@@ -10138,6 +10158,7 @@ var $author$project$Main$overlayToHtml = F4(
 										'overlay',
 										$visotype$elm_dom$Dom$element('div')))))))));
 	});
+var $author$project$Main$AddPiece = {$: 'AddPiece'};
 var $author$project$Main$KillPiece = {$: 'KillPiece'};
 var $author$project$Main$RemovePiece = function (a) {
 	return {$: 'RemovePiece', a: a};
@@ -10192,7 +10213,7 @@ var $author$project$Game$getPieceName = function (piece) {
 		case 'AI':
 			var t = piece.a;
 			if (t.$ === 'Summons') {
-				return '';
+				return 'summons';
 			} else {
 				var e = t.a;
 				return A2(
@@ -10219,8 +10240,9 @@ var $author$project$Game$getPieceType = function (piece) {
 			return '';
 	}
 };
-var $author$project$Main$pieceToHtml = F4(
-	function (model, x, y, piece) {
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $author$project$Main$pieceToHtml = F3(
+	function (model, coords, piece) {
 		var dragDropMessages = {dragEnded: $author$project$Main$MoveCanceled, dragStarted: $author$project$Main$MoveStarted, dropTargetChanged: $author$project$Main$MoveTargetChanged, dropped: $author$project$Main$MoveCompleted};
 		return (_Utils_eq(model.currentMode, $author$project$Main$KillPiece) ? $visotype$elm_dom$Dom$addAction(
 			_Utils_Tuple2(
@@ -10228,14 +10250,13 @@ var $author$project$Main$pieceToHtml = F4(
 				$author$project$Main$RemovePiece(piece))) : function (e) {
 			return e;
 		})(
-			(_Utils_eq(model.currentMode, $author$project$Main$MovePiece) ? A3(
+			(((_Utils_eq(model.currentMode, $author$project$Main$MovePiece) && (!_Utils_eq(coords, $elm$core$Maybe$Nothing))) || (_Utils_eq(model.currentMode, $author$project$Main$AddPiece) && _Utils_eq(coords, $elm$core$Maybe$Nothing))) ? A3(
 				$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
 				model.dragDropState,
-				A3(
+				A2(
 					$author$project$Main$MoveablePiece,
 					$author$project$Main$PieceType(piece),
-					x,
-					y),
+					coords),
 				dragDropMessages) : $visotype$elm_dom$Dom$addAttribute(
 				A2($elm$html$Html$Attributes$attribute, 'draggable', 'false')))(
 				function () {
@@ -10250,8 +10271,16 @@ var $author$project$Main$pieceToHtml = F4(
 								var m = t.a;
 								return $author$project$Main$enemyToHtml(m);
 							} else {
+								var i = t.a;
 								return $visotype$elm_dom$Dom$appendChild(
-									$visotype$elm_dom$Dom$element('div'));
+									A2(
+										$visotype$elm_dom$Dom$addAttribute,
+										A2(
+											$elm$html$Html$Attributes$attribute,
+											'src',
+											'/img/summons-' + ($elm$core$String$fromInt(
+												A2($elm$core$Basics$modBy, i, 3)) + '.png')),
+										$visotype$elm_dom$Dom$element('img')));
 							}
 						default:
 							return $visotype$elm_dom$Dom$addClass('none');
@@ -10277,13 +10306,23 @@ var $author$project$Main$getCellHtml = F4(
 				if (_v10.$ === 'PieceType') {
 					var p = _v10.a;
 					return (_Utils_eq(p.x, x) && _Utils_eq(p.y, y)) ? $visotype$elm_dom$Dom$appendChild(
-						A4($author$project$Main$pieceToHtml, model, x, y, p)) : function (e) {
+						A3(
+							$author$project$Main$pieceToHtml,
+							model,
+							$elm$core$Maybe$Just(
+								_Utils_Tuple2(x, y)),
+							p)) : function (e) {
 						return e;
 					};
 				} else {
 					var o = _v10.a;
 					return $visotype$elm_dom$Dom$appendChild(
-						A4($author$project$Main$overlayToHtml, model, x, y, o));
+						A3(
+							$author$project$Main$overlayToHtml,
+							model,
+							$elm$core$Maybe$Just(
+								_Utils_Tuple2(x, y)),
+							o));
 				}
 			} else {
 				return function (e) {
@@ -10295,7 +10334,11 @@ var $author$project$Main$getCellHtml = F4(
 				$visotype$elm_dom$Dom$appendChildList,
 				A2(
 					$elm$core$List$map,
-					A3($author$project$Main$overlayToHtml, model, x, y),
+					A2(
+						$author$project$Main$overlayToHtml,
+						model,
+						$elm$core$Maybe$Just(
+							_Utils_Tuple2(x, y))),
 					A2(
 						$elm$core$List$filter,
 						function (o) {
@@ -10325,7 +10368,12 @@ var $author$project$Main$getCellHtml = F4(
 							var p = _v6.a;
 							return _List_fromArray(
 								[
-									A4($author$project$Main$pieceToHtml, model, x, y, p)
+									A3(
+									$author$project$Main$pieceToHtml,
+									model,
+									$elm$core$Maybe$Just(
+										_Utils_Tuple2(x, y)),
+									p)
 								]);
 						}
 					}(),
@@ -10333,7 +10381,11 @@ var $author$project$Main$getCellHtml = F4(
 						$visotype$elm_dom$Dom$appendChildList,
 						A2(
 							$elm$core$List$map,
-							A3($author$project$Main$overlayToHtml, model, x, y),
+							A2(
+								$author$project$Main$overlayToHtml,
+								model,
+								$elm$core$Maybe$Just(
+									_Utils_Tuple2(x, y))),
 							A2(
 								$elm$core$List$filter,
 								function (o) {
@@ -10534,10 +10586,109 @@ var $author$project$Main$getNavHtml = function (model) {
 									_Utils_Tuple2(
 										'click',
 										$author$project$Main$ChangeMode($author$project$Main$RevealRoom)),
+									$visotype$elm_dom$Dom$element('li'))))),
+						A2(
+						$visotype$elm_dom$Dom$appendText,
+						'Add Piece',
+						A3(
+							$visotype$elm_dom$Dom$addClassConditional,
+							'active',
+							_Utils_eq(model.currentMode, $author$project$Main$AddPiece),
+							A2(
+								$visotype$elm_dom$Dom$addClass,
+								'add-piece',
+								A2(
+									$visotype$elm_dom$Dom$addAction,
+									_Utils_Tuple2(
+										'click',
+										$author$project$Main$ChangeMode($author$project$Main$AddPiece)),
 									$visotype$elm_dom$Dom$element('li')))))
 					]),
 				$visotype$elm_dom$Dom$element('ul')),
 			$visotype$elm_dom$Dom$element('nav')));
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $elm$core$List$sort = function (xs) {
+	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
+};
+var $author$project$Main$getNewPieceHtml = function (model) {
+	return $visotype$elm_dom$Dom$render(
+		A2(
+			$visotype$elm_dom$Dom$appendChild,
+			A2(
+				$visotype$elm_dom$Dom$appendChildList,
+				A3(
+					$elm$core$List$foldl,
+					$elm$core$Basics$append,
+					_List_Nil,
+					A2(
+						$elm$core$List$map,
+						function (k) {
+							return A2(
+								$elm$core$List$cons,
+								A2(
+									$visotype$elm_dom$Dom$appendChild,
+									A3(
+										$author$project$Main$pieceToHtml,
+										model,
+										$elm$core$Maybe$Nothing,
+										A3(
+											$author$project$Game$Piece,
+											$author$project$Game$AI(
+												$author$project$Game$Enemy(
+													A3($author$project$Monster$Monster, k, 0, $author$project$Monster$Normal))),
+											0,
+											0)),
+									$visotype$elm_dom$Dom$element('li')),
+								function () {
+									if (k.$ === 'NormalType') {
+										return _List_fromArray(
+											[
+												A2(
+												$visotype$elm_dom$Dom$appendChild,
+												A3(
+													$author$project$Main$pieceToHtml,
+													model,
+													$elm$core$Maybe$Nothing,
+													A3(
+														$author$project$Game$Piece,
+														$author$project$Game$AI(
+															$author$project$Game$Enemy(
+																A3($author$project$Monster$Monster, k, 0, $author$project$Monster$Elite))),
+														0,
+														0)),
+												$visotype$elm_dom$Dom$element('li'))
+											]);
+									} else {
+										return _List_Nil;
+									}
+								}());
+						},
+						A2(
+							$elm$core$List$filterMap,
+							function (k) {
+								return $author$project$Monster$stringToMonsterType(k);
+							},
+							$elm$core$List$reverse(
+								$elm$core$List$sort(
+									A2(
+										$elm$core$List$map,
+										function (_v1) {
+											var k = _v1.a;
+											return k;
+										},
+										A2(
+											$elm$core$List$filter,
+											function (_v0) {
+												var v = _v0.b;
+												return $elm$core$Array$length(v) > 0;
+											},
+											$elm$core$Dict$toList(model.game.state.availableMonsters)))))))),
+				$visotype$elm_dom$Dom$element('ul')),
+			A2(
+				$visotype$elm_dom$Dom$addClass,
+				'new-piece-list',
+				$visotype$elm_dom$Dom$element('div'))));
 };
 var $author$project$Main$view = function (model) {
 	return A2(
@@ -10556,6 +10707,7 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
+						$author$project$Main$getNewPieceHtml(model),
 						$author$project$Main$getNavHtml(model)
 					])),
 				A2(
