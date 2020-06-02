@@ -40,12 +40,12 @@ type GameModeType
     | DestroyOverlay
     | LootCell
     | RevealRoom
+    | AddPiece
 
 
 type alias MoveablePiece =
     { ref : MoveablePieceType
-    , x : Int
-    , y : Int
+    , coords : Maybe ( Int, Int )
     }
 
 
@@ -183,16 +183,16 @@ update msg model =
                                 OverlayType o ->
                                     let
                                         newOverlay =
-                                            Tuple.second (moveOverlay o ( m.x, m.y ) coords model.game)
+                                            Tuple.second (moveOverlay o m.coords coords model.game)
                                     in
-                                    Just (MoveablePiece (OverlayType newOverlay) m.x m.y)
+                                    Just (MoveablePiece (OverlayType newOverlay) m.coords)
 
                                 PieceType p ->
                                     let
                                         newPiece =
-                                            Tuple.second (movePiece p ( m.x, m.y ) coords model.game)
+                                            Tuple.second (movePiece p m.coords coords model.game)
                                     in
-                                    Just (MoveablePiece (PieceType newPiece) m.x m.y)
+                                    Just (MoveablePiece (PieceType newPiece) m.coords)
 
                         Nothing ->
                             model.currentDraggable
@@ -209,10 +209,10 @@ update msg model =
                         Just m ->
                             case m.ref of
                                 OverlayType o ->
-                                    Tuple.first (moveOverlay o ( m.x, m.y ) coords model.game)
+                                    Tuple.first (moveOverlay o m.coords coords model.game)
 
                                 PieceType p ->
-                                    Tuple.first (movePiece p ( m.x, m.y ) coords model.game)
+                                    Tuple.first (movePiece p m.coords coords model.game)
 
                         Nothing ->
                             model.game
@@ -272,7 +272,7 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     div [ class "content" ]
-        [ div [ class "action-list" ] [ getNavHtml model ]
+        [ div [ class "action-list" ] [ getNewPieceHtml model, getNavHtml model ]
         , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model) model.game.staticBoard))
         ]
 
@@ -280,6 +280,40 @@ view model =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     receiveGameState GameStatePushed
+
+
+getNewPieceHtml : Model -> Html.Html Msg
+getNewPieceHtml model =
+    Dom.element "div"
+        |> Dom.addClass "new-piece-list"
+        |> Dom.appendChild
+            (Dom.element "ul"
+                |> Dom.appendChildList
+                    (Dict.toList model.game.state.availableMonsters
+                        |> List.filter (\( _, v ) -> length v > 0)
+                        |> List.map (\( k, _ ) -> k)
+                        |> List.sort
+                        |> List.reverse
+                        |> filterMap (\k -> stringToMonsterType k)
+                        |> List.map
+                            (\k ->
+                                (Dom.element "li"
+                                    |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Normal))) 0 0))
+                                )
+                                    :: (case k of
+                                            NormalType _ ->
+                                                [ Dom.element "li"
+                                                    |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Elite))) 0 0))
+                                                ]
+
+                                            _ ->
+                                                []
+                                       )
+                            )
+                        |> List.foldl (++) []
+                    )
+            )
+        |> Dom.render
 
 
 getNavHtml : Model -> Html.Html Msg
@@ -360,7 +394,7 @@ getCellHtml model y x cellValue =
                                     _ ->
                                         True
                             )
-                        |> List.map (overlayToHtml model x y)
+                        |> List.map (overlayToHtml model (Just ( x, y )))
                     )
                 -- Players / Monsters / Summons
                 |> Dom.appendChildList
@@ -369,7 +403,7 @@ getCellHtml model y x cellValue =
                             []
 
                         Just p ->
-                            [ pieceToHtml model x y p ]
+                            [ pieceToHtml model (Just ( x, y )) p ]
                     )
                 -- Loot / Coins
                 |> Dom.appendChildList
@@ -388,7 +422,7 @@ getCellHtml model y x cellValue =
                                     _ ->
                                         False
                             )
-                        |> List.map (overlayToHtml model x y)
+                        |> List.map (overlayToHtml model (Just ( x, y )))
                     )
                 -- The current draggable piece
                 |> (case model.currentDraggable of
@@ -396,13 +430,13 @@ getCellHtml model y x cellValue =
                             case m.ref of
                                 PieceType p ->
                                     if p.x == x && p.y == y then
-                                        Dom.appendChild (pieceToHtml model x y p)
+                                        Dom.appendChild (pieceToHtml model (Just ( x, y )) p)
 
                                     else
                                         \e -> e
 
                                 OverlayType o ->
-                                    Dom.appendChild (overlayToHtml model x y o)
+                                    Dom.appendChild (overlayToHtml model (Just ( x, y )) o)
 
                         Nothing ->
                             \e -> e
@@ -468,8 +502,8 @@ getPieceForCoord x y pieces =
         |> head
 
 
-pieceToHtml : Model -> Int -> Int -> Piece -> Element Msg
-pieceToHtml model x y piece =
+pieceToHtml : Model -> Maybe ( Int, Int ) -> Piece -> Element Msg
+pieceToHtml model coords piece =
     let
         dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
         dragDropMessages =
@@ -498,7 +532,7 @@ pieceToHtml model x y piece =
                     Dom.addClass "none"
            )
         |> (if model.currentMode == MovePiece then
-                DragDrop.makeDraggable model.dragDropState (MoveablePiece (PieceType piece) x y) dragDropMessages
+                DragDrop.makeDraggable model.dragDropState (MoveablePiece (PieceType piece) coords) dragDropMessages
 
             else
                 Dom.addAttribute (attribute "draggable" "false")
@@ -546,8 +580,8 @@ enemyToHtml monster element =
             ]
 
 
-overlayToHtml : Model -> Int -> Int -> BoardOverlay -> Element Msg
-overlayToHtml model x y overlay =
+overlayToHtml : Model -> Maybe ( Int, Int ) -> BoardOverlay -> Element Msg
+overlayToHtml model coords overlay =
     let
         dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
         dragDropMessages =
@@ -615,22 +649,49 @@ overlayToHtml model x y overlay =
             )
         |> Dom.appendChild
             (Dom.element "img"
-                |> Dom.addAttribute (attribute "src" (getOverlayImageName overlay x y))
+                |> Dom.addAttribute (attribute "src" (getOverlayImageName overlay coords))
                 |> Dom.addAttribute (attribute "draggable" "false")
             )
-        |> (if model.currentMode == MoveOverlay then
-                case overlay.ref of
-                    Obstacle _ ->
-                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) x y) dragDropMessages
+        |> (case overlay.ref of
+                Treasure (Coin i) ->
+                    Dom.appendChild
+                        (Dom.element "span"
+                            |> Dom.appendText (String.fromInt i)
+                        )
 
-                    Trap _ ->
-                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) x y) dragDropMessages
+                _ ->
+                    \e -> e
+           )
+        |> (case coords of
+                Just ( x, y ) ->
+                    if model.currentMode == MoveOverlay then
+                        case overlay.ref of
+                            Obstacle _ ->
+                                DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
 
-                    _ ->
+                            Trap _ ->
+                                DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
+
+                            _ ->
+                                Dom.addAttribute (attribute "draggable" "false")
+
+                    else
                         Dom.addAttribute (attribute "draggable" "false")
 
-            else
-                Dom.addAttribute (attribute "draggable" "false")
+                Nothing ->
+                    if model.currentMode == MoveOverlay then
+                        case overlay.ref of
+                            Obstacle _ ->
+                                DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
+
+                            Trap _ ->
+                                DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
+
+                            _ ->
+                                Dom.addAttribute (attribute "draggable" "false")
+
+                    else
+                        Dom.addAttribute (attribute "draggable" "false")
            )
         |> (case ( model.currentMode, overlay.ref ) of
                 ( DestroyOverlay, Obstacle _ ) ->
@@ -650,8 +711,8 @@ overlayToHtml model x y overlay =
            )
 
 
-getOverlayImageName : BoardOverlay -> Int -> Int -> String
-getOverlayImageName overlay x y =
+getOverlayImageName : BoardOverlay -> Maybe ( Int, Int ) -> String
+getOverlayImageName overlay coords =
     let
         path =
             "/img/overlays/"
@@ -682,13 +743,18 @@ getOverlayImageName overlay x y =
                     ""
 
         segmentPart =
-            case head (List.filter (\( _, ( oX, oY ) ) -> oX == x && oY == y) (toIndexedList (fromList overlay.cells))) of
-                Just ( segment, _ ) ->
-                    if segment > 0 then
-                        "-" ++ String.fromInt (segment + 1)
+            case coords of
+                Just ( x, y ) ->
+                    case head (List.filter (\( _, ( oX, oY ) ) -> oX == x && oY == y) (toIndexedList (fromList overlay.cells))) of
+                        Just ( segment, _ ) ->
+                            if segment > 0 then
+                                "-" ++ String.fromInt (segment + 1)
 
-                    else
-                        ""
+                            else
+                                ""
+
+                        Nothing ->
+                            ""
 
                 Nothing ->
                     ""
