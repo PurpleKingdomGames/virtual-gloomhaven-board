@@ -1,9 +1,9 @@
-module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, revealRooms)
+module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
 import BoardMapTile exposing (MapTile, MapTileRef, refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), TreasureSubType(..))
 import Character exposing (CharacterClass, characterToString)
 import Dict exposing (Dict, get, insert)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
@@ -169,14 +169,17 @@ setCellsFromMapTiles : List MapTile -> Dict String ( List BoardOverlay, List Sce
 setCellsFromMapTiles mapTileList overlays offsetX offsetY seed game =
     case mapTileList of
         head :: rest ->
-            setCellFromMapTile game overlays offsetX offsetY head seed
-                |> setCellsFromMapTiles rest overlays offsetX offsetY seed
+            let
+                ( newGame, newSeed ) =
+                    setCellFromMapTile game overlays offsetX offsetY head seed
+            in
+            setCellsFromMapTiles rest overlays offsetX offsetY newSeed newGame
 
         _ ->
             game
 
 
-setCellFromMapTile : Game -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> MapTile -> Seed -> Game
+setCellFromMapTile : Game -> Dict String ( List BoardOverlay, List ScenarioMonster ) -> Int -> Int -> MapTile -> Seed -> ( Game, Seed )
 setCellFromMapTile game overlays offsetX offsetY tile seed =
     let
         x =
@@ -284,7 +287,9 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
                 Nothing ->
                     game.staticBoard
     in
-    { game | state = newGameState, staticBoard = newBoard, roomOrigins = newOrigins, roomTurns = Dict.insert refString tile.turns game.roomTurns }
+    ( { game | state = newGameState, staticBoard = newBoard, roomOrigins = newOrigins, roomTurns = Dict.insert refString tile.turns game.roomTurns }
+    , newSeed
+    )
 
 
 filterMonsterLevel : NumPlayers -> ScenarioMonster -> Bool
@@ -490,6 +495,73 @@ revealRoom room game =
                 game.state
         in
         { game | state = { state | visibleRooms = room :: state.visibleRooms, availableMonsters = availableMonsters, pieces = ignoredPieces ++ assignedMonsters } }
+
+
+removePieceFromBoard : Piece -> Game -> Game
+removePieceFromBoard piece game =
+    let
+        gameState =
+            game.state
+
+        filteredPieces =
+            filter (removePiece piece) gameState.pieces
+
+        newAvailableMonsters =
+            case piece.ref of
+                AI (Enemy m) ->
+                    let
+                        ref =
+                            Maybe.withDefault "" (monsterTypeToString m.monster)
+                    in
+                    case Dict.get ref gameState.availableMonsters of
+                        Just v ->
+                            insert ref (push (m.id - 1) v) gameState.availableMonsters
+
+                        Nothing ->
+                            insert ref (fromList [ m.id - 1 ]) gameState.availableMonsters
+
+                _ ->
+                    gameState.availableMonsters
+
+        newOverlays =
+            case piece.ref of
+                AI (Enemy m) ->
+                    case
+                        any
+                            (\o ->
+                                case o.ref of
+                                    Treasure (Coin _) ->
+                                        member ( piece.x, piece.y ) o.cells
+
+                                    _ ->
+                                        False
+                            )
+                            gameState.overlays
+                    of
+                        True ->
+                            map
+                                (\o ->
+                                    case o.ref of
+                                        Treasure (Coin i) ->
+                                            if member ( piece.x, piece.y ) o.cells then
+                                                { o | ref = Treasure (Coin (i + 1)) }
+
+                                            else
+                                                o
+
+                                        _ ->
+                                            o
+                                )
+                                gameState.overlays
+
+                        False ->
+                            BoardOverlay (Treasure (Coin 1)) Default [ ( piece.x, piece.y ) ]
+                                :: gameState.overlays
+
+                _ ->
+                    gameState.overlays
+    in
+    { game | state = { gameState | pieces = filteredPieces, overlays = newOverlays, availableMonsters = newAvailableMonsters } }
 
 
 assignIdentifiers : Dict String (Array Int) -> List Piece -> List Piece -> ( List Piece, Dict String (Array Int) )

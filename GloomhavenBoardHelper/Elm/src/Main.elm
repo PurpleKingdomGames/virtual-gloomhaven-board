@@ -7,15 +7,15 @@ import Browser
 import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, revealRooms)
+import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (pushGameState, receiveGameState)
 import Html exposing (div, li, nav, text, ul)
 import Html.Attributes exposing (attribute, class, src)
 import Html.Events exposing (onClick)
 import Json.Decode exposing (decodeValue, errorToString)
-import List exposing (any, filter, head, tail, take)
+import List exposing (any, filter, filterMap, head, tail, take)
 import List.Extra exposing (uniqueBy)
-import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString)
+import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Random
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
 
@@ -249,26 +249,24 @@ update msg model =
                 newState =
                     { gameState | overlays = List.filter (\o -> o.cells /= overlay.cells || o.ref /= overlay.ref) gameState.overlays }
             in
-            ( { model | game = { game | state = newState } }, Cmd.none )
+            ( { model | game = { game | state = newState } }, pushGameState newState )
 
         RemovePiece piece ->
             let
-                gameState =
-                    model.game.state
-
                 game =
-                    model.game
-
-                newState =
-                    { gameState | pieces = List.filter (\p -> p.x /= piece.x || p.y /= piece.y || p.ref /= piece.ref) gameState.pieces }
+                    removePieceFromBoard piece model.game
             in
-            ( { model | game = { game | state = newState } }, Cmd.none )
+            ( { model | game = game }, pushGameState game.state )
 
         ChangeMode mode ->
             ( { model | currentMode = mode }, Cmd.none )
 
         RevealRoomMsg rooms ->
-            ( { model | game = revealRooms model.game rooms }, Cmd.none )
+            let
+                game =
+                    revealRooms model.game rooms
+            in
+            ( { model | game = game }, pushGameState game.state )
 
 
 view : Model -> Html.Html Msg

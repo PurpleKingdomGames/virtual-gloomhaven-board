@@ -254,10 +254,7 @@ decodeTreasure =
                     decodeTreasureChest
 
                 "coin" ->
-                    succeed (Treasure Coin)
-
-                "loot" ->
-                    decodeTreasureLoot
+                    decodeTreasureCoin
 
                 _ ->
                     fail ("Unknown treasure type: " ++ typeName)
@@ -285,10 +282,10 @@ decodeTreasureChest =
             )
 
 
-decodeTreasureLoot : Decoder BoardOverlayType
-decodeTreasureLoot =
+decodeTreasureCoin : Decoder BoardOverlayType
+decodeTreasureCoin =
     field "amount" Decode.int
-        |> andThen (\i -> succeed (Treasure (Loot i)))
+        |> andThen (\i -> succeed (Treasure (Coin i)))
 
 
 decodeBoardOverlayDirection : String -> Decoder BoardOverlayDirectionType
@@ -457,11 +454,8 @@ encodeTreasure treasure =
             , ( "id", Encode.string (encodeTreasureChest c) )
             ]
 
-        Coin ->
-            [ ( "subType", Encode.string "coin" ) ]
-
-        Loot i ->
-            [ ( "subType", Encode.string "loot" )
+        Coin i ->
+            [ ( "subType", Encode.string "coin" )
             , ( "amount", Encode.int i )
             ]
 

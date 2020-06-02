@@ -7671,30 +7671,43 @@ var $author$project$Game$setCellFromMapTile = F6(
 						}
 					}())
 			});
-		return _Utils_update(
-			game,
-			{
-				roomOrigins: newOrigins,
-				roomTurns: A3($elm$core$Dict$insert, refString, tile.turns, game.roomTurns),
-				state: newGameState,
-				staticBoard: newBoard
-			});
+		return _Utils_Tuple2(
+			_Utils_update(
+				game,
+				{
+					roomOrigins: newOrigins,
+					roomTurns: A3($elm$core$Dict$insert, refString, tile.turns, game.roomTurns),
+					state: newGameState,
+					staticBoard: newBoard
+				}),
+			newSeed);
 	});
 var $author$project$Game$setCellsFromMapTiles = F6(
 	function (mapTileList, overlays, offsetX, offsetY, seed, game) {
-		if (mapTileList.b) {
-			var head = mapTileList.a;
-			var rest = mapTileList.b;
-			return A6(
-				$author$project$Game$setCellsFromMapTiles,
-				rest,
-				overlays,
-				offsetX,
-				offsetY,
-				seed,
-				A6($author$project$Game$setCellFromMapTile, game, overlays, offsetX, offsetY, head, seed));
-		} else {
-			return game;
+		setCellsFromMapTiles:
+		while (true) {
+			if (mapTileList.b) {
+				var head = mapTileList.a;
+				var rest = mapTileList.b;
+				var _v1 = A6($author$project$Game$setCellFromMapTile, game, overlays, offsetX, offsetY, head, seed);
+				var newGame = _v1.a;
+				var newSeed = _v1.b;
+				var $temp$mapTileList = rest,
+					$temp$overlays = overlays,
+					$temp$offsetX = offsetX,
+					$temp$offsetY = offsetY,
+					$temp$seed = newSeed,
+					$temp$game = newGame;
+				mapTileList = $temp$mapTileList;
+				overlays = $temp$overlays;
+				offsetX = $temp$offsetX;
+				offsetY = $temp$offsetY;
+				seed = $temp$seed;
+				game = $temp$game;
+				continue setCellsFromMapTiles;
+			} else {
+				return game;
+			}
 		}
 	});
 var $author$project$Game$generateGameMap = F3(
@@ -8356,7 +8369,6 @@ var $author$project$GameSync$decodeTrap = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
-var $author$project$BoardOverlay$Coin = {$: 'Coin'};
 var $author$project$BoardOverlay$Goal = {$: 'Goal'};
 var $author$project$GameSync$decodeTreasureChest = A2(
 	$elm$json$Json$Decode$andThen,
@@ -8380,15 +8392,15 @@ var $author$project$GameSync$decodeTreasureChest = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string));
-var $author$project$BoardOverlay$Loot = function (a) {
-	return {$: 'Loot', a: a};
+var $author$project$BoardOverlay$Coin = function (a) {
+	return {$: 'Coin', a: a};
 };
-var $author$project$GameSync$decodeTreasureLoot = A2(
+var $author$project$GameSync$decodeTreasureCoin = A2(
 	$elm$json$Json$Decode$andThen,
 	function (i) {
 		return $elm$json$Json$Decode$succeed(
 			$author$project$BoardOverlay$Treasure(
-				$author$project$BoardOverlay$Loot(i)));
+				$author$project$BoardOverlay$Coin(i)));
 	},
 	A2($elm$json$Json$Decode$field, 'amount', $elm$json$Json$Decode$int));
 var $author$project$GameSync$decodeTreasure = function () {
@@ -8398,10 +8410,7 @@ var $author$project$GameSync$decodeTreasure = function () {
 			case 'chest':
 				return $author$project$GameSync$decodeTreasureChest;
 			case 'coin':
-				return $elm$json$Json$Decode$succeed(
-					$author$project$BoardOverlay$Treasure($author$project$BoardOverlay$Coin));
-			case 'loot':
-				return $author$project$GameSync$decodeTreasureLoot;
+				return $author$project$GameSync$decodeTreasureCoin;
 			default:
 				return $elm$json$Json$Decode$fail('Unknown treasure type: ' + typeName);
 		}
@@ -8813,37 +8822,29 @@ var $author$project$GameSync$encodeTreasureChest = function (chest) {
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$GameSync$encodeTreasure = function (treasure) {
-	switch (treasure.$) {
-		case 'Chest':
-			var c = treasure.a;
-			return _List_fromArray(
-				[
-					_Utils_Tuple2(
-					'subType',
-					$elm$json$Json$Encode$string('chest')),
-					_Utils_Tuple2(
-					'id',
-					$elm$json$Json$Encode$string(
-						$author$project$GameSync$encodeTreasureChest(c)))
-				]);
-		case 'Coin':
-			return _List_fromArray(
-				[
-					_Utils_Tuple2(
-					'subType',
-					$elm$json$Json$Encode$string('coin'))
-				]);
-		default:
-			var i = treasure.a;
-			return _List_fromArray(
-				[
-					_Utils_Tuple2(
-					'subType',
-					$elm$json$Json$Encode$string('loot')),
-					_Utils_Tuple2(
-					'amount',
-					$elm$json$Json$Encode$int(i))
-				]);
+	if (treasure.$ === 'Chest') {
+		var c = treasure.a;
+		return _List_fromArray(
+			[
+				_Utils_Tuple2(
+				'subType',
+				$elm$json$Json$Encode$string('chest')),
+				_Utils_Tuple2(
+				'id',
+				$elm$json$Json$Encode$string(
+					$author$project$GameSync$encodeTreasureChest(c)))
+			]);
+	} else {
+		var i = treasure.a;
+		return _List_fromArray(
+			[
+				_Utils_Tuple2(
+				'subType',
+				$elm$json$Json$Encode$string('coin')),
+				_Utils_Tuple2(
+				'amount',
+				$elm$json$Json$Encode$int(i))
+			]);
 	}
 };
 var $elm$json$Json$Encode$list = F2(
@@ -9107,6 +9108,107 @@ var $author$project$GameSync$pushGameState = function (gameState) {
 	return $author$project$GameSync$pushGameStatePort(
 		$author$project$GameSync$encodeGameState(gameState));
 };
+var $author$project$Game$removePieceFromBoard = F2(
+	function (piece, game) {
+		var gameState = game.state;
+		var newAvailableMonsters = function () {
+			var _v4 = piece.ref;
+			if ((_v4.$ === 'AI') && (_v4.a.$ === 'Enemy')) {
+				var m = _v4.a.a;
+				var ref = A2(
+					$elm$core$Maybe$withDefault,
+					'',
+					$author$project$Monster$monsterTypeToString(m.monster));
+				var _v5 = A2($elm$core$Dict$get, ref, gameState.availableMonsters);
+				if (_v5.$ === 'Just') {
+					var v = _v5.a;
+					return A3(
+						$elm$core$Dict$insert,
+						ref,
+						A2($elm$core$Array$push, m.id - 1, v),
+						gameState.availableMonsters);
+				} else {
+					return A3(
+						$elm$core$Dict$insert,
+						ref,
+						$elm$core$Array$fromList(
+							_List_fromArray(
+								[m.id - 1])),
+						gameState.availableMonsters);
+				}
+			} else {
+				return gameState.availableMonsters;
+			}
+		}();
+		var newOverlays = function () {
+			var _v0 = piece.ref;
+			if ((_v0.$ === 'AI') && (_v0.a.$ === 'Enemy')) {
+				var m = _v0.a.a;
+				var _v1 = A2(
+					$elm$core$List$any,
+					function (o) {
+						var _v2 = o.ref;
+						if ((_v2.$ === 'Treasure') && (_v2.a.$ === 'Coin')) {
+							return A2(
+								$elm$core$List$member,
+								_Utils_Tuple2(piece.x, piece.y),
+								o.cells);
+						} else {
+							return false;
+						}
+					},
+					gameState.overlays);
+				if (_v1) {
+					return A2(
+						$elm$core$List$map,
+						function (o) {
+							var _v3 = o.ref;
+							if ((_v3.$ === 'Treasure') && (_v3.a.$ === 'Coin')) {
+								var i = _v3.a.a;
+								return A2(
+									$elm$core$List$member,
+									_Utils_Tuple2(piece.x, piece.y),
+									o.cells) ? _Utils_update(
+									o,
+									{
+										ref: $author$project$BoardOverlay$Treasure(
+											$author$project$BoardOverlay$Coin(i + 1))
+									}) : o;
+							} else {
+								return o;
+							}
+						},
+						gameState.overlays);
+				} else {
+					return A2(
+						$elm$core$List$cons,
+						A3(
+							$author$project$BoardOverlay$BoardOverlay,
+							$author$project$BoardOverlay$Treasure(
+								$author$project$BoardOverlay$Coin(1)),
+							$author$project$BoardOverlay$Default,
+							_List_fromArray(
+								[
+									_Utils_Tuple2(piece.x, piece.y)
+								])),
+						gameState.overlays);
+				}
+			} else {
+				return gameState.overlays;
+			}
+		}();
+		var filteredPieces = A2(
+			$elm$core$List$filter,
+			$author$project$Game$removePiece(piece),
+			gameState.pieces);
+		return _Utils_update(
+			game,
+			{
+				state: _Utils_update(
+					gameState,
+					{availableMonsters: newAvailableMonsters, overlays: newOverlays, pieces: filteredPieces})
+			});
+	});
 var $arsduo$elm_dom_drag_drop$Dom$DragDrop$startDragging = F2(
 	function (_v0, id) {
 		var stateData = _v0.a;
@@ -9284,30 +9386,15 @@ var $author$project$Main$update = F2(
 								game,
 								{state: newState})
 						}),
-					$elm$core$Platform$Cmd$none);
+					$author$project$GameSync$pushGameState(newState));
 			case 'RemovePiece':
 				var piece = msg.a;
-				var gameState = model.game.state;
-				var newState = _Utils_update(
-					gameState,
-					{
-						pieces: A2(
-							$elm$core$List$filter,
-							function (p) {
-								return (!_Utils_eq(p.x, piece.x)) || ((!_Utils_eq(p.y, piece.y)) || (!_Utils_eq(p.ref, piece.ref)));
-							},
-							gameState.pieces)
-					});
-				var game = model.game;
+				var game = A2($author$project$Game$removePieceFromBoard, piece, model.game);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							game: _Utils_update(
-								game,
-								{state: newState})
-						}),
-					$elm$core$Platform$Cmd$none);
+						{game: game}),
+					$author$project$GameSync$pushGameState(game.state));
 			case 'ChangeMode':
 				var mode = msg.a;
 				return _Utils_Tuple2(
@@ -9317,13 +9404,12 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			default:
 				var rooms = msg.a;
+				var game = A2($author$project$Game$revealRooms, model.game, rooms);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							game: A2($author$project$Game$revealRooms, model.game, rooms)
-						}),
-					$elm$core$Platform$Cmd$none);
+						{game: game}),
+					$author$project$GameSync$pushGameState(game.state));
 		}
 	});
 var $elm$html$Html$Attributes$stringProperty = F2(
@@ -9713,6 +9799,17 @@ var $visotype$elm_dom$Dom$addAction = function (_v0) {
 				});
 		});
 };
+var $elm$core$String$append = _String_append;
+var $visotype$elm_dom$Dom$appendText = function (s) {
+	return $visotype$elm_dom$Dom$Internal$modify(
+		function (n) {
+			return _Utils_update(
+				n,
+				{
+					text: A2($elm$core$String$append, n.text, s)
+				});
+		});
+};
 var $author$project$BoardOverlay$getBoardOverlayName = function (overlay) {
 	switch (overlay.$) {
 		case 'StartingLocation':
@@ -9728,13 +9825,10 @@ var $author$project$BoardOverlay$getBoardOverlayName = function (overlay) {
 			return 'obstacle-sarcophagus';
 		default:
 			var t = overlay.a;
-			switch (t.$) {
-				case 'Chest':
-					return 'treasure-chest';
-				case 'Coin':
-					return 'treasure-coin';
-				default:
-					return 'treasure-loot';
+			if (t.$ === 'Chest') {
+				return 'treasure-chest';
+			} else {
+				return 'treasure-coin';
 			}
 	}
 };
@@ -9870,51 +9964,51 @@ var $author$project$Main$overlayToHtml = F4(
 	function (model, x, y, overlay) {
 		var dragDropMessages = {dragEnded: $author$project$Main$MoveCanceled, dragStarted: $author$project$Main$MoveStarted, dropTargetChanged: $author$project$Main$MoveTargetChanged, dropped: $author$project$Main$MoveCompleted};
 		return function () {
-			var _v6 = _Utils_Tuple2(model.currentMode, overlay.ref);
-			_v6$4:
+			var _v7 = _Utils_Tuple2(model.currentMode, overlay.ref);
+			_v7$4:
 			while (true) {
-				switch (_v6.a.$) {
+				switch (_v7.a.$) {
 					case 'DestroyOverlay':
-						switch (_v6.b.$) {
+						switch (_v7.b.$) {
 							case 'Obstacle':
-								var _v7 = _v6.a;
+								var _v8 = _v7.a;
 								return $visotype$elm_dom$Dom$addAction(
 									_Utils_Tuple2(
 										'click',
 										$author$project$Main$RemoveOverlay(overlay)));
 							case 'Trap':
-								var _v8 = _v6.a;
+								var _v9 = _v7.a;
 								return $visotype$elm_dom$Dom$addAction(
 									_Utils_Tuple2(
 										'click',
 										$author$project$Main$RemoveOverlay(overlay)));
 							default:
-								break _v6$4;
+								break _v7$4;
 						}
 					case 'LootCell':
-						if (_v6.b.$ === 'Treasure') {
-							var _v9 = _v6.a;
+						if (_v7.b.$ === 'Treasure') {
+							var _v10 = _v7.a;
 							return $visotype$elm_dom$Dom$addAction(
 								_Utils_Tuple2(
 									'click',
 									$author$project$Main$RemoveOverlay(overlay)));
 						} else {
-							break _v6$4;
+							break _v7$4;
 						}
 					case 'RevealRoom':
-						if (_v6.b.$ === 'Door') {
-							var _v10 = _v6.a;
-							var _v11 = _v6.b;
-							var refs = _v11.b;
+						if (_v7.b.$ === 'Door') {
+							var _v11 = _v7.a;
+							var _v12 = _v7.b;
+							var refs = _v12.b;
 							return $visotype$elm_dom$Dom$addAction(
 								_Utils_Tuple2(
 									'click',
 									$author$project$Main$RevealRoomMsg(refs)));
 						} else {
-							break _v6$4;
+							break _v7$4;
 						}
 					default:
-						break _v6$4;
+						break _v7$4;
 				}
 			}
 			return function (e) {
@@ -9923,8 +10017,8 @@ var $author$project$Main$overlayToHtml = F4(
 		}()(
 			function () {
 				if (_Utils_eq(model.currentMode, $author$project$Main$MoveOverlay)) {
-					var _v5 = overlay.ref;
-					switch (_v5.$) {
+					var _v6 = overlay.ref;
+					switch (_v6.$) {
 						case 'Obstacle':
 							return A3(
 								$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
@@ -9954,95 +10048,99 @@ var $author$project$Main$overlayToHtml = F4(
 						A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
 				}
 			}()(
-				A2(
-					$visotype$elm_dom$Dom$appendChild,
+				function () {
+					var _v5 = overlay.ref;
+					if ((_v5.$ === 'Treasure') && (_v5.a.$ === 'Coin')) {
+						var i = _v5.a.a;
+						return $visotype$elm_dom$Dom$appendChild(
+							A2(
+								$visotype$elm_dom$Dom$appendText,
+								$elm$core$String$fromInt(i),
+								$visotype$elm_dom$Dom$element('span')));
+					} else {
+						return function (e) {
+							return e;
+						};
+					}
+				}()(
 					A2(
-						$visotype$elm_dom$Dom$addAttribute,
-						A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'),
+						$visotype$elm_dom$Dom$appendChild,
+						A2(
+							$visotype$elm_dom$Dom$addAttribute,
+							A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'),
+							A2(
+								$visotype$elm_dom$Dom$addAttribute,
+								A2(
+									$elm$html$Html$Attributes$attribute,
+									'src',
+									A3($author$project$Main$getOverlayImageName, overlay, x, y)),
+								$visotype$elm_dom$Dom$element('img'))),
 						A2(
 							$visotype$elm_dom$Dom$addAttribute,
 							A2(
 								$elm$html$Html$Attributes$attribute,
-								'src',
-								A3($author$project$Main$getOverlayImageName, overlay, x, y)),
-							$visotype$elm_dom$Dom$element('img'))),
-					A2(
-						$visotype$elm_dom$Dom$addAttribute,
-						A2(
-							$elm$html$Html$Attributes$attribute,
-							'data-index',
-							function () {
-								var _v2 = overlay.ref;
-								if (_v2.$ === 'Treasure') {
-									var t = _v2.a;
-									if (t.$ === 'Chest') {
-										var c = t.a;
-										if (c.$ === 'NormalChest') {
-											var i = c.a;
-											return $elm$core$String$fromInt(i);
+								'data-index',
+								function () {
+									var _v2 = overlay.ref;
+									if (_v2.$ === 'Treasure') {
+										var t = _v2.a;
+										if (t.$ === 'Chest') {
+											var c = t.a;
+											if (c.$ === 'NormalChest') {
+												var i = c.a;
+												return $elm$core$String$fromInt(i);
+											} else {
+												return 'Goal';
+											}
 										} else {
-											return 'Goal';
+											return '';
 										}
 									} else {
 										return '';
 									}
-								} else {
-									return '';
-								}
-							}()),
-						A2(
-							$visotype$elm_dom$Dom$addClass,
-							function () {
-								var _v1 = overlay.direction;
-								switch (_v1.$) {
-									case 'Default':
-										return '';
-									case 'Vertical':
-										return 'vertical';
-									case 'Horizontal':
-										return 'horizontal';
-									case 'DiagonalRight':
-										return 'diagonal-right';
-									default:
-										return 'diagonal-left';
-								}
-							}(),
+								}()),
 							A2(
 								$visotype$elm_dom$Dom$addClass,
 								function () {
-									var _v0 = overlay.ref;
-									switch (_v0.$) {
-										case 'StartingLocation':
-											return 'start-location';
-										case 'Treasure':
-											return 'treasure';
-										case 'Obstacle':
-											return 'obstacle';
-										case 'Door':
-											return 'door';
+									var _v1 = overlay.direction;
+									switch (_v1.$) {
+										case 'Default':
+											return '';
+										case 'Vertical':
+											return 'vertical';
+										case 'Horizontal':
+											return 'horizontal';
+										case 'DiagonalRight':
+											return 'diagonal-right';
 										default:
-											return 'trap';
+											return 'diagonal-left';
 									}
 								}(),
 								A2(
 									$visotype$elm_dom$Dom$addClass,
-									'overlay',
-									$visotype$elm_dom$Dom$element('div'))))))));
+									function () {
+										var _v0 = overlay.ref;
+										switch (_v0.$) {
+											case 'StartingLocation':
+												return 'start-location';
+											case 'Treasure':
+												return 'treasure';
+											case 'Obstacle':
+												return 'obstacle';
+											case 'Door':
+												return 'door';
+											default:
+												return 'trap';
+										}
+									}(),
+									A2(
+										$visotype$elm_dom$Dom$addClass,
+										'overlay',
+										$visotype$elm_dom$Dom$element('div')))))))));
 	});
 var $author$project$Main$KillPiece = {$: 'KillPiece'};
 var $author$project$Main$RemovePiece = function (a) {
 	return {$: 'RemovePiece', a: a};
-};
-var $elm$core$String$append = _String_append;
-var $visotype$elm_dom$Dom$appendText = function (s) {
-	return $visotype$elm_dom$Dom$Internal$modify(
-		function (n) {
-			return _Utils_update(
-				n,
-				{
-					text: A2($elm$core$String$append, n.text, s)
-				});
-		});
 };
 var $author$project$Main$enemyToHtml = F2(
 	function (monster, element) {

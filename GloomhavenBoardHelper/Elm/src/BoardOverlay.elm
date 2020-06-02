@@ -30,8 +30,7 @@ type ObstacleSubType
 
 type TreasureSubType
     = Chest ChestType
-    | Coin
-    | Loot Int
+    | Coin Int
 
 
 type ChestType
@@ -80,8 +79,5 @@ getBoardOverlayName overlay =
                 Chest _ ->
                     "treasure-chest"
 
-                Coin ->
+                Coin _ ->
                     "treasure-coin"
-
-                Loot _ ->
-                    "treasure-loot"

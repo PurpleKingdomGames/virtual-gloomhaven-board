@@ -236,13 +236,27 @@ $hexRotation: 60deg;
                             transform: rotate(60deg);
                         }
 
-                        &.treasure[data-index]:after {
-                            content:attr(data-index);
-                            display:block;
-                            position:absolute;
-                            top: 10px;
-                            left: 0;
-                            width:100%;
+                        &.treasure
+                        {
+                            &[data-index]:after {
+                                content:attr(data-index);
+                                display:block;
+                                position:absolute;
+                                top: 10px;
+                                left: 0;
+                                width:100%;
+                            }
+
+                            span {
+                                position: absolute;
+                                top: 24px;
+                                left: 0;
+                                font-size: 33px;
+                                text-shadow: 0px 0px 4px #fff;
+                                color: #353535;
+                                display: block;
+                                width: 100%;
+                            }
                         }
 
                         img {
