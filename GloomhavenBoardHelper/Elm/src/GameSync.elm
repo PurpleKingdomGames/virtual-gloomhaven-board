@@ -229,6 +229,9 @@ decodeObstacle =
                     "sarcophagus" ->
                         succeed (Obstacle Sarcophagus)
 
+                    "boulder-1" ->
+                        succeed (Obstacle Boulder1)
+
                     _ ->
                         fail (s ++ " is not an obstacle sub-type")
             )
@@ -433,6 +436,9 @@ encodeObstacle obstacle =
     case obstacle of
         Sarcophagus ->
             "sarcophagus"
+
+        Boulder1 ->
+            "boulder-1"
 
 
 encodeTreasure : TreasureSubType -> List ( String, Encode.Value )

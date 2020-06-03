@@ -26,6 +26,7 @@ type TrapSubType
 
 type ObstacleSubType
     = Sarcophagus
+    | Boulder1
 
 
 type TreasureSubType
@@ -73,6 +74,9 @@ getBoardOverlayName overlay =
             case o of
                 Sarcophagus ->
                     "obstacle-sarcophagus"
+
+                Boulder1 ->
+                    "obstacle-boulder-1"
 
         Treasure t ->
             case t of

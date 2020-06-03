@@ -8345,15 +8345,20 @@ var $author$project$GameSync$decodeDoorRefs = function (subType) {
 				'links',
 				$elm$json$Json$Decode$list($elm$json$Json$Decode$string))));
 };
+var $author$project$BoardOverlay$Boulder1 = {$: 'Boulder1'};
 var $author$project$GameSync$decodeObstacle = A2(
 	$elm$json$Json$Decode$andThen,
 	function (s) {
 		var _v0 = $elm$core$String$toLower(s);
-		if (_v0 === 'sarcophagus') {
-			return $elm$json$Json$Decode$succeed(
-				$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Sarcophagus));
-		} else {
-			return $elm$json$Json$Decode$fail(s + ' is not an obstacle sub-type');
+		switch (_v0) {
+			case 'sarcophagus':
+				return $elm$json$Json$Decode$succeed(
+					$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Sarcophagus));
+			case 'boulder-1':
+				return $elm$json$Json$Decode$succeed(
+					$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Boulder1));
+			default:
+				return $elm$json$Json$Decode$fail(s + ' is not an obstacle sub-type');
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
@@ -8798,7 +8803,11 @@ var $author$project$GameSync$encodeDoor = function (door) {
 	return 'stone';
 };
 var $author$project$GameSync$encodeObstacle = function (obstacle) {
-	return 'sarcophagus';
+	if (obstacle.$ === 'Sarcophagus') {
+		return 'sarcophagus';
+	} else {
+		return 'boulder-1';
+	}
 };
 var $author$project$GameSync$encodeTrap = function (trap) {
 	return 'bear';
@@ -9802,7 +9811,11 @@ var $author$project$BoardOverlay$getBoardOverlayName = function (overlay) {
 			return 'trap-bear';
 		case 'Obstacle':
 			var o = overlay.a;
-			return 'obstacle-sarcophagus';
+			if (o.$ === 'Sarcophagus') {
+				return 'obstacle-sarcophagus';
+			} else {
+				return 'obstacle-boulder-1';
+			}
 		default:
 			var t = overlay.a;
 			if (t.$ === 'Chest') {
@@ -9835,23 +9848,23 @@ var $author$project$Main$getOverlayImageName = F2(
 	function (overlay, coords) {
 		var segmentPart = function () {
 			if (coords.$ === 'Just') {
-				var _v4 = coords.a;
-				var x = _v4.a;
-				var y = _v4.b;
-				var _v5 = $elm$core$List$head(
+				var _v3 = coords.a;
+				var x = _v3.a;
+				var y = _v3.b;
+				var _v4 = $elm$core$List$head(
 					A2(
 						$elm$core$List$filter,
-						function (_v6) {
-							var _v7 = _v6.b;
-							var oX = _v7.a;
-							var oY = _v7.b;
+						function (_v5) {
+							var _v6 = _v5.b;
+							var oX = _v6.a;
+							var oY = _v6.b;
 							return _Utils_eq(oX, x) && _Utils_eq(oY, y);
 						},
 						$elm$core$Array$toIndexedList(
 							$elm$core$Array$fromList(overlay.cells))));
-				if (_v5.$ === 'Just') {
-					var _v8 = _v5.a;
-					var segment = _v8.a;
+				if (_v4.$ === 'Just') {
+					var _v7 = _v4.a;
+					var segment = _v7.a;
 					return (segment > 0) ? ('-' + $elm$core$String$fromInt(segment + 1)) : '';
 				} else {
 					return '';
@@ -9865,15 +9878,11 @@ var $author$project$Main$getOverlayImageName = F2(
 		var extension = '.png';
 		var extendedOverlayName = function () {
 			var _v0 = overlay.ref;
-			switch (_v0.$) {
-				case 'Door':
-					var d = _v0.a;
-					return _Utils_eq(overlay.direction, $author$project$BoardOverlay$Vertical) ? '-vert' : '';
-				case 'Obstacle':
-					var o = _v0.a;
-					return '';
-				default:
-					return '';
+			if (_v0.$ === 'Door') {
+				var d = _v0.a;
+				return _Utils_eq(overlay.direction, $author$project$BoardOverlay$Vertical) ? '-vert' : '';
+			} else {
+				return '';
 			}
 		}();
 		return _Utils_ap(
@@ -10232,7 +10241,7 @@ var $author$project$Game$getPieceType = function (piece) {
 		case 'AI':
 			var t = piece.a;
 			if (t.$ === 'Summons') {
-				return 'summons';
+				return 'player';
 			} else {
 				return 'monster';
 			}
@@ -10278,8 +10287,8 @@ var $author$project$Main$pieceToHtml = F3(
 										A2(
 											$elm$html$Html$Attributes$attribute,
 											'src',
-											'/img/summons-' + ($elm$core$String$fromInt(
-												A2($elm$core$Basics$modBy, i, 3)) + '.png')),
+											'/img/characters/summons-' + ($elm$core$String$fromInt(
+												A2($elm$core$Basics$modBy, 8, i)) + '.png')),
 										$visotype$elm_dom$Dom$element('img')));
 							}
 						default:
@@ -10673,18 +10682,92 @@ var $author$project$Main$getNewPieceHtml = function (model) {
 								$elm$core$List$sort(
 									A2(
 										$elm$core$List$map,
-										function (_v1) {
-											var k = _v1.a;
+										function (_v3) {
+											var k = _v3.a;
 											return k;
 										},
 										A2(
 											$elm$core$List$filter,
-											function (_v0) {
-												var v = _v0.b;
+											function (_v2) {
+												var v = _v2.b;
 												return $elm$core$Array$length(v) > 0;
 											},
 											$elm$core$Dict$toList(model.game.state.availableMonsters)))))))),
-				$visotype$elm_dom$Dom$element('ul')),
+				A2(
+					$visotype$elm_dom$Dom$appendChild,
+					A2(
+						$visotype$elm_dom$Dom$appendChild,
+						A3(
+							$author$project$Main$overlayToHtml,
+							model,
+							$elm$core$Maybe$Nothing,
+							A3(
+								$author$project$BoardOverlay$BoardOverlay,
+								$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Boulder1),
+								$author$project$BoardOverlay$Default,
+								_List_fromArray(
+									[
+										_Utils_Tuple2(0, 0)
+									]))),
+						$visotype$elm_dom$Dom$element('li')),
+					A2(
+						$visotype$elm_dom$Dom$appendChild,
+						A2(
+							$visotype$elm_dom$Dom$appendChild,
+							A3(
+								$author$project$Main$overlayToHtml,
+								model,
+								$elm$core$Maybe$Nothing,
+								A3(
+									$author$project$BoardOverlay$BoardOverlay,
+									$author$project$BoardOverlay$Trap($author$project$BoardOverlay$BearTrap),
+									$author$project$BoardOverlay$Default,
+									_List_fromArray(
+										[
+											_Utils_Tuple2(0, 0)
+										]))),
+							$visotype$elm_dom$Dom$element('li')),
+						A2(
+							$visotype$elm_dom$Dom$appendChild,
+							A2(
+								$visotype$elm_dom$Dom$appendChild,
+								function () {
+									var maxSummons = $elm$core$List$head(
+										$elm$core$List$reverse(
+											$elm$core$List$sort(
+												A2(
+													$elm$core$List$filterMap,
+													function (p) {
+														var _v1 = p.ref;
+														if ((_v1.$ === 'AI') && (_v1.a.$ === 'Summons')) {
+															var i = _v1.a.a;
+															return $elm$core$Maybe$Just(i);
+														} else {
+															return $elm$core$Maybe$Nothing;
+														}
+													},
+													model.game.state.pieces))));
+									var nextId = function () {
+										if (maxSummons.$ === 'Just') {
+											var i = maxSummons.a;
+											return i + 1;
+										} else {
+											return 1;
+										}
+									}();
+									return A3(
+										$author$project$Main$pieceToHtml,
+										model,
+										$elm$core$Maybe$Nothing,
+										A3(
+											$author$project$Game$Piece,
+											$author$project$Game$AI(
+												$author$project$Game$Summons(nextId)),
+											0,
+											0));
+								}(),
+								$visotype$elm_dom$Dom$element('li')),
+							$visotype$elm_dom$Dom$element('ul'))))),
 			A2(
 				$visotype$elm_dom$Dom$addClass,
 				'new-piece-list',

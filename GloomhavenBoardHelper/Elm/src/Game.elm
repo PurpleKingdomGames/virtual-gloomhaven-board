@@ -70,7 +70,7 @@ getPieceType piece =
         AI t ->
             case t of
                 Summons _ ->
-                    "summons"
+                    "player"
 
                 Enemy _ ->
                     "monster"

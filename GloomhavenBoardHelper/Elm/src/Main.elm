@@ -13,7 +13,7 @@ import Html exposing (div, li, nav, text, ul)
 import Html.Attributes exposing (attribute, class, src)
 import Html.Events exposing (onClick)
 import Json.Decode exposing (decodeValue, errorToString)
-import List exposing (any, filter, filterMap, head, tail, take)
+import List exposing (any, filter, filterMap, head, reverse, sort, tail, take)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Random
@@ -308,6 +308,46 @@ getNewPieceHtml model =
         |> Dom.addClass "new-piece-list"
         |> Dom.appendChild
             (Dom.element "ul"
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.appendChild
+                            (let
+                                maxSummons =
+                                    filterMap
+                                        (\p ->
+                                            case p.ref of
+                                                AI (Summons i) ->
+                                                    Just i
+
+                                                _ ->
+                                                    Nothing
+                                        )
+                                        model.game.state.pieces
+                                        |> sort
+                                        |> reverse
+                                        |> head
+
+                                nextId =
+                                    case maxSummons of
+                                        Just i ->
+                                            i + 1
+
+                                        Nothing ->
+                                            1
+                             in
+                             pieceToHtml model Nothing (Piece (AI (Summons nextId)) 0 0)
+                            )
+                    )
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.appendChild
+                            (overlayToHtml model Nothing (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]))
+                    )
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.appendChild
+                            (overlayToHtml model Nothing (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]))
+                    )
                 |> Dom.appendChildList
                     (Dict.toList model.game.state.availableMonsters
                         |> List.filter (\( _, v ) -> length v > 0)
@@ -553,7 +593,7 @@ pieceToHtml model coords piece =
                         Summons i ->
                             Dom.appendChild
                                 (Dom.element "img"
-                                    |> Dom.addAttribute (attribute "src" ("/img/summons-" ++ String.fromInt (modBy i 3) ++ ".png"))
+                                    |> Dom.addAttribute (attribute "src" ("/img/characters/summons-" ++ String.fromInt (modBy 8 i) ++ ".png"))
                                 )
 
                 Game.None ->
@@ -761,11 +801,6 @@ getOverlayImageName overlay coords =
 
                             else
                                 ""
-
-                Obstacle o ->
-                    case o of
-                        Sarcophagus ->
-                            ""
 
                 _ ->
                     ""
