@@ -4,7 +4,7 @@ import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
-import Dict
+import Dict exposing (Dict)
 import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
 import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, int, list, map2, map3, map5, map6, string, succeed)
 import Json.Encode as Encode exposing (int, list, object, string)
@@ -42,6 +42,7 @@ encodeGameState gameState =
         , ( "visibleRooms", Encode.list Encode.string (encodeMapTileRefList gameState.visibleRooms) )
         , ( "overlays", Encode.list Encode.object (encodeOverlays gameState.overlays) )
         , ( "pieces", Encode.list Encode.object (encodePieces gameState.pieces) )
+        , ( "availableMonsters", Encode.list Encode.object (encodeAvailableMonsters gameState.availableMonsters) )
         ]
 
 
@@ -512,3 +513,14 @@ encodeMonsterLevel level =
 
         Monster.None ->
             ""
+
+
+encodeAvailableMonsters : Dict String (Array Int) -> List (List ( String, Encode.Value ))
+encodeAvailableMonsters availableMonsters =
+    List.map
+        (\( k, v ) ->
+            [ ( "ref", Encode.string k )
+            , ( "bucket", Encode.list Encode.int (Array.toList v) )
+            ]
+        )
+        (Dict.toList availableMonsters)

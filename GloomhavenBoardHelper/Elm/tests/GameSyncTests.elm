@@ -1,8 +1,10 @@
 module GameSyncTests exposing (suite)
 
+import Array
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass(..))
+import Dict
 import Expect exposing (equal)
 import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
 import GameSync exposing (decodeGameState, encodeGameState)
@@ -65,7 +67,7 @@ encodedJson =
         {
             "ref": {
                 "type": "treasure",
-                "subType": "loot",
+                "subType": "coin",
                 "amount": 2
             },
             "direction": "diagonal-left",
@@ -79,7 +81,8 @@ encodedJson =
         {
             "ref": {
                 "type": "treasure",
-                "subType": "coin"
+                "subType": "coin",
+                "amount": 1
             },
             "direction": "diagonal-left",
             "cells": [
@@ -179,11 +182,18 @@ encodedJson =
         {
             "ref": {
                 "type": "summons",
-                "owner": "brute",
                 "id": 1
             },
             "x": 2,
             "y": 2
+        }
+    ],
+    "availableMonsters": [
+        {
+            "ref": "cultist",
+            "bucket": [
+                1
+            ]
         }
     ]
 }"""
@@ -198,9 +208,9 @@ decodedState =
         [ BoardOverlay StartingLocation Default [ ( 0, 1 ) ]
         , BoardOverlay (Treasure (Chest Goal)) DiagonalRight [ ( 1, 2 ) ]
         , BoardOverlay (Treasure (Chest (NormalChest 1))) DiagonalRight [ ( 2, 2 ) ]
-        , BoardOverlay (Treasure (Loot 2)) DiagonalLeft [ ( 2, 3 ) ]
-        , BoardOverlay (Treasure Coin) DiagonalLeft [ ( 2, 4 ) ]
-        , BoardOverlay (Door Stone [A1a, A2a]) Horizontal [ ( 6, 5 ) ]
+        , BoardOverlay (Treasure (Coin 2)) DiagonalLeft [ ( 2, 3 ) ]
+        , BoardOverlay (Treasure (Coin 1)) DiagonalLeft [ ( 2, 4 ) ]
+        , BoardOverlay (Door Stone [ A1a, A2a ]) Horizontal [ ( 6, 5 ) ]
         , BoardOverlay (Trap BearTrap) Vertical [ ( 7, 5 ) ]
         , BoardOverlay (Obstacle Sarcophagus) Horizontal [ ( 6, 5 ), ( 7, 5 ) ]
         ]
@@ -208,8 +218,9 @@ decodedState =
         , Piece (AI (Enemy (Monster (NormalType Cultist) 3 Monster.Normal))) 3 5
         , Piece (AI (Enemy (Monster (NormalType InoxShaman) 1 Monster.Elite))) 4 5
         , Piece (AI (Enemy (Monster (BossType Jekserah) 1 Monster.Normal))) 4 6
-        , Piece (AI (Summons 1 Brute)) 2 2
+        , Piece (AI (Summons 1)) 2 2
         ]
+        (Dict.fromList [ ( "cultist", Array.fromList [ 1 ] ) ])
 
 
 suite : Test
