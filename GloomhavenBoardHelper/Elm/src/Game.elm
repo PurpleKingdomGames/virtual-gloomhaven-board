@@ -530,8 +530,8 @@ removePieceFromBoard piece game =
 
         newOverlays =
             case piece.ref of
-                AI (Enemy m) ->
-                    case
+                AI (Enemy _) ->
+                    if
                         any
                             (\o ->
                                 case o.ref of
@@ -542,26 +542,25 @@ removePieceFromBoard piece game =
                                         False
                             )
                             gameState.overlays
-                    of
-                        True ->
-                            map
-                                (\o ->
-                                    case o.ref of
-                                        Treasure (Coin i) ->
-                                            if member ( piece.x, piece.y ) o.cells then
-                                                { o | ref = Treasure (Coin (i + 1)) }
+                    then
+                        map
+                            (\o ->
+                                case o.ref of
+                                    Treasure (Coin i) ->
+                                        if member ( piece.x, piece.y ) o.cells then
+                                            { o | ref = Treasure (Coin (i + 1)) }
 
-                                            else
-                                                o
-
-                                        _ ->
+                                        else
                                             o
-                                )
-                                gameState.overlays
 
-                        False ->
-                            BoardOverlay (Treasure (Coin 1)) Default [ ( piece.x, piece.y ) ]
-                                :: gameState.overlays
+                                    _ ->
+                                        o
+                            )
+                            gameState.overlays
+
+                    else
+                        BoardOverlay (Treasure (Coin 1)) Default [ ( piece.x, piece.y ) ]
+                            :: gameState.overlays
 
                 _ ->
                     gameState.overlays
@@ -609,7 +608,7 @@ assignIdentifier availableMonsters p =
 
 
 moveOverlay : BoardOverlay -> Maybe ( Int, Int ) -> ( Int, Int ) -> Game -> ( Game, BoardOverlay )
-moveOverlay overlay fromCoords ( toX, toY ) game =
+moveOverlay overlay _ _ game =
     ( game, overlay )
 
 

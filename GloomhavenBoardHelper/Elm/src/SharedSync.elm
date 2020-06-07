@@ -2,7 +2,7 @@ module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, dec
 
 import BoardMapTile exposing (MapTileRef(..), stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
-import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, maybe, string, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, string, succeed)
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
 

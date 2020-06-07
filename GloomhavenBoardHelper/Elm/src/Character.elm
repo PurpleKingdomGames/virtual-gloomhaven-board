@@ -1,9 +1,10 @@
 module Character exposing (CharacterClass(..), characterToString, stringToCharacter)
 
-import Dict exposing (filter, fromList, get, toList)
+import Dict exposing (Dict, filter, fromList, get, toList)
 import List exposing (head)
 
 
+characterDict : Dict String CharacterClass
 characterDict =
     fromList
         [ ( "brute", Brute )
