@@ -12,16 +12,18 @@ import GameSync exposing (pushGameState, receiveGameState)
 import Html exposing (div, li, nav, text, ul)
 import Html.Attributes exposing (attribute, class, src)
 import Html.Events exposing (onClick)
+import Http exposing (Error)
 import Json.Decode exposing (decodeValue, errorToString)
 import List exposing (any, filter, filterMap, head, reverse, sort, tail, take)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
-import Random
+import Random exposing (Seed)
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
+import ScenarioSync exposing (loadScenarioById)
 
 
 type alias Model =
-    { game : Game
+    { game : Maybe Game
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
     , currentMode : GameModeType
@@ -34,7 +36,10 @@ type MoveablePieceType
 
 
 type GameModeType
-    = MovePiece
+    = Starting
+    | Loading Int
+    | LoadFailed
+    | MovePiece
     | KillPiece
     | MoveOverlay
     | DestroyOverlay
@@ -50,7 +55,8 @@ type alias MoveablePiece =
 
 
 type Msg
-    = MoveStarted MoveablePiece
+    = Loaded Seed (Result Error Scenario)
+    | MoveStarted MoveablePiece
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
     | MoveCompleted MoveablePiece ( Int, Int )
@@ -165,136 +171,170 @@ init seed =
                 0
                 []
     in
-    ( Model (generateGameMap scenario ThreePlayer (Random.initialSeed seed)) DragDrop.initialState Nothing MovePiece, Cmd.none )
+    ( Model Nothing DragDrop.initialState Nothing (Loading 2), loadScenarioById 2 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Loaded seed result ->
+            case result of
+                Ok scenario ->
+                    let
+                        game =
+                            generateGameMap scenario ThreePlayer seed
+                    in
+                    ( { model | game = Just game, currentMode = MovePiece }, Cmd.none )
+
+                Err _ ->
+                    ( { model | currentMode = LoadFailed }, Cmd.none )
+
         MoveStarted piece ->
             ( { model | dragDropState = DragDrop.startDragging model.dragDropState piece, currentDraggable = Just piece }, Cmd.none )
 
         MoveTargetChanged coords ->
-            let
-                newDraggable =
-                    case model.currentDraggable of
-                        Just m ->
-                            case m.ref of
-                                OverlayType o ->
-                                    let
-                                        newOverlay =
-                                            Tuple.second (moveOverlay o m.coords coords model.game)
-                                    in
-                                    Just (MoveablePiece (OverlayType newOverlay) m.coords)
+            case model.game of
+                Nothing ->
+                    ( model, Cmd.none )
 
-                                PieceType p ->
-                                    let
-                                        newPiece =
-                                            Tuple.second (movePiece p m.coords coords model.game)
-                                    in
-                                    Just (MoveablePiece (PieceType newPiece) m.coords)
+                Just game ->
+                    let
+                        newDraggable =
+                            case model.currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        OverlayType o ->
+                                            let
+                                                newOverlay =
+                                                    Tuple.second (moveOverlay o m.coords coords game)
+                                            in
+                                            Just (MoveablePiece (OverlayType newOverlay) m.coords)
 
-                        Nothing ->
-                            model.currentDraggable
-            in
-            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, currentDraggable = newDraggable }, Cmd.none )
+                                        PieceType p ->
+                                            let
+                                                newPiece =
+                                                    Tuple.second (movePiece p m.coords coords game)
+                                            in
+                                            Just (MoveablePiece (PieceType newPiece) m.coords)
+
+                                Nothing ->
+                                    model.currentDraggable
+                    in
+                    ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, currentDraggable = newDraggable }, Cmd.none )
 
         MoveCanceled ->
             ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
 
         MoveCompleted _ coords ->
-            let
-                game =
-                    case model.currentDraggable of
-                        Just m ->
-                            case m.ref of
-                                OverlayType o ->
-                                    Tuple.first (moveOverlay o m.coords coords model.game)
+            case model.game of
+                Nothing ->
+                    ( model, Cmd.none )
 
-                                PieceType p ->
-                                    case p.ref of
-                                        AI (Enemy monster) ->
-                                            (if monster.id == 0 then
-                                                assignIdentifier model.game.state.availableMonsters p
+                Just oldGame ->
+                    let
+                        game =
+                            case model.currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        OverlayType o ->
+                                            Tuple.first (moveOverlay o m.coords coords oldGame)
 
-                                             else
-                                                ( p, model.game.state.availableMonsters )
-                                            )
-                                                |> (\( p2, d ) ->
-                                                        let
-                                                            newGame =
-                                                                Tuple.first (movePiece p2 m.coords coords model.game)
+                                        PieceType p ->
+                                            case p.ref of
+                                                AI (Enemy monster) ->
+                                                    (if monster.id == 0 then
+                                                        assignIdentifier oldGame.state.availableMonsters p
 
-                                                            newState =
-                                                                newGame.state
-                                                        in
-                                                        { newGame | state = { newState | availableMonsters = d } }
-                                                   )
+                                                     else
+                                                        ( p, oldGame.state.availableMonsters )
+                                                    )
+                                                        |> (\( p2, d ) ->
+                                                                let
+                                                                    newGame =
+                                                                        Tuple.first (movePiece p2 m.coords coords oldGame)
 
-                                        _ ->
-                                            Tuple.first (movePiece p m.coords coords model.game)
+                                                                    newState =
+                                                                        newGame.state
+                                                                in
+                                                                { newGame | state = { newState | availableMonsters = d } }
+                                                           )
 
-                        Nothing ->
-                            model.game
-            in
-            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = game, currentDraggable = Nothing }, pushGameState game.state )
+                                                _ ->
+                                                    Tuple.first (movePiece p m.coords coords oldGame)
+
+                                Nothing ->
+                                    oldGame
+                    in
+                    ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = Just game, currentDraggable = Nothing }, pushGameState game.state )
 
         GameStatePushed val ->
-            let
-                gameState =
-                    case decodeValue GameSync.decodeGameState val of
-                        Ok s ->
-                            if s.scenario == model.game.state.scenario && s.numPlayers == model.game.state.numPlayers then
-                                s
+            case model.game of
+                Nothing ->
+                    ( model, Cmd.none )
 
-                            else
-                                model.game.state
+                Just game ->
+                    let
+                        gameState =
+                            case decodeValue GameSync.decodeGameState val of
+                                Ok s ->
+                                    if s.scenario == game.state.scenario && s.numPlayers == game.state.numPlayers then
+                                        s
 
-                        Err _ ->
-                            model.game.state
+                                    else
+                                        game.state
 
-                game =
-                    model.game
-            in
-            ( { model | game = { game | state = gameState } }, Cmd.none )
+                                Err _ ->
+                                    game.state
+                    in
+                    ( { model | game = Just { game | state = gameState } }, Cmd.none )
 
         RemoveOverlay overlay ->
-            let
-                gameState =
-                    model.game.state
+            case model.game of
+                Nothing ->
+                    ( model, Cmd.none )
 
-                game =
-                    model.game
+                Just game ->
+                    let
+                        gameState =
+                            game.state
 
-                newState =
-                    { gameState | overlays = List.filter (\o -> o.cells /= overlay.cells || o.ref /= overlay.ref) gameState.overlays }
-            in
-            ( { model | game = { game | state = newState } }, pushGameState newState )
+                        newState =
+                            { gameState | overlays = List.filter (\o -> o.cells /= overlay.cells || o.ref /= overlay.ref) gameState.overlays }
+                    in
+                    ( { model | game = Just { game | state = newState } }, pushGameState newState )
 
         RemovePiece piece ->
-            let
-                game =
-                    removePieceFromBoard piece model.game
-            in
-            ( { model | game = game }, pushGameState game.state )
+            case model.game of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just game ->
+                    ( { model | game = Just (removePieceFromBoard piece game) }, pushGameState game.state )
 
         ChangeMode mode ->
             ( { model | currentMode = mode }, Cmd.none )
 
         RevealRoomMsg rooms ->
-            let
-                game =
-                    revealRooms model.game rooms
-            in
-            ( { model | game = game }, pushGameState game.state )
+            case model.game of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just game ->
+                    ( { model | game = Just (revealRooms game rooms) }, pushGameState game.state )
 
 
 view : Model -> Html.Html Msg
 view model =
     div [ class "content" ]
-        [ div [ class "action-list" ] [ getNewPieceHtml model, getNavHtml model ]
-        , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model) model.game.staticBoard))
-        ]
+        (case model.game of
+            Nothing ->
+                []
+
+            Just game ->
+                [ div [ class "action-list" ] [ getNewPieceHtml model game, getNavHtml model ]
+                , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
+                ]
+        )
 
 
 subscriptions : Model -> Sub Msg
@@ -302,8 +342,8 @@ subscriptions _ =
     receiveGameState GameStatePushed
 
 
-getNewPieceHtml : Model -> Html.Html Msg
-getNewPieceHtml model =
+getNewPieceHtml : Model -> Game -> Html.Html Msg
+getNewPieceHtml model game =
     Dom.element "div"
         |> Dom.addClass "new-piece-list"
         |> Dom.appendChild
@@ -322,7 +362,7 @@ getNewPieceHtml model =
                                                 _ ->
                                                     Nothing
                                         )
-                                        model.game.state.pieces
+                                        game.state.pieces
                                         |> sort
                                         |> reverse
                                         |> head
@@ -349,7 +389,7 @@ getNewPieceHtml model =
                             (overlayToHtml model Nothing (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]))
                     )
                 |> Dom.appendChildList
-                    (Dict.toList model.game.state.availableMonsters
+                    (Dict.toList game.state.availableMonsters
                         |> List.filter (\( _, v ) -> length v > 0)
                         |> List.map (\( k, _ ) -> k)
                         |> List.sort
@@ -422,13 +462,13 @@ getNavHtml model =
         |> Dom.render
 
 
-getBoardHtml : Model -> Int -> Array Cell -> Html.Html Msg
-getBoardHtml model y row =
-    div [ class "row" ] (toList (Array.indexedMap (getCellHtml model y) row))
+getBoardHtml : Model -> Game -> Int -> Array Cell -> Html.Html Msg
+getBoardHtml model game y row =
+    div [ class "row" ] (toList (Array.indexedMap (getCellHtml model game y) row))
 
 
-getCellHtml : Model -> Int -> Int -> Cell -> Html.Html Msg
-getCellHtml model y x cellValue =
+getCellHtml : Model -> Game -> Int -> Int -> Cell -> Html.Html Msg
+getCellHtml model game y x cellValue =
     let
         dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
         dragDropMessages =
@@ -444,7 +484,7 @@ getCellHtml model y x cellValue =
                 |> Dom.addClass "hexagon"
                 -- Treasure chests, obstacles, doors, traps etc.
                 |> Dom.appendChildList
-                    (List.filter (filterOverlaysForCoord x y) model.game.state.overlays
+                    (List.filter (filterOverlaysForCoord x y) game.state.overlays
                         |> List.filter
                             (\o ->
                                 case o.ref of
@@ -463,7 +503,7 @@ getCellHtml model y x cellValue =
                     )
                 -- Players / Monsters / Summons
                 |> Dom.appendChildList
-                    (case getPieceForCoord x y model.game.state.pieces of
+                    (case getPieceForCoord x y game.state.pieces of
                         Nothing ->
                             []
 
@@ -472,7 +512,7 @@ getCellHtml model y x cellValue =
                     )
                 -- Loot / Coins
                 |> Dom.appendChildList
-                    (List.filter (filterOverlaysForCoord x y) model.game.state.overlays
+                    (List.filter (filterOverlaysForCoord x y) game.state.overlays
                         |> List.filter
                             (\o ->
                                 case o.ref of
@@ -509,16 +549,16 @@ getCellHtml model y x cellValue =
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
-        |> Dom.addClass (cellValueToString model cellValue)
+        |> Dom.addClass (cellValueToString model game cellValue)
         |> (case
-                Dict.toList model.game.roomOrigins
+                Dict.toList game.roomOrigins
                     |> List.filter (\( _, ( tx, ty ) ) -> tx == x && ty == y)
                     |> head
             of
                 Just ( ref, _ ) ->
                     Dom.addAttributeList
                         [ attribute "data-board-ref" ref
-                        , class ("rotate-" ++ String.fromInt (Maybe.withDefault 0 (Dict.get ref model.game.roomTurns)))
+                        , class ("rotate-" ++ String.fromInt (Maybe.withDefault 0 (Dict.get ref game.roomTurns)))
                         ]
 
                 Nothing ->
@@ -538,9 +578,9 @@ getCellHtml model y x cellValue =
         |> Dom.render
 
 
-cellValueToString : Model -> Cell -> String
-cellValueToString model val =
-    if any (\r -> any (\x -> x == r) model.game.state.visibleRooms) val.rooms then
+cellValueToString : Model -> Game -> Cell -> String
+cellValueToString model game val =
+    if any (\r -> any (\x -> x == r) game.state.visibleRooms) val.rooms then
         if val.passable == True then
             "passable"
 
