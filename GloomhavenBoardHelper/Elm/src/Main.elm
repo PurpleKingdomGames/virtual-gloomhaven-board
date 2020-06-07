@@ -10,7 +10,7 @@ import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), assignIdentifier, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (pushGameState, receiveGameState)
 import Html exposing (div)
-import Html.Attributes exposing (attribute, class)
+import Html.Attributes exposing (attribute, class, hidden)
 import Http exposing (Error)
 import Json.Decode exposing (decodeValue)
 import List exposing (any, filter, filterMap, head, reverse, sort)
@@ -34,8 +34,7 @@ type MoveablePieceType
 
 
 type GameModeType
-    = Starting
-    | Loading Int
+    = Loading Int
     | LoadFailed
     | MovePiece
     | KillPiece
@@ -251,6 +250,7 @@ subscriptions _ =
 getNewPieceHtml : Model -> Game -> Html.Html Msg
 getNewPieceHtml model game =
     Dom.element "div"
+        |> Dom.addAttributeConditional (hidden True) (model.currentMode /= AddPiece)
         |> Dom.addClass "new-piece-list"
         |> Dom.appendChild
             (Dom.element "ul"
@@ -537,10 +537,10 @@ pieceToHtml model coords piece =
                             enemyToHtml m
 
                         Summons i ->
-                            Dom.appendChild
-                                (Dom.element "img"
-                                    |> Dom.addAttribute (attribute "src" ("/img/characters/summons-" ++ String.fromInt (modBy 8 i) ++ ".png"))
-                                )
+                            Dom.appendChildList
+                                [ Dom.element "img" |> Dom.addAttribute (attribute "src" "/img/characters/summons.png")
+                                , Dom.element "span" |> Dom.appendText (String.fromInt i)
+                                ]
 
                 Game.None ->
                     Dom.addClass "none"
