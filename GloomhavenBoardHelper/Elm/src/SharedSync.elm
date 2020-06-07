@@ -178,17 +178,7 @@ decodeMonster =
     map3 Monster
         (field "class" Decode.string |> andThen decodeMonsterType)
         (field "id" Decode.int)
-        (field "level" (maybe Decode.string)
-            |> andThen
-                (\m ->
-                    case m of
-                        Just str ->
-                            decodeMonsterLevel str
-
-                        Nothing ->
-                            succeed Monster.None
-                )
-        )
+        (field "level" Decode.string |> andThen decodeMonsterLevel)
 
 
 decodeMonsterType : String -> Decoder MonsterType

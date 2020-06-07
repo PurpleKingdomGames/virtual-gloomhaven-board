@@ -5,9 +5,9 @@ import BoardOverlay exposing (BoardOverlayDirectionType, DoorSubType)
 import Http exposing (Error, expectJson, get)
 import Json.Decode exposing (Decoder, andThen, fail, field, float, int, lazy, list, map5, map6, map7, string, succeed)
 import List exposing (all, filterMap, map)
-import Monster exposing (MonsterType, stringToMonsterType)
+import Monster exposing (Monster, MonsterType, stringToMonsterType)
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
-import SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMonster, decodeMonsterLevel)
+import SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMonsterLevel)
 
 
 type alias DoorDataObj =
@@ -26,7 +26,7 @@ decodeScenario =
     map5 Scenario
         (field "id" int)
         (field "title" string)
-        (field "mapTilesData" decodeMapTileData)
+        (field "mapTileData" decodeMapTileData)
         (field "angle" float)
         (field "additionalMonsters" (list string) |> andThen decodeMonsterList)
 
@@ -49,7 +49,7 @@ decodeMonsterList monsters =
         succeed (filterMap (\m -> m) decodedRefs)
 
     else
-        fail "Could not decode all map tile references"
+        fail "Could not decode all monster references"
 
 
 decodeMapTileData : Decoder MapTileData
@@ -81,7 +81,7 @@ decodeDoors =
         (field "room1Y" int)
         (field "room2X" int)
         (field "room2Y" int)
-        (field "mapTilesData" (lazy (\_ -> decodeMapTileData)))
+        (field "mapTileData" (lazy (\_ -> decodeMapTileData)))
         |> andThen
             (\d ->
                 succeed (DoorLink d.subType d.dir ( d.room1X, d.room1Y ) ( d.room2X, d.room2Y ) d.mapTilesData)
@@ -91,7 +91,17 @@ decodeDoors =
 decodeScenarioMonster : Decoder ScenarioMonster
 decodeScenarioMonster =
     map6 ScenarioMonster
-        (field "monster" decodeMonster)
+        (field "monster" string
+            |> andThen
+                (\m ->
+                    case stringToMonsterType m of
+                        Just monster ->
+                            succeed (Monster monster 0 Monster.None)
+
+                        Nothing ->
+                            fail ("Could not decode monster " ++ m)
+                )
+        )
         (field "initialX" int)
         (field "initialY" int)
         (field "twoPlayer" string |> andThen decodeMonsterLevel)
