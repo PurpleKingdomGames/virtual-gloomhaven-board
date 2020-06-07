@@ -1,7 +1,8 @@
-module ScenarioSync exposing (decodeScenario)
+module ScenarioSync exposing (decodeScenario, loadScenarioById)
 
 import BoardMapTile exposing (stringToRef)
 import BoardOverlay exposing (BoardOverlayDirectionType, DoorSubType)
+import Http exposing (Error, expectJson, get)
 import Json.Decode exposing (Decoder, andThen, fail, field, float, int, lazy, list, map5, map6, map7, string, succeed)
 import List exposing (all, filterMap, map)
 import Monster exposing (MonsterType, stringToMonsterType)
@@ -28,6 +29,14 @@ decodeScenario =
         (field "mapTilesData" decodeMapTileData)
         (field "angle" float)
         (field "additionalMonsters" (list string) |> andThen decodeMonsterList)
+
+
+loadScenarioById : Int -> (Result Error Scenario -> msg) -> Cmd msg
+loadScenarioById id msg =
+    Http.get
+        { url = "/data/scenarios/" ++ String.fromInt id ++ ".json"
+        , expect = expectJson msg decodeScenario
+        }
 
 
 decodeMonsterList : List String -> Decoder (List MonsterType)
