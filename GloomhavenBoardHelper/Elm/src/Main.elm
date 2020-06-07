@@ -1,7 +1,7 @@
 module Main exposing (main)
 
-import Array exposing (..)
-import BoardMapTile exposing (MapTile, MapTileRef(..), getGridByRef, refToString)
+import Array exposing (Array, fromList, length, toIndexedList, toList)
+import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
 import Dict
@@ -9,16 +9,14 @@ import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), assignIdentifier, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (pushGameState, receiveGameState)
-import Html exposing (div, li, nav, text, ul)
-import Html.Attributes exposing (attribute, class, src)
-import Html.Events exposing (onClick)
+import Html exposing (div)
+import Html.Attributes exposing (attribute, class)
 import Http exposing (Error)
-import Json.Decode exposing (decodeValue, errorToString)
-import List exposing (any, filter, filterMap, head, reverse, sort, tail, take)
-import List.Extra exposing (uniqueBy)
+import Json.Decode exposing (decodeValue)
+import List exposing (any, filter, filterMap, head, reverse, sort)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Random exposing (Seed)
-import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
+import Scenario exposing (DoorData(..), Scenario)
 import ScenarioSync exposing (loadScenarioById)
 
 
@@ -79,98 +77,6 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    let
-        scenario =
-            Scenario
-                2
-                "Barrow Lair"
-                (MapTileData B3b
-                    [ DoorLink Stone
-                        Default
-                        ( 1, -1 )
-                        ( 2, 7 )
-                        (MapTileData M1a
-                            [ DoorLink Stone
-                                DiagonalRight
-                                ( 0, 0 )
-                                ( 3, 0 )
-                                (MapTileData A4b
-                                    []
-                                    [ BoardOverlay (Treasure (Chest (NormalChest 67))) Default [ ( 0, 2 ) ]
-                                    ]
-                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 0 1 Monster.None Normal Elite
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 1 2 Elite Elite Elite
-                                    ]
-                                    5
-                                )
-                            , DoorLink Stone
-                                DiagonalLeft
-                                ( 5, 0 )
-                                ( 1, 0 )
-                                (MapTileData A2a
-                                    []
-                                    []
-                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 3 1 Monster.None Normal Elite
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 3 2 Elite Elite Elite
-                                    ]
-                                    1
-                                )
-                            , DoorLink Stone
-                                Vertical
-                                ( -1, 3 )
-                                ( 4, 1 )
-                                (MapTileData A1a
-                                    []
-                                    []
-                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 1 1 Monster.None Normal Elite
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 1 2 Normal Normal Normal
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 2 2 Normal Normal Normal
-                                    ]
-                                    3
-                                )
-                            , DoorLink Stone
-                                Vertical
-                                ( 5, 3 )
-                                ( -1, 1 )
-                                (MapTileData A3b
-                                    []
-                                    []
-                                    [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 2 1 Monster.None Normal Elite
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 2 2 Normal Normal Normal
-                                    , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Normal) 3 2 Normal Normal Normal
-                                    ]
-                                    3
-                                )
-                            ]
-                            [ BoardOverlay (Obstacle Sarcophagus) Default [ ( 3, 2 ), ( 2, 2 ) ]
-                            , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft [ ( 1, 5 ), ( 1, 4 ) ]
-                            , BoardOverlay (Obstacle Sarcophagus) DiagonalRight [ ( 3, 5 ), ( 4, 4 ) ]
-                            ]
-                            [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 1 1 Elite Elite Elite
-                            , ScenarioMonster (Monster (BossType BanditCommander) 1 Normal) 2 1 Normal Normal Normal
-                            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Normal) 3 1 Monster.None Normal Elite
-                            ]
-                            3
-                        )
-                    ]
-                    [ BoardOverlay (Trap BearTrap) Default [ ( 0, 1 ) ]
-                    , BoardOverlay (Trap BearTrap) Default [ ( 2, 1 ) ]
-                    , BoardOverlay StartingLocation Default [ ( 0, 3 ) ]
-                    , BoardOverlay StartingLocation Default [ ( 1, 3 ) ]
-                    , BoardOverlay StartingLocation Default [ ( 2, 3 ) ]
-                    , BoardOverlay StartingLocation Default [ ( 1, 2 ) ]
-                    , BoardOverlay StartingLocation Default [ ( 2, 2 ) ]
-                    ]
-                    [ ScenarioMonster (Monster (NormalType BanditArcher) 5 Monster.None) 0 0 Normal Normal Normal
-                    , ScenarioMonster (Monster (NormalType BanditArcher) 2 Monster.None) 1 0 Monster.None Monster.None Normal
-                    , ScenarioMonster (Monster (NormalType BanditArcher) 3 Monster.None) 2 0 Monster.None Normal Normal
-                    , ScenarioMonster (Monster (NormalType BanditArcher) 1 Monster.None) 3 0 Normal Normal Normal
-                    ]
-                    3
-                )
-                0
-                []
-    in
     ( Model Nothing DragDrop.initialState Nothing (Loading 2), loadScenarioById 2 (Loaded (Random.initialSeed seed)) )
 
 
@@ -549,7 +455,7 @@ getCellHtml model game y x cellValue =
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
-        |> Dom.addClass (cellValueToString model game cellValue)
+        |> Dom.addClass (cellValueToString game cellValue)
         |> (case
                 Dict.toList game.roomOrigins
                     |> List.filter (\( _, ( tx, ty ) ) -> tx == x && ty == y)
@@ -578,8 +484,8 @@ getCellHtml model game y x cellValue =
         |> Dom.render
 
 
-cellValueToString : Model -> Game -> Cell -> String
-cellValueToString model game val =
+cellValueToString : Game -> Cell -> String
+cellValueToString game val =
     if any (\r -> any (\x -> x == r) game.state.visibleRooms) val.rooms then
         if val.passable == True then
             "passable"
@@ -771,7 +677,7 @@ overlayToHtml model coords overlay =
                     \e -> e
            )
         |> (case coords of
-                Just ( x, y ) ->
+                Just ( _, _ ) ->
                     if model.currentMode == MoveOverlay then
                         case overlay.ref of
                             Obstacle _ ->
