@@ -682,36 +682,19 @@ overlayToHtml model coords overlay =
                 _ ->
                     \e -> e
            )
-        |> (case coords of
-                Just ( _, _ ) ->
-                    if model.currentMode == MoveOverlay then
-                        case overlay.ref of
-                            Obstacle _ ->
-                                DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
+        |> (if (model.currentMode == MoveOverlay && coords /= Nothing) || (model.currentMode == AddPiece && coords == Nothing) then
+                case overlay.ref of
+                    Obstacle _ ->
+                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
 
-                            Trap _ ->
-                                DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
+                    Trap _ ->
+                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
 
-                            _ ->
-                                Dom.addAttribute (attribute "draggable" "false")
-
-                    else
+                    _ ->
                         Dom.addAttribute (attribute "draggable" "false")
 
-                Nothing ->
-                    if model.currentMode == MoveOverlay then
-                        case overlay.ref of
-                            Obstacle _ ->
-                                DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
-
-                            Trap _ ->
-                                DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
-
-                            _ ->
-                                Dom.addAttribute (attribute "draggable" "false")
-
-                    else
-                        Dom.addAttribute (attribute "draggable" "false")
+            else
+                Dom.addAttribute (attribute "draggable" "false")
            )
         |> (case ( model.currentMode, overlay.ref ) of
                 ( DestroyOverlay, Obstacle _ ) ->
