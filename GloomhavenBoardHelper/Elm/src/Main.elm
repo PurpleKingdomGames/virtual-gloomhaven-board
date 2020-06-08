@@ -236,7 +236,7 @@ view model =
                 []
 
             Just game ->
-                [ div [ class "action-list" ] [ getNewPieceHtml model game, getNavHtml model ]
+                [ div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
                 , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
                 ]
         )
@@ -590,7 +590,13 @@ enemyToHtml monster element =
                         )
                     )
             , Dom.element "span"
-                |> Dom.appendText (String.fromInt monster.id)
+                |> Dom.appendText
+                    (if monster.id == 0 then
+                        ""
+
+                     else
+                        String.fromInt monster.id
+                    )
             ]
 
 
