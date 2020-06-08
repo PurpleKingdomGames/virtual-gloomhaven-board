@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), assignIdentifier, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
@@ -668,3 +668,69 @@ orderRandomArrElement bucket seed original =
 
             Nothing ->
                 ( bucket, seed )
+
+
+assignPlayers : List CharacterClass -> Game -> Game
+assignPlayers players game =
+    let
+        state =
+            game.state
+
+        filteredPieces =
+            filter
+                (\p ->
+                    case p.ref of
+                        AI (Enemy _) ->
+                            True
+
+                        _ ->
+                            False
+                )
+                state.pieces
+
+        statingLocations =
+            filter
+                (\o ->
+                    case o.ref of
+                        StartingLocation ->
+                            True
+
+                        _ ->
+                            False
+                )
+                state.overlays
+    in
+    { game | state = { state | pieces = assignPlayersToPiece players filteredPieces statingLocations } }
+
+
+assignPlayersToPiece : List CharacterClass -> List Piece -> List BoardOverlay -> List Piece
+assignPlayersToPiece players pieces startingLocations =
+    let
+        filteredLocations =
+            filter
+                (\o ->
+                    case o.ref of
+                        StartingLocation ->
+                            True
+
+                        _ ->
+                            False
+                )
+                startingLocations
+    in
+    case players of
+        player :: rest ->
+            case filteredLocations of
+                location :: otherLocations ->
+                    case head location.cells of
+                        Just ( x, y ) ->
+                            assignPlayersToPiece rest (Piece (Player player) x y :: pieces) otherLocations
+
+                        Nothing ->
+                            pieces
+
+                _ ->
+                    pieces
+
+        _ ->
+            pieces

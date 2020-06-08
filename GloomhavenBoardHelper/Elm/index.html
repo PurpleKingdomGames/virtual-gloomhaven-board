@@ -4406,7 +4406,182 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 {
 	return a >>> offset;
 });
-var $elm$core$Basics$EQ = {$: 'EQ'};
+
+
+
+// SEND REQUEST
+
+var _Http_toTask = F3(function(router, toTask, request)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		function done(response) {
+			callback(toTask(request.expect.a(response)));
+		}
+
+		var xhr = new XMLHttpRequest();
+		xhr.addEventListener('error', function() { done($elm$http$Http$NetworkError_); });
+		xhr.addEventListener('timeout', function() { done($elm$http$Http$Timeout_); });
+		xhr.addEventListener('load', function() { done(_Http_toResponse(request.expect.b, xhr)); });
+		$elm$core$Maybe$isJust(request.tracker) && _Http_track(router, xhr, request.tracker.a);
+
+		try {
+			xhr.open(request.method, request.url, true);
+		} catch (e) {
+			return done($elm$http$Http$BadUrl_(request.url));
+		}
+
+		_Http_configureRequest(xhr, request);
+
+		request.body.a && xhr.setRequestHeader('Content-Type', request.body.a);
+		xhr.send(request.body.b);
+
+		return function() { xhr.c = true; xhr.abort(); };
+	});
+});
+
+
+// CONFIGURE
+
+function _Http_configureRequest(xhr, request)
+{
+	for (var headers = request.headers; headers.b; headers = headers.b) // WHILE_CONS
+	{
+		xhr.setRequestHeader(headers.a.a, headers.a.b);
+	}
+	xhr.timeout = request.timeout.a || 0;
+	xhr.responseType = request.expect.d;
+	xhr.withCredentials = request.allowCookiesFromOtherDomains;
+}
+
+
+// RESPONSES
+
+function _Http_toResponse(toBody, xhr)
+{
+	return A2(
+		200 <= xhr.status && xhr.status < 300 ? $elm$http$Http$GoodStatus_ : $elm$http$Http$BadStatus_,
+		_Http_toMetadata(xhr),
+		toBody(xhr.response)
+	);
+}
+
+
+// METADATA
+
+function _Http_toMetadata(xhr)
+{
+	return {
+		url: xhr.responseURL,
+		statusCode: xhr.status,
+		statusText: xhr.statusText,
+		headers: _Http_parseHeaders(xhr.getAllResponseHeaders())
+	};
+}
+
+
+// HEADERS
+
+function _Http_parseHeaders(rawHeaders)
+{
+	if (!rawHeaders)
+	{
+		return $elm$core$Dict$empty;
+	}
+
+	var headers = $elm$core$Dict$empty;
+	var headerPairs = rawHeaders.split('\r\n');
+	for (var i = headerPairs.length; i--; )
+	{
+		var headerPair = headerPairs[i];
+		var index = headerPair.indexOf(': ');
+		if (index > 0)
+		{
+			var key = headerPair.substring(0, index);
+			var value = headerPair.substring(index + 2);
+
+			headers = A3($elm$core$Dict$update, key, function(oldValue) {
+				return $elm$core$Maybe$Just($elm$core$Maybe$isJust(oldValue)
+					? value + ', ' + oldValue.a
+					: value
+				);
+			}, headers);
+		}
+	}
+	return headers;
+}
+
+
+// EXPECT
+
+var _Http_expect = F3(function(type, toBody, toValue)
+{
+	return {
+		$: 0,
+		d: type,
+		b: toBody,
+		a: toValue
+	};
+});
+
+var _Http_mapExpect = F2(function(func, expect)
+{
+	return {
+		$: 0,
+		d: expect.d,
+		b: expect.b,
+		a: function(x) { return func(expect.a(x)); }
+	};
+});
+
+function _Http_toDataView(arrayBuffer)
+{
+	return new DataView(arrayBuffer);
+}
+
+
+// BODY and PARTS
+
+var _Http_emptyBody = { $: 0 };
+var _Http_pair = F2(function(a, b) { return { $: 0, a: a, b: b }; });
+
+function _Http_toFormData(parts)
+{
+	for (var formData = new FormData(); parts.b; parts = parts.b) // WHILE_CONS
+	{
+		var part = parts.a;
+		formData.append(part.a, part.b);
+	}
+	return formData;
+}
+
+var _Http_bytesToBlob = F2(function(mime, bytes)
+{
+	return new Blob([bytes], { type: mime });
+});
+
+
+// PROGRESS
+
+function _Http_track(router, xhr, tracker)
+{
+	// TODO check out lengthComputable on loadstart event
+
+	xhr.upload.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Sending({
+			sent: event.loaded,
+			size: event.total
+		}))));
+	});
+	xhr.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Receiving({
+			received: event.loaded,
+			size: event.lengthComputable ? $elm$core$Maybe$Just(event.total) : $elm$core$Maybe$Nothing
+		}))));
+	});
+}var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
@@ -5195,131 +5370,206 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$BoardMapTile$A1a = {$: 'A1a'};
-var $author$project$BoardMapTile$A2a = {$: 'A2a'};
-var $author$project$BoardMapTile$A3b = {$: 'A3b'};
-var $author$project$BoardMapTile$A4b = {$: 'A4b'};
-var $author$project$BoardMapTile$B3b = {$: 'B3b'};
-var $author$project$Monster$BanditArcher = {$: 'BanditArcher'};
-var $author$project$Monster$BanditCommander = {$: 'BanditCommander'};
-var $author$project$BoardOverlay$BearTrap = {$: 'BearTrap'};
-var $author$project$BoardOverlay$BoardOverlay = F3(
-	function (ref, direction, cells) {
-		return {cells: cells, direction: direction, ref: ref};
+var $author$project$Character$Brute = {$: 'Brute'};
+var $author$project$Main$Loaded = F2(
+	function (a, b) {
+		return {$: 'Loaded', a: a, b: b};
 	});
-var $author$project$Monster$BossType = function (a) {
-	return {$: 'BossType', a: a};
+var $author$project$Main$Loading = function (a) {
+	return {$: 'Loading', a: a};
 };
-var $author$project$BoardOverlay$Chest = function (a) {
-	return {$: 'Chest', a: a};
-};
-var $author$project$BoardOverlay$Default = {$: 'Default'};
-var $author$project$BoardOverlay$DiagonalLeft = {$: 'DiagonalLeft'};
-var $author$project$BoardOverlay$DiagonalRight = {$: 'DiagonalRight'};
-var $author$project$Scenario$DoorLink = F5(
-	function (a, b, c, d, e) {
-		return {$: 'DoorLink', a: a, b: b, c: c, d: d, e: e};
+var $author$project$Character$Mindthief = {$: 'Mindthief'};
+var $author$project$Main$Model = F5(
+	function (game, currentPlayers, dragDropState, currentDraggable, currentMode) {
+		return {currentDraggable: currentDraggable, currentMode: currentMode, currentPlayers: currentPlayers, dragDropState: dragDropState, game: game};
 	});
-var $author$project$Monster$Elite = {$: 'Elite'};
-var $author$project$Monster$LivingCorpse = {$: 'LivingCorpse'};
-var $author$project$BoardMapTile$M1a = {$: 'M1a'};
-var $author$project$Scenario$MapTileData = F5(
-	function (ref, doors, overlays, monsters, turns) {
-		return {doors: doors, monsters: monsters, overlays: overlays, ref: ref, turns: turns};
+var $author$project$Character$Tinkerer = {$: 'Tinkerer'};
+var $elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
 	});
-var $author$project$Main$Model = F4(
-	function (game, dragDropState, currentDraggable, currentMode) {
-		return {currentDraggable: currentDraggable, currentMode: currentMode, dragDropState: dragDropState, game: game};
-	});
-var $author$project$Monster$Monster = F3(
-	function (monster, id, level) {
-		return {id: id, level: level, monster: monster};
-	});
-var $author$project$Main$MovePiece = {$: 'MovePiece'};
-var $author$project$Monster$None = {$: 'None'};
-var $author$project$Monster$Normal = {$: 'Normal'};
-var $author$project$BoardOverlay$NormalChest = function (a) {
-	return {$: 'NormalChest', a: a};
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$random$Random$next = function (_v0) {
+	var state0 = _v0.a;
+	var incr = _v0.b;
+	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
 };
-var $author$project$Monster$NormalType = function (a) {
-	return {$: 'NormalType', a: a};
+var $elm$random$Random$initialSeed = function (x) {
+	var _v0 = $elm$random$Random$next(
+		A2($elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _v0.a;
+	var incr = _v0.b;
+	var state2 = (state1 + x) >>> 0;
+	return $elm$random$Random$next(
+		A2($elm$random$Random$Seed, state2, incr));
 };
-var $author$project$BoardOverlay$Obstacle = function (a) {
-	return {$: 'Obstacle', a: a};
+var $arsduo$elm_dom_drag_drop$Dom$DragDrop$State$NoDropTarget = {$: 'NoDropTarget'};
+var $arsduo$elm_dom_drag_drop$Dom$DragDrop$State = function (a) {
+	return {$: 'State', a: a};
 };
-var $author$project$BoardOverlay$Sarcophagus = {$: 'Sarcophagus'};
+var $arsduo$elm_dom_drag_drop$Dom$DragDrop$initialState = $arsduo$elm_dom_drag_drop$Dom$DragDrop$State(
+	{draggedObject: $elm$core$Maybe$Nothing, dropTarget: $arsduo$elm_dom_drag_drop$Dom$DragDrop$State$NoDropTarget});
 var $author$project$Scenario$Scenario = F5(
 	function (id, title, mapTilesData, angle, additionalMonsters) {
 		return {additionalMonsters: additionalMonsters, angle: angle, id: id, mapTilesData: mapTilesData, title: title};
 	});
-var $author$project$Scenario$ScenarioMonster = F6(
-	function (monster, initialX, initialY, twoPlayer, threePlayer, fourPlayer) {
-		return {fourPlayer: fourPlayer, initialX: initialX, initialY: initialY, monster: monster, threePlayer: threePlayer, twoPlayer: twoPlayer};
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $author$project$ScenarioSync$DoorDataObj = F7(
+	function (subType, dir, room1X, room1Y, room2X, room2Y, mapTilesData) {
+		return {dir: dir, mapTilesData: mapTilesData, room1X: room1X, room1Y: room1Y, room2X: room2X, room2Y: room2Y, subType: subType};
 	});
+var $author$project$Scenario$DoorLink = F5(
+	function (a, b, c, d, e) {
+		return {$: 'DoorLink', a: a, b: b, c: c, d: d, e: e};
+	});
+var $author$project$Scenario$MapTileData = F5(
+	function (ref, doors, overlays, monsters, turns) {
+		return {doors: doors, monsters: monsters, overlays: overlays, ref: ref, turns: turns};
+	});
+var $author$project$BoardOverlay$BoardOverlay = F3(
+	function (ref, direction, cells) {
+		return {cells: cells, direction: direction, ref: ref};
+	});
+var $author$project$BoardOverlay$Default = {$: 'Default'};
+var $author$project$BoardOverlay$DiagonalLeft = {$: 'DiagonalLeft'};
+var $author$project$BoardOverlay$DiagonalRight = {$: 'DiagonalRight'};
+var $author$project$BoardOverlay$Horizontal = {$: 'Horizontal'};
+var $author$project$BoardOverlay$Vertical = {$: 'Vertical'};
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$core$String$toLower = _String_toLower;
+var $author$project$SharedSync$decodeBoardOverlayDirection = function (dir) {
+	var _v0 = $elm$core$String$toLower(dir);
+	switch (_v0) {
+		case 'default':
+			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$Default);
+		case 'horizontal':
+			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$Horizontal);
+		case 'vertical':
+			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$Vertical);
+		case 'diagonal-left':
+			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$DiagonalLeft);
+		case 'diagonal-right':
+			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$DiagonalRight);
+		default:
+			return $elm$json$Json$Decode$fail('Could not decode overlay direction \'' + (dir + '\''));
+	}
+};
 var $author$project$BoardOverlay$StartingLocation = {$: 'StartingLocation'};
 var $author$project$BoardOverlay$Stone = {$: 'Stone'};
-var $author$project$Game$ThreePlayer = {$: 'ThreePlayer'};
-var $author$project$BoardOverlay$Trap = function (a) {
-	return {$: 'Trap', a: a};
-};
-var $author$project$BoardOverlay$Treasure = function (a) {
-	return {$: 'Treasure', a: a};
-};
-var $author$project$BoardOverlay$Vertical = {$: 'Vertical'};
-var $author$project$Game$Cell = F2(
-	function (rooms, passable) {
-		return {passable: passable, rooms: rooms};
-	});
-var $author$project$Game$Game = F4(
-	function (state, roomOrigins, roomTurns, staticBoard) {
-		return {roomOrigins: roomOrigins, roomTurns: roomTurns, state: state, staticBoard: staticBoard};
-	});
-var $author$project$Game$GameState = F6(
-	function (scenario, numPlayers, visibleRooms, overlays, pieces, availableMonsters) {
-		return {availableMonsters: availableMonsters, numPlayers: numPlayers, overlays: overlays, pieces: pieces, scenario: scenario, visibleRooms: visibleRooms};
-	});
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$core$Basics$abs = function (n) {
-	return (n < 0) ? (-n) : n;
-};
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
-var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
-var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$SharedSync$decodeDoor = A2(
+	$elm$json$Json$Decode$andThen,
+	function (s) {
+		var _v0 = $elm$core$String$toLower(s);
+		if (_v0 === 'stone') {
+			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$Stone);
 		} else {
-			return xs;
+			return $elm$json$Json$Decode$fail(s + ' is not a door sub-type');
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
+var $author$project$BoardOverlay$Door = F2(
+	function (a, b) {
+		return {$: 'Door', a: a, b: b};
+	});
+var $author$project$BoardMapTile$A1a = {$: 'A1a'};
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
 		}
 	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
 	});
+var $elm$core$Basics$not = _Basics_not;
+var $elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			$elm$core$List$any,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
+			list);
+	});
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$BoardMapTile$A1b = {$: 'A1b'};
+var $author$project$BoardMapTile$A2a = {$: 'A2a'};
+var $author$project$BoardMapTile$A2b = {$: 'A2b'};
+var $author$project$BoardMapTile$A3a = {$: 'A3a'};
+var $author$project$BoardMapTile$A3b = {$: 'A3b'};
+var $author$project$BoardMapTile$A4a = {$: 'A4a'};
+var $author$project$BoardMapTile$A4b = {$: 'A4b'};
+var $author$project$BoardMapTile$B1a = {$: 'B1a'};
+var $author$project$BoardMapTile$B1b = {$: 'B1b'};
+var $author$project$BoardMapTile$B2a = {$: 'B2a'};
+var $author$project$BoardMapTile$B2b = {$: 'B2b'};
+var $author$project$BoardMapTile$B3a = {$: 'B3a'};
+var $author$project$BoardMapTile$B3b = {$: 'B3b'};
+var $author$project$BoardMapTile$B4a = {$: 'B4a'};
+var $author$project$BoardMapTile$B4b = {$: 'B4b'};
+var $author$project$BoardMapTile$C1a = {$: 'C1a'};
+var $author$project$BoardMapTile$C1b = {$: 'C1b'};
+var $author$project$BoardMapTile$C2a = {$: 'C2a'};
+var $author$project$BoardMapTile$C2b = {$: 'C2b'};
+var $author$project$BoardMapTile$D1a = {$: 'D1a'};
+var $author$project$BoardMapTile$D1b = {$: 'D1b'};
+var $author$project$BoardMapTile$D2a = {$: 'D2a'};
+var $author$project$BoardMapTile$D2b = {$: 'D2b'};
+var $author$project$BoardMapTile$E1a = {$: 'E1a'};
+var $author$project$BoardMapTile$E1b = {$: 'E1b'};
+var $author$project$BoardMapTile$F1a = {$: 'F1a'};
+var $author$project$BoardMapTile$F1b = {$: 'F1b'};
+var $author$project$BoardMapTile$G1a = {$: 'G1a'};
+var $author$project$BoardMapTile$G1b = {$: 'G1b'};
+var $author$project$BoardMapTile$G2a = {$: 'G2a'};
+var $author$project$BoardMapTile$G2b = {$: 'G2b'};
+var $author$project$BoardMapTile$H1a = {$: 'H1a'};
+var $author$project$BoardMapTile$H1b = {$: 'H1b'};
+var $author$project$BoardMapTile$H2a = {$: 'H2a'};
+var $author$project$BoardMapTile$H2b = {$: 'H2b'};
+var $author$project$BoardMapTile$H3a = {$: 'H3a'};
+var $author$project$BoardMapTile$H3b = {$: 'H3b'};
+var $author$project$BoardMapTile$I1a = {$: 'I1a'};
+var $author$project$BoardMapTile$I1b = {$: 'I1b'};
+var $author$project$BoardMapTile$I2a = {$: 'I2a'};
+var $author$project$BoardMapTile$I2b = {$: 'I2b'};
+var $author$project$BoardMapTile$J1a = {$: 'J1a'};
+var $author$project$BoardMapTile$J1b = {$: 'J1b'};
+var $author$project$BoardMapTile$J2a = {$: 'J2a'};
+var $author$project$BoardMapTile$J2b = {$: 'J2b'};
+var $author$project$BoardMapTile$K1a = {$: 'K1a'};
+var $author$project$BoardMapTile$K1b = {$: 'K1b'};
+var $author$project$BoardMapTile$K2a = {$: 'K2a'};
+var $author$project$BoardMapTile$K2b = {$: 'K2b'};
+var $author$project$BoardMapTile$L1a = {$: 'L1a'};
+var $author$project$BoardMapTile$L1b = {$: 'L1b'};
+var $author$project$BoardMapTile$L2a = {$: 'L2a'};
+var $author$project$BoardMapTile$L2b = {$: 'L2b'};
+var $author$project$BoardMapTile$L3a = {$: 'L3a'};
+var $author$project$BoardMapTile$L3b = {$: 'L3b'};
+var $author$project$BoardMapTile$M1a = {$: 'M1a'};
+var $author$project$BoardMapTile$M1b = {$: 'M1b'};
+var $author$project$BoardMapTile$N1a = {$: 'N1a'};
+var $author$project$BoardMapTile$N1b = {$: 'N1b'};
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
 var $elm$core$Dict$Black = {$: 'Black'};
 var $elm$core$Dict$RBNode_elm_builtin = F5(
 	function (a, b, c, d, e) {
@@ -5441,6 +5691,2031 @@ var $elm$core$Dict$fromList = function (assocs) {
 		$elm$core$Dict$empty,
 		assocs);
 };
+var $author$project$BoardMapTile$boardRefDict = $elm$core$Dict$fromList(
+	_List_fromArray(
+		[
+			_Utils_Tuple2('a1a', $author$project$BoardMapTile$A1a),
+			_Utils_Tuple2('a1b', $author$project$BoardMapTile$A1b),
+			_Utils_Tuple2('a2a', $author$project$BoardMapTile$A2a),
+			_Utils_Tuple2('a2b', $author$project$BoardMapTile$A2b),
+			_Utils_Tuple2('a3a', $author$project$BoardMapTile$A3a),
+			_Utils_Tuple2('a3b', $author$project$BoardMapTile$A3b),
+			_Utils_Tuple2('a4a', $author$project$BoardMapTile$A4a),
+			_Utils_Tuple2('a4b', $author$project$BoardMapTile$A4b),
+			_Utils_Tuple2('b1a', $author$project$BoardMapTile$B1a),
+			_Utils_Tuple2('b1b', $author$project$BoardMapTile$B1b),
+			_Utils_Tuple2('b2a', $author$project$BoardMapTile$B2a),
+			_Utils_Tuple2('b2b', $author$project$BoardMapTile$B2b),
+			_Utils_Tuple2('b3a', $author$project$BoardMapTile$B3a),
+			_Utils_Tuple2('b3b', $author$project$BoardMapTile$B3b),
+			_Utils_Tuple2('b4a', $author$project$BoardMapTile$B4a),
+			_Utils_Tuple2('b4b', $author$project$BoardMapTile$B4b),
+			_Utils_Tuple2('c1a', $author$project$BoardMapTile$C1a),
+			_Utils_Tuple2('c1b', $author$project$BoardMapTile$C1b),
+			_Utils_Tuple2('c2a', $author$project$BoardMapTile$C2a),
+			_Utils_Tuple2('c2b', $author$project$BoardMapTile$C2b),
+			_Utils_Tuple2('d1a', $author$project$BoardMapTile$D1a),
+			_Utils_Tuple2('d1b', $author$project$BoardMapTile$D1b),
+			_Utils_Tuple2('d2a', $author$project$BoardMapTile$D2a),
+			_Utils_Tuple2('d2b', $author$project$BoardMapTile$D2b),
+			_Utils_Tuple2('e1a', $author$project$BoardMapTile$E1a),
+			_Utils_Tuple2('e1b', $author$project$BoardMapTile$E1b),
+			_Utils_Tuple2('f1a', $author$project$BoardMapTile$F1a),
+			_Utils_Tuple2('f1b', $author$project$BoardMapTile$F1b),
+			_Utils_Tuple2('g1a', $author$project$BoardMapTile$G1a),
+			_Utils_Tuple2('g1b', $author$project$BoardMapTile$G1b),
+			_Utils_Tuple2('g2a', $author$project$BoardMapTile$G2a),
+			_Utils_Tuple2('g2b', $author$project$BoardMapTile$G2b),
+			_Utils_Tuple2('h1a', $author$project$BoardMapTile$H1a),
+			_Utils_Tuple2('h1b', $author$project$BoardMapTile$H1b),
+			_Utils_Tuple2('h2a', $author$project$BoardMapTile$H2a),
+			_Utils_Tuple2('h2b', $author$project$BoardMapTile$H2b),
+			_Utils_Tuple2('h3a', $author$project$BoardMapTile$H3a),
+			_Utils_Tuple2('h3b', $author$project$BoardMapTile$H3b),
+			_Utils_Tuple2('i1a', $author$project$BoardMapTile$I1a),
+			_Utils_Tuple2('i1b', $author$project$BoardMapTile$I1b),
+			_Utils_Tuple2('i2a', $author$project$BoardMapTile$I2a),
+			_Utils_Tuple2('i2b', $author$project$BoardMapTile$I2b),
+			_Utils_Tuple2('j1a', $author$project$BoardMapTile$J1a),
+			_Utils_Tuple2('j1b', $author$project$BoardMapTile$J1b),
+			_Utils_Tuple2('j2a', $author$project$BoardMapTile$J2a),
+			_Utils_Tuple2('j2b', $author$project$BoardMapTile$J2b),
+			_Utils_Tuple2('k1a', $author$project$BoardMapTile$K1a),
+			_Utils_Tuple2('k1b', $author$project$BoardMapTile$K1b),
+			_Utils_Tuple2('k2a', $author$project$BoardMapTile$K2a),
+			_Utils_Tuple2('k2b', $author$project$BoardMapTile$K2b),
+			_Utils_Tuple2('l1a', $author$project$BoardMapTile$L1a),
+			_Utils_Tuple2('l1b', $author$project$BoardMapTile$L1b),
+			_Utils_Tuple2('l2a', $author$project$BoardMapTile$L2a),
+			_Utils_Tuple2('l2b', $author$project$BoardMapTile$L2b),
+			_Utils_Tuple2('l3a', $author$project$BoardMapTile$L3a),
+			_Utils_Tuple2('l3b', $author$project$BoardMapTile$L3b),
+			_Utils_Tuple2('m1a', $author$project$BoardMapTile$M1a),
+			_Utils_Tuple2('m1b', $author$project$BoardMapTile$M1b),
+			_Utils_Tuple2('n1a', $author$project$BoardMapTile$N1a),
+			_Utils_Tuple2('n1b', $author$project$BoardMapTile$N1b)
+		]));
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var $author$project$BoardMapTile$stringToRef = function (ref) {
+	return A2(
+		$elm$core$Dict$get,
+		$elm$core$String$toLower(ref),
+		$author$project$BoardMapTile$boardRefDict);
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$SharedSync$decodeMapRefList = function (refs) {
+	var decodedRefs = A2(
+		$elm$core$List$map,
+		function (ref) {
+			return $author$project$BoardMapTile$stringToRef(ref);
+		},
+		refs);
+	return A2(
+		$elm$core$List$all,
+		function (s) {
+			return !_Utils_eq(s, $elm$core$Maybe$Nothing);
+		},
+		decodedRefs) ? $elm$json$Json$Decode$succeed(
+		A2(
+			$elm$core$List$map,
+			function (r) {
+				return A2($elm$core$Maybe$withDefault, $author$project$BoardMapTile$A1a, r);
+			},
+			decodedRefs)) : $elm$json$Json$Decode$fail('Could not decode all map tile references');
+};
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$SharedSync$decodeDoorRefs = function (subType) {
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		function (refs) {
+			return $elm$json$Json$Decode$succeed(
+				A2($author$project$BoardOverlay$Door, subType, refs));
+		},
+		A2(
+			$elm$json$Json$Decode$andThen,
+			$author$project$SharedSync$decodeMapRefList,
+			A2(
+				$elm$json$Json$Decode$field,
+				'links',
+				$elm$json$Json$Decode$list($elm$json$Json$Decode$string))));
+};
+var $author$project$BoardOverlay$Boulder1 = {$: 'Boulder1'};
+var $author$project$BoardOverlay$Obstacle = function (a) {
+	return {$: 'Obstacle', a: a};
+};
+var $author$project$BoardOverlay$Sarcophagus = {$: 'Sarcophagus'};
+var $author$project$SharedSync$decodeObstacle = A2(
+	$elm$json$Json$Decode$andThen,
+	function (s) {
+		var _v0 = $elm$core$String$toLower(s);
+		switch (_v0) {
+			case 'sarcophagus':
+				return $elm$json$Json$Decode$succeed(
+					$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Sarcophagus));
+			case 'boulder-1':
+				return $elm$json$Json$Decode$succeed(
+					$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Boulder1));
+			default:
+				return $elm$json$Json$Decode$fail(s + ' is not an obstacle sub-type');
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
+var $author$project$BoardOverlay$BearTrap = {$: 'BearTrap'};
+var $author$project$BoardOverlay$Trap = function (a) {
+	return {$: 'Trap', a: a};
+};
+var $author$project$SharedSync$decodeTrap = A2(
+	$elm$json$Json$Decode$andThen,
+	function (s) {
+		var _v0 = $elm$core$String$toLower(s);
+		if (_v0 === 'bear') {
+			return $elm$json$Json$Decode$succeed(
+				$author$project$BoardOverlay$Trap($author$project$BoardOverlay$BearTrap));
+		} else {
+			return $elm$json$Json$Decode$fail(s + ' is not a trap sub-type');
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
+var $author$project$BoardOverlay$Chest = function (a) {
+	return {$: 'Chest', a: a};
+};
+var $author$project$BoardOverlay$Goal = {$: 'Goal'};
+var $author$project$BoardOverlay$NormalChest = function (a) {
+	return {$: 'NormalChest', a: a};
+};
+var $author$project$BoardOverlay$Treasure = function (a) {
+	return {$: 'Treasure', a: a};
+};
+var $author$project$SharedSync$decodeTreasureChest = A2(
+	$elm$json$Json$Decode$andThen,
+	function (s) {
+		var _v0 = $elm$core$String$toLower(s);
+		if (_v0 === 'goal') {
+			return $elm$json$Json$Decode$succeed(
+				$author$project$BoardOverlay$Treasure(
+					$author$project$BoardOverlay$Chest($author$project$BoardOverlay$Goal)));
+		} else {
+			var _v1 = $elm$core$String$toInt(s);
+			if (_v1.$ === 'Just') {
+				var i = _v1.a;
+				return $elm$json$Json$Decode$succeed(
+					$author$project$BoardOverlay$Treasure(
+						$author$project$BoardOverlay$Chest(
+							$author$project$BoardOverlay$NormalChest(i))));
+			} else {
+				return $elm$json$Json$Decode$fail('Unknown treasure id \'' + (s + '\'. Valid types are \'goal\' or an Int'));
+			}
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string));
+var $author$project$BoardOverlay$Coin = function (a) {
+	return {$: 'Coin', a: a};
+};
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $author$project$SharedSync$decodeTreasureCoin = A2(
+	$elm$json$Json$Decode$andThen,
+	function (i) {
+		return $elm$json$Json$Decode$succeed(
+			$author$project$BoardOverlay$Treasure(
+				$author$project$BoardOverlay$Coin(i)));
+	},
+	A2($elm$json$Json$Decode$field, 'amount', $elm$json$Json$Decode$int));
+var $author$project$SharedSync$decodeTreasure = function () {
+	var decodeType = function (typeName) {
+		var _v0 = $elm$core$String$toLower(typeName);
+		switch (_v0) {
+			case 'chest':
+				return $author$project$SharedSync$decodeTreasureChest;
+			case 'coin':
+				return $author$project$SharedSync$decodeTreasureCoin;
+			default:
+				return $elm$json$Json$Decode$fail('Unknown treasure type: ' + typeName);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		decodeType,
+		A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
+}();
+var $author$project$SharedSync$decodeBoardOverlayType = function () {
+	var decodeType = function (typeName) {
+		var _v0 = $elm$core$String$toLower(typeName);
+		switch (_v0) {
+			case 'starting-location':
+				return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$StartingLocation);
+			case 'door':
+				return A2($elm$json$Json$Decode$andThen, $author$project$SharedSync$decodeDoorRefs, $author$project$SharedSync$decodeDoor);
+			case 'trap':
+				return $author$project$SharedSync$decodeTrap;
+			case 'obstacle':
+				return $author$project$SharedSync$decodeObstacle;
+			case 'treasure':
+				return $author$project$SharedSync$decodeTreasure;
+			default:
+				return $elm$json$Json$Decode$fail('Unknown overlay type: ' + typeName);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		decodeType,
+		A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+}();
+var $elm$json$Json$Decode$index = _Json_decodeIndex;
+var $elm$json$Json$Decode$map3 = _Json_map3;
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $author$project$SharedSync$decodeBoardOverlay = A4(
+	$elm$json$Json$Decode$map3,
+	$author$project$BoardOverlay$BoardOverlay,
+	A2($elm$json$Json$Decode$field, 'ref', $author$project$SharedSync$decodeBoardOverlayType),
+	A2(
+		$elm$json$Json$Decode$andThen,
+		$author$project$SharedSync$decodeBoardOverlayDirection,
+		A2($elm$json$Json$Decode$field, 'direction', $elm$json$Json$Decode$string)),
+	A2(
+		$elm$json$Json$Decode$field,
+		'cells',
+		$elm$json$Json$Decode$list(
+			A3(
+				$elm$json$Json$Decode$map2,
+				$elm$core$Tuple$pair,
+				A2($elm$json$Json$Decode$index, 0, $elm$json$Json$Decode$int),
+				A2($elm$json$Json$Decode$index, 1, $elm$json$Json$Decode$int)))));
+var $author$project$Monster$Monster = F3(
+	function (monster, id, level) {
+		return {id: id, level: level, monster: monster};
+	});
+var $author$project$Monster$None = {$: 'None'};
+var $author$project$Scenario$ScenarioMonster = F6(
+	function (monster, initialX, initialY, twoPlayer, threePlayer, fourPlayer) {
+		return {fourPlayer: fourPlayer, initialX: initialX, initialY: initialY, monster: monster, threePlayer: threePlayer, twoPlayer: twoPlayer};
+	});
+var $author$project$Monster$Elite = {$: 'Elite'};
+var $author$project$Monster$Normal = {$: 'Normal'};
+var $author$project$SharedSync$decodeMonsterLevel = function (l) {
+	var _v0 = $elm$core$String$toLower(l);
+	switch (_v0) {
+		case 'normal':
+			return $elm$json$Json$Decode$succeed($author$project$Monster$Normal);
+		case 'elite':
+			return $elm$json$Json$Decode$succeed($author$project$Monster$Elite);
+		case 'none':
+			return $elm$json$Json$Decode$succeed($author$project$Monster$None);
+		default:
+			return $elm$json$Json$Decode$fail(l + ' is not a valid monster level');
+	}
+};
+var $elm$json$Json$Decode$map6 = _Json_map6;
+var $author$project$Monster$BossType = function (a) {
+	return {$: 'BossType', a: a};
+};
+var $author$project$Monster$NormalType = function (a) {
+	return {$: 'NormalType', a: a};
+};
+var $author$project$Monster$BanditCommander = {$: 'BanditCommander'};
+var $author$project$Monster$CaptainOfTheGuard = {$: 'CaptainOfTheGuard'};
+var $author$project$Monster$DarkRider = {$: 'DarkRider'};
+var $author$project$Monster$ElderDrake = {$: 'ElderDrake'};
+var $author$project$Monster$InoxBodyguard = {$: 'InoxBodyguard'};
+var $author$project$Monster$Jekserah = {$: 'Jekserah'};
+var $author$project$Monster$MercilessOverseer = {$: 'MercilessOverseer'};
+var $author$project$Monster$PrimeDemon = {$: 'PrimeDemon'};
+var $author$project$Monster$TheBetrayer = {$: 'TheBetrayer'};
+var $author$project$Monster$TheColorless = {$: 'TheColorless'};
+var $author$project$Monster$TheGloom = {$: 'TheGloom'};
+var $author$project$Monster$TheSightlessEye = {$: 'TheSightlessEye'};
+var $author$project$Monster$WingedHorror = {$: 'WingedHorror'};
+var $author$project$Monster$bossDict = $elm$core$Dict$fromList(
+	_List_fromArray(
+		[
+			_Utils_Tuple2('bandit-commander', $author$project$Monster$BanditCommander),
+			_Utils_Tuple2('merciless-overseer', $author$project$Monster$MercilessOverseer),
+			_Utils_Tuple2('inox-bodyguard', $author$project$Monster$InoxBodyguard),
+			_Utils_Tuple2('captain-of-the-guard', $author$project$Monster$CaptainOfTheGuard),
+			_Utils_Tuple2('jekserah', $author$project$Monster$Jekserah),
+			_Utils_Tuple2('prime-demon', $author$project$Monster$PrimeDemon),
+			_Utils_Tuple2('elder-drake', $author$project$Monster$ElderDrake),
+			_Utils_Tuple2('the-betrayer', $author$project$Monster$TheBetrayer),
+			_Utils_Tuple2('the-colorless', $author$project$Monster$TheColorless),
+			_Utils_Tuple2('the-sightless-eye', $author$project$Monster$TheSightlessEye),
+			_Utils_Tuple2('dark-rider', $author$project$Monster$DarkRider),
+			_Utils_Tuple2('winged-horror', $author$project$Monster$WingedHorror),
+			_Utils_Tuple2('the-gloom', $author$project$Monster$TheGloom)
+		]));
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$Monster$AncientArtillery = {$: 'AncientArtillery'};
+var $author$project$Monster$BanditArcher = {$: 'BanditArcher'};
+var $author$project$Monster$BanditGuard = {$: 'BanditGuard'};
+var $author$project$Monster$BlackImp = {$: 'BlackImp'};
+var $author$project$Monster$CaveBear = {$: 'CaveBear'};
+var $author$project$Monster$CityArcher = {$: 'CityArcher'};
+var $author$project$Monster$CityGuard = {$: 'CityGuard'};
+var $author$project$Monster$Cultist = {$: 'Cultist'};
+var $author$project$Monster$DeepTerror = {$: 'DeepTerror'};
+var $author$project$Monster$EarthDemon = {$: 'EarthDemon'};
+var $author$project$Monster$FlameDemon = {$: 'FlameDemon'};
+var $author$project$Monster$ForestImp = {$: 'ForestImp'};
+var $author$project$Monster$FrostDemon = {$: 'FrostDemon'};
+var $author$project$Monster$GiantViper = {$: 'GiantViper'};
+var $author$project$Monster$HarrowerInfester = {$: 'HarrowerInfester'};
+var $author$project$Monster$Hound = {$: 'Hound'};
+var $author$project$Monster$InoxArcher = {$: 'InoxArcher'};
+var $author$project$Monster$InoxGuard = {$: 'InoxGuard'};
+var $author$project$Monster$InoxShaman = {$: 'InoxShaman'};
+var $author$project$Monster$LivingBones = {$: 'LivingBones'};
+var $author$project$Monster$LivingCorpse = {$: 'LivingCorpse'};
+var $author$project$Monster$LivingSpirit = {$: 'LivingSpirit'};
+var $author$project$Monster$Lurker = {$: 'Lurker'};
+var $author$project$Monster$NightDemon = {$: 'NightDemon'};
+var $author$project$Monster$Ooze = {$: 'Ooze'};
+var $author$project$Monster$SavvaLavaflow = {$: 'SavvaLavaflow'};
+var $author$project$Monster$SavvasIcestorm = {$: 'SavvasIcestorm'};
+var $author$project$Monster$SpittingDrake = {$: 'SpittingDrake'};
+var $author$project$Monster$StoneGolem = {$: 'StoneGolem'};
+var $author$project$Monster$SunDemon = {$: 'SunDemon'};
+var $author$project$Monster$VermlingScout = {$: 'VermlingScout'};
+var $author$project$Monster$VermlingShaman = {$: 'VermlingShaman'};
+var $author$project$Monster$ViciousDrake = {$: 'ViciousDrake'};
+var $author$project$Monster$WindDemon = {$: 'WindDemon'};
+var $author$project$Monster$normalDict = $elm$core$Dict$fromList(
+	_List_fromArray(
+		[
+			_Utils_Tuple2('bandit-guard', $author$project$Monster$BanditGuard),
+			_Utils_Tuple2('bandit-archer', $author$project$Monster$BanditArcher),
+			_Utils_Tuple2('city-guard', $author$project$Monster$CityGuard),
+			_Utils_Tuple2('city-archer', $author$project$Monster$CityArcher),
+			_Utils_Tuple2('inox-guard', $author$project$Monster$InoxGuard),
+			_Utils_Tuple2('inox-archer', $author$project$Monster$InoxArcher),
+			_Utils_Tuple2('inox-shaman', $author$project$Monster$InoxShaman),
+			_Utils_Tuple2('vermling-scout', $author$project$Monster$VermlingScout),
+			_Utils_Tuple2('vermling-shaman', $author$project$Monster$VermlingShaman),
+			_Utils_Tuple2('living-bones', $author$project$Monster$LivingBones),
+			_Utils_Tuple2('living-corpse', $author$project$Monster$LivingCorpse),
+			_Utils_Tuple2('living-spirit', $author$project$Monster$LivingSpirit),
+			_Utils_Tuple2('cultist', $author$project$Monster$Cultist),
+			_Utils_Tuple2('flame-demon', $author$project$Monster$FlameDemon),
+			_Utils_Tuple2('frost-demon', $author$project$Monster$FrostDemon),
+			_Utils_Tuple2('earth-demon', $author$project$Monster$EarthDemon),
+			_Utils_Tuple2('wind-demon', $author$project$Monster$WindDemon),
+			_Utils_Tuple2('night-demon', $author$project$Monster$NightDemon),
+			_Utils_Tuple2('sun-demon', $author$project$Monster$SunDemon),
+			_Utils_Tuple2('ooze', $author$project$Monster$Ooze),
+			_Utils_Tuple2('giant-viper', $author$project$Monster$GiantViper),
+			_Utils_Tuple2('fores-timp', $author$project$Monster$ForestImp),
+			_Utils_Tuple2('hound', $author$project$Monster$Hound),
+			_Utils_Tuple2('cave-bear', $author$project$Monster$CaveBear),
+			_Utils_Tuple2('stone-golem', $author$project$Monster$StoneGolem),
+			_Utils_Tuple2('ancient-artillery', $author$project$Monster$AncientArtillery),
+			_Utils_Tuple2('vicious-drake', $author$project$Monster$ViciousDrake),
+			_Utils_Tuple2('spitting-drake', $author$project$Monster$SpittingDrake),
+			_Utils_Tuple2('lurker', $author$project$Monster$Lurker),
+			_Utils_Tuple2('savvas-icestorm', $author$project$Monster$SavvasIcestorm),
+			_Utils_Tuple2('savva-lavaflow', $author$project$Monster$SavvaLavaflow),
+			_Utils_Tuple2('harrower-infester', $author$project$Monster$HarrowerInfester),
+			_Utils_Tuple2('deep-terror', $author$project$Monster$DeepTerror),
+			_Utils_Tuple2('black-imp', $author$project$Monster$BlackImp)
+		]));
+var $author$project$Monster$stringToMonsterType = function (monster) {
+	var _v0 = A2(
+		$elm$core$Dict$get,
+		$elm$core$String$toLower(monster),
+		$author$project$Monster$normalDict);
+	if (_v0.$ === 'Just') {
+		var m = _v0.a;
+		return $elm$core$Maybe$Just(
+			$author$project$Monster$NormalType(m));
+	} else {
+		return A2(
+			$elm$core$Maybe$map,
+			function (v) {
+				return $author$project$Monster$BossType(v);
+			},
+			A2(
+				$elm$core$Dict$get,
+				$elm$core$String$toLower(monster),
+				$author$project$Monster$bossDict));
+	}
+};
+var $author$project$ScenarioSync$decodeScenarioMonster = A7(
+	$elm$json$Json$Decode$map6,
+	$author$project$Scenario$ScenarioMonster,
+	A2(
+		$elm$json$Json$Decode$andThen,
+		function (m) {
+			var _v0 = $author$project$Monster$stringToMonsterType(m);
+			if (_v0.$ === 'Just') {
+				var monster = _v0.a;
+				return $elm$json$Json$Decode$succeed(
+					A3($author$project$Monster$Monster, monster, 0, $author$project$Monster$None));
+			} else {
+				return $elm$json$Json$Decode$fail('Could not decode monster ' + m);
+			}
+		},
+		A2($elm$json$Json$Decode$field, 'monster', $elm$json$Json$Decode$string)),
+	A2($elm$json$Json$Decode$field, 'initialX', $elm$json$Json$Decode$int),
+	A2($elm$json$Json$Decode$field, 'initialY', $elm$json$Json$Decode$int),
+	A2(
+		$elm$json$Json$Decode$andThen,
+		$author$project$SharedSync$decodeMonsterLevel,
+		A2($elm$json$Json$Decode$field, 'twoPlayer', $elm$json$Json$Decode$string)),
+	A2(
+		$elm$json$Json$Decode$andThen,
+		$author$project$SharedSync$decodeMonsterLevel,
+		A2($elm$json$Json$Decode$field, 'threePlayer', $elm$json$Json$Decode$string)),
+	A2(
+		$elm$json$Json$Decode$andThen,
+		$author$project$SharedSync$decodeMonsterLevel,
+		A2($elm$json$Json$Decode$field, 'fourPlayer', $elm$json$Json$Decode$string)));
+var $elm$json$Json$Decode$lazy = function (thunk) {
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		thunk,
+		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
+};
+var $elm$json$Json$Decode$map5 = _Json_map5;
+var $elm$json$Json$Decode$map7 = _Json_map7;
+function $author$project$ScenarioSync$cyclic$decodeMapTileData() {
+	return A6(
+		$elm$json$Json$Decode$map5,
+		$author$project$Scenario$MapTileData,
+		A2(
+			$elm$json$Json$Decode$andThen,
+			function (r) {
+				var _v1 = $author$project$BoardMapTile$stringToRef(r);
+				if (_v1.$ === 'Just') {
+					var ref = _v1.a;
+					return $elm$json$Json$Decode$succeed(ref);
+				} else {
+					return $elm$json$Json$Decode$fail('Could not find tile reference ' + r);
+				}
+			},
+			A2($elm$json$Json$Decode$field, 'ref', $elm$json$Json$Decode$string)),
+		A2(
+			$elm$json$Json$Decode$field,
+			'doors',
+			$elm$json$Json$Decode$list(
+				$author$project$ScenarioSync$cyclic$decodeDoors())),
+		A2(
+			$elm$json$Json$Decode$field,
+			'overlays',
+			$elm$json$Json$Decode$list($author$project$SharedSync$decodeBoardOverlay)),
+		A2(
+			$elm$json$Json$Decode$field,
+			'monsters',
+			$elm$json$Json$Decode$list($author$project$ScenarioSync$decodeScenarioMonster)),
+		A2($elm$json$Json$Decode$field, 'turns', $elm$json$Json$Decode$int));
+}
+function $author$project$ScenarioSync$cyclic$decodeDoors() {
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		function (d) {
+			return $elm$json$Json$Decode$succeed(
+				A5(
+					$author$project$Scenario$DoorLink,
+					d.subType,
+					d.dir,
+					_Utils_Tuple2(d.room1X, d.room1Y),
+					_Utils_Tuple2(d.room2X, d.room2Y),
+					d.mapTilesData));
+		},
+		A8(
+			$elm$json$Json$Decode$map7,
+			$author$project$ScenarioSync$DoorDataObj,
+			$author$project$SharedSync$decodeDoor,
+			A2(
+				$elm$json$Json$Decode$andThen,
+				$author$project$SharedSync$decodeBoardOverlayDirection,
+				A2($elm$json$Json$Decode$field, 'direction', $elm$json$Json$Decode$string)),
+			A2($elm$json$Json$Decode$field, 'room1X', $elm$json$Json$Decode$int),
+			A2($elm$json$Json$Decode$field, 'room1Y', $elm$json$Json$Decode$int),
+			A2($elm$json$Json$Decode$field, 'room2X', $elm$json$Json$Decode$int),
+			A2($elm$json$Json$Decode$field, 'room2Y', $elm$json$Json$Decode$int),
+			A2(
+				$elm$json$Json$Decode$field,
+				'mapTileData',
+				$elm$json$Json$Decode$lazy(
+					function (_v0) {
+						return $author$project$ScenarioSync$cyclic$decodeMapTileData();
+					}))));
+}
+try {
+	var $author$project$ScenarioSync$decodeMapTileData = $author$project$ScenarioSync$cyclic$decodeMapTileData();
+	$author$project$ScenarioSync$cyclic$decodeMapTileData = function () {
+		return $author$project$ScenarioSync$decodeMapTileData;
+	};
+	var $author$project$ScenarioSync$decodeDoors = $author$project$ScenarioSync$cyclic$decodeDoors();
+	$author$project$ScenarioSync$cyclic$decodeDoors = function () {
+		return $author$project$ScenarioSync$decodeDoors;
+	};
+} catch ($) {
+	throw 'Some top-level definitions from `ScenarioSync` are causing infinite recursion:\n\n  ┌─────┐\n  │    decodeMapTileData\n  │     ↓\n  │    decodeDoors\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $author$project$ScenarioSync$decodeMonsterList = function (monsters) {
+	var decodedRefs = A2(
+		$elm$core$List$map,
+		function (ref) {
+			return $author$project$Monster$stringToMonsterType(ref);
+		},
+		monsters);
+	return A2(
+		$elm$core$List$all,
+		function (s) {
+			return !_Utils_eq(s, $elm$core$Maybe$Nothing);
+		},
+		decodedRefs) ? $elm$json$Json$Decode$succeed(
+		A2(
+			$elm$core$List$filterMap,
+			function (m) {
+				return m;
+			},
+			decodedRefs)) : $elm$json$Json$Decode$fail('Could not decode all monster references');
+};
+var $elm$json$Json$Decode$float = _Json_decodeFloat;
+var $author$project$ScenarioSync$decodeScenario = A6(
+	$elm$json$Json$Decode$map5,
+	$author$project$Scenario$Scenario,
+	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int),
+	A2($elm$json$Json$Decode$field, 'title', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'mapTileData', $author$project$ScenarioSync$decodeMapTileData),
+	A2($elm$json$Json$Decode$field, 'angle', $elm$json$Json$Decode$float),
+	A2(
+		$elm$json$Json$Decode$andThen,
+		$author$project$ScenarioSync$decodeMonsterList,
+		A2(
+			$elm$json$Json$Decode$field,
+			'additionalMonsters',
+			$elm$json$Json$Decode$list($elm$json$Json$Decode$string))));
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$http$Http$BadStatus_ = F2(
+	function (a, b) {
+		return {$: 'BadStatus_', a: a, b: b};
+	});
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 'BadUrl_', a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 'GoodStatus_', a: a, b: b};
+	});
+var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 'Receiving', a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 'Sending', a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (maybe.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$core$Dict$getMin = function (dict) {
+	getMin:
+	while (true) {
+		if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
+			var left = dict.d;
+			var $temp$dict = left;
+			dict = $temp$dict;
+			continue getMin;
+		} else {
+			return dict;
+		}
+	}
+};
+var $elm$core$Dict$moveRedLeft = function (dict) {
+	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
+		if ((dict.e.d.$ === 'RBNode_elm_builtin') && (dict.e.d.a.$ === 'Red')) {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v1 = dict.d;
+			var lClr = _v1.a;
+			var lK = _v1.b;
+			var lV = _v1.c;
+			var lLeft = _v1.d;
+			var lRight = _v1.e;
+			var _v2 = dict.e;
+			var rClr = _v2.a;
+			var rK = _v2.b;
+			var rV = _v2.c;
+			var rLeft = _v2.d;
+			var _v3 = rLeft.a;
+			var rlK = rLeft.b;
+			var rlV = rLeft.c;
+			var rlL = rLeft.d;
+			var rlR = rLeft.e;
+			var rRight = _v2.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				$elm$core$Dict$Red,
+				rlK,
+				rlV,
+				A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					rlL),
+				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rlR, rRight));
+		} else {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v4 = dict.d;
+			var lClr = _v4.a;
+			var lK = _v4.b;
+			var lV = _v4.c;
+			var lLeft = _v4.d;
+			var lRight = _v4.e;
+			var _v5 = dict.e;
+			var rClr = _v5.a;
+			var rK = _v5.b;
+			var rV = _v5.c;
+			var rLeft = _v5.d;
+			var rRight = _v5.e;
+			if (clr.$ === 'Black') {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			}
+		}
+	} else {
+		return dict;
+	}
+};
+var $elm$core$Dict$moveRedRight = function (dict) {
+	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
+		if ((dict.d.d.$ === 'RBNode_elm_builtin') && (dict.d.d.a.$ === 'Red')) {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v1 = dict.d;
+			var lClr = _v1.a;
+			var lK = _v1.b;
+			var lV = _v1.c;
+			var _v2 = _v1.d;
+			var _v3 = _v2.a;
+			var llK = _v2.b;
+			var llV = _v2.c;
+			var llLeft = _v2.d;
+			var llRight = _v2.e;
+			var lRight = _v1.e;
+			var _v4 = dict.e;
+			var rClr = _v4.a;
+			var rK = _v4.b;
+			var rV = _v4.c;
+			var rLeft = _v4.d;
+			var rRight = _v4.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				$elm$core$Dict$Red,
+				lK,
+				lV,
+				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
+				A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					lRight,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight)));
+		} else {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v5 = dict.d;
+			var lClr = _v5.a;
+			var lK = _v5.b;
+			var lV = _v5.c;
+			var lLeft = _v5.d;
+			var lRight = _v5.e;
+			var _v6 = dict.e;
+			var rClr = _v6.a;
+			var rK = _v6.b;
+			var rV = _v6.c;
+			var rLeft = _v6.d;
+			var rRight = _v6.e;
+			if (clr.$ === 'Black') {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			}
+		}
+	} else {
+		return dict;
+	}
+};
+var $elm$core$Dict$removeHelpPrepEQGT = F7(
+	function (targetKey, dict, color, key, value, left, right) {
+		if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
+			var _v1 = left.a;
+			var lK = left.b;
+			var lV = left.c;
+			var lLeft = left.d;
+			var lRight = left.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				lK,
+				lV,
+				lLeft,
+				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, lRight, right));
+		} else {
+			_v2$2:
+			while (true) {
+				if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Black')) {
+					if (right.d.$ === 'RBNode_elm_builtin') {
+						if (right.d.a.$ === 'Black') {
+							var _v3 = right.a;
+							var _v4 = right.d;
+							var _v5 = _v4.a;
+							return $elm$core$Dict$moveRedRight(dict);
+						} else {
+							break _v2$2;
+						}
+					} else {
+						var _v6 = right.a;
+						var _v7 = right.d;
+						return $elm$core$Dict$moveRedRight(dict);
+					}
+				} else {
+					break _v2$2;
+				}
+			}
+			return dict;
+		}
+	});
+var $elm$core$Dict$removeMin = function (dict) {
+	if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
+		var color = dict.a;
+		var key = dict.b;
+		var value = dict.c;
+		var left = dict.d;
+		var lColor = left.a;
+		var lLeft = left.d;
+		var right = dict.e;
+		if (lColor.$ === 'Black') {
+			if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
+				var _v3 = lLeft.a;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					key,
+					value,
+					$elm$core$Dict$removeMin(left),
+					right);
+			} else {
+				var _v4 = $elm$core$Dict$moveRedLeft(dict);
+				if (_v4.$ === 'RBNode_elm_builtin') {
+					var nColor = _v4.a;
+					var nKey = _v4.b;
+					var nValue = _v4.c;
+					var nLeft = _v4.d;
+					var nRight = _v4.e;
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						$elm$core$Dict$removeMin(nLeft),
+						nRight);
+				} else {
+					return $elm$core$Dict$RBEmpty_elm_builtin;
+				}
+			}
+		} else {
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				key,
+				value,
+				$elm$core$Dict$removeMin(left),
+				right);
+		}
+	} else {
+		return $elm$core$Dict$RBEmpty_elm_builtin;
+	}
+};
+var $elm$core$Dict$removeHelp = F2(
+	function (targetKey, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		} else {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			if (_Utils_cmp(targetKey, key) < 0) {
+				if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Black')) {
+					var _v4 = left.a;
+					var lLeft = left.d;
+					if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
+						var _v6 = lLeft.a;
+						return A5(
+							$elm$core$Dict$RBNode_elm_builtin,
+							color,
+							key,
+							value,
+							A2($elm$core$Dict$removeHelp, targetKey, left),
+							right);
+					} else {
+						var _v7 = $elm$core$Dict$moveRedLeft(dict);
+						if (_v7.$ === 'RBNode_elm_builtin') {
+							var nColor = _v7.a;
+							var nKey = _v7.b;
+							var nValue = _v7.c;
+							var nLeft = _v7.d;
+							var nRight = _v7.e;
+							return A5(
+								$elm$core$Dict$balance,
+								nColor,
+								nKey,
+								nValue,
+								A2($elm$core$Dict$removeHelp, targetKey, nLeft),
+								nRight);
+						} else {
+							return $elm$core$Dict$RBEmpty_elm_builtin;
+						}
+					}
+				} else {
+					return A5(
+						$elm$core$Dict$RBNode_elm_builtin,
+						color,
+						key,
+						value,
+						A2($elm$core$Dict$removeHelp, targetKey, left),
+						right);
+				}
+			} else {
+				return A2(
+					$elm$core$Dict$removeHelpEQGT,
+					targetKey,
+					A7($elm$core$Dict$removeHelpPrepEQGT, targetKey, dict, color, key, value, left, right));
+			}
+		}
+	});
+var $elm$core$Dict$removeHelpEQGT = F2(
+	function (targetKey, dict) {
+		if (dict.$ === 'RBNode_elm_builtin') {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			if (_Utils_eq(targetKey, key)) {
+				var _v1 = $elm$core$Dict$getMin(right);
+				if (_v1.$ === 'RBNode_elm_builtin') {
+					var minKey = _v1.b;
+					var minValue = _v1.c;
+					return A5(
+						$elm$core$Dict$balance,
+						color,
+						minKey,
+						minValue,
+						left,
+						$elm$core$Dict$removeMin(right));
+				} else {
+					return $elm$core$Dict$RBEmpty_elm_builtin;
+				}
+			} else {
+				return A5(
+					$elm$core$Dict$balance,
+					color,
+					key,
+					value,
+					left,
+					A2($elm$core$Dict$removeHelp, targetKey, right));
+			}
+		} else {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		}
+	});
+var $elm$core$Dict$remove = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$removeHelp, key, dict);
+		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$update = F3(
+	function (targetKey, alter, dictionary) {
+		var _v0 = alter(
+			A2($elm$core$Dict$get, targetKey, dictionary));
+		if (_v0.$ === 'Just') {
+			var value = _v0.a;
+			return A3($elm$core$Dict$insert, targetKey, value, dictionary);
+		} else {
+			return A2($elm$core$Dict$remove, targetKey, dictionary);
+		}
+	});
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $elm$http$Http$expectStringResponse = F2(
+	function (toMsg, toResult) {
+		return A3(
+			_Http_expect,
+			'',
+			$elm$core$Basics$identity,
+			A2($elm$core$Basics$composeR, toResult, toMsg));
+	});
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 'BadBody', a: a};
+};
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 'BadStatus', a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 'BadUrl', a: a};
+};
+var $elm$http$Http$NetworkError = {$: 'NetworkError'};
+var $elm$http$Http$Timeout = {$: 'Timeout'};
+var $elm$http$Http$resolve = F2(
+	function (toResult, response) {
+		switch (response.$) {
+			case 'BadUrl_':
+				var url = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadUrl(url));
+			case 'Timeout_':
+				return $elm$core$Result$Err($elm$http$Http$Timeout);
+			case 'NetworkError_':
+				return $elm$core$Result$Err($elm$http$Http$NetworkError);
+			case 'BadStatus_':
+				var metadata = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadStatus(metadata.statusCode));
+			default:
+				var body = response.b;
+				return A2(
+					$elm$core$Result$mapError,
+					$elm$http$Http$BadBody,
+					toResult(body));
+		}
+	});
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
+	});
+var $elm$http$Http$emptyBody = _Http_emptyBody;
+var $elm$http$Http$Request = function (a) {
+	return {$: 'Request', a: a};
+};
+var $elm$http$Http$State = F2(
+	function (reqs, subs) {
+		return {reqs: reqs, subs: subs};
+	});
+var $elm$http$Http$init = $elm$core$Task$succeed(
+	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$core$Process$spawn = _Scheduler_spawn;
+var $elm$http$Http$updateReqs = F3(
+	function (router, cmds, reqs) {
+		updateReqs:
+		while (true) {
+			if (!cmds.b) {
+				return $elm$core$Task$succeed(reqs);
+			} else {
+				var cmd = cmds.a;
+				var otherCmds = cmds.b;
+				if (cmd.$ === 'Cancel') {
+					var tracker = cmd.a;
+					var _v2 = A2($elm$core$Dict$get, tracker, reqs);
+					if (_v2.$ === 'Nothing') {
+						var $temp$router = router,
+							$temp$cmds = otherCmds,
+							$temp$reqs = reqs;
+						router = $temp$router;
+						cmds = $temp$cmds;
+						reqs = $temp$reqs;
+						continue updateReqs;
+					} else {
+						var pid = _v2.a;
+						return A2(
+							$elm$core$Task$andThen,
+							function (_v3) {
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A2($elm$core$Dict$remove, tracker, reqs));
+							},
+							$elm$core$Process$kill(pid));
+					}
+				} else {
+					var req = cmd.a;
+					return A2(
+						$elm$core$Task$andThen,
+						function (pid) {
+							var _v4 = req.tracker;
+							if (_v4.$ === 'Nothing') {
+								return A3($elm$http$Http$updateReqs, router, otherCmds, reqs);
+							} else {
+								var tracker = _v4.a;
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A3($elm$core$Dict$insert, tracker, pid, reqs));
+							}
+						},
+						$elm$core$Process$spawn(
+							A3(
+								_Http_toTask,
+								router,
+								$elm$core$Platform$sendToApp(router),
+								req)));
+				}
+			}
+		}
+	});
+var $elm$http$Http$onEffects = F4(
+	function (router, cmds, subs, state) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (reqs) {
+				return $elm$core$Task$succeed(
+					A2($elm$http$Http$State, reqs, subs));
+			},
+			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
+	});
+var $elm$http$Http$maybeSend = F4(
+	function (router, desiredTracker, progress, _v0) {
+		var actualTracker = _v0.a;
+		var toMsg = _v0.b;
+		return _Utils_eq(desiredTracker, actualTracker) ? $elm$core$Maybe$Just(
+			A2(
+				$elm$core$Platform$sendToApp,
+				router,
+				toMsg(progress))) : $elm$core$Maybe$Nothing;
+	});
+var $elm$http$Http$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var tracker = _v0.a;
+		var progress = _v0.b;
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$filterMap,
+					A3($elm$http$Http$maybeSend, router, tracker, progress),
+					state.subs)));
+	});
+var $elm$http$Http$Cancel = function (a) {
+	return {$: 'Cancel', a: a};
+};
+var $elm$http$Http$cmdMap = F2(
+	function (func, cmd) {
+		if (cmd.$ === 'Cancel') {
+			var tracker = cmd.a;
+			return $elm$http$Http$Cancel(tracker);
+		} else {
+			var r = cmd.a;
+			return $elm$http$Http$Request(
+				{
+					allowCookiesFromOtherDomains: r.allowCookiesFromOtherDomains,
+					body: r.body,
+					expect: A2(_Http_mapExpect, func, r.expect),
+					headers: r.headers,
+					method: r.method,
+					timeout: r.timeout,
+					tracker: r.tracker,
+					url: r.url
+				});
+		}
+	});
+var $elm$http$Http$MySub = F2(
+	function (a, b) {
+		return {$: 'MySub', a: a, b: b};
+	});
+var $elm$http$Http$subMap = F2(
+	function (func, _v0) {
+		var tracker = _v0.a;
+		var toMsg = _v0.b;
+		return A2(
+			$elm$http$Http$MySub,
+			tracker,
+			A2($elm$core$Basics$composeR, toMsg, func));
+	});
+_Platform_effectManagers['Http'] = _Platform_createManager($elm$http$Http$init, $elm$http$Http$onEffects, $elm$http$Http$onSelfMsg, $elm$http$Http$cmdMap, $elm$http$Http$subMap);
+var $elm$http$Http$command = _Platform_leaf('Http');
+var $elm$http$Http$subscription = _Platform_leaf('Http');
+var $elm$http$Http$request = function (r) {
+	return $elm$http$Http$command(
+		$elm$http$Http$Request(
+			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
+};
+var $elm$http$Http$get = function (r) {
+	return $elm$http$Http$request(
+		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
+};
+var $author$project$ScenarioSync$loadScenarioById = F2(
+	function (id, msg) {
+		return $elm$http$Http$get(
+			{
+				expect: A2($elm$http$Http$expectJson, msg, $author$project$ScenarioSync$decodeScenario),
+				url: '/data/scenarios/' + ($elm$core$String$fromInt(id) + '.json')
+			});
+	});
+var $author$project$Main$init = function (seed) {
+	return _Utils_Tuple2(
+		A5(
+			$author$project$Main$Model,
+			$elm$core$Maybe$Nothing,
+			_List_fromArray(
+				[$author$project$Character$Brute, $author$project$Character$Mindthief, $author$project$Character$Tinkerer]),
+			$arsduo$elm_dom_drag_drop$Dom$DragDrop$initialState,
+			$elm$core$Maybe$Nothing,
+			$author$project$Main$Loading(2)),
+		A2(
+			$author$project$ScenarioSync$loadScenarioById,
+			2,
+			$author$project$Main$Loaded(
+				$elm$random$Random$initialSeed(seed))));
+};
+var $author$project$Main$GameStatePushed = function (a) {
+	return {$: 'GameStatePushed', a: a};
+};
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$GameSync$receiveGameState = _Platform_incomingPort('receiveGameState', $elm$json$Json$Decode$value);
+var $author$project$Main$subscriptions = function (_v0) {
+	return $author$project$GameSync$receiveGameState($author$project$Main$GameStatePushed);
+};
+var $author$project$Main$LoadFailed = {$: 'LoadFailed'};
+var $author$project$Main$MovePiece = {$: 'MovePiece'};
+var $author$project$Main$MoveablePiece = F2(
+	function (ref, coords) {
+		return {coords: coords, ref: ref};
+	});
+var $author$project$Main$OverlayType = function (a) {
+	return {$: 'OverlayType', a: a};
+};
+var $author$project$Main$PieceType = function (a) {
+	return {$: 'PieceType', a: a};
+};
+var $author$project$Game$ThreePlayer = {$: 'ThreePlayer'};
+var $author$project$Game$AI = function (a) {
+	return {$: 'AI', a: a};
+};
+var $author$project$Game$Enemy = function (a) {
+	return {$: 'Enemy', a: a};
+};
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var $elm$core$Array$length = function (_v0) {
+	var len = _v0.a;
+	return len;
+};
+var $elm$core$Dict$foldl = F3(
+	function (func, acc, dict) {
+		foldl:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return acc;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$func = func,
+					$temp$acc = A3(
+					func,
+					key,
+					value,
+					A3($elm$core$Dict$foldl, func, acc, left)),
+					$temp$dict = right;
+				func = $temp$func;
+				acc = $temp$acc;
+				dict = $temp$dict;
+				continue foldl;
+			}
+		}
+	});
+var $elm$core$Dict$filter = F2(
+	function (isGood, dict) {
+		return A3(
+			$elm$core$Dict$foldl,
+			F3(
+				function (k, v, d) {
+					return A2(isGood, k, v) ? A3($elm$core$Dict$insert, k, v, d) : d;
+				}),
+			$elm$core$Dict$empty,
+			dict);
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Monster$monsterTypeToString = function (monster) {
+	if (monster.$ === 'NormalType') {
+		var m = monster.a;
+		var maybeKey = $elm$core$List$head(
+			$elm$core$Dict$toList(
+				A2(
+					$elm$core$Dict$filter,
+					F2(
+						function (_v2, v) {
+							return _Utils_eq(v, m);
+						}),
+					$author$project$Monster$normalDict)));
+		return A2(
+			$elm$core$Maybe$map,
+			function (_v1) {
+				var k = _v1.a;
+				return k;
+			},
+			maybeKey);
+	} else {
+		var b = monster.a;
+		var maybeKey = $elm$core$List$head(
+			$elm$core$Dict$toList(
+				A2(
+					$elm$core$Dict$filter,
+					F2(
+						function (_v4, v) {
+							return _Utils_eq(v, b);
+						}),
+					$author$project$Monster$bossDict)));
+		return A2(
+			$elm$core$Maybe$map,
+			function (_v3) {
+				var k = _v3.a;
+				return k;
+			},
+			maybeKey);
+	}
+};
+var $elm$core$Elm$JsArray$appendN = _JsArray_appendN;
+var $elm$core$Elm$JsArray$slice = _JsArray_slice;
+var $elm$core$Array$appendHelpBuilder = F2(
+	function (tail, builder) {
+		var tailLen = $elm$core$Elm$JsArray$length(tail);
+		var notAppended = ($elm$core$Array$branchFactor - $elm$core$Elm$JsArray$length(builder.tail)) - tailLen;
+		var appended = A3($elm$core$Elm$JsArray$appendN, $elm$core$Array$branchFactor, builder.tail, tail);
+		return (notAppended < 0) ? {
+			nodeList: A2(
+				$elm$core$List$cons,
+				$elm$core$Array$Leaf(appended),
+				builder.nodeList),
+			nodeListSize: builder.nodeListSize + 1,
+			tail: A3($elm$core$Elm$JsArray$slice, notAppended, tailLen, tail)
+		} : ((!notAppended) ? {
+			nodeList: A2(
+				$elm$core$List$cons,
+				$elm$core$Array$Leaf(appended),
+				builder.nodeList),
+			nodeListSize: builder.nodeListSize + 1,
+			tail: $elm$core$Elm$JsArray$empty
+		} : {nodeList: builder.nodeList, nodeListSize: builder.nodeListSize, tail: appended});
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$Array$sliceLeft = F2(
+	function (from, array) {
+		var len = array.a;
+		var tree = array.c;
+		var tail = array.d;
+		if (!from) {
+			return array;
+		} else {
+			if (_Utils_cmp(
+				from,
+				$elm$core$Array$tailIndex(len)) > -1) {
+				return A4(
+					$elm$core$Array$Array_elm_builtin,
+					len - from,
+					$elm$core$Array$shiftStep,
+					$elm$core$Elm$JsArray$empty,
+					A3(
+						$elm$core$Elm$JsArray$slice,
+						from - $elm$core$Array$tailIndex(len),
+						$elm$core$Elm$JsArray$length(tail),
+						tail));
+			} else {
+				var skipNodes = (from / $elm$core$Array$branchFactor) | 0;
+				var helper = F2(
+					function (node, acc) {
+						if (node.$ === 'SubTree') {
+							var subTree = node.a;
+							return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
+						} else {
+							var leaf = node.a;
+							return A2($elm$core$List$cons, leaf, acc);
+						}
+					});
+				var leafNodes = A3(
+					$elm$core$Elm$JsArray$foldr,
+					helper,
+					_List_fromArray(
+						[tail]),
+					tree);
+				var nodesToInsert = A2($elm$core$List$drop, skipNodes, leafNodes);
+				if (!nodesToInsert.b) {
+					return $elm$core$Array$empty;
+				} else {
+					var head = nodesToInsert.a;
+					var rest = nodesToInsert.b;
+					var firstSlice = from - (skipNodes * $elm$core$Array$branchFactor);
+					var initialBuilder = {
+						nodeList: _List_Nil,
+						nodeListSize: 0,
+						tail: A3(
+							$elm$core$Elm$JsArray$slice,
+							firstSlice,
+							$elm$core$Elm$JsArray$length(head),
+							head)
+					};
+					return A2(
+						$elm$core$Array$builderToArray,
+						true,
+						A3($elm$core$List$foldl, $elm$core$Array$appendHelpBuilder, initialBuilder, rest));
+				}
+			}
+		}
+	});
+var $elm$core$Array$fetchNewTail = F4(
+	function (shift, end, treeEnd, tree) {
+		fetchNewTail:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (treeEnd >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var sub = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$end = end,
+					$temp$treeEnd = treeEnd,
+					$temp$tree = sub;
+				shift = $temp$shift;
+				end = $temp$end;
+				treeEnd = $temp$treeEnd;
+				tree = $temp$tree;
+				continue fetchNewTail;
+			} else {
+				var values = _v0.a;
+				return A3($elm$core$Elm$JsArray$slice, 0, $elm$core$Array$bitMask & end, values);
+			}
+		}
+	});
+var $elm$core$Array$hoistTree = F3(
+	function (oldShift, newShift, tree) {
+		hoistTree:
+		while (true) {
+			if ((_Utils_cmp(oldShift, newShift) < 1) || (!$elm$core$Elm$JsArray$length(tree))) {
+				return tree;
+			} else {
+				var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, 0, tree);
+				if (_v0.$ === 'SubTree') {
+					var sub = _v0.a;
+					var $temp$oldShift = oldShift - $elm$core$Array$shiftStep,
+						$temp$newShift = newShift,
+						$temp$tree = sub;
+					oldShift = $temp$oldShift;
+					newShift = $temp$newShift;
+					tree = $temp$tree;
+					continue hoistTree;
+				} else {
+					return tree;
+				}
+			}
+		}
+	});
+var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
+var $elm$core$Array$sliceTree = F3(
+	function (shift, endIdx, tree) {
+		var lastPos = $elm$core$Array$bitMask & (endIdx >>> shift);
+		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, lastPos, tree);
+		if (_v0.$ === 'SubTree') {
+			var sub = _v0.a;
+			var newSub = A3($elm$core$Array$sliceTree, shift - $elm$core$Array$shiftStep, endIdx, sub);
+			return (!$elm$core$Elm$JsArray$length(newSub)) ? A3($elm$core$Elm$JsArray$slice, 0, lastPos, tree) : A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				lastPos,
+				$elm$core$Array$SubTree(newSub),
+				A3($elm$core$Elm$JsArray$slice, 0, lastPos + 1, tree));
+		} else {
+			return A3($elm$core$Elm$JsArray$slice, 0, lastPos, tree);
+		}
+	});
+var $elm$core$Array$sliceRight = F2(
+	function (end, array) {
+		var len = array.a;
+		var startShift = array.b;
+		var tree = array.c;
+		var tail = array.d;
+		if (_Utils_eq(end, len)) {
+			return array;
+		} else {
+			if (_Utils_cmp(
+				end,
+				$elm$core$Array$tailIndex(len)) > -1) {
+				return A4(
+					$elm$core$Array$Array_elm_builtin,
+					end,
+					startShift,
+					tree,
+					A3($elm$core$Elm$JsArray$slice, 0, $elm$core$Array$bitMask & end, tail));
+			} else {
+				var endIdx = $elm$core$Array$tailIndex(end);
+				var depth = $elm$core$Basics$floor(
+					A2(
+						$elm$core$Basics$logBase,
+						$elm$core$Array$branchFactor,
+						A2($elm$core$Basics$max, 1, endIdx - 1)));
+				var newShift = A2($elm$core$Basics$max, 5, depth * $elm$core$Array$shiftStep);
+				return A4(
+					$elm$core$Array$Array_elm_builtin,
+					end,
+					newShift,
+					A3(
+						$elm$core$Array$hoistTree,
+						startShift,
+						newShift,
+						A3($elm$core$Array$sliceTree, startShift, endIdx, tree)),
+					A4($elm$core$Array$fetchNewTail, startShift, end, endIdx, tree));
+			}
+		}
+	});
+var $elm$core$Array$translateIndex = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var posIndex = (index < 0) ? (len + index) : index;
+		return (posIndex < 0) ? 0 : ((_Utils_cmp(posIndex, len) > 0) ? len : posIndex);
+	});
+var $elm$core$Array$slice = F3(
+	function (from, to, array) {
+		var correctTo = A2($elm$core$Array$translateIndex, to, array);
+		var correctFrom = A2($elm$core$Array$translateIndex, from, array);
+		return (_Utils_cmp(correctFrom, correctTo) > 0) ? $elm$core$Array$empty : A2(
+			$elm$core$Array$sliceLeft,
+			correctFrom,
+			A2($elm$core$Array$sliceRight, correctTo, array));
+	});
+var $author$project$Game$assignIdentifier = F2(
+	function (availableMonsters, p) {
+		var _v0 = p.ref;
+		if ((_v0.$ === 'AI') && (_v0.a.$ === 'Enemy')) {
+			var monster = _v0.a.a;
+			var _v1 = $author$project$Monster$monsterTypeToString(monster.monster);
+			if (_v1.$ === 'Just') {
+				var key = _v1.a;
+				var _v2 = A2($elm$core$Dict$get, key, availableMonsters);
+				if (_v2.$ === 'Just') {
+					var bucket = _v2.a;
+					var _v3 = A2($elm$core$Array$get, 0, bucket);
+					if (_v3.$ === 'Just') {
+						var id = _v3.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								p,
+								{
+									ref: $author$project$Game$AI(
+										$author$project$Game$Enemy(
+											_Utils_update(
+												monster,
+												{id: id + 1})))
+								}),
+							A3(
+								$elm$core$Dict$insert,
+								key,
+								A3(
+									$elm$core$Array$slice,
+									1,
+									$elm$core$Array$length(bucket),
+									bucket),
+								availableMonsters));
+					} else {
+						return _Utils_Tuple2(
+							_Utils_update(
+								p,
+								{
+									ref: $author$project$Game$AI(
+										$author$project$Game$Enemy(
+											_Utils_update(
+												monster,
+												{id: 0})))
+								}),
+							availableMonsters);
+					}
+				} else {
+					return _Utils_Tuple2(
+						_Utils_update(
+							p,
+							{
+								ref: $author$project$Game$AI(
+									$author$project$Game$Enemy(
+										_Utils_update(
+											monster,
+											{id: 0})))
+							}),
+						availableMonsters);
+				}
+			} else {
+				return _Utils_Tuple2(
+					_Utils_update(
+						p,
+						{
+							ref: $author$project$Game$AI(
+								$author$project$Game$Enemy(
+									_Utils_update(
+										monster,
+										{id: 0})))
+						}),
+					availableMonsters);
+			}
+		} else {
+			return _Utils_Tuple2(p, availableMonsters);
+		}
+	});
+var $author$project$Game$Piece = F3(
+	function (ref, x, y) {
+		return {ref: ref, x: x, y: y};
+	});
+var $author$project$Game$Player = function (a) {
+	return {$: 'Player', a: a};
+};
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $author$project$Game$assignPlayersToPiece = F3(
+	function (players, pieces, startingLocations) {
+		assignPlayersToPiece:
+		while (true) {
+			var filteredLocations = A2(
+				$elm$core$List$filter,
+				function (o) {
+					var _v4 = o.ref;
+					if (_v4.$ === 'StartingLocation') {
+						return true;
+					} else {
+						return false;
+					}
+				},
+				startingLocations);
+			if (players.b) {
+				var player = players.a;
+				var rest = players.b;
+				if (filteredLocations.b) {
+					var location = filteredLocations.a;
+					var otherLocations = filteredLocations.b;
+					var _v2 = $elm$core$List$head(location.cells);
+					if (_v2.$ === 'Just') {
+						var _v3 = _v2.a;
+						var x = _v3.a;
+						var y = _v3.b;
+						var $temp$players = rest,
+							$temp$pieces = A2(
+							$elm$core$List$cons,
+							A3(
+								$author$project$Game$Piece,
+								$author$project$Game$Player(player),
+								x,
+								y),
+							pieces),
+							$temp$startingLocations = otherLocations;
+						players = $temp$players;
+						pieces = $temp$pieces;
+						startingLocations = $temp$startingLocations;
+						continue assignPlayersToPiece;
+					} else {
+						return pieces;
+					}
+				} else {
+					return pieces;
+				}
+			} else {
+				return pieces;
+			}
+		}
+	});
+var $author$project$Game$assignPlayers = F2(
+	function (players, game) {
+		var state = game.state;
+		var statingLocations = A2(
+			$elm$core$List$filter,
+			function (o) {
+				var _v1 = o.ref;
+				if (_v1.$ === 'StartingLocation') {
+					return true;
+				} else {
+					return false;
+				}
+			},
+			state.overlays);
+		var filteredPieces = A2(
+			$elm$core$List$filter,
+			function (p) {
+				var _v0 = p.ref;
+				if ((_v0.$ === 'AI') && (_v0.a.$ === 'Enemy')) {
+					return true;
+				} else {
+					return false;
+				}
+			},
+			state.pieces);
+		return _Utils_update(
+			game,
+			{
+				state: _Utils_update(
+					state,
+					{
+						pieces: A3($author$project$Game$assignPlayersToPiece, players, filteredPieces, statingLocations)
+					})
+			});
+	});
+var $author$project$Game$GameState = F6(
+	function (scenario, numPlayers, visibleRooms, overlays, pieces, availableMonsters) {
+		return {availableMonsters: availableMonsters, numPlayers: numPlayers, overlays: overlays, pieces: pieces, scenario: scenario, visibleRooms: visibleRooms};
+	});
+var $elm$json$Json$Decode$array = _Json_decodeArray;
+var $author$project$GameSync$decodeAvailableMonsters = A2(
+	$elm$json$Json$Decode$andThen,
+	function (m) {
+		return A2(
+			$elm$json$Json$Decode$andThen,
+			function (b) {
+				return $elm$json$Json$Decode$succeed(
+					_Utils_Tuple2(m, b));
+			},
+			A2(
+				$elm$json$Json$Decode$field,
+				'bucket',
+				$elm$json$Json$Decode$array($elm$json$Json$Decode$int)));
+	},
+	A2($elm$json$Json$Decode$field, 'ref', $elm$json$Json$Decode$string));
+var $author$project$Game$FourPlayer = {$: 'FourPlayer'};
+var $author$project$Game$TwoPlayer = {$: 'TwoPlayer'};
+var $author$project$GameSync$decodeNumPlayers = function (numPlayers) {
+	switch (numPlayers) {
+		case 2:
+			return $elm$json$Json$Decode$succeed($author$project$Game$TwoPlayer);
+		case 3:
+			return $elm$json$Json$Decode$succeed($author$project$Game$ThreePlayer);
+		case 4:
+			return $elm$json$Json$Decode$succeed($author$project$Game$FourPlayer);
+		default:
+			var p = numPlayers;
+			return $elm$json$Json$Decode$fail(
+				'Cannot decode a ' + ($elm$core$String$fromInt(p) + ' game'));
+	}
+};
+var $author$project$Character$Cragheart = {$: 'Cragheart'};
+var $author$project$Character$Scoundrel = {$: 'Scoundrel'};
+var $author$project$Character$Spellweaver = {$: 'Spellweaver'};
+var $author$project$Character$characterDict = $elm$core$Dict$fromList(
+	_List_fromArray(
+		[
+			_Utils_Tuple2('brute', $author$project$Character$Brute),
+			_Utils_Tuple2('cragheart', $author$project$Character$Cragheart),
+			_Utils_Tuple2('mindthief', $author$project$Character$Mindthief),
+			_Utils_Tuple2('scoundrel', $author$project$Character$Scoundrel),
+			_Utils_Tuple2('spellweaver', $author$project$Character$Spellweaver),
+			_Utils_Tuple2('tinkerer', $author$project$Character$Tinkerer)
+		]));
+var $author$project$Character$stringToCharacter = function (character) {
+	return A2(
+		$elm$core$Dict$get,
+		$elm$core$String$toLower(character),
+		$author$project$Character$characterDict);
+};
+var $author$project$GameSync$decodeCharacter = A2(
+	$elm$json$Json$Decode$andThen,
+	function (c) {
+		var _v0 = $author$project$Character$stringToCharacter(c);
+		if (_v0.$ === 'Just') {
+			var _class = _v0.a;
+			return $elm$json$Json$Decode$succeed(_class);
+		} else {
+			return $elm$json$Json$Decode$fail(c + ' is not a valid player class');
+		}
+	},
+	A2($elm$json$Json$Decode$field, 'class', $elm$json$Json$Decode$string));
+var $author$project$SharedSync$decodeMonsterType = function (m) {
+	var _v0 = $author$project$Monster$stringToMonsterType(m);
+	if (_v0.$ === 'Just') {
+		var mt = _v0.a;
+		return $elm$json$Json$Decode$succeed(mt);
+	} else {
+		return $elm$json$Json$Decode$fail(m + ' is not a valid monster type');
+	}
+};
+var $author$project$SharedSync$decodeMonster = A4(
+	$elm$json$Json$Decode$map3,
+	$author$project$Monster$Monster,
+	A2(
+		$elm$json$Json$Decode$andThen,
+		$author$project$SharedSync$decodeMonsterType,
+		A2($elm$json$Json$Decode$field, 'class', $elm$json$Json$Decode$string)),
+	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int),
+	A2(
+		$elm$json$Json$Decode$andThen,
+		$author$project$SharedSync$decodeMonsterLevel,
+		A2($elm$json$Json$Decode$field, 'level', $elm$json$Json$Decode$string)));
+var $author$project$Game$Summons = function (a) {
+	return {$: 'Summons', a: a};
+};
+var $author$project$GameSync$decodeSummons = A2(
+	$elm$json$Json$Decode$andThen,
+	function (i) {
+		return $elm$json$Json$Decode$succeed(
+			$author$project$Game$Summons(i));
+	},
+	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int));
+var $author$project$GameSync$decodePieceType = function () {
+	var decodeType = function (typeName) {
+		var _v0 = $elm$core$String$toLower(typeName);
+		switch (_v0) {
+			case 'player':
+				return A2(
+					$elm$json$Json$Decode$andThen,
+					function (c) {
+						return $elm$json$Json$Decode$succeed(
+							$author$project$Game$Player(c));
+					},
+					$author$project$GameSync$decodeCharacter);
+			case 'monster':
+				return A2(
+					$elm$json$Json$Decode$andThen,
+					function (m) {
+						return $elm$json$Json$Decode$succeed(
+							$author$project$Game$AI(
+								$author$project$Game$Enemy(m)));
+					},
+					$author$project$SharedSync$decodeMonster);
+			case 'summons':
+				return A2(
+					$elm$json$Json$Decode$andThen,
+					function (c) {
+						return $elm$json$Json$Decode$succeed(
+							$author$project$Game$AI(c));
+					},
+					$author$project$GameSync$decodeSummons);
+			default:
+				return $elm$json$Json$Decode$fail('Unknown overlay type: ' + typeName);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		decodeType,
+		A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+}();
+var $author$project$GameSync$decodePiece = A4(
+	$elm$json$Json$Decode$map3,
+	$author$project$Game$Piece,
+	A2($elm$json$Json$Decode$field, 'ref', $author$project$GameSync$decodePieceType),
+	A2($elm$json$Json$Decode$field, 'x', $elm$json$Json$Decode$int),
+	A2($elm$json$Json$Decode$field, 'y', $elm$json$Json$Decode$int));
+var $author$project$GameSync$decodeGameState = A7(
+	$elm$json$Json$Decode$map6,
+	$author$project$Game$GameState,
+	A2($elm$json$Json$Decode$field, 'scenario', $elm$json$Json$Decode$int),
+	A2(
+		$elm$json$Json$Decode$andThen,
+		$author$project$GameSync$decodeNumPlayers,
+		A2($elm$json$Json$Decode$field, 'numPlayers', $elm$json$Json$Decode$int)),
+	A2(
+		$elm$json$Json$Decode$andThen,
+		$author$project$SharedSync$decodeMapRefList,
+		A2(
+			$elm$json$Json$Decode$field,
+			'visibleRooms',
+			$elm$json$Json$Decode$list($elm$json$Json$Decode$string))),
+	A2(
+		$elm$json$Json$Decode$field,
+		'overlays',
+		$elm$json$Json$Decode$list($author$project$SharedSync$decodeBoardOverlay)),
+	A2(
+		$elm$json$Json$Decode$field,
+		'pieces',
+		$elm$json$Json$Decode$list($author$project$GameSync$decodePiece)),
+	A2(
+		$elm$json$Json$Decode$andThen,
+		function (a) {
+			return $elm$json$Json$Decode$succeed(
+				$elm$core$Dict$fromList(a));
+		},
+		A2(
+			$elm$json$Json$Decode$field,
+			'availableMonsters',
+			$elm$json$Json$Decode$list($author$project$GameSync$decodeAvailableMonsters))));
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $author$project$Game$Cell = F2(
+	function (rooms, passable) {
+		return {passable: passable, rooms: rooms};
+	});
+var $author$project$Game$Game = F4(
+	function (state, roomOrigins, roomTurns, staticBoard) {
+		return {roomOrigins: roomOrigins, roomTurns: roomTurns, state: state, staticBoard: staticBoard};
+	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
 var $author$project$Monster$getMonsterBucketSize = function (monster) {
 	if (monster.$ === 'BossType') {
 		return 1;
@@ -5518,47 +7793,6 @@ var $author$project$Monster$getMonsterBucketSize = function (monster) {
 		}
 	}
 };
-var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
-var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
-var $elm$core$Basics$ge = _Utils_ge;
-var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
-var $elm$core$Array$getHelp = F3(
-	function (shift, index, tree) {
-		getHelp:
-		while (true) {
-			var pos = $elm$core$Array$bitMask & (index >>> shift);
-			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-			if (_v0.$ === 'SubTree') {
-				var subTree = _v0.a;
-				var $temp$shift = shift - $elm$core$Array$shiftStep,
-					$temp$index = index,
-					$temp$tree = subTree;
-				shift = $temp$shift;
-				index = $temp$index;
-				tree = $temp$tree;
-				continue getHelp;
-			} else {
-				var values = _v0.a;
-				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
-			}
-		}
-	});
-var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
-var $elm$core$Array$tailIndex = function (len) {
-	return (len >>> 5) << 5;
-};
-var $elm$core$Array$get = F2(
-	function (index, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
-			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
-			A3($elm$core$Array$getHelp, startShift, index, tree)));
-	});
 var $author$project$Game$getRoomsByCoord = F2(
 	function (cells, _v0) {
 		var x = _v0.a;
@@ -6259,183 +8493,6 @@ var $author$project$Scenario$mapTileDataToList = F2(
 				allTiles));
 		return _Utils_Tuple2(allTiles, boundingBox);
 	});
-var $author$project$BoardOverlay$Door = F2(
-	function (a, b) {
-		return {$: 'Door', a: a, b: b};
-	});
-var $author$project$BoardMapTile$A1b = {$: 'A1b'};
-var $author$project$BoardMapTile$A2b = {$: 'A2b'};
-var $author$project$BoardMapTile$A3a = {$: 'A3a'};
-var $author$project$BoardMapTile$A4a = {$: 'A4a'};
-var $author$project$BoardMapTile$B1a = {$: 'B1a'};
-var $author$project$BoardMapTile$B1b = {$: 'B1b'};
-var $author$project$BoardMapTile$B2a = {$: 'B2a'};
-var $author$project$BoardMapTile$B2b = {$: 'B2b'};
-var $author$project$BoardMapTile$B3a = {$: 'B3a'};
-var $author$project$BoardMapTile$B4a = {$: 'B4a'};
-var $author$project$BoardMapTile$B4b = {$: 'B4b'};
-var $author$project$BoardMapTile$C1a = {$: 'C1a'};
-var $author$project$BoardMapTile$C1b = {$: 'C1b'};
-var $author$project$BoardMapTile$C2a = {$: 'C2a'};
-var $author$project$BoardMapTile$C2b = {$: 'C2b'};
-var $author$project$BoardMapTile$D1a = {$: 'D1a'};
-var $author$project$BoardMapTile$D1b = {$: 'D1b'};
-var $author$project$BoardMapTile$D2a = {$: 'D2a'};
-var $author$project$BoardMapTile$D2b = {$: 'D2b'};
-var $author$project$BoardMapTile$E1a = {$: 'E1a'};
-var $author$project$BoardMapTile$E1b = {$: 'E1b'};
-var $author$project$BoardMapTile$F1a = {$: 'F1a'};
-var $author$project$BoardMapTile$F1b = {$: 'F1b'};
-var $author$project$BoardMapTile$G1a = {$: 'G1a'};
-var $author$project$BoardMapTile$G1b = {$: 'G1b'};
-var $author$project$BoardMapTile$G2a = {$: 'G2a'};
-var $author$project$BoardMapTile$G2b = {$: 'G2b'};
-var $author$project$BoardMapTile$H1a = {$: 'H1a'};
-var $author$project$BoardMapTile$H1b = {$: 'H1b'};
-var $author$project$BoardMapTile$H2a = {$: 'H2a'};
-var $author$project$BoardMapTile$H2b = {$: 'H2b'};
-var $author$project$BoardMapTile$H3a = {$: 'H3a'};
-var $author$project$BoardMapTile$H3b = {$: 'H3b'};
-var $author$project$BoardMapTile$I1a = {$: 'I1a'};
-var $author$project$BoardMapTile$I1b = {$: 'I1b'};
-var $author$project$BoardMapTile$I2a = {$: 'I2a'};
-var $author$project$BoardMapTile$I2b = {$: 'I2b'};
-var $author$project$BoardMapTile$J1a = {$: 'J1a'};
-var $author$project$BoardMapTile$J1b = {$: 'J1b'};
-var $author$project$BoardMapTile$J2a = {$: 'J2a'};
-var $author$project$BoardMapTile$J2b = {$: 'J2b'};
-var $author$project$BoardMapTile$K1a = {$: 'K1a'};
-var $author$project$BoardMapTile$K1b = {$: 'K1b'};
-var $author$project$BoardMapTile$K2a = {$: 'K2a'};
-var $author$project$BoardMapTile$K2b = {$: 'K2b'};
-var $author$project$BoardMapTile$L1a = {$: 'L1a'};
-var $author$project$BoardMapTile$L1b = {$: 'L1b'};
-var $author$project$BoardMapTile$L2a = {$: 'L2a'};
-var $author$project$BoardMapTile$L2b = {$: 'L2b'};
-var $author$project$BoardMapTile$L3a = {$: 'L3a'};
-var $author$project$BoardMapTile$L3b = {$: 'L3b'};
-var $author$project$BoardMapTile$M1b = {$: 'M1b'};
-var $author$project$BoardMapTile$N1a = {$: 'N1a'};
-var $author$project$BoardMapTile$N1b = {$: 'N1b'};
-var $author$project$BoardMapTile$boardRefDict = $elm$core$Dict$fromList(
-	_List_fromArray(
-		[
-			_Utils_Tuple2('a1a', $author$project$BoardMapTile$A1a),
-			_Utils_Tuple2('a1b', $author$project$BoardMapTile$A1b),
-			_Utils_Tuple2('a2a', $author$project$BoardMapTile$A2a),
-			_Utils_Tuple2('a2b', $author$project$BoardMapTile$A2b),
-			_Utils_Tuple2('a3a', $author$project$BoardMapTile$A3a),
-			_Utils_Tuple2('a3b', $author$project$BoardMapTile$A3b),
-			_Utils_Tuple2('a4a', $author$project$BoardMapTile$A4a),
-			_Utils_Tuple2('a4b', $author$project$BoardMapTile$A4b),
-			_Utils_Tuple2('b1a', $author$project$BoardMapTile$B1a),
-			_Utils_Tuple2('b1b', $author$project$BoardMapTile$B1b),
-			_Utils_Tuple2('b2a', $author$project$BoardMapTile$B2a),
-			_Utils_Tuple2('b2b', $author$project$BoardMapTile$B2b),
-			_Utils_Tuple2('b3a', $author$project$BoardMapTile$B3a),
-			_Utils_Tuple2('b3b', $author$project$BoardMapTile$B3b),
-			_Utils_Tuple2('b4a', $author$project$BoardMapTile$B4a),
-			_Utils_Tuple2('b4b', $author$project$BoardMapTile$B4b),
-			_Utils_Tuple2('c1a', $author$project$BoardMapTile$C1a),
-			_Utils_Tuple2('c1b', $author$project$BoardMapTile$C1b),
-			_Utils_Tuple2('c2a', $author$project$BoardMapTile$C2a),
-			_Utils_Tuple2('c2b', $author$project$BoardMapTile$C2b),
-			_Utils_Tuple2('d1a', $author$project$BoardMapTile$D1a),
-			_Utils_Tuple2('d1b', $author$project$BoardMapTile$D1b),
-			_Utils_Tuple2('d2a', $author$project$BoardMapTile$D2a),
-			_Utils_Tuple2('d2b', $author$project$BoardMapTile$D2b),
-			_Utils_Tuple2('e1a', $author$project$BoardMapTile$E1a),
-			_Utils_Tuple2('e1b', $author$project$BoardMapTile$E1b),
-			_Utils_Tuple2('f1a', $author$project$BoardMapTile$F1a),
-			_Utils_Tuple2('f1b', $author$project$BoardMapTile$F1b),
-			_Utils_Tuple2('g1a', $author$project$BoardMapTile$G1a),
-			_Utils_Tuple2('g1b', $author$project$BoardMapTile$G1b),
-			_Utils_Tuple2('g2a', $author$project$BoardMapTile$G2a),
-			_Utils_Tuple2('g2b', $author$project$BoardMapTile$G2b),
-			_Utils_Tuple2('h1a', $author$project$BoardMapTile$H1a),
-			_Utils_Tuple2('h1b', $author$project$BoardMapTile$H1b),
-			_Utils_Tuple2('h2a', $author$project$BoardMapTile$H2a),
-			_Utils_Tuple2('h2b', $author$project$BoardMapTile$H2b),
-			_Utils_Tuple2('h3a', $author$project$BoardMapTile$H3a),
-			_Utils_Tuple2('h3b', $author$project$BoardMapTile$H3b),
-			_Utils_Tuple2('i1a', $author$project$BoardMapTile$I1a),
-			_Utils_Tuple2('i1b', $author$project$BoardMapTile$I1b),
-			_Utils_Tuple2('i2a', $author$project$BoardMapTile$I2a),
-			_Utils_Tuple2('i2b', $author$project$BoardMapTile$I2b),
-			_Utils_Tuple2('j1a', $author$project$BoardMapTile$J1a),
-			_Utils_Tuple2('j1b', $author$project$BoardMapTile$J1b),
-			_Utils_Tuple2('j2a', $author$project$BoardMapTile$J2a),
-			_Utils_Tuple2('j2b', $author$project$BoardMapTile$J2b),
-			_Utils_Tuple2('k1a', $author$project$BoardMapTile$K1a),
-			_Utils_Tuple2('k1b', $author$project$BoardMapTile$K1b),
-			_Utils_Tuple2('k2a', $author$project$BoardMapTile$K2a),
-			_Utils_Tuple2('k2b', $author$project$BoardMapTile$K2b),
-			_Utils_Tuple2('l1a', $author$project$BoardMapTile$L1a),
-			_Utils_Tuple2('l1b', $author$project$BoardMapTile$L1b),
-			_Utils_Tuple2('l2a', $author$project$BoardMapTile$L2a),
-			_Utils_Tuple2('l2b', $author$project$BoardMapTile$L2b),
-			_Utils_Tuple2('l3a', $author$project$BoardMapTile$L3a),
-			_Utils_Tuple2('l3b', $author$project$BoardMapTile$L3b),
-			_Utils_Tuple2('m1a', $author$project$BoardMapTile$M1a),
-			_Utils_Tuple2('m1b', $author$project$BoardMapTile$M1b),
-			_Utils_Tuple2('n1a', $author$project$BoardMapTile$N1a),
-			_Utils_Tuple2('n1b', $author$project$BoardMapTile$N1b)
-		]));
-var $elm$core$Dict$foldl = F3(
-	function (func, acc, dict) {
-		foldl:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return acc;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var $temp$func = func,
-					$temp$acc = A3(
-					func,
-					key,
-					value,
-					A3($elm$core$Dict$foldl, func, acc, left)),
-					$temp$dict = right;
-				func = $temp$func;
-				acc = $temp$acc;
-				dict = $temp$dict;
-				continue foldl;
-			}
-		}
-	});
-var $elm$core$Dict$filter = F2(
-	function (isGood, dict) {
-		return A3(
-			$elm$core$Dict$foldl,
-			F3(
-				function (k, v, d) {
-					return A2(isGood, k, v) ? A3($elm$core$Dict$insert, k, v, d) : d;
-				}),
-			$elm$core$Dict$empty,
-			dict);
-	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $author$project$BoardMapTile$refToString = function (ref) {
 	var maybeKey = $elm$core$List$head(
 		$elm$core$Dict$toList(
@@ -6517,156 +8574,8 @@ var $author$project$Scenario$mapTileDataToOverlayList = function (data) {
 			data.doors));
 	return A2($elm$core$Dict$union, initData, doorData);
 };
-var $author$project$Monster$CaptainOfTheGuard = {$: 'CaptainOfTheGuard'};
-var $author$project$Monster$DarkRider = {$: 'DarkRider'};
-var $author$project$Monster$ElderDrake = {$: 'ElderDrake'};
-var $author$project$Monster$InoxBodyguard = {$: 'InoxBodyguard'};
-var $author$project$Monster$Jekserah = {$: 'Jekserah'};
-var $author$project$Monster$MercilessOverseer = {$: 'MercilessOverseer'};
-var $author$project$Monster$PrimeDemon = {$: 'PrimeDemon'};
-var $author$project$Monster$TheBetrayer = {$: 'TheBetrayer'};
-var $author$project$Monster$TheColorless = {$: 'TheColorless'};
-var $author$project$Monster$TheGloom = {$: 'TheGloom'};
-var $author$project$Monster$TheSightlessEye = {$: 'TheSightlessEye'};
-var $author$project$Monster$WingedHorror = {$: 'WingedHorror'};
-var $author$project$Monster$bossDict = $elm$core$Dict$fromList(
-	_List_fromArray(
-		[
-			_Utils_Tuple2('bandit-commander', $author$project$Monster$BanditCommander),
-			_Utils_Tuple2('merciless-overseer', $author$project$Monster$MercilessOverseer),
-			_Utils_Tuple2('inox-bodyguard', $author$project$Monster$InoxBodyguard),
-			_Utils_Tuple2('captain-of-the-guard', $author$project$Monster$CaptainOfTheGuard),
-			_Utils_Tuple2('jekserah', $author$project$Monster$Jekserah),
-			_Utils_Tuple2('prime-demon', $author$project$Monster$PrimeDemon),
-			_Utils_Tuple2('elder-drake', $author$project$Monster$ElderDrake),
-			_Utils_Tuple2('the-betrayer', $author$project$Monster$TheBetrayer),
-			_Utils_Tuple2('the-colorless', $author$project$Monster$TheColorless),
-			_Utils_Tuple2('the-sightless-eye', $author$project$Monster$TheSightlessEye),
-			_Utils_Tuple2('dark-rider', $author$project$Monster$DarkRider),
-			_Utils_Tuple2('winged-horror', $author$project$Monster$WingedHorror),
-			_Utils_Tuple2('the-gloom', $author$project$Monster$TheGloom)
-		]));
-var $author$project$Monster$AncientArtillery = {$: 'AncientArtillery'};
-var $author$project$Monster$BanditGuard = {$: 'BanditGuard'};
-var $author$project$Monster$BlackImp = {$: 'BlackImp'};
-var $author$project$Monster$CaveBear = {$: 'CaveBear'};
-var $author$project$Monster$CityArcher = {$: 'CityArcher'};
-var $author$project$Monster$CityGuard = {$: 'CityGuard'};
-var $author$project$Monster$Cultist = {$: 'Cultist'};
-var $author$project$Monster$DeepTerror = {$: 'DeepTerror'};
-var $author$project$Monster$EarthDemon = {$: 'EarthDemon'};
-var $author$project$Monster$FlameDemon = {$: 'FlameDemon'};
-var $author$project$Monster$ForestImp = {$: 'ForestImp'};
-var $author$project$Monster$FrostDemon = {$: 'FrostDemon'};
-var $author$project$Monster$GiantViper = {$: 'GiantViper'};
-var $author$project$Monster$HarrowerInfester = {$: 'HarrowerInfester'};
-var $author$project$Monster$Hound = {$: 'Hound'};
-var $author$project$Monster$InoxArcher = {$: 'InoxArcher'};
-var $author$project$Monster$InoxGuard = {$: 'InoxGuard'};
-var $author$project$Monster$InoxShaman = {$: 'InoxShaman'};
-var $author$project$Monster$LivingBones = {$: 'LivingBones'};
-var $author$project$Monster$LivingSpirit = {$: 'LivingSpirit'};
-var $author$project$Monster$Lurker = {$: 'Lurker'};
-var $author$project$Monster$NightDemon = {$: 'NightDemon'};
-var $author$project$Monster$Ooze = {$: 'Ooze'};
-var $author$project$Monster$SavvaLavaflow = {$: 'SavvaLavaflow'};
-var $author$project$Monster$SavvasIcestorm = {$: 'SavvasIcestorm'};
-var $author$project$Monster$SpittingDrake = {$: 'SpittingDrake'};
-var $author$project$Monster$StoneGolem = {$: 'StoneGolem'};
-var $author$project$Monster$SunDemon = {$: 'SunDemon'};
-var $author$project$Monster$VermlingScout = {$: 'VermlingScout'};
-var $author$project$Monster$VermlingShaman = {$: 'VermlingShaman'};
-var $author$project$Monster$ViciousDrake = {$: 'ViciousDrake'};
-var $author$project$Monster$WindDemon = {$: 'WindDemon'};
-var $author$project$Monster$normalDict = $elm$core$Dict$fromList(
-	_List_fromArray(
-		[
-			_Utils_Tuple2('bandit-guard', $author$project$Monster$BanditGuard),
-			_Utils_Tuple2('bandit-archer', $author$project$Monster$BanditArcher),
-			_Utils_Tuple2('city-guard', $author$project$Monster$CityGuard),
-			_Utils_Tuple2('city-archer', $author$project$Monster$CityArcher),
-			_Utils_Tuple2('inox-guard', $author$project$Monster$InoxGuard),
-			_Utils_Tuple2('inox-archer', $author$project$Monster$InoxArcher),
-			_Utils_Tuple2('inox-shaman', $author$project$Monster$InoxShaman),
-			_Utils_Tuple2('vermling-scout', $author$project$Monster$VermlingScout),
-			_Utils_Tuple2('vermling-shaman', $author$project$Monster$VermlingShaman),
-			_Utils_Tuple2('living-bones', $author$project$Monster$LivingBones),
-			_Utils_Tuple2('living-corpse', $author$project$Monster$LivingCorpse),
-			_Utils_Tuple2('living-spirit', $author$project$Monster$LivingSpirit),
-			_Utils_Tuple2('cultist', $author$project$Monster$Cultist),
-			_Utils_Tuple2('flame-demon', $author$project$Monster$FlameDemon),
-			_Utils_Tuple2('frost-demon', $author$project$Monster$FrostDemon),
-			_Utils_Tuple2('earth-demon', $author$project$Monster$EarthDemon),
-			_Utils_Tuple2('wind-demon', $author$project$Monster$WindDemon),
-			_Utils_Tuple2('night-demon', $author$project$Monster$NightDemon),
-			_Utils_Tuple2('sun-demon', $author$project$Monster$SunDemon),
-			_Utils_Tuple2('ooze', $author$project$Monster$Ooze),
-			_Utils_Tuple2('giant-viper', $author$project$Monster$GiantViper),
-			_Utils_Tuple2('fores-timp', $author$project$Monster$ForestImp),
-			_Utils_Tuple2('hound', $author$project$Monster$Hound),
-			_Utils_Tuple2('cave-bear', $author$project$Monster$CaveBear),
-			_Utils_Tuple2('stone-golem', $author$project$Monster$StoneGolem),
-			_Utils_Tuple2('ancient-artillery', $author$project$Monster$AncientArtillery),
-			_Utils_Tuple2('vicious-drake', $author$project$Monster$ViciousDrake),
-			_Utils_Tuple2('spitting-drake', $author$project$Monster$SpittingDrake),
-			_Utils_Tuple2('lurker', $author$project$Monster$Lurker),
-			_Utils_Tuple2('savvas-icestorm', $author$project$Monster$SavvasIcestorm),
-			_Utils_Tuple2('savva-lavaflow', $author$project$Monster$SavvaLavaflow),
-			_Utils_Tuple2('harrower-infester', $author$project$Monster$HarrowerInfester),
-			_Utils_Tuple2('deep-terror', $author$project$Monster$DeepTerror),
-			_Utils_Tuple2('black-imp', $author$project$Monster$BlackImp)
-		]));
-var $author$project$Monster$monsterTypeToString = function (monster) {
-	if (monster.$ === 'NormalType') {
-		var m = monster.a;
-		var maybeKey = $elm$core$List$head(
-			$elm$core$Dict$toList(
-				A2(
-					$elm$core$Dict$filter,
-					F2(
-						function (_v2, v) {
-							return _Utils_eq(v, m);
-						}),
-					$author$project$Monster$normalDict)));
-		return A2(
-			$elm$core$Maybe$map,
-			function (_v1) {
-				var k = _v1.a;
-				return k;
-			},
-			maybeKey);
-	} else {
-		var b = monster.a;
-		var maybeKey = $elm$core$List$head(
-			$elm$core$Dict$toList(
-				A2(
-					$elm$core$Dict$filter,
-					F2(
-						function (_v4, v) {
-							return _Utils_eq(v, b);
-						}),
-					$author$project$Monster$bossDict)));
-		return A2(
-			$elm$core$Maybe$map,
-			function (_v3) {
-				var k = _v3.a;
-				return k;
-			},
-			maybeKey);
-	}
-};
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$random$Random$Generator = function (a) {
 	return {$: 'Generator', a: a};
-};
-var $elm$random$Random$Seed = F2(
-	function (a, b) {
-		return {$: 'Seed', a: a, b: b};
-	});
-var $elm$random$Random$next = function (_v0) {
-	var state0 = _v0.a;
-	var incr = _v0.b;
-	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
 };
 var $elm$core$Bitwise$xor = _Bitwise_xor;
 var $elm$random$Random$peel = function (_v0) {
@@ -6706,13 +8615,8 @@ var $elm$random$Random$int = F2(
 				}
 			});
 	});
-var $elm$core$Array$length = function (_v0) {
-	var len = _v0.a;
-	return len;
-};
 var $elm$core$Elm$JsArray$push = _JsArray_push;
 var $elm$core$Elm$JsArray$singleton = _JsArray_singleton;
-var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
 var $elm$core$Array$insertTailInTree = F4(
 	function (shift, index, tail, tree) {
 		var pos = $elm$core$Array$bitMask & (index >>> shift);
@@ -6789,229 +8693,6 @@ var $elm$core$Array$push = F2(
 			A2($elm$core$Elm$JsArray$push, a, tail),
 			array);
 	});
-var $elm$core$Elm$JsArray$appendN = _JsArray_appendN;
-var $elm$core$Elm$JsArray$slice = _JsArray_slice;
-var $elm$core$Array$appendHelpBuilder = F2(
-	function (tail, builder) {
-		var tailLen = $elm$core$Elm$JsArray$length(tail);
-		var notAppended = ($elm$core$Array$branchFactor - $elm$core$Elm$JsArray$length(builder.tail)) - tailLen;
-		var appended = A3($elm$core$Elm$JsArray$appendN, $elm$core$Array$branchFactor, builder.tail, tail);
-		return (notAppended < 0) ? {
-			nodeList: A2(
-				$elm$core$List$cons,
-				$elm$core$Array$Leaf(appended),
-				builder.nodeList),
-			nodeListSize: builder.nodeListSize + 1,
-			tail: A3($elm$core$Elm$JsArray$slice, notAppended, tailLen, tail)
-		} : ((!notAppended) ? {
-			nodeList: A2(
-				$elm$core$List$cons,
-				$elm$core$Array$Leaf(appended),
-				builder.nodeList),
-			nodeListSize: builder.nodeListSize + 1,
-			tail: $elm$core$Elm$JsArray$empty
-		} : {nodeList: builder.nodeList, nodeListSize: builder.nodeListSize, tail: appended});
-	});
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
-var $elm$core$Array$sliceLeft = F2(
-	function (from, array) {
-		var len = array.a;
-		var tree = array.c;
-		var tail = array.d;
-		if (!from) {
-			return array;
-		} else {
-			if (_Utils_cmp(
-				from,
-				$elm$core$Array$tailIndex(len)) > -1) {
-				return A4(
-					$elm$core$Array$Array_elm_builtin,
-					len - from,
-					$elm$core$Array$shiftStep,
-					$elm$core$Elm$JsArray$empty,
-					A3(
-						$elm$core$Elm$JsArray$slice,
-						from - $elm$core$Array$tailIndex(len),
-						$elm$core$Elm$JsArray$length(tail),
-						tail));
-			} else {
-				var skipNodes = (from / $elm$core$Array$branchFactor) | 0;
-				var helper = F2(
-					function (node, acc) {
-						if (node.$ === 'SubTree') {
-							var subTree = node.a;
-							return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-						} else {
-							var leaf = node.a;
-							return A2($elm$core$List$cons, leaf, acc);
-						}
-					});
-				var leafNodes = A3(
-					$elm$core$Elm$JsArray$foldr,
-					helper,
-					_List_fromArray(
-						[tail]),
-					tree);
-				var nodesToInsert = A2($elm$core$List$drop, skipNodes, leafNodes);
-				if (!nodesToInsert.b) {
-					return $elm$core$Array$empty;
-				} else {
-					var head = nodesToInsert.a;
-					var rest = nodesToInsert.b;
-					var firstSlice = from - (skipNodes * $elm$core$Array$branchFactor);
-					var initialBuilder = {
-						nodeList: _List_Nil,
-						nodeListSize: 0,
-						tail: A3(
-							$elm$core$Elm$JsArray$slice,
-							firstSlice,
-							$elm$core$Elm$JsArray$length(head),
-							head)
-					};
-					return A2(
-						$elm$core$Array$builderToArray,
-						true,
-						A3($elm$core$List$foldl, $elm$core$Array$appendHelpBuilder, initialBuilder, rest));
-				}
-			}
-		}
-	});
-var $elm$core$Array$fetchNewTail = F4(
-	function (shift, end, treeEnd, tree) {
-		fetchNewTail:
-		while (true) {
-			var pos = $elm$core$Array$bitMask & (treeEnd >>> shift);
-			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-			if (_v0.$ === 'SubTree') {
-				var sub = _v0.a;
-				var $temp$shift = shift - $elm$core$Array$shiftStep,
-					$temp$end = end,
-					$temp$treeEnd = treeEnd,
-					$temp$tree = sub;
-				shift = $temp$shift;
-				end = $temp$end;
-				treeEnd = $temp$treeEnd;
-				tree = $temp$tree;
-				continue fetchNewTail;
-			} else {
-				var values = _v0.a;
-				return A3($elm$core$Elm$JsArray$slice, 0, $elm$core$Array$bitMask & end, values);
-			}
-		}
-	});
-var $elm$core$Array$hoistTree = F3(
-	function (oldShift, newShift, tree) {
-		hoistTree:
-		while (true) {
-			if ((_Utils_cmp(oldShift, newShift) < 1) || (!$elm$core$Elm$JsArray$length(tree))) {
-				return tree;
-			} else {
-				var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, 0, tree);
-				if (_v0.$ === 'SubTree') {
-					var sub = _v0.a;
-					var $temp$oldShift = oldShift - $elm$core$Array$shiftStep,
-						$temp$newShift = newShift,
-						$temp$tree = sub;
-					oldShift = $temp$oldShift;
-					newShift = $temp$newShift;
-					tree = $temp$tree;
-					continue hoistTree;
-				} else {
-					return tree;
-				}
-			}
-		}
-	});
-var $elm$core$Array$sliceTree = F3(
-	function (shift, endIdx, tree) {
-		var lastPos = $elm$core$Array$bitMask & (endIdx >>> shift);
-		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, lastPos, tree);
-		if (_v0.$ === 'SubTree') {
-			var sub = _v0.a;
-			var newSub = A3($elm$core$Array$sliceTree, shift - $elm$core$Array$shiftStep, endIdx, sub);
-			return (!$elm$core$Elm$JsArray$length(newSub)) ? A3($elm$core$Elm$JsArray$slice, 0, lastPos, tree) : A3(
-				$elm$core$Elm$JsArray$unsafeSet,
-				lastPos,
-				$elm$core$Array$SubTree(newSub),
-				A3($elm$core$Elm$JsArray$slice, 0, lastPos + 1, tree));
-		} else {
-			return A3($elm$core$Elm$JsArray$slice, 0, lastPos, tree);
-		}
-	});
-var $elm$core$Array$sliceRight = F2(
-	function (end, array) {
-		var len = array.a;
-		var startShift = array.b;
-		var tree = array.c;
-		var tail = array.d;
-		if (_Utils_eq(end, len)) {
-			return array;
-		} else {
-			if (_Utils_cmp(
-				end,
-				$elm$core$Array$tailIndex(len)) > -1) {
-				return A4(
-					$elm$core$Array$Array_elm_builtin,
-					end,
-					startShift,
-					tree,
-					A3($elm$core$Elm$JsArray$slice, 0, $elm$core$Array$bitMask & end, tail));
-			} else {
-				var endIdx = $elm$core$Array$tailIndex(end);
-				var depth = $elm$core$Basics$floor(
-					A2(
-						$elm$core$Basics$logBase,
-						$elm$core$Array$branchFactor,
-						A2($elm$core$Basics$max, 1, endIdx - 1)));
-				var newShift = A2($elm$core$Basics$max, 5, depth * $elm$core$Array$shiftStep);
-				return A4(
-					$elm$core$Array$Array_elm_builtin,
-					end,
-					newShift,
-					A3(
-						$elm$core$Array$hoistTree,
-						startShift,
-						newShift,
-						A3($elm$core$Array$sliceTree, startShift, endIdx, tree)),
-					A4($elm$core$Array$fetchNewTail, startShift, end, endIdx, tree));
-			}
-		}
-	});
-var $elm$core$Array$translateIndex = F2(
-	function (index, _v0) {
-		var len = _v0.a;
-		var posIndex = (index < 0) ? (len + index) : index;
-		return (posIndex < 0) ? 0 : ((_Utils_cmp(posIndex, len) > 0) ? len : posIndex);
-	});
-var $elm$core$Array$slice = F3(
-	function (from, to, array) {
-		var correctTo = A2($elm$core$Array$translateIndex, to, array);
-		var correctFrom = A2($elm$core$Array$translateIndex, from, array);
-		return (_Utils_cmp(correctFrom, correctTo) > 0) ? $elm$core$Array$empty : A2(
-			$elm$core$Array$sliceLeft,
-			correctFrom,
-			A2($elm$core$Array$sliceRight, correctTo, array));
-	});
 var $elm$random$Random$step = F2(
 	function (_v0, seed) {
 		var generator = _v0.a;
@@ -7058,119 +8739,6 @@ var $author$project$Game$orderRandomArrElement = F3(
 			}
 		}
 	});
-var $author$project$Game$AI = function (a) {
-	return {$: 'AI', a: a};
-};
-var $author$project$Game$Enemy = function (a) {
-	return {$: 'Enemy', a: a};
-};
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
-var $author$project$Game$assignIdentifier = F2(
-	function (availableMonsters, p) {
-		var _v0 = p.ref;
-		if ((_v0.$ === 'AI') && (_v0.a.$ === 'Enemy')) {
-			var monster = _v0.a.a;
-			var _v1 = $author$project$Monster$monsterTypeToString(monster.monster);
-			if (_v1.$ === 'Just') {
-				var key = _v1.a;
-				var _v2 = A2($elm$core$Dict$get, key, availableMonsters);
-				if (_v2.$ === 'Just') {
-					var bucket = _v2.a;
-					var _v3 = A2($elm$core$Array$get, 0, bucket);
-					if (_v3.$ === 'Just') {
-						var id = _v3.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								p,
-								{
-									ref: $author$project$Game$AI(
-										$author$project$Game$Enemy(
-											_Utils_update(
-												monster,
-												{id: id + 1})))
-								}),
-							A3(
-								$elm$core$Dict$insert,
-								key,
-								A3(
-									$elm$core$Array$slice,
-									1,
-									$elm$core$Array$length(bucket),
-									bucket),
-								availableMonsters));
-					} else {
-						return _Utils_Tuple2(
-							_Utils_update(
-								p,
-								{
-									ref: $author$project$Game$AI(
-										$author$project$Game$Enemy(
-											_Utils_update(
-												monster,
-												{id: 0})))
-								}),
-							availableMonsters);
-					}
-				} else {
-					return _Utils_Tuple2(
-						_Utils_update(
-							p,
-							{
-								ref: $author$project$Game$AI(
-									$author$project$Game$Enemy(
-										_Utils_update(
-											monster,
-											{id: 0})))
-							}),
-						availableMonsters);
-				}
-			} else {
-				return _Utils_Tuple2(
-					_Utils_update(
-						p,
-						{
-							ref: $author$project$Game$AI(
-								$author$project$Game$Enemy(
-									_Utils_update(
-										monster,
-										{id: 0})))
-						}),
-					availableMonsters);
-			}
-		} else {
-			return _Utils_Tuple2(p, availableMonsters);
-		}
-	});
 var $author$project$Game$assignIdentifiers = F3(
 	function (availableMonsters, processed, monsters) {
 		assignIdentifiers:
@@ -7212,27 +8780,6 @@ var $elm$core$Array$foldl = F3(
 			func,
 			A3($elm$core$Elm$JsArray$foldl, helper, baseCase, tree),
 			tail);
-	});
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
 	});
 var $elm$core$List$member = F2(
 	function (x, xs) {
@@ -7370,10 +8917,6 @@ var $author$project$Game$revealRooms = F2(
 		}
 	});
 var $author$project$Game$None = {$: 'None'};
-var $author$project$Game$Piece = F3(
-	function (ref, x, y) {
-		return {ref: ref, x: x, y: y};
-	});
 var $author$project$Game$filterByCoord = F3(
 	function (x, y, overlay) {
 		var _v0 = overlay.cells;
@@ -7511,15 +9054,6 @@ var $elm$core$Array$set = F3(
 			startShift,
 			A4($elm$core$Array$setHelp, startShift, index, value, tree),
 			tail));
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
 	});
 var $author$project$Game$setCellFromMapTile = F6(
 	function (game, overlays, offsetX, offsetY, tile, seed) {
@@ -7793,885 +9327,8 @@ var $author$project$Game$generateGameMap = F3(
 						initGame.state.overlays))));
 		return A2($author$project$Game$revealRooms, initGame, startRooms);
 	});
-var $elm$random$Random$initialSeed = function (x) {
-	var _v0 = $elm$random$Random$next(
-		A2($elm$random$Random$Seed, 0, 1013904223));
-	var state1 = _v0.a;
-	var incr = _v0.b;
-	var state2 = (state1 + x) >>> 0;
-	return $elm$random$Random$next(
-		A2($elm$random$Random$Seed, state2, incr));
-};
-var $arsduo$elm_dom_drag_drop$Dom$DragDrop$State$NoDropTarget = {$: 'NoDropTarget'};
-var $arsduo$elm_dom_drag_drop$Dom$DragDrop$State = function (a) {
-	return {$: 'State', a: a};
-};
-var $arsduo$elm_dom_drag_drop$Dom$DragDrop$initialState = $arsduo$elm_dom_drag_drop$Dom$DragDrop$State(
-	{draggedObject: $elm$core$Maybe$Nothing, dropTarget: $arsduo$elm_dom_drag_drop$Dom$DragDrop$State$NoDropTarget});
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Main$init = function (seed) {
-	var scenario = A5(
-		$author$project$Scenario$Scenario,
-		2,
-		'Barrow Lair',
-		A5(
-			$author$project$Scenario$MapTileData,
-			$author$project$BoardMapTile$B3b,
-			_List_fromArray(
-				[
-					A5(
-					$author$project$Scenario$DoorLink,
-					$author$project$BoardOverlay$Stone,
-					$author$project$BoardOverlay$Default,
-					_Utils_Tuple2(1, -1),
-					_Utils_Tuple2(2, 7),
-					A5(
-						$author$project$Scenario$MapTileData,
-						$author$project$BoardMapTile$M1a,
-						_List_fromArray(
-							[
-								A5(
-								$author$project$Scenario$DoorLink,
-								$author$project$BoardOverlay$Stone,
-								$author$project$BoardOverlay$DiagonalRight,
-								_Utils_Tuple2(0, 0),
-								_Utils_Tuple2(3, 0),
-								A5(
-									$author$project$Scenario$MapTileData,
-									$author$project$BoardMapTile$A4b,
-									_List_Nil,
-									_List_fromArray(
-										[
-											A3(
-											$author$project$BoardOverlay$BoardOverlay,
-											$author$project$BoardOverlay$Treasure(
-												$author$project$BoardOverlay$Chest(
-													$author$project$BoardOverlay$NormalChest(67))),
-											$author$project$BoardOverlay$Default,
-											_List_fromArray(
-												[
-													_Utils_Tuple2(0, 2)
-												]))
-										]),
-									_List_fromArray(
-										[
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											0,
-											1,
-											$author$project$Monster$None,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Elite),
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											1,
-											2,
-											$author$project$Monster$Elite,
-											$author$project$Monster$Elite,
-											$author$project$Monster$Elite)
-										]),
-									5)),
-								A5(
-								$author$project$Scenario$DoorLink,
-								$author$project$BoardOverlay$Stone,
-								$author$project$BoardOverlay$DiagonalLeft,
-								_Utils_Tuple2(5, 0),
-								_Utils_Tuple2(1, 0),
-								A5(
-									$author$project$Scenario$MapTileData,
-									$author$project$BoardMapTile$A2a,
-									_List_Nil,
-									_List_Nil,
-									_List_fromArray(
-										[
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											3,
-											1,
-											$author$project$Monster$None,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Elite),
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											3,
-											2,
-											$author$project$Monster$Elite,
-											$author$project$Monster$Elite,
-											$author$project$Monster$Elite)
-										]),
-									1)),
-								A5(
-								$author$project$Scenario$DoorLink,
-								$author$project$BoardOverlay$Stone,
-								$author$project$BoardOverlay$Vertical,
-								_Utils_Tuple2(-1, 3),
-								_Utils_Tuple2(4, 1),
-								A5(
-									$author$project$Scenario$MapTileData,
-									$author$project$BoardMapTile$A1a,
-									_List_Nil,
-									_List_Nil,
-									_List_fromArray(
-										[
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											1,
-											1,
-											$author$project$Monster$None,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Elite),
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											1,
-											2,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Normal),
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											2,
-											2,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Normal)
-										]),
-									3)),
-								A5(
-								$author$project$Scenario$DoorLink,
-								$author$project$BoardOverlay$Stone,
-								$author$project$BoardOverlay$Vertical,
-								_Utils_Tuple2(5, 3),
-								_Utils_Tuple2(-1, 1),
-								A5(
-									$author$project$Scenario$MapTileData,
-									$author$project$BoardMapTile$A3b,
-									_List_Nil,
-									_List_Nil,
-									_List_fromArray(
-										[
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											2,
-											1,
-											$author$project$Monster$None,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Elite),
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											2,
-											2,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Normal),
-											A6(
-											$author$project$Scenario$ScenarioMonster,
-											A3(
-												$author$project$Monster$Monster,
-												$author$project$Monster$NormalType($author$project$Monster$LivingCorpse),
-												0,
-												$author$project$Monster$Normal),
-											3,
-											2,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Normal,
-											$author$project$Monster$Normal)
-										]),
-									3))
-							]),
-						_List_fromArray(
-							[
-								A3(
-								$author$project$BoardOverlay$BoardOverlay,
-								$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Sarcophagus),
-								$author$project$BoardOverlay$Default,
-								_List_fromArray(
-									[
-										_Utils_Tuple2(3, 2),
-										_Utils_Tuple2(2, 2)
-									])),
-								A3(
-								$author$project$BoardOverlay$BoardOverlay,
-								$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Sarcophagus),
-								$author$project$BoardOverlay$DiagonalLeft,
-								_List_fromArray(
-									[
-										_Utils_Tuple2(1, 5),
-										_Utils_Tuple2(1, 4)
-									])),
-								A3(
-								$author$project$BoardOverlay$BoardOverlay,
-								$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Sarcophagus),
-								$author$project$BoardOverlay$DiagonalRight,
-								_List_fromArray(
-									[
-										_Utils_Tuple2(3, 5),
-										_Utils_Tuple2(4, 4)
-									]))
-							]),
-						_List_fromArray(
-							[
-								A6(
-								$author$project$Scenario$ScenarioMonster,
-								A3(
-									$author$project$Monster$Monster,
-									$author$project$Monster$NormalType($author$project$Monster$BanditArcher),
-									0,
-									$author$project$Monster$Normal),
-								1,
-								1,
-								$author$project$Monster$Elite,
-								$author$project$Monster$Elite,
-								$author$project$Monster$Elite),
-								A6(
-								$author$project$Scenario$ScenarioMonster,
-								A3(
-									$author$project$Monster$Monster,
-									$author$project$Monster$BossType($author$project$Monster$BanditCommander),
-									1,
-									$author$project$Monster$Normal),
-								2,
-								1,
-								$author$project$Monster$Normal,
-								$author$project$Monster$Normal,
-								$author$project$Monster$Normal),
-								A6(
-								$author$project$Scenario$ScenarioMonster,
-								A3(
-									$author$project$Monster$Monster,
-									$author$project$Monster$NormalType($author$project$Monster$BanditArcher),
-									0,
-									$author$project$Monster$Normal),
-								3,
-								1,
-								$author$project$Monster$None,
-								$author$project$Monster$Normal,
-								$author$project$Monster$Elite)
-							]),
-						3))
-				]),
-			_List_fromArray(
-				[
-					A3(
-					$author$project$BoardOverlay$BoardOverlay,
-					$author$project$BoardOverlay$Trap($author$project$BoardOverlay$BearTrap),
-					$author$project$BoardOverlay$Default,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(0, 1)
-						])),
-					A3(
-					$author$project$BoardOverlay$BoardOverlay,
-					$author$project$BoardOverlay$Trap($author$project$BoardOverlay$BearTrap),
-					$author$project$BoardOverlay$Default,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(2, 1)
-						])),
-					A3(
-					$author$project$BoardOverlay$BoardOverlay,
-					$author$project$BoardOverlay$StartingLocation,
-					$author$project$BoardOverlay$Default,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(0, 3)
-						])),
-					A3(
-					$author$project$BoardOverlay$BoardOverlay,
-					$author$project$BoardOverlay$StartingLocation,
-					$author$project$BoardOverlay$Default,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(1, 3)
-						])),
-					A3(
-					$author$project$BoardOverlay$BoardOverlay,
-					$author$project$BoardOverlay$StartingLocation,
-					$author$project$BoardOverlay$Default,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(2, 3)
-						])),
-					A3(
-					$author$project$BoardOverlay$BoardOverlay,
-					$author$project$BoardOverlay$StartingLocation,
-					$author$project$BoardOverlay$Default,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(1, 2)
-						])),
-					A3(
-					$author$project$BoardOverlay$BoardOverlay,
-					$author$project$BoardOverlay$StartingLocation,
-					$author$project$BoardOverlay$Default,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(2, 2)
-						]))
-				]),
-			_List_fromArray(
-				[
-					A6(
-					$author$project$Scenario$ScenarioMonster,
-					A3(
-						$author$project$Monster$Monster,
-						$author$project$Monster$NormalType($author$project$Monster$BanditArcher),
-						5,
-						$author$project$Monster$None),
-					0,
-					0,
-					$author$project$Monster$Normal,
-					$author$project$Monster$Normal,
-					$author$project$Monster$Normal),
-					A6(
-					$author$project$Scenario$ScenarioMonster,
-					A3(
-						$author$project$Monster$Monster,
-						$author$project$Monster$NormalType($author$project$Monster$BanditArcher),
-						2,
-						$author$project$Monster$None),
-					1,
-					0,
-					$author$project$Monster$None,
-					$author$project$Monster$None,
-					$author$project$Monster$Normal),
-					A6(
-					$author$project$Scenario$ScenarioMonster,
-					A3(
-						$author$project$Monster$Monster,
-						$author$project$Monster$NormalType($author$project$Monster$BanditArcher),
-						3,
-						$author$project$Monster$None),
-					2,
-					0,
-					$author$project$Monster$None,
-					$author$project$Monster$Normal,
-					$author$project$Monster$Normal),
-					A6(
-					$author$project$Scenario$ScenarioMonster,
-					A3(
-						$author$project$Monster$Monster,
-						$author$project$Monster$NormalType($author$project$Monster$BanditArcher),
-						1,
-						$author$project$Monster$None),
-					3,
-					0,
-					$author$project$Monster$Normal,
-					$author$project$Monster$Normal,
-					$author$project$Monster$Normal)
-				]),
-			3),
-		0,
-		_List_Nil);
-	return _Utils_Tuple2(
-		A4(
-			$author$project$Main$Model,
-			A3(
-				$author$project$Game$generateGameMap,
-				scenario,
-				$author$project$Game$ThreePlayer,
-				$elm$random$Random$initialSeed(seed)),
-			$arsduo$elm_dom_drag_drop$Dom$DragDrop$initialState,
-			$elm$core$Maybe$Nothing,
-			$author$project$Main$MovePiece),
-		$elm$core$Platform$Cmd$none);
-};
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $author$project$Main$GameStatePushed = function (a) {
-	return {$: 'GameStatePushed', a: a};
-};
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $author$project$GameSync$receiveGameState = _Platform_incomingPort('receiveGameState', $elm$json$Json$Decode$value);
-var $author$project$Main$subscriptions = function (_v0) {
-	return $author$project$GameSync$receiveGameState($author$project$Main$GameStatePushed);
-};
-var $author$project$Main$MoveablePiece = F2(
-	function (ref, coords) {
-		return {coords: coords, ref: ref};
-	});
-var $author$project$Main$OverlayType = function (a) {
-	return {$: 'OverlayType', a: a};
-};
-var $author$project$Main$PieceType = function (a) {
-	return {$: 'PieceType', a: a};
-};
-var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $elm$json$Json$Decode$array = _Json_decodeArray;
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$GameSync$decodeAvailableMonsters = A2(
-	$elm$json$Json$Decode$andThen,
-	function (m) {
-		return A2(
-			$elm$json$Json$Decode$andThen,
-			function (b) {
-				return $elm$json$Json$Decode$succeed(
-					_Utils_Tuple2(m, b));
-			},
-			A2(
-				$elm$json$Json$Decode$field,
-				'bucket',
-				$elm$json$Json$Decode$array($elm$json$Json$Decode$int)));
-	},
-	A2($elm$json$Json$Decode$field, 'ref', $elm$json$Json$Decode$string));
-var $author$project$BoardOverlay$Horizontal = {$: 'Horizontal'};
-var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$core$String$toLower = _String_toLower;
-var $author$project$GameSync$decodeBoardOverlayDirection = function (dir) {
-	var _v0 = $elm$core$String$toLower(dir);
-	switch (_v0) {
-		case 'default':
-			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$Default);
-		case 'horizontal':
-			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$Horizontal);
-		case 'vertical':
-			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$Vertical);
-		case 'diagonal-left':
-			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$DiagonalLeft);
-		case 'diagonal-right':
-			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$DiagonalRight);
-		default:
-			return $elm$json$Json$Decode$fail('Could not decode overlay direction \'' + (dir + '\''));
-	}
-};
-var $author$project$GameSync$decodeDoor = A2(
-	$elm$json$Json$Decode$andThen,
-	function (s) {
-		var _v0 = $elm$core$String$toLower(s);
-		if (_v0 === 'stone') {
-			return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$Stone);
-		} else {
-			return $elm$json$Json$Decode$fail(s + ' is not a door sub-type');
-		}
-	},
-	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$Basics$not = _Basics_not;
-var $elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			$elm$core$List$any,
-			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
-			list);
-	});
-var $author$project$BoardMapTile$stringToRef = function (ref) {
-	return A2(
-		$elm$core$Dict$get,
-		$elm$core$String$toLower(ref),
-		$author$project$BoardMapTile$boardRefDict);
-};
-var $author$project$GameSync$decodeMapRefList = function (refs) {
-	var decodedRefs = A2(
-		$elm$core$List$map,
-		function (ref) {
-			return $author$project$BoardMapTile$stringToRef(ref);
-		},
-		refs);
-	return A2(
-		$elm$core$List$all,
-		function (s) {
-			return !_Utils_eq(s, $elm$core$Maybe$Nothing);
-		},
-		decodedRefs) ? $elm$json$Json$Decode$succeed(
-		A2(
-			$elm$core$List$map,
-			function (r) {
-				return A2($elm$core$Maybe$withDefault, $author$project$BoardMapTile$A1a, r);
-			},
-			decodedRefs)) : $elm$json$Json$Decode$fail('Could not decode all map tile references');
-};
-var $elm$json$Json$Decode$list = _Json_decodeList;
-var $author$project$GameSync$decodeDoorRefs = function (subType) {
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		function (refs) {
-			return $elm$json$Json$Decode$succeed(
-				A2($author$project$BoardOverlay$Door, subType, refs));
-		},
-		A2(
-			$elm$json$Json$Decode$andThen,
-			$author$project$GameSync$decodeMapRefList,
-			A2(
-				$elm$json$Json$Decode$field,
-				'links',
-				$elm$json$Json$Decode$list($elm$json$Json$Decode$string))));
-};
-var $author$project$BoardOverlay$Boulder1 = {$: 'Boulder1'};
-var $author$project$GameSync$decodeObstacle = A2(
-	$elm$json$Json$Decode$andThen,
-	function (s) {
-		var _v0 = $elm$core$String$toLower(s);
-		switch (_v0) {
-			case 'sarcophagus':
-				return $elm$json$Json$Decode$succeed(
-					$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Sarcophagus));
-			case 'boulder-1':
-				return $elm$json$Json$Decode$succeed(
-					$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Boulder1));
-			default:
-				return $elm$json$Json$Decode$fail(s + ' is not an obstacle sub-type');
-		}
-	},
-	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
-var $author$project$GameSync$decodeTrap = A2(
-	$elm$json$Json$Decode$andThen,
-	function (s) {
-		var _v0 = $elm$core$String$toLower(s);
-		if (_v0 === 'bear') {
-			return $elm$json$Json$Decode$succeed(
-				$author$project$BoardOverlay$Trap($author$project$BoardOverlay$BearTrap));
-		} else {
-			return $elm$json$Json$Decode$fail(s + ' is not a trap sub-type');
-		}
-	},
-	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
-var $author$project$BoardOverlay$Goal = {$: 'Goal'};
-var $author$project$GameSync$decodeTreasureChest = A2(
-	$elm$json$Json$Decode$andThen,
-	function (s) {
-		var _v0 = $elm$core$String$toLower(s);
-		if (_v0 === 'goal') {
-			return $elm$json$Json$Decode$succeed(
-				$author$project$BoardOverlay$Treasure(
-					$author$project$BoardOverlay$Chest($author$project$BoardOverlay$Goal)));
-		} else {
-			var _v1 = $elm$core$String$toInt(s);
-			if (_v1.$ === 'Just') {
-				var i = _v1.a;
-				return $elm$json$Json$Decode$succeed(
-					$author$project$BoardOverlay$Treasure(
-						$author$project$BoardOverlay$Chest(
-							$author$project$BoardOverlay$NormalChest(i))));
-			} else {
-				return $elm$json$Json$Decode$fail('Unknown treasure id \'' + (s + '\'. Valid types are \'goal\' or an Int'));
-			}
-		}
-	},
-	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string));
-var $author$project$BoardOverlay$Coin = function (a) {
-	return {$: 'Coin', a: a};
-};
-var $author$project$GameSync$decodeTreasureCoin = A2(
-	$elm$json$Json$Decode$andThen,
-	function (i) {
-		return $elm$json$Json$Decode$succeed(
-			$author$project$BoardOverlay$Treasure(
-				$author$project$BoardOverlay$Coin(i)));
-	},
-	A2($elm$json$Json$Decode$field, 'amount', $elm$json$Json$Decode$int));
-var $author$project$GameSync$decodeTreasure = function () {
-	var decodeType = function (typeName) {
-		var _v0 = $elm$core$String$toLower(typeName);
-		switch (_v0) {
-			case 'chest':
-				return $author$project$GameSync$decodeTreasureChest;
-			case 'coin':
-				return $author$project$GameSync$decodeTreasureCoin;
-			default:
-				return $elm$json$Json$Decode$fail('Unknown treasure type: ' + typeName);
-		}
-	};
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		decodeType,
-		A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
-}();
-var $author$project$GameSync$decodeBoardOverlayType = function () {
-	var decodeType = function (typeName) {
-		var _v0 = $elm$core$String$toLower(typeName);
-		switch (_v0) {
-			case 'starting-location':
-				return $elm$json$Json$Decode$succeed($author$project$BoardOverlay$StartingLocation);
-			case 'door':
-				return A2($elm$json$Json$Decode$andThen, $author$project$GameSync$decodeDoorRefs, $author$project$GameSync$decodeDoor);
-			case 'trap':
-				return $author$project$GameSync$decodeTrap;
-			case 'obstacle':
-				return $author$project$GameSync$decodeObstacle;
-			case 'treasure':
-				return $author$project$GameSync$decodeTreasure;
-			default:
-				return $elm$json$Json$Decode$fail('Unknown overlay type: ' + typeName);
-		}
-	};
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		decodeType,
-		A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-}();
-var $elm$json$Json$Decode$index = _Json_decodeIndex;
-var $elm$json$Json$Decode$map3 = _Json_map3;
-var $elm$core$Tuple$pair = F2(
-	function (a, b) {
-		return _Utils_Tuple2(a, b);
-	});
-var $author$project$GameSync$decodeBoardOverlay = A4(
-	$elm$json$Json$Decode$map3,
-	$author$project$BoardOverlay$BoardOverlay,
-	A2($elm$json$Json$Decode$field, 'ref', $author$project$GameSync$decodeBoardOverlayType),
-	A2(
-		$elm$json$Json$Decode$andThen,
-		$author$project$GameSync$decodeBoardOverlayDirection,
-		A2($elm$json$Json$Decode$field, 'direction', $elm$json$Json$Decode$string)),
-	A2(
-		$elm$json$Json$Decode$field,
-		'cells',
-		$elm$json$Json$Decode$list(
-			A3(
-				$elm$json$Json$Decode$map2,
-				$elm$core$Tuple$pair,
-				A2($elm$json$Json$Decode$index, 0, $elm$json$Json$Decode$int),
-				A2($elm$json$Json$Decode$index, 1, $elm$json$Json$Decode$int)))));
-var $author$project$Game$FourPlayer = {$: 'FourPlayer'};
-var $author$project$Game$TwoPlayer = {$: 'TwoPlayer'};
-var $author$project$GameSync$decodeNumPlayers = function (numPlayers) {
-	switch (numPlayers) {
-		case 2:
-			return $elm$json$Json$Decode$succeed($author$project$Game$TwoPlayer);
-		case 3:
-			return $elm$json$Json$Decode$succeed($author$project$Game$ThreePlayer);
-		case 4:
-			return $elm$json$Json$Decode$succeed($author$project$Game$FourPlayer);
-		default:
-			var p = numPlayers;
-			return $elm$json$Json$Decode$fail(
-				'Cannot decode a ' + ($elm$core$String$fromInt(p) + ' game'));
-	}
-};
-var $author$project$Game$Player = function (a) {
-	return {$: 'Player', a: a};
-};
-var $author$project$Character$Brute = {$: 'Brute'};
-var $author$project$Character$Cragheart = {$: 'Cragheart'};
-var $author$project$Character$Mindthief = {$: 'Mindthief'};
-var $author$project$Character$Scoundrel = {$: 'Scoundrel'};
-var $author$project$Character$Spellweaver = {$: 'Spellweaver'};
-var $author$project$Character$Tinkerer = {$: 'Tinkerer'};
-var $author$project$Character$characterDict = $elm$core$Dict$fromList(
-	_List_fromArray(
-		[
-			_Utils_Tuple2('brute', $author$project$Character$Brute),
-			_Utils_Tuple2('cragheart', $author$project$Character$Cragheart),
-			_Utils_Tuple2('mindthief', $author$project$Character$Mindthief),
-			_Utils_Tuple2('scoundrel', $author$project$Character$Scoundrel),
-			_Utils_Tuple2('spellweaver', $author$project$Character$Spellweaver),
-			_Utils_Tuple2('tinkerer', $author$project$Character$Tinkerer)
-		]));
-var $author$project$Character$stringToCharacter = function (character) {
-	return A2(
-		$elm$core$Dict$get,
-		$elm$core$String$toLower(character),
-		$author$project$Character$characterDict);
-};
-var $author$project$GameSync$decodeCharacter = A2(
-	$elm$json$Json$Decode$andThen,
-	function (c) {
-		var _v0 = $author$project$Character$stringToCharacter(c);
-		if (_v0.$ === 'Just') {
-			var _class = _v0.a;
-			return $elm$json$Json$Decode$succeed(_class);
-		} else {
-			return $elm$json$Json$Decode$fail(c + ' is not a valid player class');
-		}
-	},
-	A2($elm$json$Json$Decode$field, 'class', $elm$json$Json$Decode$string));
-var $author$project$GameSync$decodeMonsterLevel = function (l) {
-	var _v0 = $elm$core$String$toLower(l);
-	switch (_v0) {
-		case 'normal':
-			return $elm$json$Json$Decode$succeed($author$project$Monster$Normal);
-		case 'elite':
-			return $elm$json$Json$Decode$succeed($author$project$Monster$Elite);
-		case '':
-			return $elm$json$Json$Decode$succeed($author$project$Monster$None);
-		default:
-			return $elm$json$Json$Decode$fail(l + ' is not a valid monster level');
-	}
-};
-var $author$project$Monster$stringToMonsterType = function (monster) {
-	var _v0 = A2(
-		$elm$core$Dict$get,
-		$elm$core$String$toLower(monster),
-		$author$project$Monster$normalDict);
-	if (_v0.$ === 'Just') {
-		var m = _v0.a;
-		return $elm$core$Maybe$Just(
-			$author$project$Monster$NormalType(m));
-	} else {
-		return A2(
-			$elm$core$Maybe$map,
-			function (v) {
-				return $author$project$Monster$BossType(v);
-			},
-			A2(
-				$elm$core$Dict$get,
-				$elm$core$String$toLower(monster),
-				$author$project$Monster$bossDict));
-	}
-};
-var $author$project$GameSync$decodeMonsterType = function (m) {
-	var _v0 = $author$project$Monster$stringToMonsterType(m);
-	if (_v0.$ === 'Just') {
-		var mt = _v0.a;
-		return $elm$json$Json$Decode$succeed(mt);
-	} else {
-		return $elm$json$Json$Decode$fail(m + ' is not a valid monster type');
-	}
-};
-var $author$project$GameSync$decodeMonster = A4(
-	$elm$json$Json$Decode$map3,
-	$author$project$Monster$Monster,
-	A2(
-		$elm$json$Json$Decode$andThen,
-		$author$project$GameSync$decodeMonsterType,
-		A2($elm$json$Json$Decode$field, 'class', $elm$json$Json$Decode$string)),
-	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int),
-	A2(
-		$elm$json$Json$Decode$andThen,
-		$author$project$GameSync$decodeMonsterLevel,
-		A2($elm$json$Json$Decode$field, 'level', $elm$json$Json$Decode$string)));
-var $author$project$Game$Summons = function (a) {
-	return {$: 'Summons', a: a};
-};
-var $author$project$GameSync$decodeSummons = A2(
-	$elm$json$Json$Decode$andThen,
-	function (i) {
-		return $elm$json$Json$Decode$succeed(
-			$author$project$Game$Summons(i));
-	},
-	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int));
-var $author$project$GameSync$decodePieceType = function () {
-	var decodeType = function (typeName) {
-		var _v0 = $elm$core$String$toLower(typeName);
-		switch (_v0) {
-			case 'player':
-				return A2(
-					$elm$json$Json$Decode$andThen,
-					function (c) {
-						return $elm$json$Json$Decode$succeed(
-							$author$project$Game$Player(c));
-					},
-					$author$project$GameSync$decodeCharacter);
-			case 'monster':
-				return A2(
-					$elm$json$Json$Decode$andThen,
-					function (m) {
-						return $elm$json$Json$Decode$succeed(
-							$author$project$Game$AI(
-								$author$project$Game$Enemy(m)));
-					},
-					$author$project$GameSync$decodeMonster);
-			case 'summons':
-				return A2(
-					$elm$json$Json$Decode$andThen,
-					function (c) {
-						return $elm$json$Json$Decode$succeed(
-							$author$project$Game$AI(c));
-					},
-					$author$project$GameSync$decodeSummons);
-			default:
-				return $elm$json$Json$Decode$fail('Unknown overlay type: ' + typeName);
-		}
-	};
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		decodeType,
-		A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-}();
-var $author$project$GameSync$decodePiece = A4(
-	$elm$json$Json$Decode$map3,
-	$author$project$Game$Piece,
-	A2($elm$json$Json$Decode$field, 'ref', $author$project$GameSync$decodePieceType),
-	A2($elm$json$Json$Decode$field, 'x', $elm$json$Json$Decode$int),
-	A2($elm$json$Json$Decode$field, 'y', $elm$json$Json$Decode$int));
-var $elm$json$Json$Decode$map6 = _Json_map6;
-var $author$project$GameSync$decodeGameState = A7(
-	$elm$json$Json$Decode$map6,
-	$author$project$Game$GameState,
-	A2($elm$json$Json$Decode$field, 'scenario', $elm$json$Json$Decode$int),
-	A2(
-		$elm$json$Json$Decode$andThen,
-		$author$project$GameSync$decodeNumPlayers,
-		A2($elm$json$Json$Decode$field, 'numPlayers', $elm$json$Json$Decode$int)),
-	A2(
-		$elm$json$Json$Decode$andThen,
-		$author$project$GameSync$decodeMapRefList,
-		A2(
-			$elm$json$Json$Decode$field,
-			'visibleRooms',
-			$elm$json$Json$Decode$list($elm$json$Json$Decode$string))),
-	A2(
-		$elm$json$Json$Decode$field,
-		'overlays',
-		$elm$json$Json$Decode$list($author$project$GameSync$decodeBoardOverlay)),
-	A2(
-		$elm$json$Json$Decode$field,
-		'pieces',
-		$elm$json$Json$Decode$list($author$project$GameSync$decodePiece)),
-	A2(
-		$elm$json$Json$Decode$andThen,
-		function (a) {
-			return $elm$json$Json$Decode$succeed(
-				$elm$core$Dict$fromList(a));
-		},
-		A2(
-			$elm$json$Json$Decode$field,
-			'availableMonsters',
-			$elm$json$Json$Decode$list($author$project$GameSync$decodeAvailableMonsters))));
-var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $author$project$Game$moveOverlay = F4(
-	function (overlay, fromCoords, _v0, game) {
-		var toX = _v0.a;
-		var toY = _v0.b;
+	function (overlay, _v0, _v1, game) {
 		return _Utils_Tuple2(game, overlay);
 	});
 var $author$project$Game$canMoveTo = F2(
@@ -8746,6 +9403,40 @@ var $author$project$Game$movePiece = F4(
 				}),
 			newPiece) : _Utils_Tuple2(game, piece);
 	});
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$GameSync$encodeAvailableMonsters = function (availableMonsters) {
+	return A2(
+		$elm$core$List$map,
+		function (_v0) {
+			var k = _v0.a;
+			var v = _v0.b;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'ref',
+					$elm$json$Json$Encode$string(k)),
+					_Utils_Tuple2(
+					'bucket',
+					A2(
+						$elm$json$Json$Encode$list,
+						$elm$json$Json$Encode$int,
+						$elm$core$Array$toList(v)))
+				]);
+		},
+		$elm$core$Dict$toList(availableMonsters));
+};
 var $author$project$GameSync$encodeMapTileRefList = function (refs) {
 	return A2(
 		$elm$core$List$map,
@@ -8820,8 +9511,6 @@ var $author$project$GameSync$encodeTreasureChest = function (chest) {
 		return 'goal';
 	}
 };
-var $elm$json$Json$Encode$int = _Json_wrap;
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$GameSync$encodeTreasure = function (treasure) {
 	if (treasure.$ === 'Chest') {
 		var c = treasure.a;
@@ -8848,15 +9537,6 @@ var $author$project$GameSync$encodeTreasure = function (treasure) {
 			]);
 	}
 };
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
 		A3(
@@ -9092,7 +9772,13 @@ var $author$project$GameSync$encodeGameState = function (gameState) {
 				A2(
 					$elm$json$Json$Encode$list,
 					$elm$json$Json$Encode$object,
-					$author$project$GameSync$encodePieces(gameState.pieces)))
+					$author$project$GameSync$encodePieces(gameState.pieces))),
+				_Utils_Tuple2(
+				'availableMonsters',
+				A2(
+					$elm$json$Json$Encode$list,
+					$elm$json$Json$Encode$object,
+					$author$project$GameSync$encodeAvailableMonsters(gameState.availableMonsters)))
 			]));
 };
 var $author$project$GameSync$pushGameStatePort = _Platform_outgoingPort('pushGameStatePort', $elm$core$Basics$identity);
@@ -9104,16 +9790,16 @@ var $author$project$Game$removePieceFromBoard = F2(
 	function (piece, game) {
 		var gameState = game.state;
 		var newAvailableMonsters = function () {
-			var _v4 = piece.ref;
-			if ((_v4.$ === 'AI') && (_v4.a.$ === 'Enemy')) {
-				var m = _v4.a.a;
+			var _v3 = piece.ref;
+			if ((_v3.$ === 'AI') && (_v3.a.$ === 'Enemy')) {
+				var m = _v3.a.a;
 				var ref = A2(
 					$elm$core$Maybe$withDefault,
 					'',
 					$author$project$Monster$monsterTypeToString(m.monster));
-				var _v5 = A2($elm$core$Dict$get, ref, gameState.availableMonsters);
-				if (_v5.$ === 'Just') {
-					var v = _v5.a;
+				var _v4 = A2($elm$core$Dict$get, ref, gameState.availableMonsters);
+				if (_v4.$ === 'Just') {
+					var v = _v4.a;
 					return A3(
 						$elm$core$Dict$insert,
 						ref,
@@ -9135,12 +9821,11 @@ var $author$project$Game$removePieceFromBoard = F2(
 		var newOverlays = function () {
 			var _v0 = piece.ref;
 			if ((_v0.$ === 'AI') && (_v0.a.$ === 'Enemy')) {
-				var m = _v0.a.a;
-				var _v1 = A2(
+				return A2(
 					$elm$core$List$any,
 					function (o) {
-						var _v2 = o.ref;
-						if ((_v2.$ === 'Treasure') && (_v2.a.$ === 'Coin')) {
+						var _v1 = o.ref;
+						if ((_v1.$ === 'Treasure') && (_v1.a.$ === 'Coin')) {
 							return A2(
 								$elm$core$List$member,
 								_Utils_Tuple2(piece.x, piece.y),
@@ -9149,42 +9834,37 @@ var $author$project$Game$removePieceFromBoard = F2(
 							return false;
 						}
 					},
+					gameState.overlays) ? A2(
+					$elm$core$List$map,
+					function (o) {
+						var _v2 = o.ref;
+						if ((_v2.$ === 'Treasure') && (_v2.a.$ === 'Coin')) {
+							var i = _v2.a.a;
+							return A2(
+								$elm$core$List$member,
+								_Utils_Tuple2(piece.x, piece.y),
+								o.cells) ? _Utils_update(
+								o,
+								{
+									ref: $author$project$BoardOverlay$Treasure(
+										$author$project$BoardOverlay$Coin(i + 1))
+								}) : o;
+						} else {
+							return o;
+						}
+					},
+					gameState.overlays) : A2(
+					$elm$core$List$cons,
+					A3(
+						$author$project$BoardOverlay$BoardOverlay,
+						$author$project$BoardOverlay$Treasure(
+							$author$project$BoardOverlay$Coin(1)),
+						$author$project$BoardOverlay$Default,
+						_List_fromArray(
+							[
+								_Utils_Tuple2(piece.x, piece.y)
+							])),
 					gameState.overlays);
-				if (_v1) {
-					return A2(
-						$elm$core$List$map,
-						function (o) {
-							var _v3 = o.ref;
-							if ((_v3.$ === 'Treasure') && (_v3.a.$ === 'Coin')) {
-								var i = _v3.a.a;
-								return A2(
-									$elm$core$List$member,
-									_Utils_Tuple2(piece.x, piece.y),
-									o.cells) ? _Utils_update(
-									o,
-									{
-										ref: $author$project$BoardOverlay$Treasure(
-											$author$project$BoardOverlay$Coin(i + 1))
-									}) : o;
-							} else {
-								return o;
-							}
-						},
-						gameState.overlays);
-				} else {
-					return A2(
-						$elm$core$List$cons,
-						A3(
-							$author$project$BoardOverlay$BoardOverlay,
-							$author$project$BoardOverlay$Treasure(
-								$author$project$BoardOverlay$Coin(1)),
-							$author$project$BoardOverlay$Default,
-							_List_fromArray(
-								[
-									_Utils_Tuple2(piece.x, piece.y)
-								])),
-						gameState.overlays);
-				}
 			} else {
 				return gameState.overlays;
 			}
@@ -9231,6 +9911,28 @@ var $arsduo$elm_dom_drag_drop$Dom$DragDrop$updateDropTarget = F2(
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
+			case 'Loaded':
+				var seed = msg.a;
+				var result = msg.b;
+				if (result.$ === 'Ok') {
+					var scenario = result.a;
+					var game = A3($author$project$Game$generateGameMap, scenario, $author$project$Game$ThreePlayer, seed);
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								currentMode: $author$project$Main$MovePiece,
+								game: $elm$core$Maybe$Just(
+									A2($author$project$Game$assignPlayers, model.currentPlayers, game))
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{currentMode: $author$project$Main$LoadFailed}),
+						$elm$core$Platform$Cmd$none);
+				}
 			case 'MoveStarted':
 				var piece = msg.a;
 				return _Utils_Tuple2(
@@ -9243,40 +9945,46 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'MoveTargetChanged':
 				var coords = msg.a;
-				var newDraggable = function () {
-					var _v1 = model.currentDraggable;
-					if (_v1.$ === 'Just') {
-						var m = _v1.a;
-						var _v2 = m.ref;
-						if (_v2.$ === 'OverlayType') {
-							var o = _v2.a;
-							var newOverlay = A4($author$project$Game$moveOverlay, o, m.coords, coords, model.game).b;
-							return $elm$core$Maybe$Just(
-								A2(
-									$author$project$Main$MoveablePiece,
-									$author$project$Main$OverlayType(newOverlay),
-									m.coords));
+				var _v2 = model.game;
+				if (_v2.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var game = _v2.a;
+					var newDraggable = function () {
+						var _v3 = model.currentDraggable;
+						if (_v3.$ === 'Just') {
+							var m = _v3.a;
+							var _v4 = m.ref;
+							if (_v4.$ === 'OverlayType') {
+								var o = _v4.a;
+								var newOverlay = A4($author$project$Game$moveOverlay, o, m.coords, coords, game).b;
+								return $elm$core$Maybe$Just(
+									A2(
+										$author$project$Main$MoveablePiece,
+										$author$project$Main$OverlayType(newOverlay),
+										m.coords));
+							} else {
+								var p = _v4.a;
+								var newPiece = A4($author$project$Game$movePiece, p, m.coords, coords, game).b;
+								return $elm$core$Maybe$Just(
+									A2(
+										$author$project$Main$MoveablePiece,
+										$author$project$Main$PieceType(newPiece),
+										m.coords));
+							}
 						} else {
-							var p = _v2.a;
-							var newPiece = A4($author$project$Game$movePiece, p, m.coords, coords, model.game).b;
-							return $elm$core$Maybe$Just(
-								A2(
-									$author$project$Main$MoveablePiece,
-									$author$project$Main$PieceType(newPiece),
-									m.coords));
+							return model.currentDraggable;
 						}
-					} else {
-						return model.currentDraggable;
-					}
-				}();
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							currentDraggable: newDraggable,
-							dragDropState: A2($arsduo$elm_dom_drag_drop$Dom$DragDrop$updateDropTarget, model.dragDropState, coords)
-						}),
-					$elm$core$Platform$Cmd$none);
+					}();
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								currentDraggable: newDraggable,
+								dragDropState: A2($arsduo$elm_dom_drag_drop$Dom$DragDrop$updateDropTarget, model.dragDropState, coords)
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
 			case 'MoveCanceled':
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -9288,102 +9996,128 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'MoveCompleted':
 				var coords = msg.b;
-				var game = function () {
-					var _v3 = model.currentDraggable;
-					if (_v3.$ === 'Just') {
-						var m = _v3.a;
-						var _v4 = m.ref;
-						if (_v4.$ === 'OverlayType') {
-							var o = _v4.a;
-							return A4($author$project$Game$moveOverlay, o, m.coords, coords, model.game).a;
-						} else {
-							var p = _v4.a;
-							var _v5 = p.ref;
-							if ((_v5.$ === 'AI') && (_v5.a.$ === 'Enemy')) {
-								var monster = _v5.a.a;
-								return function (_v6) {
-									var p2 = _v6.a;
-									var d = _v6.b;
-									var newGame = A4($author$project$Game$movePiece, p2, m.coords, coords, model.game).a;
-									var newState = newGame.state;
-									return _Utils_update(
-										newGame,
-										{
-											state: _Utils_update(
-												newState,
-												{availableMonsters: d})
-										});
-								}(
-									(!monster.id) ? A2($author$project$Game$assignIdentifier, model.game.state.availableMonsters, p) : _Utils_Tuple2(p, model.game.state.availableMonsters));
+				var _v5 = model.game;
+				if (_v5.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var oldGame = _v5.a;
+					var game = function () {
+						var _v6 = model.currentDraggable;
+						if (_v6.$ === 'Just') {
+							var m = _v6.a;
+							var _v7 = m.ref;
+							if (_v7.$ === 'OverlayType') {
+								var o = _v7.a;
+								return A4($author$project$Game$moveOverlay, o, m.coords, coords, oldGame).a;
 							} else {
-								return A4($author$project$Game$movePiece, p, m.coords, coords, model.game).a;
+								var p = _v7.a;
+								var _v8 = p.ref;
+								if ((_v8.$ === 'AI') && (_v8.a.$ === 'Enemy')) {
+									var monster = _v8.a.a;
+									return function (_v9) {
+										var p2 = _v9.a;
+										var d = _v9.b;
+										var newGame = A4($author$project$Game$movePiece, p2, m.coords, coords, oldGame).a;
+										var newState = newGame.state;
+										return _Utils_update(
+											newGame,
+											{
+												state: _Utils_update(
+													newState,
+													{availableMonsters: d})
+											});
+									}(
+										(!monster.id) ? A2($author$project$Game$assignIdentifier, oldGame.state.availableMonsters, p) : _Utils_Tuple2(p, oldGame.state.availableMonsters));
+								} else {
+									return A4($author$project$Game$movePiece, p, m.coords, coords, oldGame).a;
+								}
 							}
+						} else {
+							return oldGame;
 						}
-					} else {
-						return model.game;
-					}
-				}();
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							currentDraggable: $elm$core$Maybe$Nothing,
-							dragDropState: $arsduo$elm_dom_drag_drop$Dom$DragDrop$stopDragging(model.dragDropState),
-							game: game
-						}),
-					$author$project$GameSync$pushGameState(game.state));
+					}();
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								currentDraggable: $elm$core$Maybe$Nothing,
+								dragDropState: $arsduo$elm_dom_drag_drop$Dom$DragDrop$stopDragging(model.dragDropState),
+								game: $elm$core$Maybe$Just(game)
+							}),
+						$author$project$GameSync$pushGameState(game.state));
+				}
 			case 'GameStatePushed':
 				var val = msg.a;
-				var gameState = function () {
-					var _v7 = A2($elm$json$Json$Decode$decodeValue, $author$project$GameSync$decodeGameState, val);
-					if (_v7.$ === 'Ok') {
-						var s = _v7.a;
-						return (_Utils_eq(s.scenario, model.game.state.scenario) && _Utils_eq(s.numPlayers, model.game.state.numPlayers)) ? s : model.game.state;
-					} else {
-						return model.game.state;
-					}
-				}();
-				var game = model.game;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							game: _Utils_update(
-								game,
-								{state: gameState})
-						}),
-					$elm$core$Platform$Cmd$none);
+				var _v10 = model.game;
+				if (_v10.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var game = _v10.a;
+					var gameState = function () {
+						var _v11 = A2($elm$json$Json$Decode$decodeValue, $author$project$GameSync$decodeGameState, val);
+						if (_v11.$ === 'Ok') {
+							var s = _v11.a;
+							return (_Utils_eq(s.scenario, game.state.scenario) && _Utils_eq(s.numPlayers, game.state.numPlayers)) ? s : game.state;
+						} else {
+							return game.state;
+						}
+					}();
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								game: $elm$core$Maybe$Just(
+									_Utils_update(
+										game,
+										{state: gameState}))
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
 			case 'RemoveOverlay':
 				var overlay = msg.a;
-				var gameState = model.game.state;
-				var newState = _Utils_update(
-					gameState,
-					{
-						overlays: A2(
-							$elm$core$List$filter,
-							function (o) {
-								return (!_Utils_eq(o.cells, overlay.cells)) || (!_Utils_eq(o.ref, overlay.ref));
-							},
-							gameState.overlays)
-					});
-				var game = model.game;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
+				var _v12 = model.game;
+				if (_v12.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var game = _v12.a;
+					var gameState = game.state;
+					var newState = _Utils_update(
+						gameState,
 						{
-							game: _Utils_update(
-								game,
-								{state: newState})
-						}),
-					$author$project$GameSync$pushGameState(newState));
+							overlays: A2(
+								$elm$core$List$filter,
+								function (o) {
+									return (!_Utils_eq(o.cells, overlay.cells)) || (!_Utils_eq(o.ref, overlay.ref));
+								},
+								gameState.overlays)
+						});
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								game: $elm$core$Maybe$Just(
+									_Utils_update(
+										game,
+										{state: newState}))
+							}),
+						$author$project$GameSync$pushGameState(newState));
+				}
 			case 'RemovePiece':
 				var piece = msg.a;
-				var game = A2($author$project$Game$removePieceFromBoard, piece, model.game);
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{game: game}),
-					$author$project$GameSync$pushGameState(game.state));
+				var _v13 = model.game;
+				if (_v13.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var game = _v13.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								game: $elm$core$Maybe$Just(
+									A2($author$project$Game$removePieceFromBoard, piece, game))
+							}),
+						$author$project$GameSync$pushGameState(game.state));
+				}
 			case 'ChangeMode':
 				var mode = msg.a;
 				return _Utils_Tuple2(
@@ -9393,12 +10127,20 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			default:
 				var rooms = msg.a;
-				var game = A2($author$project$Game$revealRooms, model.game, rooms);
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{game: game}),
-					$author$project$GameSync$pushGameState(game.state));
+				var _v14 = model.game;
+				if (_v14.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var game = _v14.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								game: $elm$core$Maybe$Just(
+									A2($author$project$Game$revealRooms, game, rooms))
+							}),
+						$author$project$GameSync$pushGameState(game.state));
+				}
 		}
 	});
 var $elm$html$Html$Attributes$stringProperty = F2(
@@ -9649,7 +10391,7 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 	});
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $author$project$Main$cellValueToString = F2(
-	function (model, val) {
+	function (game, val) {
 		return A2(
 			$elm$core$List$any,
 			function (r) {
@@ -9658,7 +10400,7 @@ var $author$project$Main$cellValueToString = F2(
 					function (x) {
 						return _Utils_eq(x, r);
 					},
-					model.game.state.visibleRooms);
+					game.state.visibleRooms);
 			},
 			val.rooms) ? (val.passable ? 'passable' : 'impassable') : 'hidden';
 	});
@@ -9755,6 +10497,7 @@ var $arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDroppable = F4(
 			return droppableElement;
 		}
 	});
+var $author$project$Main$AddPiece = {$: 'AddPiece'};
 var $author$project$Main$MoveOverlay = {$: 'MoveOverlay'};
 var $author$project$Main$RemoveOverlay = function (a) {
 	return {$: 'RemoveOverlay', a: a};
@@ -9762,11 +10505,6 @@ var $author$project$Main$RemoveOverlay = function (a) {
 var $author$project$Main$RevealRoomMsg = function (a) {
 	return {$: 'RevealRoomMsg', a: a};
 };
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var $visotype$elm_dom$Dom$addAction = function (_v0) {
 	var event = _v0.a;
 	var msg = _v0.b;
@@ -9960,51 +10698,51 @@ var $author$project$Main$overlayToHtml = F3(
 	function (model, coords, overlay) {
 		var dragDropMessages = {dragEnded: $author$project$Main$MoveCanceled, dragStarted: $author$project$Main$MoveStarted, dropTargetChanged: $author$project$Main$MoveTargetChanged, dropped: $author$project$Main$MoveCompleted};
 		return function () {
-			var _v10 = _Utils_Tuple2(model.currentMode, overlay.ref);
-			_v10$4:
+			var _v7 = _Utils_Tuple2(model.currentMode, overlay.ref);
+			_v7$4:
 			while (true) {
-				switch (_v10.a.$) {
+				switch (_v7.a.$) {
 					case 'DestroyOverlay':
-						switch (_v10.b.$) {
+						switch (_v7.b.$) {
 							case 'Obstacle':
-								var _v11 = _v10.a;
+								var _v8 = _v7.a;
 								return $visotype$elm_dom$Dom$addAction(
 									_Utils_Tuple2(
 										'click',
 										$author$project$Main$RemoveOverlay(overlay)));
 							case 'Trap':
-								var _v12 = _v10.a;
+								var _v9 = _v7.a;
 								return $visotype$elm_dom$Dom$addAction(
 									_Utils_Tuple2(
 										'click',
 										$author$project$Main$RemoveOverlay(overlay)));
 							default:
-								break _v10$4;
+								break _v7$4;
 						}
 					case 'LootCell':
-						if (_v10.b.$ === 'Treasure') {
-							var _v13 = _v10.a;
+						if (_v7.b.$ === 'Treasure') {
+							var _v10 = _v7.a;
 							return $visotype$elm_dom$Dom$addAction(
 								_Utils_Tuple2(
 									'click',
 									$author$project$Main$RemoveOverlay(overlay)));
 						} else {
-							break _v10$4;
+							break _v7$4;
 						}
 					case 'RevealRoom':
-						if (_v10.b.$ === 'Door') {
-							var _v14 = _v10.a;
-							var _v15 = _v10.b;
-							var refs = _v15.b;
+						if (_v7.b.$ === 'Door') {
+							var _v11 = _v7.a;
+							var _v12 = _v7.b;
+							var refs = _v12.b;
 							return $visotype$elm_dom$Dom$addAction(
 								_Utils_Tuple2(
 									'click',
 									$author$project$Main$RevealRoomMsg(refs)));
 						} else {
-							break _v10$4;
+							break _v7$4;
 						}
 					default:
-						break _v10$4;
+						break _v7$4;
 				}
 			}
 			return function (e) {
@@ -10012,69 +10750,34 @@ var $author$project$Main$overlayToHtml = F3(
 			};
 		}()(
 			function () {
-				if (coords.$ === 'Just') {
-					var _v7 = coords.a;
-					var x = _v7.a;
-					var y = _v7.b;
-					if (_Utils_eq(model.currentMode, $author$project$Main$MoveOverlay)) {
-						var _v8 = overlay.ref;
-						switch (_v8.$) {
-							case 'Obstacle':
-								return A3(
-									$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
-									model.dragDropState,
-									A2(
-										$author$project$Main$MoveablePiece,
-										$author$project$Main$OverlayType(overlay),
-										coords),
-									dragDropMessages);
-							case 'Trap':
-								return A3(
-									$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
-									model.dragDropState,
-									A2(
-										$author$project$Main$MoveablePiece,
-										$author$project$Main$OverlayType(overlay),
-										coords),
-									dragDropMessages);
-							default:
-								return $visotype$elm_dom$Dom$addAttribute(
-									A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
-						}
-					} else {
-						return $visotype$elm_dom$Dom$addAttribute(
-							A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
+				if ((_Utils_eq(model.currentMode, $author$project$Main$MoveOverlay) && (!_Utils_eq(coords, $elm$core$Maybe$Nothing))) || (_Utils_eq(model.currentMode, $author$project$Main$AddPiece) && _Utils_eq(coords, $elm$core$Maybe$Nothing))) {
+					var _v6 = overlay.ref;
+					switch (_v6.$) {
+						case 'Obstacle':
+							return A3(
+								$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
+								model.dragDropState,
+								A2(
+									$author$project$Main$MoveablePiece,
+									$author$project$Main$OverlayType(overlay),
+									coords),
+								dragDropMessages);
+						case 'Trap':
+							return A3(
+								$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
+								model.dragDropState,
+								A2(
+									$author$project$Main$MoveablePiece,
+									$author$project$Main$OverlayType(overlay),
+									coords),
+								dragDropMessages);
+						default:
+							return $visotype$elm_dom$Dom$addAttribute(
+								A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
 					}
 				} else {
-					if (_Utils_eq(model.currentMode, $author$project$Main$MoveOverlay)) {
-						var _v9 = overlay.ref;
-						switch (_v9.$) {
-							case 'Obstacle':
-								return A3(
-									$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
-									model.dragDropState,
-									A2(
-										$author$project$Main$MoveablePiece,
-										$author$project$Main$OverlayType(overlay),
-										coords),
-									dragDropMessages);
-							case 'Trap':
-								return A3(
-									$arsduo$elm_dom_drag_drop$Dom$DragDrop$makeDraggable,
-									model.dragDropState,
-									A2(
-										$author$project$Main$MoveablePiece,
-										$author$project$Main$OverlayType(overlay),
-										coords),
-									dragDropMessages);
-							default:
-								return $visotype$elm_dom$Dom$addAttribute(
-									A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
-						}
-					} else {
-						return $visotype$elm_dom$Dom$addAttribute(
-							A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
-					}
+					return $visotype$elm_dom$Dom$addAttribute(
+						A2($elm$html$Html$Attributes$attribute, 'draggable', 'false'));
 				}
 			}()(
 				function () {
@@ -10167,7 +10870,6 @@ var $author$project$Main$overlayToHtml = F3(
 										'overlay',
 										$visotype$elm_dom$Dom$element('div')))))))));
 	});
-var $author$project$Main$AddPiece = {$: 'AddPiece'};
 var $author$project$Main$KillPiece = {$: 'KillPiece'};
 var $author$project$Main$RemovePiece = function (a) {
 	return {$: 'RemovePiece', a: a};
@@ -10206,7 +10908,7 @@ var $author$project$Main$enemyToHtml = F2(
 					$visotype$elm_dom$Dom$element('img')),
 					A2(
 					$visotype$elm_dom$Dom$appendText,
-					$elm$core$String$fromInt(monster.id),
+					(!monster.id) ? '' : $elm$core$String$fromInt(monster.id),
 					$visotype$elm_dom$Dom$element('span'))
 				]),
 			A2($visotype$elm_dom$Dom$addClass, _class, element));
@@ -10249,7 +10951,6 @@ var $author$project$Game$getPieceType = function (piece) {
 			return '';
 	}
 };
-var $elm$core$Basics$modBy = _Basics_modBy;
 var $author$project$Main$pieceToHtml = F3(
 	function (model, coords, piece) {
 		var dragDropMessages = {dragEnded: $author$project$Main$MoveCanceled, dragStarted: $author$project$Main$MoveStarted, dropTargetChanged: $author$project$Main$MoveTargetChanged, dropped: $author$project$Main$MoveCompleted};
@@ -10281,15 +10982,18 @@ var $author$project$Main$pieceToHtml = F3(
 								return $author$project$Main$enemyToHtml(m);
 							} else {
 								var i = t.a;
-								return $visotype$elm_dom$Dom$appendChild(
-									A2(
-										$visotype$elm_dom$Dom$addAttribute,
-										A2(
-											$elm$html$Html$Attributes$attribute,
-											'src',
-											'/img/characters/summons-' + ($elm$core$String$fromInt(
-												A2($elm$core$Basics$modBy, 8, i)) + '.png')),
-										$visotype$elm_dom$Dom$element('img')));
+								return $visotype$elm_dom$Dom$appendChildList(
+									_List_fromArray(
+										[
+											A2(
+											$visotype$elm_dom$Dom$addAttribute,
+											A2($elm$html$Html$Attributes$attribute, 'src', '/img/characters/summons.png'),
+											$visotype$elm_dom$Dom$element('img')),
+											A2(
+											$visotype$elm_dom$Dom$appendText,
+											$elm$core$String$fromInt(i),
+											$visotype$elm_dom$Dom$element('span'))
+										]));
 							}
 						default:
 							return $visotype$elm_dom$Dom$addClass('none');
@@ -10304,8 +11008,8 @@ var $author$project$Main$pieceToHtml = F3(
 							$visotype$elm_dom$Dom$element('div'))))));
 	});
 var $visotype$elm_dom$Dom$render = $visotype$elm_dom$Dom$Internal$render;
-var $author$project$Main$getCellHtml = F4(
-	function (model, y, x, cellValue) {
+var $author$project$Main$getCellHtml = F5(
+	function (model, game, y, x, cellValue) {
 		var dragDropMessages = {dragEnded: $author$project$Main$MoveCanceled, dragStarted: $author$project$Main$MoveStarted, dropTargetChanged: $author$project$Main$MoveTargetChanged, dropped: $author$project$Main$MoveCompleted};
 		var cellElement = function () {
 			var _v9 = model.currentDraggable;
@@ -10366,11 +11070,11 @@ var $author$project$Main$getCellHtml = F4(
 						A2(
 							$elm$core$List$filter,
 							A2($author$project$Main$filterOverlaysForCoord, x, y),
-							model.game.state.overlays))),
+							game.state.overlays))),
 				A2(
 					$visotype$elm_dom$Dom$appendChildList,
 					function () {
-						var _v6 = A3($author$project$Main$getPieceForCoord, x, y, model.game.state.pieces);
+						var _v6 = A3($author$project$Main$getPieceForCoord, x, y, game.state.pieces);
 						if (_v6.$ === 'Nothing') {
 							return _List_Nil;
 						} else {
@@ -10413,7 +11117,7 @@ var $author$project$Main$getCellHtml = F4(
 								A2(
 									$elm$core$List$filter,
 									A2($author$project$Main$filterOverlaysForCoord, x, y),
-									model.game.state.overlays))),
+									game.state.overlays))),
 						A2(
 							$visotype$elm_dom$Dom$addClass,
 							'hexagon',
@@ -10443,7 +11147,7 @@ var $author$project$Main$getCellHtml = F4(
 								var ty = _v2.b;
 								return _Utils_eq(tx, x) && _Utils_eq(ty, y);
 							},
-							$elm$core$Dict$toList(model.game.roomOrigins)));
+							$elm$core$Dict$toList(game.roomOrigins)));
 					if (_v0.$ === 'Just') {
 						var _v3 = _v0.a;
 						var ref = _v3.a;
@@ -10456,7 +11160,7 @@ var $author$project$Main$getCellHtml = F4(
 										A2(
 											$elm$core$Maybe$withDefault,
 											0,
-											A2($elm$core$Dict$get, ref, model.game.roomTurns))))
+											A2($elm$core$Dict$get, ref, game.roomTurns))))
 								]));
 					} else {
 						return function (e) {
@@ -10466,14 +11170,14 @@ var $author$project$Main$getCellHtml = F4(
 				}()(
 					A2(
 						$visotype$elm_dom$Dom$addClass,
-						A2($author$project$Main$cellValueToString, model, cellValue),
+						A2($author$project$Main$cellValueToString, game, cellValue),
 						A2(
 							$visotype$elm_dom$Dom$addClass,
 							'cell-wrapper',
 							$visotype$elm_dom$Dom$element('div'))))));
 	});
-var $author$project$Main$getBoardHtml = F3(
-	function (model, y, row) {
+var $author$project$Main$getBoardHtml = F4(
+	function (model, game, y, row) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -10483,7 +11187,7 @@ var $author$project$Main$getBoardHtml = F3(
 			$elm$core$Array$toList(
 				A2(
 					$elm$core$Array$indexedMap,
-					A2($author$project$Main$getCellHtml, model, y),
+					A3($author$project$Main$getCellHtml, model, game, y),
 					row)));
 	});
 var $author$project$Main$ChangeMode = function (a) {
@@ -10616,100 +11320,102 @@ var $author$project$Main$getNavHtml = function (model) {
 				$visotype$elm_dom$Dom$element('ul')),
 			$visotype$elm_dom$Dom$element('nav')));
 };
+var $visotype$elm_dom$Dom$addAttributeConditional = F2(
+	function (a, test) {
+		if (test) {
+			return $visotype$elm_dom$Dom$addAttribute(a);
+		} else {
+			return function (x) {
+				return x;
+			};
+		}
+	});
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$hidden = $elm$html$Html$Attributes$boolProperty('hidden');
 var $elm$core$List$sortBy = _List_sortBy;
 var $elm$core$List$sort = function (xs) {
 	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
 };
-var $author$project$Main$getNewPieceHtml = function (model) {
-	return $visotype$elm_dom$Dom$render(
-		A2(
-			$visotype$elm_dom$Dom$appendChild,
+var $author$project$Main$getNewPieceHtml = F2(
+	function (model, game) {
+		return $visotype$elm_dom$Dom$render(
 			A2(
-				$visotype$elm_dom$Dom$appendChildList,
-				A3(
-					$elm$core$List$foldl,
-					$elm$core$Basics$append,
-					_List_Nil,
-					A2(
-						$elm$core$List$map,
-						function (k) {
-							return A2(
-								$elm$core$List$cons,
-								A2(
-									$visotype$elm_dom$Dom$appendChild,
-									A3(
-										$author$project$Main$pieceToHtml,
-										model,
-										$elm$core$Maybe$Nothing,
-										A3(
-											$author$project$Game$Piece,
-											$author$project$Game$AI(
-												$author$project$Game$Enemy(
-													A3($author$project$Monster$Monster, k, 0, $author$project$Monster$Normal))),
-											0,
-											0)),
-									$visotype$elm_dom$Dom$element('li')),
-								function () {
-									if (k.$ === 'NormalType') {
-										return _List_fromArray(
-											[
-												A2(
-												$visotype$elm_dom$Dom$appendChild,
-												A3(
-													$author$project$Main$pieceToHtml,
-													model,
-													$elm$core$Maybe$Nothing,
-													A3(
-														$author$project$Game$Piece,
-														$author$project$Game$AI(
-															$author$project$Game$Enemy(
-																A3($author$project$Monster$Monster, k, 0, $author$project$Monster$Elite))),
-														0,
-														0)),
-												$visotype$elm_dom$Dom$element('li'))
-											]);
-									} else {
-										return _List_Nil;
-									}
-								}());
-						},
-						A2(
-							$elm$core$List$filterMap,
-							function (k) {
-								return $author$project$Monster$stringToMonsterType(k);
-							},
-							$elm$core$List$reverse(
-								$elm$core$List$sort(
-									A2(
-										$elm$core$List$map,
-										function (_v3) {
-											var k = _v3.a;
-											return k;
-										},
-										A2(
-											$elm$core$List$filter,
-											function (_v2) {
-												var v = _v2.b;
-												return $elm$core$Array$length(v) > 0;
-											},
-											$elm$core$Dict$toList(model.game.state.availableMonsters)))))))),
+				$visotype$elm_dom$Dom$appendChild,
 				A2(
-					$visotype$elm_dom$Dom$appendChild,
-					A2(
-						$visotype$elm_dom$Dom$appendChild,
-						A3(
-							$author$project$Main$overlayToHtml,
-							model,
-							$elm$core$Maybe$Nothing,
-							A3(
-								$author$project$BoardOverlay$BoardOverlay,
-								$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Boulder1),
-								$author$project$BoardOverlay$Default,
-								_List_fromArray(
-									[
-										_Utils_Tuple2(0, 0)
-									]))),
-						$visotype$elm_dom$Dom$element('li')),
+					$visotype$elm_dom$Dom$appendChildList,
+					A3(
+						$elm$core$List$foldl,
+						$elm$core$Basics$append,
+						_List_Nil,
+						A2(
+							$elm$core$List$map,
+							function (k) {
+								return A2(
+									$elm$core$List$cons,
+									A2(
+										$visotype$elm_dom$Dom$appendChild,
+										A3(
+											$author$project$Main$pieceToHtml,
+											model,
+											$elm$core$Maybe$Nothing,
+											A3(
+												$author$project$Game$Piece,
+												$author$project$Game$AI(
+													$author$project$Game$Enemy(
+														A3($author$project$Monster$Monster, k, 0, $author$project$Monster$Normal))),
+												0,
+												0)),
+										$visotype$elm_dom$Dom$element('li')),
+									function () {
+										if (k.$ === 'NormalType') {
+											return _List_fromArray(
+												[
+													A2(
+													$visotype$elm_dom$Dom$appendChild,
+													A3(
+														$author$project$Main$pieceToHtml,
+														model,
+														$elm$core$Maybe$Nothing,
+														A3(
+															$author$project$Game$Piece,
+															$author$project$Game$AI(
+																$author$project$Game$Enemy(
+																	A3($author$project$Monster$Monster, k, 0, $author$project$Monster$Elite))),
+															0,
+															0)),
+													$visotype$elm_dom$Dom$element('li'))
+												]);
+										} else {
+											return _List_Nil;
+										}
+									}());
+							},
+							A2(
+								$elm$core$List$filterMap,
+								function (k) {
+									return $author$project$Monster$stringToMonsterType(k);
+								},
+								$elm$core$List$reverse(
+									$elm$core$List$sort(
+										A2(
+											$elm$core$List$map,
+											function (_v3) {
+												var k = _v3.a;
+												return k;
+											},
+											A2(
+												$elm$core$List$filter,
+												function (_v2) {
+													var v = _v2.b;
+													return $elm$core$Array$length(v) > 0;
+												},
+												$elm$core$Dict$toList(game.state.availableMonsters)))))))),
 					A2(
 						$visotype$elm_dom$Dom$appendChild,
 						A2(
@@ -10720,7 +11426,7 @@ var $author$project$Main$getNewPieceHtml = function (model) {
 								$elm$core$Maybe$Nothing,
 								A3(
 									$author$project$BoardOverlay$BoardOverlay,
-									$author$project$BoardOverlay$Trap($author$project$BoardOverlay$BearTrap),
+									$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Boulder1),
 									$author$project$BoardOverlay$Default,
 									_List_fromArray(
 										[
@@ -10731,48 +11437,69 @@ var $author$project$Main$getNewPieceHtml = function (model) {
 							$visotype$elm_dom$Dom$appendChild,
 							A2(
 								$visotype$elm_dom$Dom$appendChild,
-								function () {
-									var maxSummons = $elm$core$List$head(
-										$elm$core$List$reverse(
-											$elm$core$List$sort(
-												A2(
-													$elm$core$List$filterMap,
-													function (p) {
-														var _v1 = p.ref;
-														if ((_v1.$ === 'AI') && (_v1.a.$ === 'Summons')) {
-															var i = _v1.a.a;
-															return $elm$core$Maybe$Just(i);
-														} else {
-															return $elm$core$Maybe$Nothing;
-														}
-													},
-													model.game.state.pieces))));
-									var nextId = function () {
-										if (maxSummons.$ === 'Just') {
-											var i = maxSummons.a;
-											return i + 1;
-										} else {
-											return 1;
-										}
-									}();
-									return A3(
-										$author$project$Main$pieceToHtml,
-										model,
-										$elm$core$Maybe$Nothing,
-										A3(
-											$author$project$Game$Piece,
-											$author$project$Game$AI(
-												$author$project$Game$Summons(nextId)),
-											0,
-											0));
-								}(),
+								A3(
+									$author$project$Main$overlayToHtml,
+									model,
+									$elm$core$Maybe$Nothing,
+									A3(
+										$author$project$BoardOverlay$BoardOverlay,
+										$author$project$BoardOverlay$Trap($author$project$BoardOverlay$BearTrap),
+										$author$project$BoardOverlay$Default,
+										_List_fromArray(
+											[
+												_Utils_Tuple2(0, 0)
+											]))),
 								$visotype$elm_dom$Dom$element('li')),
-							$visotype$elm_dom$Dom$element('ul'))))),
-			A2(
-				$visotype$elm_dom$Dom$addClass,
-				'new-piece-list',
-				$visotype$elm_dom$Dom$element('div'))));
-};
+							A2(
+								$visotype$elm_dom$Dom$appendChild,
+								A2(
+									$visotype$elm_dom$Dom$appendChild,
+									function () {
+										var maxSummons = $elm$core$List$head(
+											$elm$core$List$reverse(
+												$elm$core$List$sort(
+													A2(
+														$elm$core$List$filterMap,
+														function (p) {
+															var _v1 = p.ref;
+															if ((_v1.$ === 'AI') && (_v1.a.$ === 'Summons')) {
+																var i = _v1.a.a;
+																return $elm$core$Maybe$Just(i);
+															} else {
+																return $elm$core$Maybe$Nothing;
+															}
+														},
+														game.state.pieces))));
+										var nextId = function () {
+											if (maxSummons.$ === 'Just') {
+												var i = maxSummons.a;
+												return i + 1;
+											} else {
+												return 1;
+											}
+										}();
+										return A3(
+											$author$project$Main$pieceToHtml,
+											model,
+											$elm$core$Maybe$Nothing,
+											A3(
+												$author$project$Game$Piece,
+												$author$project$Game$AI(
+													$author$project$Game$Summons(nextId)),
+												0,
+												0));
+									}(),
+									$visotype$elm_dom$Dom$element('li')),
+								$visotype$elm_dom$Dom$element('ul'))))),
+				A2(
+					$visotype$elm_dom$Dom$addClass,
+					'new-piece-list',
+					A3(
+						$visotype$elm_dom$Dom$addAttributeConditional,
+						$elm$html$Html$Attributes$hidden(true),
+						!_Utils_eq(model.currentMode, $author$project$Main$AddPiece),
+						$visotype$elm_dom$Dom$element('div')))));
+	});
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -10780,31 +11507,39 @@ var $author$project$Main$view = function (model) {
 			[
 				$elm$html$Html$Attributes$class('content')
 			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
+		function () {
+			var _v0 = model.game;
+			if (_v0.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var game = _v0.a;
+				return _List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('action-list')
-					]),
-				_List_fromArray(
-					[
-						$author$project$Main$getNewPieceHtml(model),
-						$author$project$Main$getNavHtml(model)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('board')
-					]),
-				$elm$core$Array$toList(
-					A2(
-						$elm$core$Array$indexedMap,
-						$author$project$Main$getBoardHtml(model),
-						model.game.staticBoard)))
-			]));
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('action-list')
+							]),
+						_List_fromArray(
+							[
+								$author$project$Main$getNavHtml(model),
+								A2($author$project$Main$getNewPieceHtml, model, game)
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('board')
+							]),
+						$elm$core$Array$toList(
+							A2(
+								$elm$core$Array$indexedMap,
+								A2($author$project$Main$getBoardHtml, model, game),
+								game.staticBoard)))
+					]);
+			}
+		}());
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});

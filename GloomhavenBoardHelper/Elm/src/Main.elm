@@ -4,10 +4,11 @@ import Array exposing (Array, fromList, length, toIndexedList, toList)
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
+import Character exposing (CharacterClass(..), characterToString)
 import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), assignIdentifier, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (pushGameState, receiveGameState)
 import Html exposing (div)
 import Html.Attributes exposing (attribute, class, hidden)
@@ -22,6 +23,7 @@ import ScenarioSync exposing (loadScenarioById)
 
 type alias Model =
     { game : Maybe Game
+    , currentPlayers : List CharacterClass
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
     , currentMode : GameModeType
@@ -76,7 +78,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing DragDrop.initialState Nothing (Loading 2), loadScenarioById 2 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing [ Brute, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 2), loadScenarioById 2 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -85,11 +87,15 @@ update msg model =
         Loaded seed result ->
             case result of
                 Ok scenario ->
-                    let
-                        game =
-                            generateGameMap scenario ThreePlayer seed
-                    in
-                    ( { model | game = Just game, currentMode = MovePiece }, Cmd.none )
+                    if List.length model.currentPlayers > 4 || List.length model.currentPlayers < 2 then
+                        ( { model | currentMode = LoadFailed }, Cmd.none )
+
+                    else
+                        let
+                            game =
+                                generateGameMap scenario ThreePlayer seed
+                        in
+                        ( { model | game = Just (assignPlayers model.currentPlayers game), currentMode = MovePiece }, Cmd.none )
 
                 Err _ ->
                     ( { model | currentMode = LoadFailed }, Cmd.none )
@@ -528,8 +534,13 @@ pieceToHtml model coords piece =
         |> Dom.addClass (getPieceType piece.ref)
         |> Dom.addClass (getPieceName piece.ref)
         |> (case piece.ref of
-                Player _ ->
-                    Dom.appendChild (Dom.element "div")
+                Player p ->
+                    let
+                        player =
+                            Maybe.withDefault "" (characterToString p)
+                    in
+                    Dom.appendChild
+                        (Dom.element "img" |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ player ++ ".png")))
 
                 AI t ->
                     case t of

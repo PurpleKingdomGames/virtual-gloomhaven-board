@@ -129,7 +129,7 @@ html {
             user-drag: element;
 
             &:hover {
-            cursor: move;
+                cursor: move;
             }
         }
 
@@ -302,10 +302,6 @@ html {
                             position: absolute;
                             top: 0;
                             left:0;
-                        }
-
-                        .player {
-                            cursor: move;
                         }
 
                         .overlay {
