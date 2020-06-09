@@ -189,12 +189,7 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
             tile.y - offsetY
 
         refString =
-            case refToString tile.ref of
-                Just s ->
-                    s
-
-                Nothing ->
-                    ""
+            Maybe.withDefault "" (refToString tile.ref)
 
         newOrigins =
             if tile.originalX == 0 && tile.originalY == 0 then

@@ -1,7 +1,7 @@
 module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
 import BoardMapTile exposing (MapTile, MapTileRef, getMapTileListByRef, refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DoorSubType(..))
 import Dict exposing (Dict, empty, singleton, union)
 import Hexagon exposing (rotate)
 import Monster exposing (Monster, MonsterLevel, MonsterType)
@@ -58,7 +58,27 @@ mapTileDataToOverlayList data =
                             (\d ->
                                 case d of
                                     DoorLink subType dir ( x, y ) _ l ->
-                                        BoardOverlay (Door subType [ data.ref, l.ref ]) dir [ ( x, y ) ]
+                                        case subType of
+                                            Corridor _ Two ->
+                                                let
+                                                    turns =
+                                                        case dir of
+                                                            DiagonalLeft ->
+                                                                1
+
+                                                            DiagonalRight ->
+                                                                2
+
+                                                            _ ->
+                                                                0
+
+                                                    coords2 =
+                                                        rotate ( x, y ) ( x + 1, y ) turns
+                                                in
+                                                BoardOverlay (Door subType [ data.ref, l.ref ]) dir [ ( x, y ), coords2 ]
+
+                                            _ ->
+                                                BoardOverlay (Door subType [ data.ref, l.ref ]) dir [ ( x, y ) ]
                             )
                             data.doors
                     , data.monsters
