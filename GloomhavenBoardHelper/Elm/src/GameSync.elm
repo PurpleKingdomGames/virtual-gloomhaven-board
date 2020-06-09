@@ -225,12 +225,18 @@ encodeDoor door =
         Stone ->
             "stone"
 
+        DarkFog ->
+            "dark-fog"
+
 
 encodeTrap : TrapSubType -> String
 encodeTrap trap =
     case trap of
         BearTrap ->
             "bear"
+
+        Spike ->
+            "spike"
 
 
 encodeObstacle : ObstacleSubType -> String
@@ -241,6 +247,9 @@ encodeObstacle obstacle =
 
         Boulder1 ->
             "boulder-1"
+
+        Nest ->
+            "nest"
 
 
 encodeTreasure : TreasureSubType -> List ( String, Encode.Value )

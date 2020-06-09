@@ -78,7 +78,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing [ Brute, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 2), loadScenarioById 2 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing [ Brute, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 43), loadScenarioById 43 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -747,6 +747,9 @@ getOverlayImageName overlay coords =
 
                             else
                                 ""
+
+                        _ ->
+                            ""
 
                 _ ->
                     ""

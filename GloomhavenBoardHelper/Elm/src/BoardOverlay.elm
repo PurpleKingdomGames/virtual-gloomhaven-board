@@ -18,15 +18,18 @@ type BoardOverlayType
 
 type DoorSubType
     = Stone
+    | DarkFog
 
 
 type TrapSubType
     = BearTrap
+    | Spike
 
 
 type ObstacleSubType
     = Sarcophagus
     | Boulder1
+    | Nest
 
 
 type TreasureSubType
@@ -65,10 +68,16 @@ getBoardOverlayName overlay =
                 Stone ->
                     "door-stone"
 
+                DarkFog ->
+                    "door-dark-fog"
+
         Trap t ->
             case t of
                 BearTrap ->
                     "trap-bear"
+
+                Spike ->
+                    "trap-spike"
 
         Obstacle o ->
             case o of
@@ -77,6 +86,9 @@ getBoardOverlayName overlay =
 
                 Boulder1 ->
                     "obstacle-boulder-1"
+
+                Nest ->
+                    "obstacle-nest"
 
         Treasure t ->
             case t of

@@ -33,7 +33,7 @@ normalDict =
         , ( "cave-bear", CaveBear )
         , ( "stone-golem", StoneGolem )
         , ( "ancient-artillery", AncientArtillery )
-        , ( "vicious-drake", ViciousDrake )
+        , ( "rending-drake", RendingDrake )
         , ( "spitting-drake", SpittingDrake )
         , ( "lurker", Lurker )
         , ( "savvas-icestorm", SavvasIcestorm )
@@ -101,7 +101,7 @@ type NormalMonsterType
     | CaveBear
     | StoneGolem
     | AncientArtillery
-    | ViciousDrake
+    | RendingDrake
     | SpittingDrake
     | Lurker
     | SavvasIcestorm
@@ -248,7 +248,7 @@ getMonsterBucketSize monster =
                 AncientArtillery ->
                     6
 
-                ViciousDrake ->
+                RendingDrake ->
                     6
 
                 SpittingDrake ->

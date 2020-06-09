@@ -16,6 +16,9 @@ decodeDoor =
                     "stone" ->
                         succeed Stone
 
+                    "dark-fog" ->
+                        succeed DarkFog
+
                     _ ->
                         fail (s ++ " is not a door sub-type")
             )
@@ -86,6 +89,9 @@ decodeTrap =
                     "bear" ->
                         succeed (Trap BearTrap)
 
+                    "spike" ->
+                        succeed (Trap Spike)
+
                     _ ->
                         fail (s ++ " is not a trap sub-type")
             )
@@ -102,6 +108,9 @@ decodeObstacle =
 
                     "boulder-1" ->
                         succeed (Obstacle Boulder1)
+
+                    "nest" ->
+                        succeed (Obstacle Nest)
 
                     _ ->
                         fail (s ++ " is not an obstacle sub-type")
