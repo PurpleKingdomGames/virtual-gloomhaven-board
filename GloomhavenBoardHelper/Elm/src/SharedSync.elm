@@ -1,7 +1,7 @@
 module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel)
 
 import BoardMapTile exposing (MapTileRef(..), stringToRef)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, string, succeed)
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
@@ -16,11 +16,63 @@ decodeDoor =
                     "stone" ->
                         succeed Stone
 
+                    "corridor" ->
+                        decodeCorridor
+
                     "dark-fog" ->
                         succeed DarkFog
 
                     _ ->
                         fail (s ++ " is not a door sub-type")
+            )
+
+
+decodeCorridor : Decoder DoorSubType
+decodeCorridor =
+    field "material" Decode.string
+        |> andThen
+            (\m ->
+                let
+                    material =
+                        case String.toLower m of
+                            "earth" ->
+                                Just Earth
+
+                            "manmade-stone" ->
+                                Just ManmadeStone
+
+                            "natural-stone" ->
+                                Just NaturalStone
+
+                            "wood" ->
+                                Just Wood
+
+                            _ ->
+                                Nothing
+                in
+                case material of
+                    Just mm ->
+                        decodeCorridorSize mm
+
+                    Nothing ->
+                        fail ("Could not decode material '" ++ m ++ "'")
+            )
+
+
+decodeCorridorSize : CorridorMaterial -> Decoder DoorSubType
+decodeCorridorSize material =
+    field "size" Decode.int
+        |> andThen
+            (\s ->
+                case s of
+                    1 ->
+                        succeed (Corridor material One)
+
+                    2 ->
+                        succeed (Corridor material Two)
+
+                    _ ->
+                        fail (String.fromInt s ++ " is not a valid corridor size")
             )
 
 

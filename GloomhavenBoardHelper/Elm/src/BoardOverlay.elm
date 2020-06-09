@@ -1,4 +1,4 @@
-module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 
 import BoardMapTile exposing (MapTileRef)
 
@@ -17,8 +17,21 @@ type BoardOverlayType
 
 
 type DoorSubType
-    = Stone
+    = Corridor CorridorMaterial CorridorSize
     | DarkFog
+    | Stone
+
+
+type CorridorMaterial
+    = Earth
+    | ManmadeStone
+    | NaturalStone
+    | Wood
+
+
+type CorridorSize
+    = One
+    | Two
 
 
 type TrapSubType
@@ -68,6 +81,28 @@ getBoardOverlayName overlay =
             case d of
                 Stone ->
                     "door-stone"
+
+                Corridor c num ->
+                    (case c of
+                        Earth ->
+                            "corridor-earth"
+
+                        ManmadeStone ->
+                            "corridor-manmade-stone"
+
+                        NaturalStone ->
+                            "corridor-natural-stone"
+
+                        Wood ->
+                            "corridor-wood"
+                    )
+                        ++ (case num of
+                                One ->
+                                    "-1"
+
+                                Two ->
+                                    "-2"
+                           )
 
                 DarkFog ->
                     "door-dark-fog"

@@ -2,7 +2,7 @@ port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, 
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
 import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
@@ -224,6 +224,29 @@ encodeDoor door =
     case door of
         Stone ->
             "stone"
+
+        Corridor c i ->
+            "corridor-"
+                ++ (case c of
+                        Earth ->
+                            "earth"
+
+                        ManmadeStone ->
+                            "manmade-stone"
+
+                        NaturalStone ->
+                            "natural-stone"
+
+                        Wood ->
+                            "wood"
+                   )
+                ++ (case i of
+                        One ->
+                            "-1"
+
+                        Two ->
+                            "-2"
+                   )
 
         DarkFog ->
             "dark-fog"
