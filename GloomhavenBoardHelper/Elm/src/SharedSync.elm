@@ -112,6 +112,9 @@ decodeObstacle =
                     "nest" ->
                         succeed (Obstacle Nest)
 
+                    "table" ->
+                        succeed (Obstacle Table)
+
                     _ ->
                         fail (s ++ " is not an obstacle sub-type")
             )

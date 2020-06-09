@@ -251,6 +251,9 @@ encodeObstacle obstacle =
         Nest ->
             "nest"
 
+        Table ->
+            "table"
+
 
 encodeTreasure : TreasureSubType -> List ( String, Encode.Value )
 encodeTreasure treasure =

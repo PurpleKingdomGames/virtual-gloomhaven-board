@@ -313,6 +313,10 @@ html {
                                 transform: rotate(60deg);
                             }
 
+                            &.horizontal {
+                                transform: rotate(180deg);
+                            }
+
                             &.treasure
                             {
                                 transform: scale(0.5);

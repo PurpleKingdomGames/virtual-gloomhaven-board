@@ -78,7 +78,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing [ Brute, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 43), loadScenarioById 43 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing [ Brute, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 1), loadScenarioById 1 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -738,18 +738,9 @@ getOverlayImageName overlay coords =
             ".png"
 
         extendedOverlayName =
-            case overlay.ref of
-                Door d _ ->
-                    case d of
-                        Stone ->
-                            if overlay.direction == Vertical then
-                                "-vert"
-
-                            else
-                                ""
-
-                        _ ->
-                            ""
+            case ( overlay.ref, overlay.direction ) of
+                ( Door Stone _, Vertical ) ->
+                    "-vert"
 
                 _ ->
                     ""

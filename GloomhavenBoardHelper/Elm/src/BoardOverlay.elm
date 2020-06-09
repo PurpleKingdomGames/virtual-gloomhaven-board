@@ -30,6 +30,7 @@ type ObstacleSubType
     = Sarcophagus
     | Boulder1
     | Nest
+    | Table
 
 
 type TreasureSubType
@@ -86,6 +87,9 @@ getBoardOverlayName overlay =
 
                 Boulder1 ->
                     "obstacle-boulder-1"
+
+                Table ->
+                    "obstacle-table"
 
                 Nest ->
                     "obstacle-nest"

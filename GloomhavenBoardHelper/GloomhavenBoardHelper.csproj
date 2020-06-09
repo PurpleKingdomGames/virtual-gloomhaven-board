@@ -4,9 +4,8 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-        <!-- extends watching group to include *.js files -->
         <Watch
-        Include="**\*.cs;**\*.js;**\*.json;**\*.html;**\*.elm;**\*.scss"
+        Include="**\*.cs;**\*.js;**\*.html;**\*.elm;**\*.scss"
         Exclude="bin\**\*;obj\**\*;Elm\tests\*;Elm\elm-stuff;\*;wwwroot\js\main.min.js"
         />
     </ItemGroup>

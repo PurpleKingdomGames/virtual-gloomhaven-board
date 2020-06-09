@@ -5842,10 +5842,12 @@ var $author$project$SharedSync$decodeDoorRefs = function (subType) {
 				$elm$json$Json$Decode$list($elm$json$Json$Decode$string))));
 };
 var $author$project$BoardOverlay$Boulder1 = {$: 'Boulder1'};
+var $author$project$BoardOverlay$Nest = {$: 'Nest'};
 var $author$project$BoardOverlay$Obstacle = function (a) {
 	return {$: 'Obstacle', a: a};
 };
 var $author$project$BoardOverlay$Sarcophagus = {$: 'Sarcophagus'};
+var $author$project$BoardOverlay$Table = {$: 'Table'};
 var $author$project$SharedSync$decodeObstacle = A2(
 	$elm$json$Json$Decode$andThen,
 	function (s) {
@@ -5857,12 +5859,19 @@ var $author$project$SharedSync$decodeObstacle = A2(
 			case 'boulder-1':
 				return $elm$json$Json$Decode$succeed(
 					$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Boulder1));
+			case 'nest':
+				return $elm$json$Json$Decode$succeed(
+					$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Nest));
+			case 'table':
+				return $elm$json$Json$Decode$succeed(
+					$author$project$BoardOverlay$Obstacle($author$project$BoardOverlay$Table));
 			default:
 				return $elm$json$Json$Decode$fail(s + ' is not an obstacle sub-type');
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
 var $author$project$BoardOverlay$BearTrap = {$: 'BearTrap'};
+var $author$project$BoardOverlay$Spike = {$: 'Spike'};
 var $author$project$BoardOverlay$Trap = function (a) {
 	return {$: 'Trap', a: a};
 };
@@ -5870,11 +5879,15 @@ var $author$project$SharedSync$decodeTrap = A2(
 	$elm$json$Json$Decode$andThen,
 	function (s) {
 		var _v0 = $elm$core$String$toLower(s);
-		if (_v0 === 'bear') {
-			return $elm$json$Json$Decode$succeed(
-				$author$project$BoardOverlay$Trap($author$project$BoardOverlay$BearTrap));
-		} else {
-			return $elm$json$Json$Decode$fail(s + ' is not a trap sub-type');
+		switch (_v0) {
+			case 'bear':
+				return $elm$json$Json$Decode$succeed(
+					$author$project$BoardOverlay$Trap($author$project$BoardOverlay$BearTrap));
+			case 'spike':
+				return $elm$json$Json$Decode$succeed(
+					$author$project$BoardOverlay$Trap($author$project$BoardOverlay$Spike));
+			default:
+				return $elm$json$Json$Decode$fail(s + ' is not a trap sub-type');
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'subType', $elm$json$Json$Decode$string));
@@ -6081,6 +6094,7 @@ var $author$project$Monster$LivingSpirit = {$: 'LivingSpirit'};
 var $author$project$Monster$Lurker = {$: 'Lurker'};
 var $author$project$Monster$NightDemon = {$: 'NightDemon'};
 var $author$project$Monster$Ooze = {$: 'Ooze'};
+var $author$project$Monster$RendingDrake = {$: 'RendingDrake'};
 var $author$project$Monster$SavvaLavaflow = {$: 'SavvaLavaflow'};
 var $author$project$Monster$SavvasIcestorm = {$: 'SavvasIcestorm'};
 var $author$project$Monster$SpittingDrake = {$: 'SpittingDrake'};
@@ -6088,7 +6102,6 @@ var $author$project$Monster$StoneGolem = {$: 'StoneGolem'};
 var $author$project$Monster$SunDemon = {$: 'SunDemon'};
 var $author$project$Monster$VermlingScout = {$: 'VermlingScout'};
 var $author$project$Monster$VermlingShaman = {$: 'VermlingShaman'};
-var $author$project$Monster$ViciousDrake = {$: 'ViciousDrake'};
 var $author$project$Monster$WindDemon = {$: 'WindDemon'};
 var $author$project$Monster$normalDict = $elm$core$Dict$fromList(
 	_List_fromArray(
@@ -6119,7 +6132,7 @@ var $author$project$Monster$normalDict = $elm$core$Dict$fromList(
 			_Utils_Tuple2('cave-bear', $author$project$Monster$CaveBear),
 			_Utils_Tuple2('stone-golem', $author$project$Monster$StoneGolem),
 			_Utils_Tuple2('ancient-artillery', $author$project$Monster$AncientArtillery),
-			_Utils_Tuple2('vicious-drake', $author$project$Monster$ViciousDrake),
+			_Utils_Tuple2('rending-drake', $author$project$Monster$RendingDrake),
 			_Utils_Tuple2('spitting-drake', $author$project$Monster$SpittingDrake),
 			_Utils_Tuple2('lurker', $author$project$Monster$Lurker),
 			_Utils_Tuple2('savvas-icestorm', $author$project$Monster$SavvasIcestorm),
@@ -7778,7 +7791,7 @@ var $author$project$Monster$getMonsterBucketSize = function (monster) {
 				return 6;
 			case 'AncientArtillery':
 				return 6;
-			case 'ViciousDrake':
+			case 'RendingDrake':
 				return 6;
 			case 'SpittingDrake':
 				return 6;
@@ -9502,10 +9515,15 @@ var $author$project$GameSync$encodeDoor = function (door) {
 	}
 };
 var $author$project$GameSync$encodeObstacle = function (obstacle) {
-	if (obstacle.$ === 'Sarcophagus') {
-		return 'sarcophagus';
-	} else {
-		return 'boulder-1';
+	switch (obstacle.$) {
+		case 'Sarcophagus':
+			return 'sarcophagus';
+		case 'Boulder1':
+			return 'boulder-1';
+		case 'Nest':
+			return 'nest';
+		default:
+			return 'table';
 	}
 };
 var $author$project$GameSync$encodeTrap = function (trap) {
@@ -10577,10 +10595,15 @@ var $author$project$BoardOverlay$getBoardOverlayName = function (overlay) {
 			}
 		case 'Obstacle':
 			var o = overlay.a;
-			if (o.$ === 'Sarcophagus') {
-				return 'obstacle-sarcophagus';
-			} else {
-				return 'obstacle-boulder-1';
+			switch (o.$) {
+				case 'Sarcophagus':
+					return 'obstacle-sarcophagus';
+				case 'Boulder1':
+					return 'obstacle-boulder-1';
+				case 'Table':
+					return 'obstacle-table';
+				default:
+					return 'obstacle-nest';
 			}
 		default:
 			var t = overlay.a;
@@ -10614,23 +10637,23 @@ var $author$project$Main$getOverlayImageName = F2(
 	function (overlay, coords) {
 		var segmentPart = function () {
 			if (coords.$ === 'Just') {
-				var _v3 = coords.a;
-				var x = _v3.a;
-				var y = _v3.b;
-				var _v4 = $elm$core$List$head(
+				var _v5 = coords.a;
+				var x = _v5.a;
+				var y = _v5.b;
+				var _v6 = $elm$core$List$head(
 					A2(
 						$elm$core$List$filter,
-						function (_v5) {
-							var _v6 = _v5.b;
-							var oX = _v6.a;
-							var oY = _v6.b;
+						function (_v7) {
+							var _v8 = _v7.b;
+							var oX = _v8.a;
+							var oY = _v8.b;
 							return _Utils_eq(oX, x) && _Utils_eq(oY, y);
 						},
 						$elm$core$Array$toIndexedList(
 							$elm$core$Array$fromList(overlay.cells))));
-				if (_v4.$ === 'Just') {
-					var _v7 = _v4.a;
-					var segment = _v7.a;
+				if (_v6.$ === 'Just') {
+					var _v9 = _v6.a;
+					var segment = _v9.a;
 					return (segment > 0) ? ('-' + $elm$core$String$fromInt(segment + 1)) : '';
 				} else {
 					return '';
@@ -10643,14 +10666,12 @@ var $author$project$Main$getOverlayImageName = F2(
 		var overlayName = $author$project$BoardOverlay$getBoardOverlayName(overlay.ref);
 		var extension = '.png';
 		var extendedOverlayName = function () {
-			var _v0 = overlay.ref;
-			if (_v0.$ === 'Door') {
-				var d = _v0.a;
-				if (d.$ === 'Stone') {
-					return _Utils_eq(overlay.direction, $author$project$BoardOverlay$Vertical) ? '-vert' : '';
-				} else {
-					return '';
-				}
+			var _v0 = _Utils_Tuple2(overlay.ref, overlay.direction);
+			if (((_v0.a.$ === 'Door') && (_v0.a.a.$ === 'Stone')) && (_v0.b.$ === 'Vertical')) {
+				var _v1 = _v0.a;
+				var _v2 = _v1.a;
+				var _v3 = _v0.b;
+				return '-vert';
 			} else {
 				return '';
 			}
