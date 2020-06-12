@@ -3,11 +3,11 @@ module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
 import BoardMapTile exposing (MapTile, MapTileRef, refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass, characterToString)
 import Dict exposing (Dict, get, insert)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
-import List exposing (any, filter, filterMap, head, map, member)
+import List exposing (any, filter, filterMap, foldl, head, map, member)
 import Monster exposing (Monster, MonsterLevel(..), getMonsterBucketSize, monsterTypeToString)
 import Random exposing (Seed)
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
@@ -493,8 +493,34 @@ revealRoom room game =
 
             state =
                 game.state
+
+            newGame =
+                { game | state = { state | visibleRooms = room :: state.visibleRooms, availableMonsters = availableMonsters, pieces = ignoredPieces ++ assignedMonsters } }
+
+            corridors =
+                game.state.overlays
+                    |> filter
+                        (\o ->
+                            case o.ref of
+                                Door (Corridor _ _) refs ->
+                                    member room refs
+
+                                _ ->
+                                    False
+                        )
+                    |> filterMap
+                        (\o ->
+                            case o.ref of
+                                Door (Corridor _ _) refs ->
+                                    Just refs
+
+                                _ ->
+                                    Nothing
+                        )
+                    |> foldl (++) []
+                    |> filter (\r -> r /= room)
         in
-        { game | state = { state | visibleRooms = room :: state.visibleRooms, availableMonsters = availableMonsters, pieces = ignoredPieces ++ assignedMonsters } }
+        revealRooms newGame corridors
 
 
 removePieceFromBoard : Piece -> Game -> Game
