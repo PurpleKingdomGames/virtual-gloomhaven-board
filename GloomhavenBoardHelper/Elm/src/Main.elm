@@ -220,7 +220,11 @@ update msg model =
                     ( model, Cmd.none )
 
                 Just game ->
-                    ( { model | game = Just (removePieceFromBoard piece game) }, pushGameState game.state )
+                    let
+                        newGame =
+                            removePieceFromBoard piece game
+                    in
+                    ( { model | game = Just newGame }, pushGameState newGame.state )
 
         ChangeMode mode ->
             ( { model | currentMode = mode }, Cmd.none )
@@ -231,7 +235,11 @@ update msg model =
                     ( model, Cmd.none )
 
                 Just game ->
-                    ( { model | game = Just (revealRooms game rooms) }, pushGameState game.state )
+                    let
+                        newGame =
+                            revealRooms game rooms
+                    in
+                    ( { model | game = Just newGame }, pushGameState newGame.state )
 
 
 view : Model -> Html.Html Msg
