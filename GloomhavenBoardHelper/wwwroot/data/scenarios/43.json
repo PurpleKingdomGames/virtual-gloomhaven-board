@@ -452,6 +452,14 @@
                             "fourPlayer": "normal"
                         },
                         {
+                            "monster": "flame-demon",
+                            "initialX": 4,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
                             "monster": "spitting-drake",
                             "initialX": 5,
                             "initialY": 5,
