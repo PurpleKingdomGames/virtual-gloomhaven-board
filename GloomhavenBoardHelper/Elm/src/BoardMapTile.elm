@@ -158,7 +158,7 @@ getGridByRef ref =
     let
         configA =
             [ Array.fromList [ False, False, False, False, False ]
-            , Array.fromList [ True, True, True, True, False ]
+            , Array.fromList [ False, True, True, True, True ]
             , Array.fromList [ True, True, True, True, True ]
             , Array.fromList [ False, False, False, False, False ]
             ]
