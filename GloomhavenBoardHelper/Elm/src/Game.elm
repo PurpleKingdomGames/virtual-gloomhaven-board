@@ -3,11 +3,12 @@ module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
 import BoardMapTile exposing (MapTile, MapTileRef, refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Character exposing (CharacterClass, characterToString)
 import Dict exposing (Dict, get, insert)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
 import List exposing (any, filter, filterMap, foldl, head, map, member)
+import List.Extra exposing (uniqueBy)
 import Monster exposing (Monster, MonsterLevel(..), getMonsterBucketSize, monsterTypeToString)
 import Random exposing (Seed)
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
@@ -146,6 +147,7 @@ generateGameMap scenario numPlayers seed =
 
         initGame =
             setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY seed (Game initGameState Dict.empty Dict.empty initMap)
+                |> ensureUniqueOverlays
 
         startRooms =
             filterMap
@@ -329,17 +331,12 @@ getPieceFromMonster numPlayers monster =
 
 getRoomsByCoord : Array (Array Cell) -> ( Int, Int ) -> Maybe (List MapTileRef)
 getRoomsByCoord cells ( x, y ) =
-    case Array.get y cells of
-        Just colCell ->
-            case Array.get x colCell of
-                Just cell ->
-                    Just cell.rooms
-
-                Nothing ->
-                    Nothing
-
-        Nothing ->
-            Nothing
+    Array.get y cells
+        |> Maybe.andThen
+            (\colCell ->
+                Array.get x colCell
+                    |> Maybe.map (\cell -> cell.rooms)
+            )
 
 
 filterByCoord : Int -> Int -> BoardOverlay -> Bool
@@ -755,3 +752,33 @@ assignPlayersToPiece players pieces startingLocations =
 
         _ ->
             pieces
+
+
+ensureUniqueOverlays : Game -> Game
+ensureUniqueOverlays game =
+    let
+        state =
+            game.state
+
+        overlays =
+            state.overlays
+                |> uniqueBy
+                    (\o ->
+                        cellsToString o.cells ++ getBoardOverlayName o.ref
+                    )
+
+        pieces =
+            state.pieces
+                |> uniqueBy
+                    (\p ->
+                        String.fromInt p.x ++ "x" ++ String.fromInt p.y
+                    )
+    in
+    { game | state = { state | overlays = overlays, pieces = pieces } }
+
+
+cellsToString : List ( Int, Int ) -> String
+cellsToString cells =
+    cells
+        |> map (\( x, y ) -> String.fromInt x ++ "x" ++ String.fromInt y)
+        |> foldl (\s b -> s ++ "|" ++ b) ""
