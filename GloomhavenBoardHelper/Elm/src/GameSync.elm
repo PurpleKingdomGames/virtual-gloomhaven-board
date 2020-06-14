@@ -271,6 +271,9 @@ encodeObstacle obstacle =
         Boulder1 ->
             "boulder-1"
 
+        Boulder2 ->
+            "boulder-2"
+
         Nest ->
             "nest"
 

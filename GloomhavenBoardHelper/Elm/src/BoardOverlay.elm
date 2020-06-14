@@ -42,6 +42,7 @@ type TrapSubType
 type ObstacleSubType
     = Sarcophagus
     | Boulder1
+    | Boulder2
     | Nest
     | Table
 
@@ -122,6 +123,9 @@ getBoardOverlayName overlay =
 
                 Boulder1 ->
                     "obstacle-boulder-1"
+
+                Boulder2 ->
+                    "obstacle-boulder-2"
 
                 Table ->
                     "obstacle-table"

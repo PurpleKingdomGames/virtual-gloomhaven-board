@@ -161,6 +161,9 @@ decodeObstacle =
                     "boulder-1" ->
                         succeed (Obstacle Boulder1)
 
+                    "boulder-2" ->
+                        succeed (Obstacle Boulder2)
+
                     "nest" ->
                         succeed (Obstacle Nest)
 
