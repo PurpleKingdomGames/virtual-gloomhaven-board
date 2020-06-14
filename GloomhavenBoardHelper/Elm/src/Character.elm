@@ -10,6 +10,7 @@ characterDict =
         [ ( "brute", Brute )
         , ( "cragheart", Cragheart )
         , ( "mindthief", Mindthief )
+        , ( "plagueherald", PlagueHerald )
         , ( "scoundrel", Scoundrel )
         , ( "spellweaver", Spellweaver )
         , ( "tinkerer", Tinkerer )
@@ -20,6 +21,7 @@ type CharacterClass
     = Brute
     | Cragheart
     | Mindthief
+    | PlagueHerald
     | Scoundrel
     | Spellweaver
     | Tinkerer
