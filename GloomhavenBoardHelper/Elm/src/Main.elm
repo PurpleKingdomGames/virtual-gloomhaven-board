@@ -78,7 +78,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing [ Brute, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 43), loadScenarioById 43 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing [ Brute, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 16), loadScenarioById 16 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -402,7 +402,21 @@ getCellHtml model game y x cellValue =
         cellElement =
             Dom.element "div"
                 |> Dom.addClass "hexagon"
-                -- Treasure chests, obstacles, doors, traps etc.
+                -- Doors
+                |> Dom.appendChildList
+                    (List.filter (filterOverlaysForCoord x y) game.state.overlays
+                        |> List.filter
+                            (\o ->
+                                case o.ref of
+                                    Door _ _ ->
+                                        True
+
+                                    _ ->
+                                        False
+                            )
+                        |> List.map (overlayToHtml model (Just ( x, y )))
+                    )
+                -- Treasure chests, obstacles, traps etc.
                 |> Dom.appendChildList
                     (List.filter (filterOverlaysForCoord x y) game.state.overlays
                         |> List.filter
@@ -415,6 +429,9 @@ getCellHtml model game y x cellValue =
 
                                             _ ->
                                                 False
+
+                                    Door _ _ ->
+                                        False
 
                                     _ ->
                                         True
@@ -430,7 +447,7 @@ getCellHtml model game y x cellValue =
                         Just p ->
                             [ pieceToHtml model (Just ( x, y )) p ]
                     )
-                -- Loot / Coins
+                -- Coins
                 |> Dom.appendChildList
                     (List.filter (filterOverlaysForCoord x y) game.state.overlays
                         |> List.filter
