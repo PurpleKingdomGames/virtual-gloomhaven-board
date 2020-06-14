@@ -73,7 +73,7 @@ mapTileDataToOverlayList data =
                                                                 0
 
                                                     coords2 =
-                                                        rotate ( x, y ) ( x + 1, y ) turns
+                                                        rotate ( x + 1, y ) ( x, y ) turns
                                                 in
                                                 BoardOverlay (Door subType [ data.ref, l.ref ]) dir [ ( x, y ), coords2 ]
 
