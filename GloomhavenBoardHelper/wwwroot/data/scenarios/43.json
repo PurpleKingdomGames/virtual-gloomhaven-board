@@ -189,7 +189,7 @@
                                     },
                                     {
                                         "monster": "spitting-drake",
-                                        "initialX": 1,
+                                        "initialX": 0,
                                         "initialY": 1,
                                         "twoPlayer": "normal",
                                         "threePlayer": "normal",
@@ -205,7 +205,7 @@
                                     },
                                     {
                                         "monster": "spitting-drake",
-                                        "initialX": 1,
+                                        "initialX": 0,
                                         "initialY": 3,
                                         "twoPlayer": "none",
                                         "threePlayer": "normal",
@@ -237,7 +237,7 @@
                                 "monsters": [
                                     {
                                         "monster": "spitting-drake",
-                                        "initialX": 1,
+                                        "initialX": 0,
                                         "initialY": 1,
                                         "twoPlayer": "none",
                                         "threePlayer": "none",
@@ -285,7 +285,7 @@
                                 "monsters": [
                                     {
                                         "monster": "spitting-drake",
-                                        "initialX": 4,
+                                        "initialX": 3,
                                         "initialY": 1,
                                         "twoPlayer": "none",
                                         "threePlayer": "normal",
