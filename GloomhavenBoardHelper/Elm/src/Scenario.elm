@@ -1,9 +1,10 @@
 module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
+import Bitwise
 import BoardMapTile exposing (MapTile, MapTileRef, getMapTileListByRef, refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DoorSubType(..))
 import Dict exposing (Dict, empty, singleton, union)
-import Hexagon exposing (rotate)
+import Hexagon exposing (cubeToOddRow, oddRowToCube, rotate)
 import Monster exposing (Monster, MonsterLevel, MonsterType)
 
 
@@ -157,12 +158,22 @@ normaliseAndRotateMapTile turns refPoint origin mapTile =
 
 
 normaliseAndRotatePoint : Int -> ( Int, Int ) -> ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
-normaliseAndRotatePoint turns ( refPointX, refPointY ) ( originX, originY ) ( x, y ) =
+normaliseAndRotatePoint turns refPoint origin tileCoord =
     let
-        initX =
-            x - originX + refPointX
+        ( refPointX, refPointY, refPointZ ) =
+            oddRowToCube refPoint
 
-        initY =
-            y - originY + refPointY
+        ( originX, originY, originZ ) =
+            oddRowToCube origin
+
+        ( tileCoordX, tileCoordY, tileCoordZ ) =
+            oddRowToCube tileCoord
+
+        initCoords =
+            cubeToOddRow
+                ( tileCoordX - originX + refPointX
+                , tileCoordY - originY + refPointY
+                , tileCoordZ - originZ + refPointZ
+                )
     in
-    Hexagon.rotate ( initX, initY ) ( refPointX, refPointY ) turns
+    Hexagon.rotate initCoords refPoint turns
