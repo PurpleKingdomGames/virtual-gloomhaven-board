@@ -20,6 +20,7 @@ type DoorSubType
     = Corridor CorridorMaterial CorridorSize
     | DarkFog
     | Stone
+    | Wooden
 
 
 type CorridorMaterial
@@ -43,8 +44,10 @@ type ObstacleSubType
     = Sarcophagus
     | Boulder1
     | Boulder2
+    | Bush
     | Nest
     | Table
+    | Tree3
 
 
 type TreasureSubType
@@ -82,6 +85,9 @@ getBoardOverlayName overlay =
             case d of
                 Stone ->
                     "door-stone"
+
+                Wooden ->
+                    "door-wooden"
 
                 Corridor c num ->
                     (case c of
@@ -127,11 +133,17 @@ getBoardOverlayName overlay =
                 Boulder2 ->
                     "obstacle-boulder-2"
 
+                Bush ->
+                    "obstacle-bush"
+
                 Table ->
                     "obstacle-table"
 
                 Nest ->
                     "obstacle-nest"
+
+                Tree3 ->
+                    "obstacle-tree-3"
 
         Treasure t ->
             case t of

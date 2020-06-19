@@ -16,6 +16,9 @@ decodeDoor =
                     "stone" ->
                         succeed Stone
 
+                    "wooden" ->
+                        succeed Wooden
+
                     "corridor" ->
                         decodeCorridor
 
@@ -164,11 +167,17 @@ decodeObstacle =
                     "boulder-2" ->
                         succeed (Obstacle Boulder2)
 
+                    "bush" ->
+                        succeed (Obstacle Bush)
+
                     "nest" ->
                         succeed (Obstacle Nest)
 
                     "table" ->
                         succeed (Obstacle Table)
+
+                    "tree-3" ->
+                        succeed (Obstacle Tree3)
 
                     _ ->
                         fail (s ++ " is not an obstacle sub-type")

@@ -193,6 +193,15 @@ encodeOverlayType overlay =
         StartingLocation ->
             object [ ( "type", Encode.string "starting-location" ) ]
 
+        Door (Corridor m i) refs ->
+            object
+                [ ( "type", Encode.string "door" )
+                , ( "subType", Encode.string "corridor" )
+                , ( "material", Encode.string (encodeMaterial m) )
+                , ( "size", Encode.int (encodeSize i) )
+                , ( "links", Encode.list Encode.string (encodeMapTileRefList refs) )
+                ]
+
         Door s refs ->
             object
                 [ ( "type", Encode.string "door" )
@@ -225,31 +234,40 @@ encodeDoor door =
         Stone ->
             "stone"
 
-        Corridor c i ->
-            "corridor-"
-                ++ (case c of
-                        Earth ->
-                            "earth"
+        Wooden ->
+            "wooden"
 
-                        ManmadeStone ->
-                            "manmade-stone"
-
-                        NaturalStone ->
-                            "natural-stone"
-
-                        Wood ->
-                            "wood"
-                   )
-                ++ (case i of
-                        One ->
-                            "-1"
-
-                        Two ->
-                            "-2"
-                   )
+        Corridor _ _ ->
+            "corridor"
 
         DarkFog ->
             "dark-fog"
+
+
+encodeMaterial : CorridorMaterial -> String
+encodeMaterial m =
+    case m of
+        Earth ->
+            "earth"
+
+        ManmadeStone ->
+            "manmade-stone"
+
+        NaturalStone ->
+            "natural-stone"
+
+        Wood ->
+            "wood"
+
+
+encodeSize : CorridorSize -> Int
+encodeSize i =
+    case i of
+        One ->
+            1
+
+        Two ->
+            2
 
 
 encodeTrap : TrapSubType -> String
@@ -274,11 +292,17 @@ encodeObstacle obstacle =
         Boulder2 ->
             "boulder-2"
 
+        Bush ->
+            "bush"
+
         Nest ->
             "nest"
 
         Table ->
             "table"
+
+        Tree3 ->
+            "tree-3"
 
 
 encodeTreasure : TreasureSubType -> List ( String, Encode.Value )
