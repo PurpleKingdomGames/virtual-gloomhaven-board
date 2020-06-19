@@ -314,5 +314,69 @@ suite =
                     Scenario.mapTileDataToList tileData Nothing
                         |> Tuple.second
                         |> Expect.equal expectedResult
+            , test "should output A1a" <|
+                \_ ->
+                    let
+                        tileData =
+                            MapTileData A1a [] [] [] 0
+
+                        expectedResult =
+                            [ MapTile A1a 0 0 0 0 0 False True
+                            , MapTile A1a 1 0 0 1 0 False True
+                            , MapTile A1a 2 0 0 2 0 False True
+                            , MapTile A1a 3 0 0 3 0 False True
+                            , MapTile A1a 4 0 0 4 0 False True
+                            , MapTile A1a 0 1 0 0 1 True True
+                            , MapTile A1a 1 1 0 1 1 True True
+                            , MapTile A1a 2 1 0 2 1 True True
+                            , MapTile A1a 3 1 0 3 1 True True
+                            , MapTile A1a 4 1 0 4 1 False True
+                            , MapTile A1a 0 2 0 0 2 True True
+                            , MapTile A1a 1 2 0 1 2 True True
+                            , MapTile A1a 2 2 0 2 2 True True
+                            , MapTile A1a 3 2 0 3 2 True True
+                            , MapTile A1a 4 2 0 4 2 True True
+                            , MapTile A1a 0 3 0 0 3 False True
+                            , MapTile A1a 1 3 0 1 3 False True
+                            , MapTile A1a 2 3 0 2 3 False True
+                            , MapTile A1a 3 3 0 3 3 False True
+                            , MapTile A1a 4 3 0 4 3 False True
+                            ]
+                    in
+                    Scenario.mapTileDataToList tileData Nothing
+                        |> Tuple.first
+                        |> Expect.equalLists expectedResult
+            , test "should output A1a rotated at 180 degrees" <|
+                \_ ->
+                    let
+                        tileData =
+                            MapTileData A1a [] [] [] 3
+
+                        expectedResult =
+                            [ MapTile A1a 0 0 3 0 0 False True
+                            , MapTile A1a -1 0 3 1 0 False True
+                            , MapTile A1a -2 0 3 2 0 False True
+                            , MapTile A1a -3 0 3 3 0 False True
+                            , MapTile A1a -4 0 3 4 0 False True
+                            , MapTile A1a -1 -1 3 0 1 True True
+                            , MapTile A1a -2 -1 3 1 1 True True
+                            , MapTile A1a -3 -1 3 2 1 True True
+                            , MapTile A1a -4 -1 3 3 1 True True
+                            , MapTile A1a -5 -1 3 4 1 False True
+                            , MapTile A1a 0 -2 3 0 2 True True
+                            , MapTile A1a -1 -2 3 1 2 True True
+                            , MapTile A1a -2 -2 3 2 2 True True
+                            , MapTile A1a -3 -2 3 3 2 True True
+                            , MapTile A1a -4 -2 3 4 2 True True
+                            , MapTile A1a -1 -3 3 0 3 False True
+                            , MapTile A1a -2 -3 3 1 3 False True
+                            , MapTile A1a -3 -3 3 2 3 False True
+                            , MapTile A1a -4 -3 3 3 3 False True
+                            , MapTile A1a -5 -3 3 4 3 False True
+                            ]
+                    in
+                    Scenario.mapTileDataToList tileData Nothing
+                        |> Tuple.first
+                        |> Expect.equalLists expectedResult
             ]
         ]
