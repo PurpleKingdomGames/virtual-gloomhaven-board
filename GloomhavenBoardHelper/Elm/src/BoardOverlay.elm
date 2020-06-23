@@ -1,19 +1,19 @@
-module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 
 import BoardMapTile exposing (MapTileRef)
 
 
 type BoardOverlayType
-    = StartingLocation
-    | Door DoorSubType (List MapTileRef)
-    | Trap TrapSubType
+    = Door DoorSubType (List MapTileRef)
+    | Hazard HazardSubType
     | Obstacle ObstacleSubType
+    | StartingLocation
+    | Trap TrapSubType
     | Treasure TreasureSubType
 
 
 
 -- DifficultTerrain
--- Corridors
 
 
 type DoorSubType
@@ -40,13 +40,20 @@ type TrapSubType
     | Spike
 
 
+type HazardSubType
+    = Thorns
+
+
 type ObstacleSubType
-    = Sarcophagus
+    = Barrel
     | Boulder1
     | Boulder2
     | Bush
+    | Crate
     | Nest
+    | Sarcophagus
     | Table
+    | Totem
     | Tree3
 
 
@@ -78,9 +85,6 @@ type alias BoardOverlay =
 getBoardOverlayName : BoardOverlayType -> String
 getBoardOverlayName overlay =
     case overlay of
-        StartingLocation ->
-            "starting-location"
-
         Door d _ ->
             case d of
                 Stone ->
@@ -114,18 +118,18 @@ getBoardOverlayName overlay =
                 DarkFog ->
                     "door-dark-fog"
 
-        Trap t ->
-            case t of
-                BearTrap ->
-                    "trap-bear"
-
-                Spike ->
-                    "trap-spike"
+        Hazard h ->
+            case h of
+                Thorns ->
+                    "hazard-thorns"
 
         Obstacle o ->
             case o of
                 Sarcophagus ->
                     "obstacle-sarcophagus"
+
+                Barrel ->
+                    "obstacle-barrel"
 
                 Boulder1 ->
                     "obstacle-boulder-1"
@@ -136,14 +140,31 @@ getBoardOverlayName overlay =
                 Bush ->
                     "obstacle-bush"
 
+                Crate ->
+                    "obstacle-crate"
+
                 Table ->
                     "obstacle-table"
+
+                Totem ->
+                    "obstacle-totem"
 
                 Nest ->
                     "obstacle-nest"
 
                 Tree3 ->
                     "obstacle-tree-3"
+
+        StartingLocation ->
+            "starting-location"
+
+        Trap t ->
+            case t of
+                BearTrap ->
+                    "trap-bear"
+
+                Spike ->
+                    "trap-spike"
 
         Treasure t ->
             case t of

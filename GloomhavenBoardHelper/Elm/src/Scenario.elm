@@ -1,6 +1,5 @@
 module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
 
-import Bitwise
 import BoardMapTile exposing (MapTile, MapTileRef, getMapTileListByRef, refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DoorSubType(..))
 import Dict exposing (Dict, empty, singleton, union)

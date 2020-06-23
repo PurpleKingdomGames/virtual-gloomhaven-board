@@ -2,7 +2,7 @@ port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, 
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
 import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
@@ -198,9 +198,6 @@ encodeOverlayCells cells =
 encodeOverlayType : BoardOverlayType -> Encode.Value
 encodeOverlayType overlay =
     case overlay of
-        StartingLocation ->
-            object [ ( "type", Encode.string "starting-location" ) ]
-
         Door (Corridor m i) refs ->
             object
                 [ ( "type", Encode.string "door" )
@@ -217,16 +214,25 @@ encodeOverlayType overlay =
                 , ( "links", Encode.list Encode.string (encodeMapTileRefList refs) )
                 ]
 
-        Trap t ->
+        Hazard h ->
             object
-                [ ( "type", Encode.string "trap" )
-                , ( "subType", Encode.string (encodeTrap t) )
+                [ ( "type", Encode.string "hazard" )
+                , ( "subType", Encode.string (encodeHazard h) )
                 ]
 
         Obstacle o ->
             object
                 [ ( "type", Encode.string "obstacle" )
                 , ( "subType", Encode.string (encodeObstacle o) )
+                ]
+
+        StartingLocation ->
+            object [ ( "type", Encode.string "starting-location" ) ]
+
+        Trap t ->
+            object
+                [ ( "type", Encode.string "trap" )
+                , ( "subType", Encode.string (encodeTrap t) )
                 ]
 
         Treasure t ->
@@ -288,11 +294,21 @@ encodeTrap trap =
             "spike"
 
 
+encodeHazard : HazardSubType -> String
+encodeHazard hazard =
+    case hazard of
+        Thorns ->
+            "thorns"
+
+
 encodeObstacle : ObstacleSubType -> String
 encodeObstacle obstacle =
     case obstacle of
         Sarcophagus ->
             "sarcophagus"
+
+        Barrel ->
+            "barrel"
 
         Boulder1 ->
             "boulder-1"
@@ -303,11 +319,17 @@ encodeObstacle obstacle =
         Bush ->
             "bush"
 
+        Crate ->
+            "crate"
+
         Nest ->
             "nest"
 
         Table ->
             "table"
+
+        Totem ->
+            "totem"
 
         Tree3 ->
             "tree-3"

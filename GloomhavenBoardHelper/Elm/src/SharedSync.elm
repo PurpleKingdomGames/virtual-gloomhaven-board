@@ -1,7 +1,7 @@
 module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel)
 
 import BoardMapTile exposing (MapTileRef(..), stringToRef)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, string, succeed)
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
@@ -105,18 +105,21 @@ decodeBoardOverlayType =
     let
         decodeType typeName =
             case String.toLower typeName of
-                "starting-location" ->
-                    succeed StartingLocation
-
                 "door" ->
                     decodeDoor
                         |> andThen decodeDoorRefs
 
-                "trap" ->
-                    decodeTrap
+                "hazard" ->
+                    decodeHazard
 
                 "obstacle" ->
                     decodeObstacle
+
+                "starting-location" ->
+                    succeed StartingLocation
+
+                "trap" ->
+                    decodeTrap
 
                 "treasure" ->
                     decodeTreasure
@@ -152,6 +155,20 @@ decodeTrap =
             )
 
 
+decodeHazard : Decoder BoardOverlayType
+decodeHazard =
+    field "subType" Decode.string
+        |> andThen
+            (\s ->
+                case String.toLower s of
+                    "thorns" ->
+                        succeed (Hazard Thorns)
+
+                    _ ->
+                        fail (s ++ " is not an hazard sub-type")
+            )
+
+
 decodeObstacle : Decoder BoardOverlayType
 decodeObstacle =
     field "subType" Decode.string
@@ -160,6 +177,9 @@ decodeObstacle =
                 case String.toLower s of
                     "sarcophagus" ->
                         succeed (Obstacle Sarcophagus)
+
+                    "barrel" ->
+                        succeed (Obstacle Barrel)
 
                     "boulder-1" ->
                         succeed (Obstacle Boulder1)
@@ -170,11 +190,17 @@ decodeObstacle =
                     "bush" ->
                         succeed (Obstacle Bush)
 
+                    "crate" ->
+                        succeed (Obstacle Crate)
+
                     "nest" ->
                         succeed (Obstacle Nest)
 
                     "table" ->
                         succeed (Obstacle Table)
+
+                    "totem" ->
+                        succeed (Obstacle Totem)
 
                     "tree-3" ->
                         succeed (Obstacle Tree3)
