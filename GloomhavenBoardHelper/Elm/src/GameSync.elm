@@ -1,4 +1,4 @@
-port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, receiveGameState)
+port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, pushInitGameState, receiveGameState)
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -16,12 +16,20 @@ import SharedSync exposing (decodeBoardOverlay, decodeMapRefList, decodeMonster)
 port pushGameStatePort : Encode.Value -> Cmd msg
 
 
+port pushInitStatePort : Encode.Value -> Cmd msg
+
+
 port receiveGameState : (Decode.Value -> msg) -> Sub msg
 
 
 pushGameState : GameState -> Cmd msg
 pushGameState gameState =
     pushGameStatePort (encodeGameState gameState)
+
+
+pushInitGameState : GameState -> Cmd msg
+pushInitGameState gameState =
+    pushInitStatePort (encodeGameState gameState)
 
 
 decodeGameState : Decoder GameState

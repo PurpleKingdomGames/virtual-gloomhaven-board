@@ -9,7 +9,7 @@ import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
-import GameSync exposing (pushGameState, receiveGameState)
+import GameSync exposing (pushGameState, pushInitGameState, receiveGameState)
 import Html exposing (div)
 import Html.Attributes exposing (attribute, class, hidden)
 import Http exposing (Error)
@@ -95,7 +95,7 @@ update msg model =
                             game =
                                 generateGameMap scenario ThreePlayer seed
                         in
-                        ( { model | game = Just (assignPlayers model.currentPlayers game), currentMode = MovePiece }, Cmd.none )
+                        ( { model | game = Just (assignPlayers model.currentPlayers game), currentMode = MovePiece }, pushInitGameState game.state )
 
                 Err _ ->
                     ( { model | currentMode = LoadFailed }, Cmd.none )

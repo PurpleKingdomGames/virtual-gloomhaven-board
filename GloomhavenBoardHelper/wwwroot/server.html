@@ -32,8 +32,14 @@
 
         const signalSocket = new WebSocket('ws://localhost:5000/ws');
         let arrClients = [];
+        let currentGameState = null;
+
+        app.ports.pushInitStatePort.subscribe(function(message) {
+            currentGameState = message;
+        });
 
         app.ports.pushGameStatePort.subscribe(function(message) {
+            currentGameState = message;
             updateClients(message);
         });
 
@@ -56,6 +62,10 @@
             if (cmd == 'OFFER') {
                 signalSocket.send('ANSWER ' + ip + " {}\r\n");
                 arrClients.push(ip);
+
+                if (currentGameState != null)
+                    updateClients(currentGameState);
+
             } else if (cmd == 'UPDATE') {
                 let message = JSON.parse(data);
                 app.ports.receiveGameState.send(message);
