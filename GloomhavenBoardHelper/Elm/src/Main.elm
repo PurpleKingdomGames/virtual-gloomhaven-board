@@ -78,7 +78,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing [ PlagueHerald, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 16), loadScenarioById 16 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing [ PlagueHerald, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 17), loadScenarioById 17 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -565,7 +565,10 @@ pieceToHtml model coords piece =
                             Maybe.withDefault "" (characterToString p)
                     in
                     Dom.appendChild
-                        (Dom.element "img" |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ player ++ ".png")))
+                        (Dom.element "img"
+                            |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ player ++ ".png"))
+                            |> Dom.addAttribute (attribute "draggable" "false")
+                        )
 
                 AI t ->
                     case t of
@@ -574,7 +577,9 @@ pieceToHtml model coords piece =
 
                         Summons i ->
                             Dom.appendChildList
-                                [ Dom.element "img" |> Dom.addAttribute (attribute "src" "/img/characters/summons.png")
+                                [ Dom.element "img"
+                                    |> Dom.addAttribute (attribute "src" "/img/characters/summons.png")
+                                    |> Dom.addAttribute (attribute "draggable" "false")
                                 , Dom.element "span" |> Dom.appendText (String.fromInt i)
                                 ]
 
@@ -765,6 +770,9 @@ getOverlayImageName overlay coords =
         extendedOverlayName =
             case ( overlay.ref, overlay.direction ) of
                 ( Door Stone _, Vertical ) ->
+                    "-vert"
+
+                ( Door Wooden _, Vertical ) ->
                     "-vert"
 
                 _ ->
