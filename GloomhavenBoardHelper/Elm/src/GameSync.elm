@@ -325,6 +325,9 @@ encodeObstacle obstacle =
         Nest ->
             "nest"
 
+        Pillar ->
+            "pillar"
+
         Table ->
             "table"
 

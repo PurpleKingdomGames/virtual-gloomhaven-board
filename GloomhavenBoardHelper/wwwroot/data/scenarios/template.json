@@ -38,8 +38,8 @@
                 "monster": "inox-guard",
                 "initialX": 2,
                 "initialY": 0,
-                "twoPlayer": "none",
-                "threePlayer": "none",
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
                 "fourPlayer": "normal"
             }
         ],

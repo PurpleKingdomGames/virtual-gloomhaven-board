@@ -196,6 +196,9 @@ decodeObstacle =
                     "nest" ->
                         succeed (Obstacle Nest)
 
+                    "pillar" ->
+                        succeed (Obstacle Pillar)
+
                     "table" ->
                         succeed (Obstacle Table)
 
