@@ -1,19 +1,16 @@
-module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 
 import BoardMapTile exposing (MapTileRef)
 
 
 type BoardOverlayType
-    = Door DoorSubType (List MapTileRef)
+    = DifficultTerrain DifficultTerrainSubType
+    | Door DoorSubType (List MapTileRef)
     | Hazard HazardSubType
     | Obstacle ObstacleSubType
     | StartingLocation
     | Trap TrapSubType
     | Treasure TreasureSubType
-
-
-
--- DifficultTerrain
 
 
 type DoorSubType
@@ -44,8 +41,13 @@ type HazardSubType
     = Thorns
 
 
+type DifficultTerrainSubType
+    = Rubble
+
+
 type ObstacleSubType
-    = Barrel
+    = Altar
+    | Barrel
     | Boulder1
     | Boulder2
     | Bush
@@ -119,6 +121,11 @@ getBoardOverlayName overlay =
                 DarkFog ->
                     "door-dark-fog"
 
+        DifficultTerrain d ->
+            case d of
+                Rubble ->
+                    "difficult-terrain-rubble"
+
         Hazard h ->
             case h of
                 Thorns ->
@@ -126,6 +133,9 @@ getBoardOverlayName overlay =
 
         Obstacle o ->
             case o of
+                Altar ->
+                    "obstacle-altar"
+
                 Sarcophagus ->
                     "obstacle-sarcophagus"
 

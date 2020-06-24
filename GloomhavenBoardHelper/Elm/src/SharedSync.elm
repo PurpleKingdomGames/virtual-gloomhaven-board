@@ -1,7 +1,7 @@
 module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel)
 
 import BoardMapTile exposing (MapTileRef(..), stringToRef)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, string, succeed)
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
@@ -109,6 +109,9 @@ decodeBoardOverlayType =
                     decodeDoor
                         |> andThen decodeDoorRefs
 
+                "difficult-terrain" ->
+                    decodeDifficultTerrain
+
                 "hazard" ->
                     decodeHazard
 
@@ -169,12 +172,29 @@ decodeHazard =
             )
 
 
+decodeDifficultTerrain : Decoder BoardOverlayType
+decodeDifficultTerrain =
+    field "subType" Decode.string
+        |> andThen
+            (\s ->
+                case String.toLower s of
+                    "rubble" ->
+                        succeed (DifficultTerrain Rubble)
+
+                    _ ->
+                        fail (s ++ " is not a difficult terrain sub-type")
+            )
+
+
 decodeObstacle : Decoder BoardOverlayType
 decodeObstacle =
     field "subType" Decode.string
         |> andThen
             (\s ->
                 case String.toLower s of
+                    "altar" ->
+                        succeed (Obstacle Altar)
+
                     "sarcophagus" ->
                         succeed (Obstacle Sarcophagus)
 

@@ -2,7 +2,7 @@ port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, 
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
 import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
@@ -198,6 +198,12 @@ encodeOverlayCells cells =
 encodeOverlayType : BoardOverlayType -> Encode.Value
 encodeOverlayType overlay =
     case overlay of
+        DifficultTerrain d ->
+            object
+                [ ( "type", Encode.string "difficult-terrain" )
+                , ( "subType", Encode.string (encodeDifficultTerrain d) )
+                ]
+
         Door (Corridor m i) refs ->
             object
                 [ ( "type", Encode.string "door" )
@@ -294,6 +300,13 @@ encodeTrap trap =
             "spike"
 
 
+encodeDifficultTerrain : DifficultTerrainSubType -> String
+encodeDifficultTerrain terrain =
+    case terrain of
+        Rubble ->
+            "rubble"
+
+
 encodeHazard : HazardSubType -> String
 encodeHazard hazard =
     case hazard of
@@ -304,6 +317,9 @@ encodeHazard hazard =
 encodeObstacle : ObstacleSubType -> String
 encodeObstacle obstacle =
     case obstacle of
+        Altar ->
+            "altar"
+
         Sarcophagus ->
             "sarcophagus"
 
