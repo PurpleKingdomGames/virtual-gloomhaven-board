@@ -16,6 +16,7 @@ type BoardOverlayType
 type DoorSubType
     = Corridor CorridorMaterial CorridorSize
     | DarkFog
+    | LightFog
     | Stone
     | Wooden
 
@@ -34,6 +35,7 @@ type CorridorSize
 
 type TrapSubType
     = BearTrap
+    | Poison
     | Spike
 
 
@@ -121,6 +123,9 @@ getBoardOverlayName overlay =
                 DarkFog ->
                     "door-dark-fog"
 
+                LightFog ->
+                    "door-light-fog"
+
         DifficultTerrain d ->
             case d of
                 Rubble ->
@@ -179,6 +184,9 @@ getBoardOverlayName overlay =
 
                 Spike ->
                     "trap-spike"
+
+                Poison ->
+                    "trap-poison"
 
         Treasure t ->
             case t of

@@ -25,6 +25,9 @@ decodeDoor =
                     "dark-fog" ->
                         succeed DarkFog
 
+                    "light-fog" ->
+                        succeed LightFog
+
                     _ ->
                         fail (s ++ " is not a door sub-type")
             )
@@ -152,6 +155,9 @@ decodeTrap =
 
                     "spike" ->
                         succeed (Trap Spike)
+
+                    "poison" ->
+                        succeed (Trap Poison)
 
                     _ ->
                         fail (s ++ " is not a trap sub-type")

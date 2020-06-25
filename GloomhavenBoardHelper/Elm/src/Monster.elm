@@ -28,7 +28,7 @@ normalDict =
         , ( "sun-demon", SunDemon )
         , ( "ooze", Ooze )
         , ( "giant-viper", GiantViper )
-        , ( "fores-timp", ForestImp )
+        , ( "forest-imp", ForestImp )
         , ( "hound", Hound )
         , ( "cave-bear", CaveBear )
         , ( "stone-golem", StoneGolem )

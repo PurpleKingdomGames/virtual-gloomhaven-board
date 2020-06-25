@@ -263,6 +263,9 @@ encodeDoor door =
         DarkFog ->
             "dark-fog"
 
+        LightFog ->
+            "light-fog"
+
 
 encodeMaterial : CorridorMaterial -> String
 encodeMaterial m =
@@ -298,6 +301,9 @@ encodeTrap trap =
 
         Spike ->
             "spike"
+
+        Poison ->
+            "poison"
 
 
 encodeDifficultTerrain : DifficultTerrainSubType -> String
