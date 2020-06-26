@@ -184,6 +184,9 @@ decodeDifficultTerrain =
         |> andThen
             (\s ->
                 case String.toLower s of
+                    "log" ->
+                        succeed (DifficultTerrain Log)
+
                     "rubble" ->
                         succeed (DifficultTerrain Rubble)
 

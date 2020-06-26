@@ -309,6 +309,9 @@ encodeTrap trap =
 encodeDifficultTerrain : DifficultTerrainSubType -> String
 encodeDifficultTerrain terrain =
     case terrain of
+        Log ->
+            "log"
+
         Rubble ->
             "rubble"
 
