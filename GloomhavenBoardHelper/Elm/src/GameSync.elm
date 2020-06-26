@@ -329,11 +329,11 @@ encodeObstacle obstacle =
         Altar ->
             "altar"
 
-        Sarcophagus ->
-            "sarcophagus"
-
         Barrel ->
             "barrel"
+
+        Bookcase ->
+            "bookcase"
 
         Boulder1 ->
             "boulder-1"
@@ -344,6 +344,9 @@ encodeObstacle obstacle =
         Bush ->
             "bush"
 
+        Cabinet ->
+            "cabinet"
+
         Crate ->
             "crate"
 
@@ -352,6 +355,12 @@ encodeObstacle obstacle =
 
         Pillar ->
             "pillar"
+
+        Sarcophagus ->
+            "sarcophagus"
+
+        Shelf ->
+            "shelf"
 
         Table ->
             "table"

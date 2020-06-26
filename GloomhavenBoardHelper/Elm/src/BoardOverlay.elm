@@ -51,13 +51,16 @@ type DifficultTerrainSubType
 type ObstacleSubType
     = Altar
     | Barrel
+    | Bookcase
     | Boulder1
     | Boulder2
     | Bush
+    | Cabinet
     | Crate
     | Nest
     | Pillar
     | Sarcophagus
+    | Shelf
     | Table
     | Totem
     | Tree3
@@ -145,11 +148,11 @@ getBoardOverlayName overlay =
                 Altar ->
                     "obstacle-altar"
 
-                Sarcophagus ->
-                    "obstacle-sarcophagus"
-
                 Barrel ->
                     "obstacle-barrel"
+
+                Bookcase ->
+                    "obstacle-bookcase"
 
                 Boulder1 ->
                     "obstacle-boulder-1"
@@ -160,20 +163,29 @@ getBoardOverlayName overlay =
                 Bush ->
                     "obstacle-bush"
 
+                Cabinet ->
+                    "obstacle-cabinet"
+
                 Crate ->
                     "obstacle-crate"
 
+                Nest ->
+                    "obstacle-nest"
+
                 Pillar ->
                     "obstacle-pillar"
+
+                Sarcophagus ->
+                    "obstacle-sarcophagus"
+
+                Shelf ->
+                    "obstacle-shelf"
 
                 Table ->
                     "obstacle-table"
 
                 Totem ->
                     "obstacle-totem"
-
-                Nest ->
-                    "obstacle-nest"
 
                 Tree3 ->
                     "obstacle-tree-3"

@@ -204,9 +204,6 @@ decodeObstacle =
                     "altar" ->
                         succeed (Obstacle Altar)
 
-                    "sarcophagus" ->
-                        succeed (Obstacle Sarcophagus)
-
                     "barrel" ->
                         succeed (Obstacle Barrel)
 
@@ -219,14 +216,26 @@ decodeObstacle =
                     "bush" ->
                         succeed (Obstacle Bush)
 
+                    "bookcase" ->
+                        succeed (Obstacle Bookcase)
+
                     "crate" ->
                         succeed (Obstacle Crate)
+
+                    "cabinet" ->
+                        succeed (Obstacle Cabinet)
 
                     "nest" ->
                         succeed (Obstacle Nest)
 
                     "pillar" ->
                         succeed (Obstacle Pillar)
+
+                    "sarcophagus" ->
+                        succeed (Obstacle Sarcophagus)
+
+                    "shelf" ->
+                        succeed (Obstacle Shelf)
 
                     "table" ->
                         succeed (Obstacle Table)

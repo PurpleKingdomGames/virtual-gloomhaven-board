@@ -165,8 +165,13 @@ monsterTypeToString monster =
 getMonsterBucketSize : MonsterType -> Int
 getMonsterBucketSize monster =
     case monster of
-        BossType _ ->
-            1
+        BossType b ->
+            case b of
+                InoxBodyguard ->
+                    2
+
+                _ ->
+                    1
 
         NormalType t ->
             case t of
