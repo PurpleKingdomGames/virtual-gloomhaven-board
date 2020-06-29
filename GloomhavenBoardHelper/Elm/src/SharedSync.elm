@@ -170,6 +170,9 @@ decodeHazard =
         |> andThen
             (\s ->
                 case String.toLower s of
+                    "hot-coals" ->
+                        succeed (Hazard HotCoals)
+
                     "thorns" ->
                         succeed (Hazard Thorns)
 
@@ -212,6 +215,9 @@ decodeObstacle =
 
                     "boulder-2" ->
                         succeed (Obstacle Boulder2)
+
+                    "boulder-3" ->
+                        succeed (Obstacle Boulder3)
 
                     "bush" ->
                         succeed (Obstacle Bush)

@@ -40,7 +40,8 @@ type TrapSubType
 
 
 type HazardSubType
-    = Thorns
+    = HotCoals
+    | Thorns
 
 
 type DifficultTerrainSubType
@@ -54,6 +55,7 @@ type ObstacleSubType
     | Bookcase
     | Boulder1
     | Boulder2
+    | Boulder3
     | Bush
     | Cabinet
     | Crate
@@ -140,6 +142,9 @@ getBoardOverlayName overlay =
 
         Hazard h ->
             case h of
+                HotCoals ->
+                    "hazard-hot-coals"
+
                 Thorns ->
                     "hazard-thorns"
 
@@ -159,6 +164,9 @@ getBoardOverlayName overlay =
 
                 Boulder2 ->
                     "obstacle-boulder-2"
+
+                Boulder3 ->
+                    "obstacle-boulder-3"
 
                 Bush ->
                     "obstacle-bush"

@@ -319,6 +319,9 @@ encodeDifficultTerrain terrain =
 encodeHazard : HazardSubType -> String
 encodeHazard hazard =
     case hazard of
+        HotCoals ->
+            "hot-coals"
+
         Thorns ->
             "thorns"
 
@@ -340,6 +343,9 @@ encodeObstacle obstacle =
 
         Boulder2 ->
             "boulder-2"
+
+        Boulder3 ->
+            "boulder-3"
 
         Bush ->
             "bush"
