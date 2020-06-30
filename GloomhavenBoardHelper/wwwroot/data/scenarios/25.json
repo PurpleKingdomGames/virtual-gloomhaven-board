@@ -1,0 +1,416 @@
+{
+    "id": 25,
+    "title": "Icecrag Ascent",
+    "mapTileData": {
+        "ref": "k2a",
+        "doors": [
+            {
+                "subType": "dark-fog",
+                "direction": "default",
+                "room1X": -1,
+                "room1Y": 5,
+                "room2X": 3,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "n1a",
+                    "doors": [
+                        {
+                            "subType": "dark-fog",
+                            "direction": "default",
+                            "room1X": 1,
+                            "room1Y": 7,
+                            "room2X": 0,
+                            "room2Y": 3,
+                            "mapTileData": {
+                                "ref": "g2a",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "boulder-1"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "boulder-1"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [5, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "boulder-1"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 2]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "rending-drake",
+                                        "initialX": 2,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "rending-drake",
+                                        "initialX": 3,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "spitting-drake",
+                                        "initialX": 5,
+                                        "initialY": 0,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "spitting-drake",
+                                        "initialX": 4,
+                                        "initialY": 1,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "spitting-drake",
+                                        "initialX": 5,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 3
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "coin",
+                                "amount": 1
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "coin",
+                                "amount": 1
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "coin",
+                                "amount": 1
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [6, 6]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "chest",
+                                "id": "58"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [7, 6]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-1"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-1"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [6, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-1"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 4]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-2"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 2], [1, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-2"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 3], [2, 3]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-2"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [6, 3], [7, 4]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-2"
+                            },
+                            "direction": "diagonal-right",
+                            "cells": [
+                                [5, 5], [5, 6]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [4, 4]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 5]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [4, 5]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [6, 5]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "rending-drake",
+                            "initialX": 0,
+                            "initialY": 1,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "rending-drake",
+                            "initialX": 5,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "rending-drake",
+                            "initialX": 3,
+                            "initialY": 3,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "spitting-drake",
+                            "initialX": 0,
+                            "initialY": 5,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "spitting-drake",
+                            "initialX": 1,
+                            "initialY": 5,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "spitting-drake",
+                            "initialX": 2,
+                            "initialY": 6,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 4]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [7, 4]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 5]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "hound",
+                "initialX": 1,
+                "initialY": 1,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "hound",
+                "initialX": 1,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "hound",
+                "initialX": 0,
+                "initialY": 3,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "hound",
+                "initialX": 1,
+                "initialY": 3,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "hound",
+                "initialX": 0,
+                "initialY": 4,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "hound",
+                "initialX": 0,
+                "initialY": 5,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 5
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
