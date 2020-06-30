@@ -193,6 +193,9 @@ decodeDifficultTerrain =
                     "rubble" ->
                         succeed (DifficultTerrain Rubble)
 
+                    "water" ->
+                        succeed (DifficultTerrain Water)
+
                     _ ->
                         fail (s ++ " is not a difficult terrain sub-type")
             )

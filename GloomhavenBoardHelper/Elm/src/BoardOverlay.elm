@@ -47,6 +47,7 @@ type HazardSubType
 type DifficultTerrainSubType
     = Log
     | Rubble
+    | Water
 
 
 type ObstacleSubType
@@ -140,6 +141,9 @@ getBoardOverlayName overlay =
 
                 Rubble ->
                     "difficult-terrain-rubble"
+
+                Water ->
+                    "difficult-terrain-water"
 
         Hazard h ->
             case h of

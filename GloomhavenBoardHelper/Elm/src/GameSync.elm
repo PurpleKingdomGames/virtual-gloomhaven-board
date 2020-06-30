@@ -315,6 +315,9 @@ encodeDifficultTerrain terrain =
         Rubble ->
             "rubble"
 
+        Water ->
+            "water"
+
 
 encodeHazard : HazardSubType -> String
 encodeHazard hazard =
