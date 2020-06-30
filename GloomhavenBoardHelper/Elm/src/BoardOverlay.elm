@@ -61,6 +61,7 @@ type ObstacleSubType
     | Crate
     | Nest
     | Pillar
+    | RockColumn
     | Sarcophagus
     | Shelf
     | Table
@@ -182,6 +183,9 @@ getBoardOverlayName overlay =
 
                 Pillar ->
                     "obstacle-pillar"
+
+                RockColumn ->
+                    "obstacle-rock-column"
 
                 Sarcophagus ->
                     "obstacle-sarcophagus"

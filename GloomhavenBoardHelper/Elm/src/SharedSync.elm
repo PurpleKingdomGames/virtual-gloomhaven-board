@@ -237,6 +237,9 @@ decodeObstacle =
                     "pillar" ->
                         succeed (Obstacle Pillar)
 
+                    "rock-column" ->
+                        succeed (Obstacle RockColumn)
+
                     "sarcophagus" ->
                         succeed (Obstacle Sarcophagus)
 

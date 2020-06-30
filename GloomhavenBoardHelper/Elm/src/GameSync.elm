@@ -362,6 +362,9 @@ encodeObstacle obstacle =
         Pillar ->
             "pillar"
 
+        RockColumn ->
+            "rock-column"
+
         Sarcophagus ->
             "sarcophagus"
 
