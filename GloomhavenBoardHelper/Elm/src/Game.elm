@@ -193,12 +193,12 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
         refString =
             Maybe.withDefault "" (refToString tile.ref)
 
-        newOrigins =
+        ( isOrigin, newOrigins ) =
             if tile.originalX == 0 && tile.originalY == 0 then
-                Dict.insert refString ( x, y ) game.roomOrigins
+                ( True, Dict.insert refString ( x, y ) game.roomOrigins )
 
             else
-                game.roomOrigins
+                ( False, game.roomOrigins )
 
         state =
             game.state
@@ -217,6 +217,18 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
 
                 Nothing ->
                     ( [], Piece None 0 0 )
+
+        hasDoor =
+            boardOverlays
+                |> any
+                    (\o ->
+                        case o.ref of
+                            Door _ _ ->
+                                True
+
+                            _ ->
+                                False
+                    )
 
         ( monsterBucket, newSeed ) =
             case piece.ref of
@@ -284,9 +296,13 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
                 Nothing ->
                     game.staticBoard
     in
-    ( { game | state = newGameState, staticBoard = newBoard, roomOrigins = newOrigins, roomTurns = Dict.insert refString tile.turns game.roomTurns }
-    , newSeed
-    )
+    if tile.passable || hasDoor || isOrigin then
+        ( { game | state = newGameState, staticBoard = newBoard, roomOrigins = newOrigins, roomTurns = Dict.insert refString tile.turns game.roomTurns }
+        , newSeed
+        )
+
+    else
+        ( game, newSeed )
 
 
 filterMonsterLevel : NumPlayers -> ScenarioMonster -> Bool
@@ -431,10 +447,10 @@ revealRoom room game =
     else
         let
             roomCells =
-                indexedMap (\y arr -> indexedMap (\x cell -> ( cell.rooms, ( x, y ) )) arr) game.staticBoard
+                indexedMap (\y arr -> indexedMap (\x cell -> ( cell, ( x, y ) )) arr) game.staticBoard
                     |> Array.foldl (\a b -> fromList (toList a ++ toList b)) Array.empty
                     |> toList
-                    |> filter (\( rooms, _ ) -> member room rooms)
+                    |> filter (\( cell, _ ) -> cell.passable && member room cell.rooms)
                     |> map (\( _, c ) -> c)
 
             ( assignedMonsters, availableMonsters ) =
