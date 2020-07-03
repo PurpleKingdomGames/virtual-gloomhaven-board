@@ -183,6 +183,12 @@ encodeOverlayDirection dir =
         DiagonalRight ->
             "diagonal-right"
 
+        DiagonalLeftReverse ->
+            "diagonal-left-reverse"
+
+        DiagonalRightReverse ->
+            "diagonal-right-reverse"
+
         Horizontal ->
             "horizontal"
 
@@ -362,6 +368,9 @@ encodeObstacle obstacle =
         Crate ->
             "crate"
 
+        Fountain ->
+            "fountain"
+
         Nest ->
             "nest"
 
@@ -377,6 +386,9 @@ encodeObstacle obstacle =
         Shelf ->
             "shelf"
 
+        Stalagmites ->
+            "stalagmites"
+
         Table ->
             "table"
 
@@ -385,6 +397,9 @@ encodeObstacle obstacle =
 
         Tree3 ->
             "tree-3"
+
+        WallSection ->
+            "wall-section"
 
 
 encodeTreasure : TreasureSubType -> List ( String, Encode.Value )

@@ -61,14 +61,17 @@ type ObstacleSubType
     | Bush
     | Cabinet
     | Crate
+    | Fountain
     | Nest
     | Pillar
     | RockColumn
     | Sarcophagus
     | Shelf
+    | Stalagmites
     | Table
     | Totem
     | Tree3
+    | WallSection
 
 
 type TreasureSubType
@@ -87,6 +90,8 @@ type BoardOverlayDirectionType
     | Vertical
     | DiagonalLeft
     | DiagonalRight
+    | DiagonalLeftReverse
+    | DiagonalRightReverse
 
 
 type alias BoardOverlay =
@@ -186,6 +191,9 @@ getBoardOverlayName overlay =
                 Crate ->
                     "obstacle-crate"
 
+                Fountain ->
+                    "obstacle-fountain"
+
                 Nest ->
                     "obstacle-nest"
 
@@ -201,6 +209,9 @@ getBoardOverlayName overlay =
                 Shelf ->
                     "obstacle-shelf"
 
+                Stalagmites ->
+                    "obstacle-stalagmites"
+
                 Table ->
                     "obstacle-table"
 
@@ -209,6 +220,9 @@ getBoardOverlayName overlay =
 
                 Tree3 ->
                     "obstacle-tree-3"
+
+                WallSection ->
+                    "obstacle-wall-section"
 
         StartingLocation ->
             "starting-location"

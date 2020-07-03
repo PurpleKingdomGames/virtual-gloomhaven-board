@@ -309,8 +309,16 @@ html {
                                 transform: rotate(120deg);
                             }
 
+                            &.diagonal-right-reverse {
+                                transform: rotate(300deg);
+                            }
+
                             &.diagonal-left {
                                 transform: rotate(60deg);
+                            }
+
+                            &.diagonal-left-reverse {
+                                transform: rotate(240deg);
                             }
 
                             &.horizontal {

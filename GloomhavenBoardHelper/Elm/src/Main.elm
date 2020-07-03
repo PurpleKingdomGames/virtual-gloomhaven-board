@@ -720,6 +720,12 @@ overlayToHtml model coords overlay =
 
                 DiagonalLeft ->
                     "diagonal-left"
+
+                DiagonalRightReverse ->
+                    "diagonal-right-reverse"
+
+                DiagonalLeftReverse ->
+                    "diagonal-left-reverse"
             )
         |> Dom.addAttribute
             (attribute "data-index"

@@ -237,6 +237,9 @@ decodeObstacle =
                     "cabinet" ->
                         succeed (Obstacle Cabinet)
 
+                    "fountain" ->
+                        succeed (Obstacle Fountain)
+
                     "nest" ->
                         succeed (Obstacle Nest)
 
@@ -252,6 +255,9 @@ decodeObstacle =
                     "shelf" ->
                         succeed (Obstacle Shelf)
 
+                    "stalagmites" ->
+                        succeed (Obstacle Stalagmites)
+
                     "table" ->
                         succeed (Obstacle Table)
 
@@ -260,6 +266,9 @@ decodeObstacle =
 
                     "tree-3" ->
                         succeed (Obstacle Tree3)
+
+                    "wall-section" ->
+                        succeed (Obstacle WallSection)
 
                     _ ->
                         fail (s ++ " is not an obstacle sub-type")
@@ -326,6 +335,12 @@ decodeBoardOverlayDirection dir =
 
         "diagonal-right" ->
             succeed DiagonalRight
+
+        "diagonal-left-reverse" ->
+            succeed DiagonalLeftReverse
+
+        "diagonal-right-reverse" ->
+            succeed DiagonalRightReverse
 
         _ ->
             fail ("Could not decode overlay direction '" ++ dir ++ "'")
