@@ -218,17 +218,18 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
                 Nothing ->
                     ( [], Piece None 0 0 )
 
-        hasDoor =
+        doorRefs =
             boardOverlays
-                |> any
+                |> filterMap
                     (\o ->
                         case o.ref of
-                            Door _ _ ->
-                                True
+                            Door _ refs ->
+                                Just refs
 
                             _ ->
-                                False
+                                Nothing
                     )
+                |> foldl (++) []
 
         ( monsterBucket, newSeed ) =
             case piece.ref of
@@ -285,7 +286,10 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
 
                                             else
                                                 True
-                                        , rooms = tile.ref :: foundCell.rooms
+                                        , rooms =
+                                            tile.ref
+                                                :: (doorRefs ++ foundCell.rooms)
+                                                |> uniqueBy (\r -> Maybe.withDefault "" (refToString r))
                                     }
                             in
                             set y (set x newCell yRow) game.staticBoard
@@ -296,7 +300,7 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
                 Nothing ->
                     game.staticBoard
     in
-    if tile.passable || hasDoor || isOrigin then
+    if tile.passable || (List.length doorRefs > 0) || isOrigin then
         ( { game | state = newGameState, staticBoard = newBoard, roomOrigins = newOrigins, roomTurns = Dict.insert refString tile.turns game.roomTurns }
         , newSeed
         )
