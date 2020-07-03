@@ -19,6 +19,9 @@ decodeDoor =
                     "wooden" ->
                         succeed Wooden
 
+                    "breakable-wall" ->
+                        succeed BreakableWall
+
                     "corridor" ->
                         decodeCorridor
 

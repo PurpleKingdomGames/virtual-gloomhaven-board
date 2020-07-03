@@ -257,6 +257,9 @@ encodeDoor door =
         Wooden ->
             "wooden"
 
+        BreakableWall ->
+            "breakable-wall"
+
         Corridor _ _ ->
             "corridor"
 

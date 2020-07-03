@@ -14,7 +14,8 @@ type BoardOverlayType
 
 
 type DoorSubType
-    = Corridor CorridorMaterial CorridorSize
+    = BreakableWall
+    | Corridor CorridorMaterial CorridorSize
     | DarkFog
     | LightFog
     | Stone
@@ -105,6 +106,9 @@ getBoardOverlayName overlay =
 
                 Wooden ->
                     "door-wooden"
+
+                BreakableWall ->
+                    "door-breakable-wall"
 
                 Corridor c num ->
                     (case c of

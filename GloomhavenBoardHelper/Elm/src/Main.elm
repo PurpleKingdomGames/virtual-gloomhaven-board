@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Array exposing (Array, fromList, length, toIndexedList, toList)
 import BoardMapTile exposing (MapTileRef(..))
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
 import Character exposing (CharacterClass(..), characterToString)
 import Dict
@@ -14,7 +14,7 @@ import Html exposing (div)
 import Html.Attributes exposing (attribute, class, hidden)
 import Http exposing (Error)
 import Json.Decode exposing (decodeValue)
-import List exposing (any, filter, filterMap, head, reverse, sort)
+import List exposing (any, filter, filterMap, head, map, reverse, sort)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Random exposing (Seed)
 import Scenario exposing (DoorData(..), Scenario)
@@ -63,7 +63,7 @@ type Msg
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
     | ChangeMode GameModeType
-    | RevealRoomMsg (List MapTileRef)
+    | RevealRoomMsg (List MapTileRef) ( Int, Int )
 
 
 main : Program Int Model Msg
@@ -78,7 +78,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing [ PlagueHerald, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 72), loadScenarioById 72 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing [ PlagueHerald, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 11), loadScenarioById 11 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -229,15 +229,42 @@ update msg model =
         ChangeMode mode ->
             ( { model | currentMode = mode }, Cmd.none )
 
-        RevealRoomMsg rooms ->
+        RevealRoomMsg rooms ( x, y ) ->
             case model.game of
                 Nothing ->
                     ( model, Cmd.none )
 
                 Just game ->
                     let
-                        newGame =
+                        updatedGame =
                             revealRooms game rooms
+
+                        newState =
+                            updatedGame.state
+
+                        doorToCorridor =
+                            newState.overlays
+                                |> map
+                                    (\o ->
+                                        case head o.cells of
+                                            Just ( oX, oY ) ->
+                                                if x == oX && y == oY then
+                                                    case o.ref of
+                                                        Door BreakableWall tiles ->
+                                                            { o | ref = Door (Corridor NaturalStone BoardOverlay.One) tiles }
+
+                                                        _ ->
+                                                            o
+
+                                                else
+                                                    o
+
+                                            Nothing ->
+                                                o
+                                    )
+
+                        newGame =
+                            { updatedGame | state = { newState | overlays = doorToCorridor } }
                     in
                     ( { model | game = Just newGame }, pushGameState newGame.state )
 
@@ -743,18 +770,18 @@ overlayToHtml model coords overlay =
             else
                 Dom.addAttribute (attribute "draggable" "false")
            )
-        |> (case ( model.currentMode, overlay.ref ) of
-                ( DestroyOverlay, Obstacle _ ) ->
+        |> (case ( model.currentMode, overlay.ref, coords ) of
+                ( DestroyOverlay, Obstacle _, _ ) ->
                     Dom.addAction ( "click", RemoveOverlay overlay )
 
-                ( DestroyOverlay, Trap _ ) ->
+                ( DestroyOverlay, Trap _, _ ) ->
                     Dom.addAction ( "click", RemoveOverlay overlay )
 
-                ( LootCell, Treasure _ ) ->
+                ( LootCell, Treasure _, _ ) ->
                     Dom.addAction ( "click", RemoveOverlay overlay )
 
-                ( RevealRoom, Door _ refs ) ->
-                    Dom.addAction ( "click", RevealRoomMsg refs )
+                ( RevealRoom, Door _ refs, Just gridRef ) ->
+                    Dom.addAction ( "click", RevealRoomMsg refs gridRef )
 
                 _ ->
                     \e -> e
@@ -776,6 +803,9 @@ getOverlayImageName overlay coords =
         extendedOverlayName =
             case ( overlay.ref, overlay.direction ) of
                 ( Door Stone _, Vertical ) ->
+                    "-vert"
+
+                ( Door BreakableWall _, Vertical ) ->
                     "-vert"
 
                 ( Door Wooden _, Vertical ) ->
