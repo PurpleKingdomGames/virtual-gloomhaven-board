@@ -7,10 +7,12 @@ import List exposing (head)
 characterDict : Dict String CharacterClass
 characterDict =
     fromList
-        [ ( "brute", Brute )
+        [ ( "berserker", Berserker )
+        , ( "brute", Brute )
         , ( "cragheart", Cragheart )
         , ( "mindthief", Mindthief )
         , ( "plagueherald", PlagueHerald )
+        , ( "quartermaster", Quartermaster )
         , ( "scoundrel", Scoundrel )
         , ( "spellweaver", Spellweaver )
         , ( "tinkerer", Tinkerer )
@@ -18,10 +20,12 @@ characterDict =
 
 
 type CharacterClass
-    = Brute
+    = Berserker
+    | Brute
     | Cragheart
     | Mindthief
     | PlagueHerald
+    | Quartermaster
     | Scoundrel
     | Spellweaver
     | Tinkerer
