@@ -291,6 +291,9 @@ encodeMaterial m =
         NaturalStone ->
             "natural-stone"
 
+        PressurePlate ->
+            "pressure-plate"
+
         Wood ->
             "wood"
 

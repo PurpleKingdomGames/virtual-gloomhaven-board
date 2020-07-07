@@ -27,6 +27,7 @@ type CorridorMaterial
     = Earth
     | ManmadeStone
     | NaturalStone
+    | PressurePlate
     | Wood
 
 
@@ -130,6 +131,9 @@ getBoardOverlayName overlay =
 
                         NaturalStone ->
                             "corridor-natural-stone"
+
+                        PressurePlate ->
+                            "corridor-pressure-plate"
 
                         Wood ->
                             "corridor-wood"

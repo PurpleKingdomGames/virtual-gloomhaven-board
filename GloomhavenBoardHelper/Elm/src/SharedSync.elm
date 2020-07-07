@@ -56,6 +56,9 @@ decodeCorridor =
                             "natural-stone" ->
                                 Just NaturalStone
 
+                            "pressure-plate" ->
+                                Just PressurePlate
+
                             "wood" ->
                                 Just Wood
 
