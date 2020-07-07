@@ -1,0 +1,411 @@
+{
+    "id": 14,
+    "title": "Frozen Hollow",
+    "mapTileData": {
+        "ref": "k1b",
+        "doors": [
+            {
+                "subType": "dark-fog",
+                "direction": "default",
+                "room1X": -1,
+                "room1Y": 5,
+                "room2X": -1,
+                "room2Y": 5,
+                "mapTileData": {
+                    "ref": "k2a",
+                    "doors": [
+                        {
+                            "subType": "dark-fog",
+                            "direction": "default",
+                            "room1X": 6,
+                            "room1Y": 6,
+                            "room2X": 2,
+                            "room2Y": 5,
+                            "mapTileData": {
+                                "ref": "i2a",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "rock-column"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "rock-column"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [4, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "rock-column"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "rock-column"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [4, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "rock-column"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 4]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "rock-column"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [5, 4]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "bear"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "bear"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [4, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "chest",
+                                            "id": "26"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 0]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "living-spirit",
+                                        "initialX": 1,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "living-spirit",
+                                        "initialX": 3,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "living-spirit",
+                                        "initialX": 0,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "living-spirit",
+                                        "initialX": 5,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "hound",
+                                        "initialX": 2,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "hound",
+                                        "initialX": 3,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "frost-demon",
+                                        "initialX": 2,
+                                        "initialY": 1,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "frost-demon",
+                                        "initialX": 1,
+                                        "initialY": 4,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "frost-demon",
+                                        "initialX": 4,
+                                        "initialY": 4,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 0
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-2"
+                            },
+                            "direction": "diagonal-right-reverse",
+                            "cells": [
+                                [2, 1], [2, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-2"
+                            },
+                            "direction": "diagonal-left-reverse",
+                            "cells": [
+                                [6, 3], [7, 4]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "living-spirit",
+                            "initialX": 5,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "frost-demon",
+                            "initialX": 1,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "frost-demon",
+                            "initialX": 3,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "frost-demon",
+                            "initialX": 2,
+                            "initialY": 3,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "frost-demon",
+                            "initialX": 5,
+                            "initialY": 3,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 3
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 4]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [7, 4]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "stalagmites"
+                },
+                "direction": "default",
+                "cells": [
+                    [4, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "stalagmites"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 3]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "hound",
+                "initialX": 2,
+                "initialY": 0,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "hound",
+                "initialX": 4,
+                "initialY": 0,
+                "twoPlayer": "normal",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "hound",
+                "initialX": 5,
+                "initialY": 0,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "hound",
+                "initialX": 2,
+                "initialY": 1,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "hound",
+                "initialX": 3,
+                "initialY": 1,
+                "twoPlayer": "normal",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "hound",
+                "initialX": 5,
+                "initialY": 2,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "living-spirit",
+                "initialX": 1,
+                "initialY": 3,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "living-spirit",
+                "initialX": 1,
+                "initialY": 4,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "living-spirit",
+                "initialX": 1,
+                "initialY": 5,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            }
+        ],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
