@@ -257,6 +257,9 @@ encodeOverlayType overlay =
 encodeDoor : DoorSubType -> String
 encodeDoor door =
     case door of
+        AltarDoor ->
+            "altar"
+
         Stone ->
             "stone"
 

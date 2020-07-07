@@ -13,6 +13,9 @@ decodeDoor =
         |> andThen
             (\s ->
                 case String.toLower s of
+                    "altar" ->
+                        succeed AltarDoor
+
                     "stone" ->
                         succeed Stone
 

@@ -14,7 +14,8 @@ type BoardOverlayType
 
 
 type DoorSubType
-    = BreakableWall
+    = AltarDoor
+    | BreakableWall
     | Corridor CorridorMaterial CorridorSize
     | DarkFog
     | LightFog
@@ -106,6 +107,9 @@ getBoardOverlayName overlay =
     case overlay of
         Door d _ ->
             case d of
+                AltarDoor ->
+                    "door-altar"
+
                 Stone ->
                     "door-stone"
 

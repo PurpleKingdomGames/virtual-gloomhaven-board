@@ -1,0 +1,333 @@
+{
+    "id": 90,
+    "title": "Demonic Rift",
+    "mapTileData": {
+        "ref": "m1b",
+        "doors": [
+            {
+                "subType": "altar",
+                "direction": "default",
+                "room1X": 2,
+                "room1Y": 3,
+                "room2X": -3,
+                "room2Y": -2,
+                "mapTileData": {
+                    "ref": "d1b",
+                    "doors": [
+                        {
+                            "subType": "corridor",
+                            "material": "earth",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 4,
+                            "room1Y": 3,
+                            "room2X": 0,
+                            "room2Y": 0,
+                            "mapTileData": {
+                                "ref": "c2a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 1
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "earth",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 4,
+                            "room1Y": 4,
+                            "room2X": -1,
+                            "room2Y": 1,
+                            "mapTileData": {
+                                "ref": "c2a",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "hazard",
+                                            "subType": "hot-coals"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "spike"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "chest",
+                                            "id": "19"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 2]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "wind-demon",
+                                        "initialX": 2,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "wind-demon",
+                                        "initialX": 0,
+                                        "initialY": 3,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "wind-demon",
+                                        "initialX": 2,
+                                        "initialY": 3,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 1
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "altar"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [2, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [2, 3]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 3]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [4, 4]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "night-demon",
+                            "initialX": 4,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "night-demon",
+                            "initialX": 1,
+                            "initialY": 4,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 1
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [3, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [4, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "hazard",
+                    "subType": "thorns"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "hazard",
+                    "subType": "thorns"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "hazard",
+                    "subType": "thorns"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 5]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "earth-demon",
+                "initialX": 2,
+                "initialY": 2,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "earth-demon",
+                "initialX": 3,
+                "initialY": 2,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "earth-demon",
+                "initialX": 1,
+                "initialY": 3,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "earth-demon",
+                "initialX": 3,
+                "initialY": 3,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "wind-demon",
+                "initialX": 0,
+                "initialY": 4,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "wind-demon",
+                "initialX": 5,
+                "initialY": 4,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "wind-demon",
+                "initialX": 2,
+                "initialY": 5,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": [ "living-spirit" ]
+}
