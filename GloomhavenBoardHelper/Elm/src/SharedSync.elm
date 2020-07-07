@@ -240,6 +240,9 @@ decodeObstacle =
                     "cabinet" ->
                         succeed (Obstacle Cabinet)
 
+                    "crystal" ->
+                        succeed (Obstacle Crystal)
+
                     "fountain" ->
                         succeed (Obstacle Fountain)
 

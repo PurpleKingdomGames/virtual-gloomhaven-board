@@ -371,6 +371,9 @@ encodeObstacle obstacle =
         Crate ->
             "crate"
 
+        Crystal ->
+            "crystal"
+
         Fountain ->
             "fountain"
 

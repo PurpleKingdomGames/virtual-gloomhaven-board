@@ -78,7 +78,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing [ PlagueHerald, Mindthief, Tinkerer ] DragDrop.initialState Nothing (Loading 11), loadScenarioById 11 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing [ Berserker, Quartermaster, Tinkerer ] DragDrop.initialState Nothing (Loading 93), loadScenarioById 93 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

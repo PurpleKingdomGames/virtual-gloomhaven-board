@@ -62,6 +62,7 @@ type ObstacleSubType
     | Bush
     | Cabinet
     | Crate
+    | Crystal
     | Fountain
     | Nest
     | Pillar
@@ -194,6 +195,9 @@ getBoardOverlayName overlay =
 
                 Crate ->
                     "obstacle-crate"
+
+                Crystal ->
+                    "obstacle-crystal"
 
                 Fountain ->
                     "obstacle-fountain"
