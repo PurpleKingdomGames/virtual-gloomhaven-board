@@ -37,7 +37,7 @@ normalDict =
         , ( "spitting-drake", SpittingDrake )
         , ( "lurker", Lurker )
         , ( "savvas-icestorm", SavvasIcestorm )
-        , ( "savva-lavaflow", SavvaLavaflow )
+        , ( "savvas-lavaflow", SavvaLavaflow )
         , ( "harrower-infester", HarrowerInfester )
         , ( "deep-terror", DeepTerror )
         , ( "black-imp", BlackImp )
