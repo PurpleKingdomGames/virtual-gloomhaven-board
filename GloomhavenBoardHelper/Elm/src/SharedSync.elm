@@ -202,6 +202,12 @@ decodeDifficultTerrain =
                     "rubble" ->
                         succeed (DifficultTerrain Rubble)
 
+                    "stairs" ->
+                        succeed (DifficultTerrain Stairs)
+
+                    "stairs-vert" ->
+                        succeed (DifficultTerrain VerticalStairs)
+
                     "water" ->
                         succeed (DifficultTerrain Water)
 

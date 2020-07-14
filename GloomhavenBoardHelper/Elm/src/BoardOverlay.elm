@@ -50,6 +50,8 @@ type HazardSubType
 type DifficultTerrainSubType
     = Log
     | Rubble
+    | Stairs
+    | VerticalStairs
     | Water
 
 
@@ -159,6 +161,12 @@ getBoardOverlayName overlay =
 
                 Rubble ->
                     "difficult-terrain-rubble"
+
+                Stairs ->
+                    "difficult-terrain-stairs"
+
+                VerticalStairs ->
+                    "difficult-terrain-stairs-vert"
 
                 Water ->
                     "difficult-terrain-water"

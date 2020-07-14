@@ -330,6 +330,12 @@ encodeDifficultTerrain terrain =
         Rubble ->
             "rubble"
 
+        Stairs ->
+            "stairs"
+
+        VerticalStairs ->
+            "stairs-vert"
+
         Water ->
             "water"
 
