@@ -1,0 +1,387 @@
+{
+    "id": 31,
+    "title": "Plane of Night",
+    "mapTileData": {
+        "ref": "g2a",
+        "doors": [
+            {
+                "subType": "dark-fog",
+                "direction": "default",
+                "room1X": 7,
+                "room1Y": 1,
+                "room2X": -1,
+                "room2Y": 1,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [
+                        {
+                            "subType": "dark-fog",
+                            "direction": "default",
+                            "room1X": 7,
+                            "room1Y": 6,
+                            "room2X": -1,
+                            "room2Y": 3,
+                            "mapTileData": {
+                                "ref": "l2a",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "rock-column"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 3]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "chest",
+                                            "id": "69"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 0]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "night-demon",
+                                        "initialX": 2,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "night-demon",
+                                        "initialX": 1,
+                                        "initialY": 3,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "night-demon",
+                                        "initialX": 2,
+                                        "initialY": 4,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "deep-terror",
+                                        "initialX": 2,
+                                        "initialY": 0,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "deep-terror",
+                                        "initialX": 2,
+                                        "initialY": 6,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    }
+                                ],
+                                "turns": 1
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "stalagmites"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "stalagmites"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [4, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "stalagmites"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [5, 4]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [6, 2]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "night-demon",
+                            "initialX": 5,
+                            "initialY": 3,
+                            "twoPlayer": "normal",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 2,
+                            "initialY": 0,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 4,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 2,
+                            "initialY": 1,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 4,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 5,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 2,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 6,
+                            "initialY": 4,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 7,
+                            "initialY": 4,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 5,
+                            "initialY": 5,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "stalagmites"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "stalagmites"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "trap",
+                    "subType": "spike"
+                },
+                "direction": "default",
+                "cells": [
+                    [3, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "trap",
+                    "subType": "spike"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "trap",
+                    "subType": "spike"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "trap",
+                    "subType": "spike"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 2]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "night-demon",
+                "initialX": 4,
+                "initialY": 0,
+                "twoPlayer": "normal",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "night-demon",
+                "initialX": 4,
+                "initialY": 1,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "deep-terror",
+                "initialX": 7,
+                "initialY": 0,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "deep-terror",
+                "initialX": 6,
+                "initialY": 1,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "deep-terror",
+                "initialX": 7,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
