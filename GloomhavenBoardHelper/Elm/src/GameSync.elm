@@ -404,6 +404,9 @@ encodeObstacle obstacle =
         Stalagmites ->
             "stalagmites"
 
+        Stump ->
+            "stump"
+
         Table ->
             "table"
 

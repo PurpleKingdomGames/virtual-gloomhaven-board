@@ -273,6 +273,9 @@ decodeObstacle =
                     "stalagmites" ->
                         succeed (Obstacle Stalagmites)
 
+                    "stump" ->
+                        succeed (Obstacle Stump)
+
                     "table" ->
                         succeed (Obstacle Table)
 

@@ -73,6 +73,7 @@ type ObstacleSubType
     | Sarcophagus
     | Shelf
     | Stalagmites
+    | Stump
     | Table
     | Totem
     | Tree3
@@ -231,6 +232,9 @@ getBoardOverlayName overlay =
 
                 Stalagmites ->
                     "obstacle-stalagmites"
+
+                Stump ->
+                    "obstacle-stump"
 
                 Table ->
                     "obstacle-table"
