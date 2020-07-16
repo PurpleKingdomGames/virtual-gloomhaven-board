@@ -15,6 +15,9 @@ $hexHeight: 90px;
 
 html {
     font-family: 'PirateOne', Nyala, Georgia, serif;
+    background-image: radial-gradient(circle at 0%, rgba(255, 255, 255, 0.2) 0%, rgba(241, 236, 232, 0.2) 31%, rgba(156, 124, 108, 0.3) 85%, rgba(81, 64, 30, 0.4) 100%), url("/img/bg.png");
+    background-repeat: repeat;
+    box-shadow: inset -100px 0 100px rgba(0, 0, 20, 0.15), 0 5px 15px rgba(0, 0, 0, 0.1);
 
     .player,
     .overlay,
@@ -170,6 +173,7 @@ html {
                 position:relative;
                 overflow: visible;
                 visibility: visible;
+                transition: opacity 1s;
 
                 &.hidden {
                     opacity: 0;
