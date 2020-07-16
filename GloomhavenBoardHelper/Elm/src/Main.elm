@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Array exposing (Array, fromList, length, toIndexedList, toList)
 import BoardMapTile exposing (MapTileRef(..))
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
 import Character exposing (CharacterClass(..), characterToString)
 import Dict
@@ -78,7 +78,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing [ Berserker, Quartermaster, Tinkerer ] DragDrop.initialState Nothing (Loading 15), loadScenarioById 15 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing [ Berserker, Quartermaster, Tinkerer ] DragDrop.initialState Nothing (Loading 33), loadScenarioById 33 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -94,8 +94,9 @@ update msg model =
                         let
                             game =
                                 generateGameMap scenario ThreePlayer seed
+                                    |> assignPlayers model.currentPlayers
                         in
-                        ( { model | game = Just (assignPlayers model.currentPlayers game), currentMode = MovePiece }, pushInitGameState game.state )
+                        ( { model | game = Just game, currentMode = MovePiece }, pushInitGameState game.state )
 
                 Err _ ->
                     ( { model | currentMode = LoadFailed }, Cmd.none )
