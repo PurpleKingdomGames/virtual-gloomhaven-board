@@ -383,6 +383,9 @@ encodeObstacle obstacle =
         Crystal ->
             "crystal"
 
+        DarkPit ->
+            "dark-pit"
+
         Fountain ->
             "fountain"
 

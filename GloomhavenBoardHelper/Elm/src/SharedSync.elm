@@ -252,6 +252,9 @@ decodeObstacle =
                     "crystal" ->
                         succeed (Obstacle Crystal)
 
+                    "dark-pit" ->
+                        succeed (Obstacle DarkPit)
+
                     "fountain" ->
                         succeed (Obstacle Fountain)
 

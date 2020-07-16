@@ -1,0 +1,436 @@
+{
+    "id": 39,
+    "title": "Treacherous Divide",
+    "mapTileData": {
+        "ref": "l2a",
+        "doors": [
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": -1,
+                "room1Y": -1,
+                "room2X": 6,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "n1a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 3
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 0,
+                "room1Y": -1,
+                "room2X": 5,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "n1a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 3
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 1,
+                "room1Y": -1,
+                "room2X": 4,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "n1a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 3
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 2,
+                "room1Y": -1,
+                "room2X": 3,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "n1a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 3
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 3,
+                "room1Y": -1,
+                "room2X": 2,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "n1a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 3
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 4,
+                "room1Y": -1,
+                "room2X": 1,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "n1a",
+                    "doors": [
+                        {
+                            "subType": "dark-fog",
+                            "direction": "default",
+                            "room1X": 5,
+                            "room1Y": 7,
+                            "room2X": 0,
+                            "room2Y": 0,
+                            "mapTileData": {
+                                "ref": "d2b",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "altar"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 4]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "frost-demon",
+                                        "initialX": 2,
+                                        "initialY": 2,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "frost-demon",
+                                        "initialX": 4,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "frost-demon",
+                                        "initialX": 1,
+                                        "initialY": 4,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 4
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "dark-pit"
+                            },
+                            "direction": "diagonal-right",
+                            "cells": [
+                                [6, 0], [6, -1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "dark-pit"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [0, 1], [0, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "dark-pit"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [1, 1], [1, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "dark-pit"
+                            },
+                            "direction": "diagonal-right",
+                            "cells": [
+                                [6, 1], [7, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-1"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [5, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "boulder-1"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [4, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "spike"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [2, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "chest",
+                                "id": "73"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 6]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "spitting-drake",
+                            "initialX": 0,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "spitting-drake",
+                            "initialX": 1,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "spitting-drake",
+                            "initialX": 6,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "spitting-drake",
+                            "initialX": 7,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "frost-demon",
+                            "initialX": 2,
+                            "initialY": 3,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "frost-demon",
+                            "initialX": 4,
+                            "initialY": 3,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "cultist",
+                            "initialX": 1,
+                            "initialY": 6,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "cultist",
+                            "initialX": 6,
+                            "initialY": 6,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        }
+                    ],
+                    "turns": 3
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 6]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 6]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [3, 6]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "trap",
+                    "subType": "spike"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "dark-pit"
+                },
+                "direction": "diagonal-right",
+                "cells": [
+                    [0, -1], [0, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "dark-pit"
+                },
+                "direction": "diagonal-right",
+                "cells": [
+                    [4, -1], [4, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "boulder-1"
+                },
+                "direction": "default",
+                "cells": [
+                    [3, -1]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "cave-bear",
+                "initialX": 1,
+                "initialY": 1,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "cave-bear",
+                "initialX": 1,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "cave-bear",
+                "initialX": 3,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": [ "living-bones" ]
+}
