@@ -9,7 +9,7 @@ import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
-import GameSync exposing (pushGameState, pushInitGameState, receiveGameState)
+import GameSync exposing (pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
 import Html exposing (div)
 import Html.Attributes exposing (attribute, class, hidden)
 import Http exposing (Error)
@@ -189,7 +189,7 @@ update msg model =
                         gameState =
                             case decodeValue GameSync.decodeGameState val of
                                 Ok s ->
-                                    if s.scenario == game.state.scenario && s.numPlayers == game.state.numPlayers then
+                                    if s.scenario == game.state.scenario && s.numPlayers == game.state.numPlayers && s.updateCount > game.state.updateCount then
                                         s
 
                                     else
@@ -198,7 +198,7 @@ update msg model =
                                 Err _ ->
                                     game.state
                     in
-                    ( { model | game = Just { game | state = gameState } }, Cmd.none )
+                    ( { model | game = Just { game | state = gameState } }, pushUpdatedGameState gameState )
 
         RemoveOverlay overlay ->
             case model.game of

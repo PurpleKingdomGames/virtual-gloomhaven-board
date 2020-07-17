@@ -55,6 +55,7 @@ type alias Game =
 type alias GameState =
     { scenario : Int
     , numPlayers : NumPlayers
+    , updateCount : Int
     , visibleRooms : List MapTileRef
     , overlays : List BoardOverlay
     , pieces : List Piece
@@ -113,6 +114,7 @@ generateGameMap scenario numPlayers seed =
         initGameState =
             GameState scenario.id
                 numPlayers
+                0
                 []
                 []
                 []

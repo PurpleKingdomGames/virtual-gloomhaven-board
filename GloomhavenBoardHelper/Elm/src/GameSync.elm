@@ -1,4 +1,4 @@
-port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, pushInitGameState, receiveGameState)
+port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -6,7 +6,7 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
 import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
-import Json.Decode as Decode exposing (Decoder, andThen, fail, field, int, list, map3, map6, string, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, fail, field, int, list, map3, map7, string, succeed)
 import Json.Encode as Encode exposing (int, list, object, string)
 import List exposing (map)
 import Monster exposing (MonsterLevel(..), monsterTypeToString)
@@ -19,12 +19,20 @@ port pushGameStatePort : Encode.Value -> Cmd msg
 port pushInitStatePort : Encode.Value -> Cmd msg
 
 
+port updateStatePort : Encode.Value -> Cmd msg
+
+
 port receiveGameState : (Decode.Value -> msg) -> Sub msg
 
 
 pushGameState : GameState -> Cmd msg
 pushGameState gameState =
-    pushGameStatePort (encodeGameState gameState)
+    pushGameStatePort (encodeGameState { gameState | updateCount = gameState.updateCount + 1 })
+
+
+pushUpdatedGameState : GameState -> Cmd msg
+pushUpdatedGameState gameState =
+    updateStatePort (encodeGameState gameState)
 
 
 pushInitGameState : GameState -> Cmd msg
@@ -34,9 +42,10 @@ pushInitGameState gameState =
 
 decodeGameState : Decoder GameState
 decodeGameState =
-    map6 GameState
+    map7 GameState
         (field "scenario" Decode.int)
         (field "numPlayers" Decode.int |> andThen decodeNumPlayers)
+        (field "updateCount" Decode.int)
         (field "visibleRooms" (Decode.list Decode.string) |> andThen decodeMapRefList)
         (field "overlays" (Decode.list decodeBoardOverlay))
         (field "pieces" (Decode.list decodePiece))
@@ -48,6 +57,7 @@ encodeGameState gameState =
     object
         [ ( "scenario", Encode.int gameState.scenario )
         , ( "numPlayers", Encode.int (encodeNumPlayers gameState.numPlayers) )
+        , ( "updateCount", Encode.int gameState.updateCount )
         , ( "visibleRooms", Encode.list Encode.string (encodeMapTileRefList gameState.visibleRooms) )
         , ( "overlays", Encode.list Encode.object (encodeOverlays gameState.overlays) )
         , ( "pieces", Encode.list Encode.object (encodePieces gameState.pieces) )

@@ -38,6 +38,10 @@
             currentGameState = message;
         });
 
+        app.ports.updateStatePort.subscribe(function(message) {
+            currentGameState = message;
+        });
+
         app.ports.pushGameStatePort.subscribe(function(message) {
             currentGameState = message;
             updateClients(message);
