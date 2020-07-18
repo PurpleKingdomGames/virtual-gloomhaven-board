@@ -165,6 +165,7 @@ generateGameMap scenario numPlayers seed =
                 |> List.foldl (++) []
                 |> filterMap (getRoomsByCoord initGame.staticBoard)
                 |> List.foldl (++) []
+                |> uniqueBy (\ref -> Maybe.withDefault "" (refToString ref))
     in
     revealRooms initGame startRooms
 
@@ -344,8 +345,15 @@ getPieceFromMonster numPlayers monster =
             let
                 m =
                     p.monster
+
+                level =
+                    getLevelForMonster numPlayers p
             in
-            Piece (AI (Enemy { m | level = getLevelForMonster numPlayers p })) p.initialX p.initialY
+            if level == Monster.None then
+                Piece None 0 0
+
+            else
+                Piece (AI (Enemy { m | level = level })) p.initialX p.initialY
 
         Nothing ->
             Piece None 0 0
@@ -463,8 +471,8 @@ revealRoom room game =
                 filterMap
                     (\p ->
                         case p.ref of
-                            AI (Enemy _) ->
-                                if member ( p.x, p.y ) roomCells then
+                            AI (Enemy e) ->
+                                if member ( p.x, p.y ) roomCells && e.id == 0 then
                                     Just p
 
                                 else
@@ -498,8 +506,8 @@ revealRoom room game =
                 filterMap
                     (\p ->
                         case p.ref of
-                            AI (Enemy _) ->
-                                if member ( p.x, p.y ) roomCells then
+                            AI (Enemy e) ->
+                                if member ( p.x, p.y ) roomCells && e.id == 0 then
                                     Nothing
 
                                 else
