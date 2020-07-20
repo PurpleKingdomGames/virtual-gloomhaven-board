@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
@@ -46,8 +46,7 @@ type alias Cell =
 
 type alias Game =
     { state : GameState
-    , roomOrigins : Dict String ( Int, Int )
-    , roomTurns : Dict String Int
+    , roomData : List RoomData
     , staticBoard : Array (Array Cell)
     }
 
@@ -60,6 +59,13 @@ type alias GameState =
     , overlays : List BoardOverlay
     , pieces : List Piece
     , availableMonsters : Dict String (Array Int)
+    }
+
+
+type alias RoomData =
+    { ref : MapTileRef
+    , origin : ( Int, Int )
+    , turns : Int
     }
 
 
@@ -148,7 +154,7 @@ generateGameMap scenario numPlayers seed =
             initialize arrSize (always (initialize arrSize (always (Cell [] False))))
 
         initGame =
-            setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY seed (Game initGameState Dict.empty Dict.empty initMap)
+            setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY seed (Game initGameState [] initMap)
                 |> ensureUniqueOverlays
 
         startRooms =
@@ -198,10 +204,10 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
 
         ( isOrigin, newOrigins ) =
             if tile.originalX == 0 && tile.originalY == 0 then
-                ( True, Dict.insert refString ( x, y ) game.roomOrigins )
+                ( True, RoomData tile.ref ( x, y ) tile.turns :: game.roomData )
 
             else
-                ( False, game.roomOrigins )
+                ( False, game.roomData )
 
         state =
             game.state
@@ -304,7 +310,7 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
                     game.staticBoard
     in
     if tile.passable || (List.length doorRefs > 0) || isOrigin then
-        ( { game | state = newGameState, staticBoard = newBoard, roomOrigins = newOrigins, roomTurns = Dict.insert refString tile.turns game.roomTurns }
+        ( { game | state = newGameState, staticBoard = newBoard, roomData = newOrigins }
         , newSeed
         )
 

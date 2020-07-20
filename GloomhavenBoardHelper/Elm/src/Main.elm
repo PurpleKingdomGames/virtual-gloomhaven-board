@@ -1,17 +1,18 @@
 module Main exposing (main)
 
 import Array exposing (Array, fromList, length, toIndexedList, toList)
-import BoardMapTile exposing (MapTileRef(..))
+import Bitwise
+import BoardMapTile exposing (MapTileRef(..), refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
 import Character exposing (CharacterClass(..), characterToString)
 import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
-import Html exposing (div)
-import Html.Attributes exposing (attribute, class, hidden)
+import Html exposing (div, img)
+import Html.Attributes exposing (attribute, class, hidden, src, style)
 import Http exposing (Error)
 import Json.Decode exposing (decodeValue)
 import List exposing (any, filter, filterMap, head, map, reverse, sort)
@@ -279,7 +280,10 @@ view model =
 
             Just game ->
                 [ div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
-                , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
+                , div [ class "board-wrapper" ]
+                    [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) game.roomData)
+                    , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
+                    ]
                 ]
         )
 
@@ -410,6 +414,48 @@ getNavHtml model =
         |> Dom.render
 
 
+getMapTileHtml : List MapTileRef -> RoomData -> Html.Html msg
+getMapTileHtml visibleRooms roomData =
+    let
+        ( x, y ) =
+            roomData.origin
+
+        ref =
+            Maybe.withDefault "" (refToString roomData.ref)
+
+        xPx =
+            (x * 76)
+                + (if Bitwise.and y 1 == 1 then
+                    38
+
+                   else
+                    0
+                  )
+
+        yPx =
+            y * 67
+    in
+    div
+        [ class "mapTile"
+        , class ("rotate-" ++ String.fromInt roomData.turns)
+        , class
+            (if any (\r -> r == roomData.ref) visibleRooms then
+                "visible"
+
+             else
+                "hidden"
+            )
+        , style "top" (String.fromInt yPx ++ "px")
+        , style "left" (String.fromInt xPx ++ "px")
+        ]
+        [ img
+            [ src ("/img/map-tiles/" ++ ref ++ ".png")
+            , class ("ref-" ++ ref)
+            ]
+            []
+        ]
+
+
 getBoardHtml : Model -> Game -> Int -> Array Cell -> Html.Html Msg
 getBoardHtml model game y row =
     div [ class "row" ] (toList (Array.indexedMap (getCellHtml model game y) row))
@@ -515,20 +561,6 @@ getCellHtml model game y x cellValue =
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
         |> Dom.addClass (cellValueToString game cellValue)
-        |> (case
-                Dict.toList game.roomOrigins
-                    |> List.filter (\( _, ( tx, ty ) ) -> tx == x && ty == y)
-                    |> head
-            of
-                Just ( ref, _ ) ->
-                    Dom.addAttributeList
-                        [ attribute "data-board-ref" ref
-                        , class ("rotate-" ++ String.fromInt (Maybe.withDefault 0 (Dict.get ref game.roomTurns)))
-                        ]
-
-                Nothing ->
-                    \e -> e
-           )
         |> Dom.appendChild
             (Dom.element "div"
                 |> Dom.addClass "cell"

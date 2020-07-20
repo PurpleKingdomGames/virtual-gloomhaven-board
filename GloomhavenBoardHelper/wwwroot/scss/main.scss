@@ -151,6 +151,121 @@ html {
         }
     }
 
+    $tiles:
+        ('a1a', -2px, 41px)
+        ('a1b', -19px, 39px)
+        ('a2a', -20px, 20px)
+        ('a2b', -20px, 20px)
+        ('a3a', -20px, 20px)
+        ('a3b', -20px, 20px)
+        ('a4a', -20px, 20px)
+        ('a4b', -20px, 20px)
+
+        ('b1a', -27px, -51px)
+        ('b1b', -27px, -51px)
+        ('b2a', -27px, -51px)
+        ('b2b', -27px, -51px)
+        ('b3a', -27px, -51px)
+        ('b3b', -27px, -51px)
+        ('b4a', -27px, -51px)
+        ('b4b', -27px, -51px)
+
+        ('c1a', -61px, -45px)
+        ('c1b', -61px, -45px)
+        ('c2a', -61px, -45px)
+        ('c2b', -61px, -45px)
+
+        ('d1a', -59px, -50px)
+        ('d1b', -59px, -50px)
+        ('d2a', -59px, -50px)
+        ('d2b', -59px, -50px)
+
+        ('e1a', 12px, -44px)
+        ('e1b', 12px, -44px)
+
+        ('f1a', -24px, -45px)
+        ('f1b', -24px, -45px)
+
+        ('g1a', -22px, -48px)
+        ('g1b', -22px, -48px)
+        ('g2a', -22px, -48px)
+        ('g2b', -22px, -48px)
+
+        ('h1a', 15px, -40px)
+        ('h1b', 15px, -40px)
+        ('h2a', 15px, -40px)
+        ('h2b', 15px, -40px)
+        ('h3a', 15px, -40px)
+        ('h3b', 15px, -40px)
+
+        ('i1a', -25px, -47px)
+        ('i1b', -25px, -47px)
+        ('i2a', -25px, -47px)
+        ('i2b', -25px, -47px)
+
+        ('j1a', -25px, -51px)
+        ('j1b', -24px, -49px)
+        ('j2a', -25px, -52px)
+        ('j2b', -24px, -49px)
+
+        ('k1a', -56px, -47px)
+        ('k1b', -71px, -47px)
+        ('k2a', -73px, -45px)
+        ('k2b', -56px, -47px)
+
+        ('l1a', -25px, -47px)
+        ('l1b', -25px, -47px)
+        ('l2a', -25px, -47px)
+        ('l2b', -25px, -47px)
+        ('l3a', -25px, -47px)
+        ('l3b', -25px, -47px)
+
+        ('m1a', -20px, -45px)
+        ('m1b', -22px, -46px)
+
+        ('n1a', -19px, -48px)
+        ('n1b', -19px, -48px)
+    ;
+
+    .mapTiles {
+        position: relative;
+
+        .mapTile {
+            position: absolute;
+            width: $hexWidth;
+            height: $hexHeight;
+            overflow: visible;
+
+            @for $i from 1 through 5
+            {
+                &.rotate-#{$i} {
+                    transform: rotate(60deg * $i);
+                }
+            }
+
+            img {
+                position: relative;
+                transition: opacity 1s;
+
+                @each $tile in $tiles {
+                    $key: nth($tile, 1);
+                    $left: nth($tile, 2);
+                    $top: nth($tile, 3);
+
+                    &.ref-#{$key} {
+                        left: $left;
+                        top: $top;
+                    }
+                }
+            }
+
+
+            &.hidden img {
+                opacity: 0;
+            }
+        }
+    }
+
     .board {
         text-align: center;
 
@@ -178,117 +293,6 @@ html {
                 &.hidden {
                     opacity: 0;
                     visibility: hidden;
-                }
-
-                &[data-board-ref]
-                {
-                    &:before {
-                        content:'';
-                        z-index: -1;
-                        position:absolute;
-                        background-repeat: no-repeat;
-                        width: 1024px;
-                        height: 1024px;
-                    }
-
-                    @for $i from 1 through 5
-                    {
-                        &.rotate-#{$i} {
-                            transform: rotate(60deg * $i);
-                        }
-
-                        &.rotate-#{$i} > * {
-                            transform: rotate(-60deg * $i);
-                        }
-                    }
-                }
-
-                $tiles:
-                    ('a1a', -2px, 41px)
-                    ('a1b', -19px, 39px)
-                    ('a2a', -20px, 20px)
-                    ('a2b', -20px, 20px)
-                    ('a3a', -20px, 20px)
-                    ('a3b', -20px, 20px)
-                    ('a4a', -20px, 20px)
-                    ('a4b', -20px, 20px)
-
-                    ('b1a', -27px, -51px)
-                    ('b1b', -27px, -51px)
-                    ('b2a', -27px, -51px)
-                    ('b2b', -27px, -51px)
-                    ('b3a', -27px, -51px)
-                    ('b3b', -27px, -51px)
-                    ('b4a', -27px, -51px)
-                    ('b4b', -27px, -51px)
-
-                    ('c1a', -61px, -45px)
-                    ('c1b', -61px, -45px)
-                    ('c2a', -61px, -45px)
-                    ('c2b', -61px, -45px)
-
-                    ('d1a', -59px, -50px)
-                    ('d1b', -59px, -50px)
-                    ('d2a', -59px, -50px)
-                    ('d2b', -59px, -50px)
-
-                    ('e1a', 12px, -44px)
-                    ('e1b', 12px, -44px)
-
-                    ('f1a', -24px, -45px)
-                    ('f1b', -24px, -45px)
-
-                    ('g1a', -22px, -48px)
-                    ('g1b', -22px, -48px)
-                    ('g2a', -22px, -48px)
-                    ('g2b', -22px, -48px)
-
-                    ('h1a', 15px, -40px)
-                    ('h1b', 15px, -40px)
-                    ('h2a', 15px, -40px)
-                    ('h2b', 15px, -40px)
-                    ('h3a', 15px, -40px)
-                    ('h3b', 15px, -40px)
-
-                    ('i1a', -25px, -47px)
-                    ('i1b', -25px, -47px)
-                    ('i2a', -25px, -47px)
-                    ('i2b', -25px, -47px)
-
-                    ('j1a', -25px, -51px)
-                    ('j1b', -24px, -49px)
-                    ('j2a', -25px, -52px)
-                    ('j2b', -24px, -49px)
-
-                    ('k1a', -56px, -47px)
-                    ('k1b', -71px, -47px)
-                    ('k2a', -73px, -45px)
-                    ('k2b', -56px, -47px)
-
-                    ('l1a', -25px, -47px)
-                    ('l1b', -25px, -47px)
-                    ('l2a', -25px, -47px)
-                    ('l2b', -25px, -47px)
-                    ('l3a', -25px, -47px)
-                    ('l3b', -25px, -47px)
-
-                    ('m1a', -20px, -45px)
-                    ('m1b', -22px, -46px)
-
-                    ('n1a', -19px, -48px)
-                    ('n1b', -19px, -48px)
-                ;
-
-                @each $tile in $tiles {
-                    $key: nth($tile, 1);
-                    $left: nth($tile, 2);
-                    $top: nth($tile, 3);
-
-                    &[data-board-ref='#{$key}']:before {
-                        background-image: url('/img/map-tiles/#{$key}.png');
-                        left: $left;
-                        top: $top;
-                    }
                 }
 
                 .cell {
