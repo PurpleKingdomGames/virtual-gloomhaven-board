@@ -113,7 +113,9 @@ mapTileDataToList data maybeTurnAxis =
                     ( ( 0, 0 ), ( 0, 0 ) )
 
         mapTiles =
-            getMapTileListByRef data.ref
+            (getMapTileListByRef data.ref
+                ++ getMapTileListByObstacle data data.overlays
+            )
                 |> List.map (normaliseAndRotateMapTile data.turns refPoint origin)
 
         doorTiles =
@@ -130,6 +132,14 @@ mapTileDataToList data maybeTurnAxis =
                     (BoardBounds 0 0 0 0)
     in
     ( allTiles, boundingBox )
+
+
+getMapTileListByObstacle : MapTileData -> List BoardOverlay -> List MapTile
+getMapTileListByObstacle mapTileData boardOverlays =
+    boardOverlays
+        |> List.map (\o -> o.cells)
+        |> List.foldl (++) []
+        |> List.map (\( x, y ) -> MapTile mapTileData.ref x y mapTileData.turns x y True True)
 
 
 mapDoorDataToList : MapTileRef -> ( Int, Int ) -> ( Int, Int ) -> Int -> DoorData -> List MapTile
