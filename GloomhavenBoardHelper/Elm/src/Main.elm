@@ -507,8 +507,25 @@ getCellHtml model game y x cellValue =
                                     Door _ _ ->
                                         False
 
+                                    StartingLocation ->
+                                        False
+
                                     _ ->
                                         True
+                            )
+                        |> List.map (overlayToHtml model (Just ( x, y )))
+                    )
+                -- Starting locations
+                |> Dom.appendChildList
+                    (List.filter (filterOverlaysForCoord x y) game.state.overlays
+                        |> List.filter
+                            (\o ->
+                                case o.ref of
+                                    StartingLocation ->
+                                        True
+
+                                    _ ->
+                                        False
                             )
                         |> List.map (overlayToHtml model (Just ( x, y )))
                     )
