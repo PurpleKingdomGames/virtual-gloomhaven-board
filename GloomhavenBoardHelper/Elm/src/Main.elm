@@ -32,7 +32,7 @@ type alias Model =
 
 
 type MoveablePieceType
-    = OverlayType BoardOverlay
+    = OverlayType BoardOverlay (Maybe ( Int, Int ))
     | PieceType Piece
 
 
@@ -116,12 +116,12 @@ update msg model =
                             case model.currentDraggable of
                                 Just m ->
                                     case m.ref of
-                                        OverlayType o ->
+                                        OverlayType o prevCoords ->
                                             let
-                                                newOverlay =
-                                                    Tuple.second (moveOverlay o m.coords coords game)
+                                                ( _, newOverlay, newCoords ) =
+                                                    moveOverlay o m.coords prevCoords coords game
                                             in
-                                            Just (MoveablePiece (OverlayType newOverlay) m.coords)
+                                            Just (MoveablePiece (OverlayType newOverlay newCoords) m.coords)
 
                                         PieceType p ->
                                             let
@@ -149,8 +149,12 @@ update msg model =
                             case model.currentDraggable of
                                 Just m ->
                                     case m.ref of
-                                        OverlayType o ->
-                                            Tuple.first (moveOverlay o m.coords coords oldGame)
+                                        OverlayType o prevCoords ->
+                                            let
+                                                ( g, _, _ ) =
+                                                    moveOverlay o m.coords prevCoords coords oldGame
+                                            in
+                                            g
 
                                         PieceType p ->
                                             case p.ref of
@@ -568,8 +572,12 @@ getCellHtml model game y x cellValue =
                                     else
                                         \e -> e
 
-                                OverlayType o ->
-                                    Dom.appendChild (overlayToHtml model (Just ( x, y )) o)
+                                OverlayType o _ ->
+                                    if any (\c -> c == ( x, y )) o.cells then
+                                        Dom.appendChild (overlayToHtml model (Just ( x, y )) o)
+
+                                    else
+                                        \e -> e
 
                         Nothing ->
                             \e -> e
@@ -815,10 +823,10 @@ overlayToHtml model coords overlay =
         |> (if (model.currentMode == MoveOverlay && coords /= Nothing) || (model.currentMode == AddPiece && coords == Nothing) then
                 case overlay.ref of
                     Obstacle _ ->
-                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
+                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay Nothing) coords) dragDropMessages
 
                     Trap _ ->
-                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay) coords) dragDropMessages
+                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay Nothing) coords) dragDropMessages
 
                     _ ->
                         Dom.addAttribute (attribute "draggable" "false")

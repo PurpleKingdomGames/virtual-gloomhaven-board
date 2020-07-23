@@ -7,7 +7,7 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Character exposing (CharacterClass, characterToString)
 import Dict exposing (Dict, get, insert)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
-import List exposing (any, filter, filterMap, foldl, head, map, member)
+import List exposing (all, any, filter, filterMap, foldl, head, map, member)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (Monster, MonsterLevel(..), getMonsterBucketSize, monsterTypeToString)
 import Random exposing (Seed)
@@ -440,13 +440,91 @@ movePiece piece fromCoords ( toX, toY ) game =
                 Nothing ->
                     gamestate
     in
-    if canMoveTo ( toX, toY ) { game | state = newGamestate } then
+    if canMoveTo ( toX, toY ) { game | state = newGamestate } True then
         ( { game | state = { newGamestate | pieces = newPiece :: newGamestate.pieces } }
         , newPiece
         )
 
     else
         ( game, piece )
+
+
+moveOverlay : BoardOverlay -> Maybe ( Int, Int ) -> Maybe ( Int, Int ) -> ( Int, Int ) -> Game -> ( Game, BoardOverlay, Maybe ( Int, Int ) )
+moveOverlay overlay fromCoords prevCoords ( toX, toY ) game =
+    let
+        gamestate =
+            game.state
+
+        ( fromX, fromY, fromZ ) =
+            case fromCoords of
+                Just ( oX, oY ) ->
+                    oddRowToCube ( oX, oY )
+
+                Nothing ->
+                    ( 0, 0, 0 )
+
+        ( prevDiffX, prevDiffY, prevDiffZ ) =
+            case prevCoords of
+                Just p ->
+                    let
+                        ( pX, pY, pZ ) =
+                            oddRowToCube p
+                    in
+                    ( fromX - pX, fromY - pY, fromZ - pZ )
+
+                Nothing ->
+                    ( 0, 0, 0 )
+
+        ( diffX, diffY, diffZ ) =
+            let
+                ( dX, dY, dZ ) =
+                    case fromCoords of
+                        Just _ ->
+                            let
+                                ( newX, newY, newZ ) =
+                                    oddRowToCube ( toX, toY )
+                            in
+                            ( newX - fromX, newY - fromY, newZ - fromZ )
+
+                        Nothing ->
+                            oddRowToCube ( toX, toY )
+            in
+            ( dX + prevDiffX, dY + prevDiffY, dZ + prevDiffZ )
+
+        moveCells c =
+            let
+                ( cX, cY, cZ ) =
+                    oddRowToCube c
+            in
+            cubeToOddRow ( cX + diffX, cY + diffY, cZ + diffZ )
+
+        newOverlay =
+            { overlay | cells = map moveCells overlay.cells }
+
+        newGamestate =
+            case fromCoords of
+                Just justFrom ->
+                    { gamestate
+                        | overlays =
+                            filter
+                                (\o -> o.ref /= overlay.ref || List.all (\c -> c /= justFrom) o.cells)
+                                gamestate.overlays
+                    }
+
+                Nothing ->
+                    gamestate
+
+        newGame =
+            { game | state = newGamestate }
+    in
+    if all (\c -> canMoveTo c newGame False) newOverlay.cells then
+        ( { game | state = { newGamestate | overlays = newOverlay :: newGamestate.overlays } }
+        , newOverlay
+        , Just ( toX, toY )
+        )
+
+    else
+        ( game, overlay, prevCoords )
 
 
 revealRooms : Game -> List MapTileRef -> Game
@@ -661,11 +739,6 @@ assignIdentifier availableMonsters p =
             ( p, availableMonsters )
 
 
-moveOverlay : BoardOverlay -> Maybe ( Int, Int ) -> ( Int, Int ) -> Game -> ( Game, BoardOverlay )
-moveOverlay overlay _ _ game =
-    ( game, overlay )
-
-
 removePiece : Piece -> Piece -> Bool
 removePiece pieceToRemove comparePiece =
     pieceToRemove.ref
@@ -676,22 +749,44 @@ removePiece pieceToRemove comparePiece =
         /= comparePiece.y
 
 
-canMoveTo : ( Int, Int ) -> Game -> Bool
-canMoveTo ( toX, toY ) game =
+canMoveTo : ( Int, Int ) -> Game -> Bool -> Bool
+canMoveTo ( toX, toY ) game ignoreObstacles =
+    let
+        obstacleList =
+            if ignoreObstacles then
+                []
+
+            else
+                game.state.overlays
+                    |> filter
+                        (\o ->
+                            case o.ref of
+                                Obstacle _ ->
+                                    True
+
+                                Trap _ ->
+                                    True
+
+                                Door (Corridor _ _) _ ->
+                                    False
+
+                                Door _ _ ->
+                                    True
+
+                                _ ->
+                                    False
+                        )
+    in
     case Array.get toY game.staticBoard of
         Just row ->
             case Array.get toX row of
                 Just cell ->
-                    if cell.passable then
-                        -- TODO : Account for obstacles, account for hidden rooms
-                        if any (\p -> p.x == toX && p.y == toY) game.state.pieces then
-                            False
-
-                        else
-                            True
-
-                    else
-                        False
+                    any (\c -> List.member c cell.rooms) game.state.visibleRooms
+                        && cell.passable
+                        && all (\p -> p.x /= toX || p.y /= toY) game.state.pieces
+                        && (ignoreObstacles
+                                || all (\o -> List.all (\c -> c /= ( toX, toY )) o.cells) obstacleList
+                           )
 
                 Nothing ->
                     False
