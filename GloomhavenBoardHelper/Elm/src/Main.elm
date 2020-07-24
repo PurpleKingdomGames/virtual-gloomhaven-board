@@ -476,13 +476,16 @@ getCellHtml model game y x cellValue =
             , dropped = MoveCompleted
             }
 
+        overlaysForCell =
+            List.filter (filterOverlaysForCoord x y) game.state.overlays
+
         cellElement : Dom.Element Msg
         cellElement =
             Dom.element "div"
                 |> Dom.addClass "hexagon"
                 -- Doors
                 |> Dom.appendChildList
-                    (List.filter (filterOverlaysForCoord x y) game.state.overlays
+                    (overlaysForCell
                         |> List.filter
                             (\o ->
                                 case o.ref of
@@ -496,7 +499,7 @@ getCellHtml model game y x cellValue =
                     )
                 -- Treasure chests, obstacles, traps etc.
                 |> Dom.appendChildList
-                    (List.filter (filterOverlaysForCoord x y) game.state.overlays
+                    (overlaysForCell
                         |> List.filter
                             (\o ->
                                 case o.ref of
@@ -521,7 +524,7 @@ getCellHtml model game y x cellValue =
                     )
                 -- Starting locations
                 |> Dom.appendChildList
-                    (List.filter (filterOverlaysForCoord x y) game.state.overlays
+                    (overlaysForCell
                         |> List.filter
                             (\o ->
                                 case o.ref of
@@ -544,7 +547,7 @@ getCellHtml model game y x cellValue =
                     )
                 -- Coins
                 |> Dom.appendChildList
-                    (List.filter (filterOverlaysForCoord x y) game.state.overlays
+                    (overlaysForCell
                         |> List.filter
                             (\o ->
                                 case o.ref of
@@ -582,6 +585,7 @@ getCellHtml model game y x cellValue =
                         Nothing ->
                             \e -> e
                    )
+                |> addActionsForCell model.currentMode ( x, y ) overlaysForCell
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
@@ -834,22 +838,6 @@ overlayToHtml model coords overlay =
             else
                 Dom.addAttribute (attribute "draggable" "false")
            )
-        |> (case ( model.currentMode, overlay.ref, coords ) of
-                ( DestroyOverlay, Obstacle _, _ ) ->
-                    Dom.addAction ( "click", RemoveOverlay overlay )
-
-                ( DestroyOverlay, Trap _, _ ) ->
-                    Dom.addAction ( "click", RemoveOverlay overlay )
-
-                ( LootCell, Treasure _, _ ) ->
-                    Dom.addAction ( "click", RemoveOverlay overlay )
-
-                ( RevealRoom, Door _ refs, Just gridRef ) ->
-                    Dom.addAction ( "click", RevealRoomMsg refs gridRef )
-
-                _ ->
-                    \e -> e
-           )
 
 
 getOverlayImageName : BoardOverlay -> Maybe ( Int, Int ) -> String
@@ -899,3 +887,33 @@ getOverlayImageName overlay coords =
                     ""
     in
     path ++ overlayName ++ extendedOverlayName ++ segmentPart ++ extension
+
+
+addActionsForCell : GameModeType -> ( Int, Int ) -> List BoardOverlay -> Dom.Element Msg -> Dom.Element Msg
+addActionsForCell currentMode coords overlays element =
+    case overlays of
+        overlay :: rest ->
+            let
+                e =
+                    element
+                        |> (case ( currentMode, overlay.ref ) of
+                                ( DestroyOverlay, Obstacle _ ) ->
+                                    Dom.addAction ( "click", RemoveOverlay overlay )
+
+                                ( DestroyOverlay, Trap _ ) ->
+                                    Dom.addAction ( "click", RemoveOverlay overlay )
+
+                                ( LootCell, Treasure _ ) ->
+                                    Dom.addAction ( "click", RemoveOverlay overlay )
+
+                                ( RevealRoom, Door _ refs ) ->
+                                    Dom.addAction ( "click", RevealRoomMsg refs coords )
+
+                                _ ->
+                                    \x -> x
+                           )
+            in
+            addActionsForCell currentMode coords rest e
+
+        _ ->
+            element
