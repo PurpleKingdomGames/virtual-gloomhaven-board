@@ -838,6 +838,18 @@ overlayToHtml model coords overlay =
             else
                 Dom.addAttribute (attribute "draggable" "false")
            )
+        |> (case model.currentDraggable of
+                Just piece ->
+                    case ( piece.ref, piece.coords ) of
+                        ( OverlayType o _, Just cell ) ->
+                            Dom.addClassConditional "being-dragged" (o.ref == overlay.ref && any (\c -> cell == c) overlay.cells)
+
+                        _ ->
+                            \e -> e
+
+                _ ->
+                    \e -> e
+           )
 
 
 getOverlayImageName : BoardOverlay -> Maybe ( Int, Int ) -> String
