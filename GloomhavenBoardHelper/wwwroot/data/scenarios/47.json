@@ -1,0 +1,295 @@
+{
+    "id": 47,
+    "title": "Lair of the Unseeing Eye",
+    "mapTileData": {
+        "ref": "j1a",
+        "doors": [
+            {
+                "subType": "stone",
+                "direction": "vertical",
+                "room1X": -1,
+                "room1Y": 5,
+                "room2X": 5,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "m1a",
+                    "doors": [],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "chest",
+                                "id": "18"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "chest",
+                                "id": "57"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 6]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "harrower-infester",
+                            "initialX": 3,
+                            "initialY": 1,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "harrower-infester",
+                            "initialX": 0,
+                            "initialY": 3,
+                            "twoPlayer": "elite",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "harrower-infester",
+                            "initialX": 3,
+                            "initialY": 5,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "deep-terror",
+                            "initialX": 2,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "deep-terror",
+                            "initialX": 3,
+                            "initialY": 3,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "deep-terror",
+                            "initialX": 2,
+                            "initialY": 4,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "the-sightless-eye",
+                            "initialX": 2,
+                            "initialY": 3,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 3
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [7, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [7, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [4, 4]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 4]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [4, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [4, 6]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 6]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "lurker",
+                "initialX": 4,
+                "initialY": 3,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "lurker",
+                "initialX": 6,
+                "initialY": 4,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "lurker",
+                "initialX": 2,
+                "initialY": 4,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "lurker",
+                "initialX": 1,
+                "initialY": 5,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "lurker",
+                "initialX": 3,
+                "initialY": 6,
+                "twoPlayer": "normal",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 3
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
