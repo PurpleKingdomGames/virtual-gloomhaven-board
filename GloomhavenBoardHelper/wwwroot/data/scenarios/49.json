@@ -1,0 +1,442 @@
+{
+    "id": 49,
+    "title": "Rebel's Stand",
+    "mapTileData": {
+        "ref": "g1a",
+        "doors": [
+            {
+                "subType": "light-fog",
+                "direction": "default",
+                "room1X": 7,
+                "room1Y": 1,
+                "room2X": -1,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "l1b",
+                    "doors": [
+                        {
+                            "subType": "corridor",
+                            "material": "earth",
+                            "size": 2,
+                            "direction": "default",
+                            "room1X": 4,
+                            "room1Y": 0,
+                            "room2X": 5,
+                            "room2Y": 6,
+                            "mapTileData": {
+                                "ref": "l3a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 3
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "earth",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 4,
+                            "room1Y": 1,
+                            "room2X": 4,
+                            "room2Y": 5,
+                            "mapTileData": {
+                                "ref": "l3a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 3
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "earth",
+                            "size": 2,
+                            "direction": "default",
+                            "room1X": 4,
+                            "room1Y": 2,
+                            "room2X": 5,
+                            "room2Y": 4,
+                            "mapTileData": {
+                                "ref": "l3a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 3
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "earth",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 4,
+                            "room1Y": 3,
+                            "room2X": 4,
+                            "room2Y": 3,
+                            "mapTileData": {
+                                "ref": "l3a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 3
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "earth",
+                            "size": 2,
+                            "direction": "default",
+                            "room1X": 4,
+                            "room1Y": 4,
+                            "room2X": 5,
+                            "room2Y": 2,
+                            "mapTileData": {
+                                "ref": "l3a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 3
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "earth",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 4,
+                            "room1Y": 5,
+                            "room2X": 4,
+                            "room2Y": 1,
+                            "mapTileData": {
+                                "ref": "l3a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 3
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "earth",
+                            "size": 2,
+                            "direction": "default",
+                            "room1X": 4,
+                            "room1Y": 6,
+                            "room2X": 5,
+                            "room2Y": 0,
+                            "mapTileData": {
+                                "ref": "l3a",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "hazard",
+                                            "subType": "thorns"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "hazard",
+                                            "subType": "thorns"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 6]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "chest",
+                                            "id": "44"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 0]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "city-archer",
+                                        "initialX": 2,
+                                        "initialY": 0,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "city-archer",
+                                        "initialX": 1,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "city-archer",
+                                        "initialX": 1,
+                                        "initialY": 4,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "city-archer",
+                                        "initialX": 2,
+                                        "initialY": 6,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "ancient-artillery",
+                                        "initialX": 1,
+                                        "initialY": 3,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    }
+                                ],
+                                "turns": 3
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "thorns"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "thorns"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 5]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "stump"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "stump"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 5]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "stump"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [4, 6]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "giant-viper",
+                            "initialX": 3,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "giant-viper",
+                            "initialX": 3,
+                            "initialY": 6,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "city-guard",
+                            "initialX": 1,
+                            "initialY": 0,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "city-guard",
+                            "initialX": 1,
+                            "initialY": 6,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "city-guard",
+                            "initialX": 4,
+                            "initialY": 1,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "city-guard",
+                            "initialX": 4,
+                            "initialY": 3,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "city-guard",
+                            "initialX": 4,
+                            "initialY": 5,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 2]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "giant-viper",
+                "initialX": 4,
+                "initialY": 0,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "giant-viper",
+                "initialX": 3,
+                "initialY": 1,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "giant-viper",
+                "initialX": 4,
+                "initialY": 1,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "giant-viper",
+                "initialX": 4,
+                "initialY": 2,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "city-archer",
+                "initialX": 7,
+                "initialY": 0,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "city-archer",
+                "initialX": 6,
+                "initialY": 1,
+                "twoPlayer": "none",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "city-archer",
+                "initialX": 7,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
