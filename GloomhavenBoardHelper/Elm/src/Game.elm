@@ -46,6 +46,7 @@ type alias Cell =
 
 type alias Game =
     { state : GameState
+    , seed : Random.Seed
     , roomData : List RoomData
     , staticBoard : Array (Array Cell)
     }
@@ -154,7 +155,7 @@ generateGameMap scenario numPlayers seed =
             initialize arrSize (always (initialize arrSize (always (Cell [] False))))
 
         initGame =
-            setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY seed (Game initGameState [] initMap)
+            setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY seed (Game initGameState seed [] initMap)
                 |> ensureUniqueOverlays
 
         startRooms =
@@ -315,7 +316,7 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
         )
 
     else
-        ( game, newSeed )
+        ( { game | seed = newSeed }, newSeed )
 
 
 filterMonsterLevel : NumPlayers -> ScenarioMonster -> Bool

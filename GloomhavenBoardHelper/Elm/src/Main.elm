@@ -24,10 +24,12 @@ import ScenarioSync exposing (loadScenarioById)
 
 type alias Model =
     { game : Maybe Game
+    , currentScenarioInput : Int
     , currentPlayers : List CharacterClass
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
     , currentMode : GameModeType
+    , appMode : AppModeType
     }
 
 
@@ -48,6 +50,11 @@ type GameModeType
     | AddPiece
 
 
+type AppModeType
+    = Game
+    | ScenarioDialog
+
+
 type alias MoveablePiece =
     { ref : MoveablePieceType
     , coords : Maybe ( Int, Int )
@@ -63,8 +70,11 @@ type Msg
     | GameStatePushed Json.Decode.Value
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
-    | ChangeMode GameModeType
+    | ChangeGameMode GameModeType
+    | ChangeAppMode AppModeType
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
+    | ChangeScenario Int
+    | EnterScenarioNumber String
 
 
 main : Program Int Model Msg
@@ -79,7 +89,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing [ Berserker, Quartermaster, Tinkerer ] DragDrop.initialState Nothing (Loading 33), loadScenarioById 33 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing 50 [ Berserker, Quartermaster, Tinkerer ] DragDrop.initialState Nothing (Loading 49) Game, loadScenarioById 49 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -97,7 +107,7 @@ update msg model =
                                 generateGameMap scenario ThreePlayer seed
                                     |> assignPlayers model.currentPlayers
                         in
-                        ( { model | game = Just game, currentMode = MovePiece }, pushInitGameState game.state )
+                        ( { model | game = Just game, currentMode = MovePiece, currentScenarioInput = scenario.id }, pushInitGameState game.state )
 
                 Err _ ->
                     ( { model | currentMode = LoadFailed }, Cmd.none )
@@ -232,7 +242,7 @@ update msg model =
                     in
                     ( { model | game = Just newGame }, pushGameState newGame.state )
 
-        ChangeMode mode ->
+        ChangeGameMode mode ->
             ( { model | currentMode = mode }, Cmd.none )
 
         RevealRoomMsg rooms ( x, y ) ->
@@ -274,6 +284,33 @@ update msg model =
                     in
                     ( { model | game = Just newGame }, pushGameState newGame.state )
 
+        ChangeAppMode mode ->
+            ( { model | appMode = mode }, Cmd.none )
+
+        ChangeScenario newScenario ->
+            let
+                seed =
+                    case model.game of
+                        Just game ->
+                            game.seed
+
+                        Nothing ->
+                            Random.initialSeed 0
+            in
+            ( { model | appMode = Game, currentDraggable = Nothing, game = Nothing }, loadScenarioById newScenario (Loaded seed) )
+
+        EnterScenarioNumber strId ->
+            case String.toInt strId of
+                Just scenarioId ->
+                    if scenarioId > 0 && scenarioId < 94 then
+                        ( { model | currentScenarioInput = scenarioId }, Cmd.none )
+
+                    else
+                        ( model, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
 
 view : Model -> Html.Html Msg
 view model =
@@ -283,12 +320,20 @@ view model =
                 []
 
             Just game ->
-                [ div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
+                [ div [ class "menu" ] [ getMenuHtml model ]
+                , div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
                 , div [ class "board-wrapper" ]
                     [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) game.roomData)
                     , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
                     ]
                 ]
+                    ++ (case model.appMode of
+                            Game ->
+                                []
+
+                            _ ->
+                                [ getDialogForAppMode model ]
+                       )
         )
 
 
@@ -372,6 +417,70 @@ getNewPieceHtml model game =
         |> Dom.render
 
 
+getMenuHtml : Model -> Html.Html Msg
+getMenuHtml model =
+    Dom.element "nav"
+        |> Dom.appendChild
+            (Dom.element "ul"
+                |> Dom.appendChildList
+                    [ Dom.element "li"
+                        |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
+                        |> Dom.appendText "Change Scenario"
+                    ]
+            )
+        |> Dom.render
+
+
+getDialogForAppMode : Model -> Html.Html Msg
+getDialogForAppMode model =
+    Dom.element "div"
+        |> Dom.addClass "overlay"
+        |> Dom.appendChild
+            (Dom.element "div"
+                |> Dom.addClass "dialog"
+                |> (case model.appMode of
+                        ScenarioDialog ->
+                            Dom.appendChild (getScenarioDialog model)
+
+                        Game ->
+                            \e -> e
+                   )
+            )
+        |> Dom.render
+
+
+getScenarioDialog : Model -> Element Msg
+getScenarioDialog model =
+    Dom.element "div"
+        |> Dom.addClass "scenario-form"
+        |> Dom.appendChildList
+            [ Dom.element "div"
+                |> Dom.addClass "input-wrapper"
+                |> Dom.appendChildList
+                    [ Dom.element "label"
+                        |> Dom.addAttribute (attribute "for" "scenarioIdInput")
+                        |> Dom.appendText "Scenario"
+                    , Dom.element "input"
+                        |> Dom.addAttribute (attribute "id" "scenarioIdInput")
+                        |> Dom.addAttribute (attribute "type" "number")
+                        |> Dom.addAttribute (attribute "min" "1")
+                        |> Dom.addAttribute (attribute "max" "93")
+                        |> Dom.addAttribute (attribute "value" (String.fromInt model.currentScenarioInput))
+                        |> Dom.addChangeHandler EnterScenarioNumber
+                    ]
+            , Dom.element "div"
+                |> Dom.addClass "button-wrapper"
+                |> Dom.appendChildList
+                    [ Dom.element "button"
+                        |> Dom.appendText "OK"
+                        |> Dom.addAction ( "click", ChangeScenario model.currentScenarioInput )
+                    , Dom.element "button"
+                        |> Dom.appendText "Cancel"
+                        |> Dom.addAction ( "click", ChangeAppMode Game )
+                    ]
+            ]
+
+
 getNavHtml : Model -> Html.Html Msg
 getNavHtml model =
     Dom.element "nav"
@@ -379,37 +488,37 @@ getNavHtml model =
             (Dom.element "ul"
                 |> Dom.appendChildList
                     [ Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeMode MovePiece )
+                        |> Dom.addAction ( "click", ChangeGameMode MovePiece )
                         |> Dom.addClass "move-piece"
                         |> Dom.addClassConditional "active" (model.currentMode == MovePiece)
                         |> Dom.appendText "Move Piece"
                     , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeMode KillPiece )
+                        |> Dom.addAction ( "click", ChangeGameMode KillPiece )
                         |> Dom.addClass "kill-piece"
                         |> Dom.addClassConditional "active" (model.currentMode == KillPiece)
                         |> Dom.appendText "Kill Piece"
                     , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeMode LootCell )
+                        |> Dom.addAction ( "click", ChangeGameMode LootCell )
                         |> Dom.addClass "loot"
                         |> Dom.addClassConditional "active" (model.currentMode == LootCell)
                         |> Dom.appendText "Loot"
                     , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeMode MoveOverlay )
+                        |> Dom.addAction ( "click", ChangeGameMode MoveOverlay )
                         |> Dom.addClass "move-overlay"
                         |> Dom.addClassConditional "active" (model.currentMode == MoveOverlay)
                         |> Dom.appendText "Move Overlay"
                     , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeMode DestroyOverlay )
+                        |> Dom.addAction ( "click", ChangeGameMode DestroyOverlay )
                         |> Dom.addClass "destroy-overlay"
                         |> Dom.addClassConditional "active" (model.currentMode == DestroyOverlay)
                         |> Dom.appendText "Destroy Overlay"
                     , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeMode RevealRoom )
+                        |> Dom.addAction ( "click", ChangeGameMode RevealRoom )
                         |> Dom.addClass "reveal-room"
                         |> Dom.addClassConditional "active" (model.currentMode == RevealRoom)
                         |> Dom.appendText "Reveal Room"
                     , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeMode AddPiece )
+                        |> Dom.addAction ( "click", ChangeGameMode AddPiece )
                         |> Dom.addClass "add-piece"
                         |> Dom.addClassConditional "active" (model.currentMode == AddPiece)
                         |> Dom.appendText "Add Piece"
