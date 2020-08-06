@@ -24,12 +24,19 @@ import ScenarioSync exposing (loadScenarioById)
 
 type alias Model =
     { game : Maybe Game
+    , config : Config
+    , currentMode : GameModeType
     , currentScenarioInput : Int
     , currentPlayers : List CharacterClass
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
-    , currentMode : GameModeType
-    , appMode : AppModeType
+    }
+
+
+type alias Config =
+    { appMode : AppModeType
+    , clientOrServer : ClientOrServer
+    , joinCode : String
     }
 
 
@@ -48,6 +55,11 @@ type GameModeType
     | LootCell
     | RevealRoom
     | AddPiece
+
+
+type ClientOrServer
+    = Client
+    | Server
 
 
 type AppModeType
@@ -89,7 +101,7 @@ main =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing 50 [ Berserker, Quartermaster, Tinkerer ] DragDrop.initialState Nothing (Loading 49) Game, loadScenarioById 49 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing (Config Game Client "join-1") (Loading 49) 0 [ Berserker, Quartermaster, Tinkerer ] DragDrop.initialState Nothing, loadScenarioById 49 (Loaded (Random.initialSeed seed)) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -285,7 +297,11 @@ update msg model =
                     ( { model | game = Just newGame }, pushGameState newGame.state )
 
         ChangeAppMode mode ->
-            ( { model | appMode = mode }, Cmd.none )
+            let
+                config =
+                    model.config
+            in
+            ( { model | config = { config | appMode = mode } }, Cmd.none )
 
         ChangeScenario newScenario ->
             let
@@ -296,8 +312,11 @@ update msg model =
 
                         Nothing ->
                             Random.initialSeed 0
+
+                config =
+                    model.config
             in
-            ( { model | appMode = Game, currentDraggable = Nothing, game = Nothing }, loadScenarioById newScenario (Loaded seed) )
+            ( { model | config = { config | appMode = Game }, currentDraggable = Nothing, game = Nothing }, loadScenarioById newScenario (Loaded seed) )
 
         EnterScenarioNumber strId ->
             case String.toInt strId of
@@ -314,6 +333,10 @@ update msg model =
 
 view : Model -> Html.Html Msg
 view model =
+    let
+        config =
+            model.config
+    in
     div [ class "content" ]
         (case model.game of
             Nothing ->
@@ -327,7 +350,7 @@ view model =
                     , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
                     ]
                 ]
-                    ++ (case model.appMode of
+                    ++ (case config.appMode of
                             Game ->
                                 []
 
@@ -438,7 +461,7 @@ getDialogForAppMode model =
         |> Dom.appendChild
             (Dom.element "div"
                 |> Dom.addClass "dialog"
-                |> (case model.appMode of
+                |> (case model.config.appMode of
                         ScenarioDialog ->
                             Dom.appendChild (getScenarioDialog model)
 
