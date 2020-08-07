@@ -1,4 +1,4 @@
-port module GameSync exposing (decodeGameState, encodeGameState, pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
+port module GameSync exposing (ClientOrServer(..), decodeGameState, encodeGameState, pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -13,6 +13,94 @@ import Monster exposing (MonsterLevel(..), monsterTypeToString)
 import SharedSync exposing (decodeBoardOverlay, decodeMapRefList, decodeMonster)
 
 
+
+-- PING (client/server)
+
+
+port ping : () -> Cmd msg
+
+
+
+-- RECEIVE_OFFER (server)
+
+
+port receiveOffer : (Decode.Value -> msg) -> Sub msg
+
+
+
+-- SEND_OFFER (client)
+
+
+port sendOffer : String -> Cmd msg
+
+
+
+-- SEND_ANSWER (server)
+
+
+port sendAnswer : Encode.Value -> Cmd msg
+
+
+
+-- RECEIVE_ANSWER (client)
+
+
+port receiveAnswer : (Decode.Value -> msg) -> Sub msg
+
+
+
+-- CLIENT_DISCONNECT (server)
+
+
+port clientDisconnected : (Decode.Value -> msg) -> Sub msg
+
+
+
+-- RECEIVE_UPDATE (client/server)
+
+
+port receiveUpdate : (Decode.Value -> msg) -> Sub msg
+
+
+
+-- SEND_UPDATE (client/server)
+
+
+port sendUpdate : Encode.Value -> Cmd msg
+
+
+
+-- DISCONNECTED (client/server)
+
+
+port disconnected : (Decode.Value -> msg) -> Sub msg
+
+
+
+-- REGISTER_SERVER (server)
+
+
+port registerServer : () -> Cmd msg
+
+
+
+-- RECEIVE_JOIN_CODE (server)
+
+
+port receiveJoinCode : (String -> msg) -> Sub msg
+
+
+
+-- INVALID_JOIN_CODE (client)
+
+
+port invalidJoinCode : (Decode.Value -> msg) -> Sub msg
+
+
+
+-- START LEGACY PORTS --
+
+
 port pushGameStatePort : Encode.Value -> Cmd msg
 
 
@@ -23,6 +111,15 @@ port updateStatePort : Encode.Value -> Cmd msg
 
 
 port receiveGameState : (Decode.Value -> msg) -> Sub msg
+
+
+
+-- END LEGACY PORTS --
+
+
+type ClientOrServer
+    = Client
+    | Server
 
 
 pushGameState : GameState -> Cmd msg

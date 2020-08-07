@@ -30,8 +30,23 @@
             flags: Math.floor(Math.random() * Math.floor(4000))
         });
 
-        const signalSocket = new WebSocket('ws://88.98.84.156:5000/ws');
+        const signalSocket = new WebSocket('ws://' + location.host + '/ws');
         let offerTimeout = null;
+
+        /** SERVER IMPLEMENTATION **/
+        // Create a server - register a client code/request a new one
+        // Return the client code to Elm
+        // When a client connects, notify Elm
+        // Elm puhes the current state to the new client - updates the client list
+        // When pushing a new client state, Elm should push to all clients
+
+        /** CLIENT IMPLEMENTATION **/
+        // Create a client - check client code
+        // Return a connected/disconnected state
+        // Elm pushes the current state to the server
+
+
+
         app.ports.pushGameStatePort.subscribe(function(message) {
             console.log(message);
             signalSocket.send("UPDATE 127.0.0.1 " + JSON.stringify(message) + "\r\n");

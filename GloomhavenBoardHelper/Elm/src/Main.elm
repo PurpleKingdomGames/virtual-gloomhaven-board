@@ -10,7 +10,7 @@ import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
-import GameSync exposing (pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
+import GameSync exposing (ClientOrServer(..), pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
 import Html exposing (div, img)
 import Html.Attributes exposing (attribute, class, hidden, src, style)
 import Http exposing (Error)
@@ -57,11 +57,6 @@ type GameModeType
     | AddPiece
 
 
-type ClientOrServer
-    = Client
-    | Server
-
-
 type AppModeType
     = Game
     | ScenarioDialog
@@ -87,6 +82,8 @@ type Msg
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
     | ChangeScenario Int
     | EnterScenarioNumber String
+    | ChangeClientServerType String
+    | ChangeJoinCode String
 
 
 main : Program Int Model Msg
@@ -330,6 +327,51 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
+        ChangeClientServerType typeStr ->
+            let
+                config =
+                    model.config
+
+                game =
+                    model.game
+                        |> Maybe.map
+                            (\g ->
+                                let
+                                    state =
+                                        g.state
+                                in
+                                { g | state = { state | updateCount = 0 } }
+                            )
+            in
+            case String.toLower typeStr of
+                "client" ->
+                    if model.config.clientOrServer /= Client then
+                        ( { model | config = { config | clientOrServer = Client }, game = game }, Cmd.none )
+
+                    else
+                        ( model, Cmd.none )
+
+                "server" ->
+                    if model.config.clientOrServer /= Server then
+                        ( { model | config = { config | clientOrServer = Server }, game = game }, Cmd.none )
+
+                    else
+                        ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        ChangeJoinCode newCode ->
+            if model.config.clientOrServer == Client then
+                let
+                    config =
+                        model.config
+                in
+                ( { model | config = { config | joinCode = newCode } }, Cmd.none )
+
+            else
+                ( model, Cmd.none )
+
 
 view : Model -> Html.Html Msg
 view model =
@@ -449,6 +491,37 @@ getMenuHtml model =
                     [ Dom.element "li"
                         |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
                         |> Dom.appendText "Change Scenario"
+                    , Dom.element "li"
+                        |> Dom.appendChildList
+                            [ Dom.element "label"
+                                |> Dom.addAttribute (attribute "for" "clientServerType")
+                                |> Dom.appendText "Type"
+                            , Dom.element "select"
+                                |> Dom.addAttribute (attribute "id" "clientServerType")
+                                |> Dom.addChangeHandler ChangeClientServerType
+                                |> Dom.appendChildList
+                                    [ Dom.element "option"
+                                        |> Dom.addAttribute (attribute "value" "client")
+                                        |> Dom.addAttributeConditional (attribute "selected" "selected") (model.config.clientOrServer == Client)
+                                        |> Dom.appendText "Client"
+                                    , Dom.element "option"
+                                        |> Dom.addAttribute (attribute "value" "server")
+                                        |> Dom.addAttributeConditional (attribute "selected" "selected") (model.config.clientOrServer == Server)
+                                        |> Dom.appendText "Server"
+                                    ]
+                            ]
+                    , Dom.element "li"
+                        |> Dom.appendChildList
+                            [ Dom.element "label"
+                                |> Dom.addAttribute (attribute "for" "clientServerJoinCode")
+                                |> Dom.appendText "Join Code"
+                            , Dom.element "input"
+                                |> Dom.addAttribute (attribute "id" "clientServerJoinCode")
+                                |> Dom.addAttribute (attribute "value" model.config.joinCode)
+                                |> Dom.addAttribute (attribute "type" "text")
+                                |> Dom.addAttributeConditional (attribute "readonly" "readonly") (model.config.clientOrServer == Server)
+                                |> Dom.addChangeHandler ChangeJoinCode
+                            ]
                     ]
             )
         |> Dom.render
