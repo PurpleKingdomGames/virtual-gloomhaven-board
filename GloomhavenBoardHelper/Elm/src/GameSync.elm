@@ -1,4 +1,4 @@
-port module GameSync exposing (ClientOrServer(..), decodeGameState, encodeGameState, pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
+port module GameSync exposing (ClientOrServer(..), Msg, decodeGameState, encodeGameState, ping, pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState, subscriptions, update)
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -6,7 +6,7 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
 import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
-import Json.Decode as Decode exposing (Decoder, andThen, fail, field, int, list, map3, map7, string, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, int, list, map3, map7, string, succeed)
 import Json.Encode as Encode exposing (int, list, object, string)
 import List exposing (map)
 import Monster exposing (MonsterLevel(..), monsterTypeToString)
@@ -24,7 +24,7 @@ port ping : () -> Cmd msg
 -- RECEIVE_OFFER (server)
 
 
-port receiveOffer : (Decode.Value -> msg) -> Sub msg
+port receiveOffer : (String -> msg) -> Sub msg
 
 
 
@@ -38,7 +38,7 @@ port sendOffer : String -> Cmd msg
 -- SEND_ANSWER (server)
 
 
-port sendAnswer : Encode.Value -> Cmd msg
+port sendAnswer : ( String, Maybe Encode.Value ) -> Cmd msg
 
 
 
@@ -52,7 +52,7 @@ port receiveAnswer : (Decode.Value -> msg) -> Sub msg
 -- CLIENT_DISCONNECT (server)
 
 
-port clientDisconnected : (Decode.Value -> msg) -> Sub msg
+port clientDisconnected : (String -> msg) -> Sub msg
 
 
 
@@ -66,21 +66,28 @@ port receiveUpdate : (Decode.Value -> msg) -> Sub msg
 -- SEND_UPDATE (client/server)
 
 
-port sendUpdate : Encode.Value -> Cmd msg
+port sendUpdate : ( String, Maybe Encode.Value ) -> Cmd msg
 
 
 
 -- DISCONNECTED (client/server)
 
 
-port disconnected : (Decode.Value -> msg) -> Sub msg
+port disconnected : (() -> msg) -> Sub msg
+
+
+
+-- CONNECTED (client/server)
+
+
+port connected : (() -> msg) -> Sub msg
 
 
 
 -- REGISTER_SERVER (server)
 
 
-port registerServer : () -> Cmd msg
+port registerServer : String -> Cmd msg
 
 
 
@@ -94,7 +101,7 @@ port receiveJoinCode : (String -> msg) -> Sub msg
 -- INVALID_JOIN_CODE (client)
 
 
-port invalidJoinCode : (Decode.Value -> msg) -> Sub msg
+port invalidJoinCode : (() -> msg) -> Sub msg
 
 
 
@@ -122,6 +129,19 @@ type ClientOrServer
     | Server
 
 
+type Msg
+    = OfferSent String
+    | OfferReceived String
+    | AnswerReceived Decode.Value
+    | ClientDisconnected String
+    | UpdateReceived Decode.Value
+    | Disconnected ()
+    | Connected ()
+    | RegisterServer String
+    | JoinCodeReceived String
+    | JoinCodeInvalid ()
+
+
 pushGameState : GameState -> Cmd msg
 pushGameState gameState =
     pushGameStatePort (encodeGameState { gameState | updateCount = gameState.updateCount + 1 })
@@ -135,6 +155,87 @@ pushUpdatedGameState gameState =
 pushInitGameState : GameState -> Cmd msg
 pushInitGameState gameState =
     pushInitStatePort (encodeGameState gameState)
+
+
+update : Msg -> Maybe GameState -> ClientOrServer -> List String -> (GameState -> msg) -> (List String -> msg) -> ( Maybe msg, Cmd msg )
+update msg gameState clientOrServer connectedClients gameStateUpdateMsg clientIpMsg =
+    case msg of
+        OfferSent joinCode ->
+            ( Nothing, sendOffer joinCode )
+
+        OfferReceived ip ->
+            ( Just (clientIpMsg (ip :: connectedClients)), sendAnswer ( ip, Maybe.map (\s -> encodeGameState s) gameState ) )
+
+        AnswerReceived val ->
+            let
+                newGameState =
+                    decodeAndUpdateGameState gameState val
+            in
+            ( Maybe.map (\s -> gameStateUpdateMsg s) newGameState, Cmd.none )
+
+        UpdateReceived val ->
+            let
+                newGameState =
+                    decodeAndUpdateGameState gameState val
+            in
+            case ( clientOrServer, newGameState ) of
+                ( Server, Just _ ) ->
+                    ( Maybe.map (\g -> gameStateUpdateMsg g) newGameState
+                    , List.map
+                        (\ip ->
+                            sendUpdate ( ip, Maybe.map (\g -> encodeGameState g) newGameState )
+                        )
+                        connectedClients
+                        |> Cmd.batch
+                    )
+
+                ( Client, Just _ ) ->
+                    ( Maybe.map (\s -> gameStateUpdateMsg s) newGameState, Cmd.none )
+
+                _ ->
+                    ( Nothing, Cmd.none )
+
+        ClientDisconnected ip ->
+            ( Just (clientIpMsg (List.filter (\i -> i /= ip) connectedClients)), Cmd.none )
+
+        RegisterServer prefferedJoinCode ->
+            ( Nothing, registerServer prefferedJoinCode )
+
+        _ ->
+            ( Nothing, Cmd.none )
+
+
+decodeAndUpdateGameState : Maybe GameState -> Decode.Value -> Maybe GameState
+decodeAndUpdateGameState gameState val =
+    case decodeValue decodeGameState val of
+        Ok s ->
+            case gameState of
+                Just g ->
+                    if s.updateCount > g.updateCount then
+                        Just s
+
+                    else
+                        Nothing
+
+                Nothing ->
+                    Just s
+
+        Err _ ->
+            Nothing
+
+
+subscriptions : Sub Msg
+subscriptions =
+    Sub.batch
+        [ receiveOffer OfferReceived
+        , receiveAnswer AnswerReceived
+        , clientDisconnected ClientDisconnected
+        , receiveUpdate UpdateReceived
+        , disconnected Disconnected
+        , connected Connected
+        , receiveJoinCode JoinCodeReceived
+        , invalidJoinCode JoinCodeInvalid
+        ]
 
 
 decodeGameState : Decoder GameState

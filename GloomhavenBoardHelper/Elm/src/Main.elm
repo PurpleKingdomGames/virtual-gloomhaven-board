@@ -10,7 +10,7 @@ import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
-import GameSync exposing (ClientOrServer(..), pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
+import GameSync exposing (ClientOrServer(..), Msg, pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
 import Html exposing (div, img)
 import Html.Attributes exposing (attribute, class, hidden, src, style)
 import Http exposing (Error)
@@ -26,8 +26,10 @@ type alias Model =
     { game : Maybe Game
     , config : Config
     , currentMode : GameModeType
+    , clientsConnected : List String
     , currentScenarioInput : Int
     , currentPlayers : List CharacterClass
+    , currentServerSettings : Maybe ( ClientOrServer, String )
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
     }
@@ -60,6 +62,7 @@ type GameModeType
 type AppModeType
     = Game
     | ScenarioDialog
+    | ServerConfigDialog
 
 
 type alias MoveablePiece =
@@ -69,12 +72,16 @@ type alias MoveablePiece =
 
 
 type Msg
-    = Loaded Seed (Result Error Scenario)
+    = Loaded Seed (Maybe Game.GameState) (Result Error Scenario)
     | MoveStarted MoveablePiece
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
     | MoveCompleted MoveablePiece ( Int, Int )
+      -- LEGACY
     | GameStatePushed Json.Decode.Value
+      -- END LEGACY
+    | GameStateUpdated Game.GameState
+    | ClientListUpdated (List String)
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
     | ChangeGameMode GameModeType
@@ -84,6 +91,7 @@ type Msg
     | EnterScenarioNumber String
     | ChangeClientServerType String
     | ChangeJoinCode String
+    | GameSyncMsg GameSync.Msg
 
 
 main : Program Int Model Msg
@@ -96,15 +104,23 @@ main =
         }
 
 
+
+-- PLACEHOLDER
+
+
+initScenario =
+    50
+
+
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing (Config Game Client "join-1") (Loading 49) 0 [ Berserker, Quartermaster, Tinkerer ] DragDrop.initialState Nothing, loadScenarioById 49 (Loaded (Random.initialSeed seed)) )
+    ( Model Nothing (Config Game Client "join-1") (Loading initScenario) [] 0 [ Berserker, Quartermaster, Tinkerer ] Nothing DragDrop.initialState Nothing, loadScenarioById initScenario (Loaded (Random.initialSeed seed) Nothing) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Loaded seed result ->
+        Loaded seed initGameState result ->
             case result of
                 Ok scenario ->
                     if List.length model.currentPlayers > 4 || List.length model.currentPlayers < 2 then
@@ -115,8 +131,16 @@ update msg model =
                             game =
                                 generateGameMap scenario ThreePlayer seed
                                     |> assignPlayers model.currentPlayers
+
+                            gameState =
+                                case initGameState of
+                                    Just gs ->
+                                        gs
+
+                                    Nothing ->
+                                        game.state
                         in
-                        ( { model | game = Just game, currentMode = MovePiece, currentScenarioInput = scenario.id }, pushInitGameState game.state )
+                        ( { model | game = Just { game | state = gameState }, currentMode = MovePiece, currentScenarioInput = scenario.id }, pushInitGameState game.state )
 
                 Err _ ->
                     ( { model | currentMode = LoadFailed }, Cmd.none )
@@ -313,7 +337,7 @@ update msg model =
                 config =
                     model.config
             in
-            ( { model | config = { config | appMode = Game }, currentDraggable = Nothing, game = Nothing }, loadScenarioById newScenario (Loaded seed) )
+            ( { model | config = { config | appMode = Game }, currentMode = Loading newScenario, currentDraggable = Nothing, game = Nothing }, loadScenarioById newScenario (Loaded seed Nothing) )
 
         EnterScenarioNumber strId ->
             case String.toInt strId of
@@ -329,48 +353,75 @@ update msg model =
 
         ChangeClientServerType typeStr ->
             let
-                config =
-                    model.config
+                currentJoinCode =
+                    case model.currentServerSettings of
+                        Just ( _, j ) ->
+                            j
 
-                game =
-                    model.game
-                        |> Maybe.map
-                            (\g ->
-                                let
-                                    state =
-                                        g.state
-                                in
-                                { g | state = { state | updateCount = 0 } }
-                            )
+                        Nothing ->
+                            model.config.joinCode
             in
             case String.toLower typeStr of
                 "client" ->
-                    if model.config.clientOrServer /= Client then
-                        ( { model | config = { config | clientOrServer = Client }, game = game }, Cmd.none )
-
-                    else
-                        ( model, Cmd.none )
+                    ( { model | currentServerSettings = Just ( Client, currentJoinCode ) }, Cmd.none )
 
                 "server" ->
-                    if model.config.clientOrServer /= Server then
-                        ( { model | config = { config | clientOrServer = Server }, game = game }, Cmd.none )
-
-                    else
-                        ( model, Cmd.none )
+                    ( { model | currentServerSettings = Just ( Server, currentJoinCode ) }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         ChangeJoinCode newCode ->
-            if model.config.clientOrServer == Client then
-                let
-                    config =
-                        model.config
-                in
-                ( { model | config = { config | joinCode = newCode } }, Cmd.none )
+            let
+                clientOrServer =
+                    case model.currentServerSettings of
+                        Just ( s, _ ) ->
+                            s
 
-            else
-                ( model, Cmd.none )
+                        Nothing ->
+                            model.config.clientOrServer
+            in
+            ( { model | currentServerSettings = Just ( clientOrServer, newCode ) }, Cmd.none )
+
+        GameSyncMsg gameSyncMsg ->
+            let
+                gameState =
+                    Maybe.map (\g -> g.state) model.game
+
+                ( updateMsg, cmdMsg ) =
+                    GameSync.update
+                        gameSyncMsg
+                        gameState
+                        model.config.clientOrServer
+                        model.clientsConnected
+                        GameStateUpdated
+                        ClientListUpdated
+            in
+            case updateMsg of
+                Just u ->
+                    let
+                        ( newModel, msgs ) =
+                            update u model
+                    in
+                    ( newModel, Cmd.batch [ cmdMsg, msgs ] )
+
+                Nothing ->
+                    ( model, cmdMsg )
+
+        GameStateUpdated gameState ->
+            case model.game of
+                Just game ->
+                    if game.state.scenario == gameState.scenario then
+                        ( { model | game = Just { game | state = gameState } }, Cmd.none )
+
+                    else
+                        ( { model | currentMode = Loading gameState.scenario }, loadScenarioById gameState.scenario (Loaded (Random.initialSeed gameState.scenario) (Just gameState)) )
+
+                Nothing ->
+                    ( { model | currentMode = Loading gameState.scenario }, loadScenarioById gameState.scenario (Loaded (Random.initialSeed gameState.scenario) (Just gameState)) )
+
+        ClientListUpdated clientList ->
+            ( { model | clientsConnected = clientList }, Cmd.none )
 
 
 view : Model -> Html.Html Msg
@@ -385,7 +436,7 @@ view model =
                 []
 
             Just game ->
-                [ div [ class "menu" ] [ getMenuHtml model ]
+                [ div [ class "menu" ] [ getMenuHtml ]
                 , div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
                 , div [ class "board-wrapper" ]
                     [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) game.roomData)
@@ -404,7 +455,10 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    receiveGameState GameStatePushed
+    Sub.batch
+        [ receiveGameState GameStatePushed
+        , Sub.map (\s -> GameSyncMsg s) GameSync.subscriptions
+        ]
 
 
 getNewPieceHtml : Model -> Game -> Html.Html Msg
@@ -482,8 +536,8 @@ getNewPieceHtml model game =
         |> Dom.render
 
 
-getMenuHtml : Model -> Html.Html Msg
-getMenuHtml model =
+getMenuHtml : Html.Html Msg
+getMenuHtml =
     Dom.element "nav"
         |> Dom.appendChild
             (Dom.element "ul"
@@ -492,36 +546,8 @@ getMenuHtml model =
                         |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
                         |> Dom.appendText "Change Scenario"
                     , Dom.element "li"
-                        |> Dom.appendChildList
-                            [ Dom.element "label"
-                                |> Dom.addAttribute (attribute "for" "clientServerType")
-                                |> Dom.appendText "Type"
-                            , Dom.element "select"
-                                |> Dom.addAttribute (attribute "id" "clientServerType")
-                                |> Dom.addChangeHandler ChangeClientServerType
-                                |> Dom.appendChildList
-                                    [ Dom.element "option"
-                                        |> Dom.addAttribute (attribute "value" "client")
-                                        |> Dom.addAttributeConditional (attribute "selected" "selected") (model.config.clientOrServer == Client)
-                                        |> Dom.appendText "Client"
-                                    , Dom.element "option"
-                                        |> Dom.addAttribute (attribute "value" "server")
-                                        |> Dom.addAttributeConditional (attribute "selected" "selected") (model.config.clientOrServer == Server)
-                                        |> Dom.appendText "Server"
-                                    ]
-                            ]
-                    , Dom.element "li"
-                        |> Dom.appendChildList
-                            [ Dom.element "label"
-                                |> Dom.addAttribute (attribute "for" "clientServerJoinCode")
-                                |> Dom.appendText "Join Code"
-                            , Dom.element "input"
-                                |> Dom.addAttribute (attribute "id" "clientServerJoinCode")
-                                |> Dom.addAttribute (attribute "value" model.config.joinCode)
-                                |> Dom.addAttribute (attribute "type" "text")
-                                |> Dom.addAttributeConditional (attribute "readonly" "readonly") (model.config.clientOrServer == Server)
-                                |> Dom.addChangeHandler ChangeJoinCode
-                            ]
+                        |> Dom.addAction ( "click", ChangeAppMode ServerConfigDialog )
+                        |> Dom.appendText "Connection Settings"
                     ]
             )
         |> Dom.render
@@ -537,6 +563,9 @@ getDialogForAppMode model =
                 |> (case model.config.appMode of
                         ScenarioDialog ->
                             Dom.appendChild (getScenarioDialog model)
+
+                        ServerConfigDialog ->
+                            Dom.appendChild (getServerSettingsDialog model)
 
                         Game ->
                             \e -> e
@@ -563,6 +592,66 @@ getScenarioDialog model =
                         |> Dom.addAttribute (attribute "max" "93")
                         |> Dom.addAttribute (attribute "value" (String.fromInt model.currentScenarioInput))
                         |> Dom.addChangeHandler EnterScenarioNumber
+                    ]
+            , Dom.element "div"
+                |> Dom.addClass "button-wrapper"
+                |> Dom.appendChildList
+                    [ Dom.element "button"
+                        |> Dom.appendText "OK"
+                        |> Dom.addAction ( "click", ChangeScenario model.currentScenarioInput )
+                    , Dom.element "button"
+                        |> Dom.appendText "Cancel"
+                        |> Dom.addAction ( "click", ChangeAppMode Game )
+                    ]
+            ]
+
+
+getServerSettingsDialog : Model -> Element Msg
+getServerSettingsDialog model =
+    let
+        ( clientOrServer, joinCode ) =
+            case model.currentServerSettings of
+                Just s ->
+                    s
+
+                Nothing ->
+                    ( model.config.clientOrServer, model.config.joinCode )
+    in
+    Dom.element "div"
+        |> Dom.addClass "scenario-form"
+        |> Dom.appendChildList
+            [ Dom.element "div"
+                |> Dom.addClass "input-wrapper"
+                |> Dom.appendChildList
+                    [ Dom.element "label"
+                        |> Dom.addAttribute (attribute "for" "clientServerType")
+                        |> Dom.appendText "Type"
+                    , Dom.element "select"
+                        |> Dom.addAttribute (attribute "id" "clientServerType")
+                        |> Dom.addChangeHandler ChangeClientServerType
+                        |> Dom.appendChildList
+                            [ Dom.element "option"
+                                |> Dom.addAttribute (attribute "value" "client")
+                                |> Dom.addAttributeConditional (attribute "selected" "selected") (clientOrServer == Client)
+                                |> Dom.appendText "Client"
+                            , Dom.element "option"
+                                |> Dom.addAttribute (attribute "value" "server")
+                                |> Dom.addAttributeConditional (attribute "selected" "selected") (clientOrServer == Server)
+                                |> Dom.appendText "Server"
+                            ]
+                    ]
+            , Dom.element "div"
+                |> Dom.addClass "input-wrapper"
+                |> Dom.addAttributeConditional (attribute "hidden" "hidden") (clientOrServer == Server)
+                |> Dom.appendChildList
+                    [ Dom.element "label"
+                        |> Dom.addAttribute (attribute "for" "clientServerJoinCode")
+                        |> Dom.appendText "Join Code"
+                    , Dom.element "input"
+                        |> Dom.addAttribute (attribute "id" "clientServerJoinCode")
+                        |> Dom.addAttribute (attribute "value" joinCode)
+                        |> Dom.addAttribute (attribute "type" "text")
+                        |> Dom.addChangeHandler ChangeJoinCode
                     ]
             , Dom.element "div"
                 |> Dom.addClass "button-wrapper"

@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Virtual Gloomhaven Board</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/main.min.js"></script>
+</head>
+<body>
+    <div id="elm-node"></div>
+    <script>
+        document.body.addEventListener("dragstart", event => {
+            if (event.target && event.target.draggable) {
+                // Absurdly, this is needed for Firefox; see https://medium.com/elm-shorts/elm-drag-and-drop-game-630205556d2
+                event.dataTransfer.setData("text/html", "blank");
+                var emptyImage = document.createElement('img');
+                // Set the src to be a 0x0 gif
+                emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+                event.dataTransfer.setDragImage(emptyImage, 0, 0);
+            }
+        });
+
+        document.body.addEventListener("dragover", event => {
+            // This is needed in order to make dragging work
+            return false;
+        });
+
+        const app = Elm.Main.init({
+            node: document.getElementById("elm-node"),
+            flags: Math.floor(Math.random() * Math.floor(4000))
+        });
+
+        const signalSocket = new WebSocket('ws://' + location.host + '/ws');
+
+        app.ports.ping.subscribe (() => {
+            signalSocket.send('PING\r\n');
+        });
+
+        app.ports.sendOffer.subscribe (joinCode => {
+            signalSocket.send('OFFER ' + joinCode + ' \r\n');
+        });
+
+        app.ports.sendAnswer.subscribe (gameState => {
+            signalSocket.send('ANSWER ' + JSON.stringify(gameState) + ' \r\n');
+        });
+
+        app.ports.sendUpdate.subscribe (gameState => {
+            signalSocket.send('UPDATE ' + JSON.stringify(gameState) + ' \r\n');
+        });
+
+        app.ports.sendUpdate.registerServer (
+            suggestedCode => signalSocket.send('REGISTER_SERVER ' + suggestedCode + ' \r\n')
+        );
+
+        signalSocket.onopen = () => app.ports.connected.send();
+        signalSocket.onclose = () => app.ports.disconnected.send();
+
+        signalSocket.onmessage = async m => {
+            let splitData = m.data.replace('\r\n', '').split(' ');
+            const cmd = splitData.shift();
+            const data = splitData.join(' ');
+
+            switch (cmd.toUpper()) {
+                case 'OFFER':
+                    app.ports.receiveOffer.send(JSON.parse(data));
+                    break;
+
+                case 'ANSWER':
+                    app.ports.receiveAnswer.send(JSON.parse(data));
+                    break;
+
+                case 'UPDATE':
+                    app.ports.receiveUpdate.send(JSON.parse(data));
+                    break;
+
+                case 'DISCONNECT':
+                    app.ports.clientDisconnected.send(JSON.parse(data));
+                    break;
+
+                case 'JOIN_CODE':
+                    app.ports.receiveJoinCode.send(data);
+                    break;
+
+                case 'INVALID_JOIN_CODE':
+                    app.ports.invalidJoinCode.send(data);
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
