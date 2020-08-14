@@ -1,0 +1,387 @@
+{
+    "id": 58,
+    "title": "Bloody Shack",
+    "mapTileData": {
+        "ref": "c2a",
+        "doors": [
+            {
+                "subType": "wooden",
+                "direction": "default",
+                "room1X": 1,
+                "room1Y": -1,
+                "room2X": 0,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "g2b",
+                    "doors": [
+                        {
+                            "subType": "wooden",
+                            "direction": "default",
+                            "room1X": 6,
+                            "room1Y": 3,
+                            "room2X": 0,
+                            "room2Y": 4,
+                            "mapTileData": {
+                                "ref": "d1b",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "starting-location"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "starting-location"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "boulder-1"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 3]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [4, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 3]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "black-imp",
+                                        "initialX": 1,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+
+                                    {
+                                        "monster": "harrower-infester",
+                                        "initialX": 3,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    }
+                                ],
+                                "turns": 5
+                            }
+                        },
+                        {
+                            "subType": "wooden",
+                            "direction": "default",
+                            "room1X": 3,
+                            "room1Y": -1,
+                            "room2X": 1,
+                            "room2Y": -1,
+                            "mapTileData": {
+                                "ref": "b1a",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "nest"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "nest"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "nest"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 3]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "nest"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 3]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "city-guard",
+                                        "initialX": 1,
+                                        "initialY": 1,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "earth-demon",
+                                        "initialX": 1,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "harrower-infester",
+                                        "initialX": 2,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 0
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "table"
+                            },
+                            "direction": "horizontal",
+                            "cells": [
+                                [1, 0], [2, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "coin",
+                                "amount": 1
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "chest",
+                                "id": "goal"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "poison"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [6, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "poison"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [2, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "poison"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [6, 2]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "harrower-infester",
+                            "initialX": 5,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "none",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "harrower-infester",
+                            "initialX": 5,
+                            "initialY": 1,
+                            "twoPlayer": "none",
+                            "threePlayer": "elite",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "harrower-infester",
+                            "initialX": 4,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 3,
+                            "initialY": 0,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 4,
+                            "initialY": 0,
+                            "twoPlayer": "none",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "black-imp",
+                            "initialX": 0,
+                            "initialY": 1,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "earth-demon",
+                            "initialX": 1,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "earth-demon",
+                            "initialX": 7,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 3
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "boulder-1"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "boulder-1"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 1]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "harrower-infester",
+                "initialX": 1,
+                "initialY": 0,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "black-imp",
+                "initialX": 2,
+                "initialY": 1,
+                "twoPlayer": "normal",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "earth-demon",
+                "initialX": 2,
+                "initialY": 3,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            }
+        ],
+        "turns": 3
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
