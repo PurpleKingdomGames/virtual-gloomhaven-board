@@ -1,0 +1,437 @@
+{
+    "id": 62,
+    "title": "Template",
+    "mapTileData": {
+        "ref": "k1b",
+        "doors": [
+            {
+                "subType": "dark-fog",
+                "direction": "default",
+                "room1X": 6,
+                "room1Y": 6,
+                "room2X": 2,
+                "room2Y": 5,
+                "mapTileData": {
+                    "ref": "i2a",
+                    "doors": [
+                        {
+                            "subType": "dark-fog",
+                            "direction": "default",
+                            "room1X": 2,
+                            "room1Y": -1,
+                            "room2X": 2,
+                            "room2Y": -1,
+                            "mapTileData": {
+                                "ref": "d2b",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "hazard",
+                                            "subType": "hot-coals"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "hazard",
+                                            "subType": "hot-coals"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "hazard",
+                                            "subType": "hot-coals"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "hazard",
+                                            "subType": "hot-coals"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 3]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "hazard",
+                                            "subType": "hot-coals"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 3]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 3]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 4]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 4]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "chest",
+                                            "id": "12"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 4]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "inox-guard",
+                                        "initialX": 2,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "inox-archer",
+                                        "initialX": 1,
+                                        "initialY": 0,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "inox-archer",
+                                        "initialX": 3,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "flame-demon",
+                                        "initialX": 1,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "flame-demon",
+                                        "initialX": 1,
+                                        "initialY": 3,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    }
+                                ],
+                                "turns": 3
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [2, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [2, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [2, 3]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "inox-guard",
+                            "initialX": 1,
+                            "initialY": 3,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "inox-guard",
+                            "initialX": 3,
+                            "initialY": 3,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "inox-archer",
+                            "initialX": 4,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "flame-demon",
+                            "initialX": 2,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "flame-demon",
+                            "initialX": 4,
+                            "initialY": 0,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "flame-demon",
+                            "initialX": 1,
+                            "initialY": 1,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 4]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 4]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 5]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "inox-guard",
+                "initialX": 5,
+                "initialY": 4,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "inox-guard",
+                "initialX": 6,
+                "initialY": 4,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "inox-guard",
+                "initialX": 7,
+                "initialY": 4,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "inox-archer",
+                "initialX": 5,
+                "initialY": 5,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "inox-archer",
+                "initialX": 6,
+                "initialY": 5,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "vermling-scout",
+                "initialX": 3,
+                "initialY": 0,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "vermling-scout",
+                "initialX": 5,
+                "initialY": 0,
+                "twoPlayer": "normal",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "vermling-scout",
+                "initialX": 4,
+                "initialY": 1,
+                "twoPlayer": "normal",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "vermling-scout",
+                "initialX": 3,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "vermling-scout",
+                "initialX": 6,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "vermling-scout",
+                "initialX": 4,
+                "initialY": 3,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            }
+        ],
+        "turns": 3
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
