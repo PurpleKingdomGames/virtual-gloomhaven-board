@@ -1,0 +1,660 @@
+{
+    "id": 70,
+    "title": "Chained Isle",
+    "mapTileData": {
+        "ref": "l3a",
+        "doors": [
+            {
+                "subType": "corridor",
+                "material": "earth",
+                "size": 2,
+                "direction": "horizontal",
+                "room1X": -1,
+                "room1Y": 0,
+                "room2X": 0,
+                "room2Y": 6,
+                "mapTileData": {
+                    "ref": "l1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "earth",
+                "size": 1,
+                "direction": "default",
+                "room1X": -1,
+                "room1Y": 1,
+                "room2X": -1,
+                "room2Y": 5,
+                "mapTileData": {
+                    "ref": "l1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "earth",
+                "size": 2,
+                "direction": "horizontal",
+                "room1X": -1,
+                "room1Y": 2,
+                "room2X": 0,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "l1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "earth",
+                "size": 1,
+                "direction": "horizontal",
+                "room1X": -1,
+                "room1Y": 3,
+                "room2X": -1,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "l1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "earth",
+                "size": 2,
+                "direction": "horizontal",
+                "room1X": -1,
+                "room1Y": 4,
+                "room2X": 0,
+                "room2Y": 2,
+                "mapTileData": {
+                    "ref": "l1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "earth",
+                "size": 1,
+                "direction": "horizontal",
+                "room1X": -1,
+                "room1Y": 5,
+                "room2X": -1,
+                "room2Y": 1,
+                "mapTileData": {
+                    "ref": "l1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "earth",
+                "size": 2,
+                "direction": "horizontal",
+                "room1X": -1,
+                "room1Y": 6,
+                "room2X": 0,
+                "room2Y": 0,
+                "mapTileData": {
+                    "ref": "l1b",
+                    "doors": [
+                        {
+                            "subType": "dark-fog",
+                            "direction": "default",
+                            "room1X": -1,
+                            "room1Y": -1,
+                            "room2X": 3,
+                            "room2Y": 0,
+                            "mapTileData": {
+                                "ref": "a3a",
+                                "doors": [
+                                    {
+                                        "subType": "dark-fog",
+                                        "direction": "default",
+                                        "room1X": 2,
+                                        "room1Y": 3,
+                                        "room2X": -1,
+                                        "room2Y": 1,
+                                        "mapTileData": {
+                                            "ref": "d2b",
+                                            "doors": [
+                                                {
+                                                    "subType": "dark-fog",
+                                                    "direction": "default",
+                                                    "room1X": 2,
+                                                    "room1Y": -1,
+                                                    "room2X": 3,
+                                                    "room2Y": 0,
+                                                    "mapTileData": {
+                                                        "ref": "a2b",
+                                                        "doors": [
+                                                            {
+                                                                "subType": "dark-fog",
+                                                                "direction": "default",
+                                                                "room1X": 0,
+                                                                "room1Y": 3,
+                                                                "room2X": 1,
+                                                                "room2Y": -1,
+                                                                "mapTileData": {
+                                                                    "ref": "e1b",
+                                                                    "doors": [],
+                                                                    "overlays": [
+                                                                        {
+                                                                            "ref": {
+                                                                                "type": "trap",
+                                                                                "subType": "bear"
+                                                                            },
+                                                                            "direction": "default",
+                                                                            "cells": [
+                                                                                [1, 1]
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "ref": {
+                                                                                "type": "trap",
+                                                                                "subType": "bear"
+                                                                            },
+                                                                            "direction": "default",
+                                                                            "cells": [
+                                                                                [4, 2]
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "ref": {
+                                                                                "type": "treasure",
+                                                                                "subType": "coin",
+                                                                                "amount": 1
+                                                                            },
+                                                                            "direction": "default",
+                                                                            "cells": [
+                                                                                [3, 2]
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "ref": {
+                                                                                "type": "treasure",
+                                                                                "subType": "coin",
+                                                                                "amount": 1
+                                                                            },
+                                                                            "direction": "default",
+                                                                            "cells": [
+                                                                                [0, 3]
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "ref": {
+                                                                                "type": "treasure",
+                                                                                "subType": "coin",
+                                                                                "amount": 1
+                                                                            },
+                                                                            "direction": "default",
+                                                                            "cells": [
+                                                                                [4, 4]
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "ref": {
+                                                                                "type": "treasure",
+                                                                                "subType": "chest",
+                                                                                "id": "06"
+                                                                            },
+                                                                            "direction": "default",
+                                                                            "cells": [
+                                                                                [3, 4]
+                                                                            ]
+                                                                        }
+                                                                    ],
+                                                                    "monsters": [
+                                                                        {
+                                                                            "monster": "night-demon",
+                                                                            "initialX": 0,
+                                                                            "initialY": 1,
+                                                                            "twoPlayer": "none",
+                                                                            "threePlayer": "none",
+                                                                            "fourPlayer": "normal"
+                                                                        },
+                                                                        {
+                                                                            "monster": "night-demon",
+                                                                            "initialX": 3,
+                                                                            "initialY": 1,
+                                                                            "twoPlayer": "normal",
+                                                                            "threePlayer": "elite",
+                                                                            "fourPlayer": "elite"
+                                                                        },
+                                                                        {
+                                                                            "monster": "wind-demon",
+                                                                            "initialX": 1,
+                                                                            "initialY": 3,
+                                                                            "twoPlayer": "elite",
+                                                                            "threePlayer": "elite",
+                                                                            "fourPlayer": "elite"
+                                                                        },
+                                                                        {
+                                                                            "monster": "wind-demon",
+                                                                            "initialX": 4,
+                                                                            "initialY": 3,
+                                                                            "twoPlayer": "none",
+                                                                            "threePlayer": "none",
+                                                                            "fourPlayer": "normal"
+                                                                        }
+                                                                    ],
+                                                                    "turns": 1
+                                                                }
+                                                            }
+                                                        ],
+                                                        "overlays": [
+                                                            {
+                                                                "ref": {
+                                                                    "type": "trap",
+                                                                    "subType": "bear"
+                                                                },
+                                                                "direction": "default",
+                                                                "cells": [
+                                                                    [1, 1]
+                                                                ]
+                                                            },
+                                                            {
+                                                                "ref": {
+                                                                    "type": "trap",
+                                                                    "subType": "bear"
+                                                                },
+                                                                "direction": "default",
+                                                                "cells": [
+                                                                    [2, 2]
+                                                                ]
+                                                            },
+                                                            {
+                                                                "ref": {
+                                                                    "type": "treasure",
+                                                                    "subType": "coin",
+                                                                    "amount": 1
+                                                                },
+                                                                "direction": "default",
+                                                                "cells": [
+                                                                    [4, 2]
+                                                                ]
+                                                            }
+                                                        ],
+                                                        "monsters": [],
+                                                        "turns": 1
+                                                    }
+                                                }
+                                            ],
+                                            "overlays": [
+                                                {
+                                                    "ref": {
+                                                        "type": "trap",
+                                                        "subType": "bear"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [3, 4]
+                                                    ]
+                                                },
+                                                {
+                                                    "ref": {
+                                                        "type": "obstacle",
+                                                        "subType": "boulder-1"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [2, 0]
+                                                    ]
+                                                },
+                                                {
+                                                    "ref": {
+                                                        "type": "obstacle",
+                                                        "subType": "boulder-1"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [1, 1]
+                                                    ]
+                                                },
+                                                {
+                                                    "ref": {
+                                                        "type": "obstacle",
+                                                        "subType": "boulder-1"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [1, 2]
+                                                    ]
+                                                },
+                                                {
+                                                    "ref": {
+                                                        "type": "obstacle",
+                                                        "subType": "boulder-1"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [2, 2]
+                                                    ]
+                                                },
+                                                {
+                                                    "ref": {
+                                                        "type": "obstacle",
+                                                        "subType": "boulder-1"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [2, 3]
+                                                    ]
+                                                },
+                                                {
+                                                    "ref": {
+                                                        "type": "treasure",
+                                                        "subType": "coin",
+                                                        "amount": 1
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [4, 2]
+                                                    ]
+                                                },
+                                                {
+                                                    "ref": {
+                                                        "type": "treasure",
+                                                        "subType": "coin",
+                                                        "amount": 1
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [1, 4]
+                                                    ]
+                                                }
+                                            ],
+                                            "monsters": [
+                                                {
+                                                    "monster": "night-demon",
+                                                    "initialX": 0,
+                                                    "initialY": 3,
+                                                    "twoPlayer": "none",
+                                                    "threePlayer": "none",
+                                                    "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "night-demon",
+                                                    "initialX": 1,
+                                                    "initialY": 3,
+                                                    "twoPlayer": "normal",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "wind-demon",
+                                                    "initialX": 2,
+                                                    "initialY": 1,
+                                                    "twoPlayer": "none",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "wind-demon",
+                                                    "initialX": 3,
+                                                    "initialY": 1,
+                                                    "twoPlayer": "normal",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                }
+                                            ],
+                                            "turns": 4
+                                        }
+                                    }
+                                ],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 1]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "night-demon",
+                                        "initialX": 0,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "wind-demon",
+                                        "initialX": 4,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 3
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "starting-location"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 6]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "starting-location"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 6]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "tree-3"
+                            },
+                            "direction": "horizontal",
+                            "cells": [
+                                [0, 3], [-1, 3], [0, 4]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "tree-3"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [2, 2], [3, 2], [2, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "thorns"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 5]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "thorns"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "difficult-terrain",
+                                "subType": "log"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [2, 4], [2, 5]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "night-demon",
+                            "initialX": 0,
+                            "initialY": 0,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "night-demon",
+                            "initialX": 1,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "wind-demon",
+                            "initialX": 2,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "wind-demon",
+                            "initialX": 3,
+                            "initialY": 3,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "hazard",
+                    "subType": "thorns"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "hazard",
+                    "subType": "thorns"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "log"
+                },
+                "direction": "diagonal-left",
+                "cells": [
+                    [4, 2], [3, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "log"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 6], [1, 6]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "tree-3"
+                },
+                "direction": "horizontal",
+                "cells": [
+                    [2, 4], [3, 4], [2, 3]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "night-demon",
+                "initialX": 2,
+                "initialY": 2,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "wind-demon",
+                "initialX": 1,
+                "initialY": 4,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            }
+        ],
+        "turns": 3
+    },
+    "angle": 0,
+    "additionalMonsters": ["living-spirit"]
+}
