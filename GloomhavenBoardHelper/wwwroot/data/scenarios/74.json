@@ -1,0 +1,518 @@
+{
+    "id": 74,
+    "title": "Merchant Ship",
+    "mapTileData": {
+        "ref": "b1a",
+        "doors": [
+            {
+                "subType": "corridor",
+                "material": "wood",
+                "size": 1,
+                "direction": "horizontal",
+                "room1X": 1,
+                "room1Y": -1,
+                "room2X": 3,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "g2b",
+                    "doors": [
+                        {
+                            "subType": "wooden",
+                            "direction": "default",
+                            "room1X": 1,
+                            "room1Y": 3,
+                            "room2X": 1,
+                            "room2Y": 5,
+                            "mapTileData": {
+                                "ref": "i1a",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "barrel"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "table"
+                                        },
+                                        "direction": "diagonal-left-reverse",
+                                        "cells": [
+                                            [3, 2], [3, 3]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [5, 4]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "chest",
+                                            "id": "20"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 0]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "bandit-archer",
+                                        "initialX": 3,
+                                        "initialY": 0,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "bandit-archer",
+                                        "initialX": 0,
+                                        "initialY": 3,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "bandit-guard",
+                                        "initialX": 3,
+                                        "initialY": 4,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "lurker",
+                                        "initialX": 0,
+                                        "initialY": 1,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "lurker",
+                                        "initialX": 4,
+                                        "initialY": 3,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "none"
+                                    }
+                                ],
+                                "turns": 3
+                            }
+                        },
+                        {
+                            "subType": "wooden",
+                            "direction": "default",
+                            "room1X": 5,
+                            "room1Y": 3,
+                            "room2X": 3,
+                            "room2Y": 5,
+                            "mapTileData": {
+                                "ref": "i2b",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "barrel"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [4, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "barrel"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 4]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "table"
+                                        },
+                                        "direction": "diagonal-right-reverse",
+                                        "cells": [
+                                            [1, 1], [1, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 0]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [0, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "treasure",
+                                            "subType": "coin",
+                                            "amount": 1
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 4]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "lurker",
+                                        "initialX": 2,
+                                        "initialY": 0,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "lurker",
+                                        "initialX": 0,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "bandit-archer",
+                                        "initialX": 1,
+                                        "initialY": 3,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "bandit-guard",
+                                        "initialX": 4,
+                                        "initialY": 4,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 3
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "starting-location"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 0]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "starting-location"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [6, 0]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "lurker",
+                            "initialX": 3,
+                            "initialY": 0,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "lurker",
+                            "initialX": 3,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "deep-terror",
+                            "initialX": 0,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "deep-terror",
+                            "initialX": 3,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "elite",
+                            "fourPlayer": "none"
+                        },
+                        {
+                            "monster": "deep-terror",
+                            "initialX": 7,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "bandit-guard",
+                            "initialX": 1,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "bandit-guard",
+                            "initialX": 4,
+                            "initialY": 1,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "bandit-guard",
+                            "initialX": 1,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "bandit-guard",
+                            "initialX": 6,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [3, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [3, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "water"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 3]
+                ]
+            }
+        ],
+        "monsters": [],
+        "turns": 3
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
