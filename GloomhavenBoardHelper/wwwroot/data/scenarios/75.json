@@ -38,7 +38,7 @@
                             "direction": "default",
                             "room1X": -1,
                             "room1Y": 1,
-                            "room2X": 4,
+                            "room2X": -1,
                             "room2Y": 5,
                             "mapTileData": {
                                 "ref": "l3a",
@@ -72,7 +72,7 @@
                             "direction": "default",
                             "room1X": -1,
                             "room1Y": 3,
-                            "room2X": 4,
+                            "room2X": -1,
                             "room2Y": 3,
                             "mapTileData": {
                                 "ref": "l3a",
@@ -106,7 +106,7 @@
                             "direction": "default",
                             "room1X": -1,
                             "room1Y": 5,
-                            "room2X": 4,
+                            "room2X": -1,
                             "room2Y": 1,
                             "mapTileData": {
                                 "ref": "l3a",
