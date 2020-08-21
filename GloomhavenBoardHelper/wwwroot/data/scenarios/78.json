@@ -1,0 +1,349 @@
+{
+    "id": 78,
+    "title": "Sacrifice Pit",
+    "mapTileData": {
+        "ref": "f1a",
+        "doors": [
+            {
+                "subType": "stone",
+                "direction": "vertical",
+                "room1X": -1,
+                "room1Y": 1,
+                "room2X": -1,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "m1a",
+                    "doors": [
+                        {
+                            "subType": "stone",
+                            "direction": "default",
+                            "room1X": 1,
+                            "room1Y": 7,
+                            "room2X": 1,
+                            "room2Y": -1,
+                            "mapTileData": {
+                                "ref": "i1b",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 0
+                            }
+                        },
+                        {
+                            "subType": "stone",
+                            "direction": "default",
+                            "room1X": 2,
+                            "room1Y": 7,
+                            "room2X": 2,
+                            "room2Y": -1,
+                            "mapTileData": {
+                                "ref": "i1b",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 0
+                            }
+                        },
+                        {
+                            "subType": "stone",
+                            "direction": "default",
+                            "room1X": 3,
+                            "room1Y": 7,
+                            "room2X": 3,
+                            "room2Y": -1,
+                            "mapTileData": {
+                                "ref": "i1b",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "altar"
+                                        },
+                                        "direction": "horizontal",
+                                        "cells": [
+                                            [2, 4]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "altar"
+                                        },
+                                        "direction": "horizontal",
+                                        "cells": [
+                                            [3, 4]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "black-imp",
+                                        "initialX": 0,
+                                        "initialY": 0,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "black-imp",
+                                        "initialX": 5,
+                                        "initialY": 0,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "black-imp",
+                                        "initialX": 2,
+                                        "initialY": 1,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "black-imp",
+                                        "initialX": 0,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "black-imp",
+                                        "initialX": 5,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "black-imp",
+                                        "initialX": 0,
+                                        "initialY": 3,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "black-imp",
+                                        "initialX": 4,
+                                        "initialY": 3,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "cultist",
+                                        "initialX": 0,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "cultist",
+                                        "initialX": 4,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    }
+                                ],
+                                "turns": 0
+                            }
+                        }
+                    ],
+                    "overlays": [],
+                    "monsters": [
+                        {
+                            "monster": "bandit-archer",
+                            "initialX": 3,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "bandit-archer",
+                            "initialX": 5,
+                            "initialY": 4,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "bandit-archer",
+                            "initialX": 4,
+                            "initialY": 6,
+                            "twoPlayer": "normal",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "cultist",
+                            "initialX": 2,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "cultist",
+                            "initialX": 3,
+                            "initialY": 0,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "cultist",
+                            "initialX": 4,
+                            "initialY": 1,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "cultist",
+                            "initialX": 0,
+                            "initialY": 5,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "cultist",
+                            "initialX": 1,
+                            "initialY": 5,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "cultist",
+                            "initialX": 1,
+                            "initialY": 6,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 8]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 8]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 8]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 7]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 7]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "boulder-1"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "boulder-1"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 4]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "bandit-guard",
+                "initialX": 1,
+                "initialY": 4,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "bandit-guard",
+                "initialX": 0,
+                "initialY": 5,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "bandit-guard",
+                "initialX": 1,
+                "initialY": 5,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "bandit-archer",
+                "initialX": 0,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "bandit-archer",
+                "initialX": 2,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 3
+    },
+    "angle": 0,
+    "additionalMonsters": [ "living-bones" ]
+}
