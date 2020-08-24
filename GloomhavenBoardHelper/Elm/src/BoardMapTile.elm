@@ -66,6 +66,7 @@ type MapTileRef
     | M1b
     | N1a
     | N1b
+    | Empty
 
 
 type alias MapTile =
@@ -143,6 +144,7 @@ boardRefDict =
         , ( "m1b", M1b )
         , ( "n1a", N1a )
         , ( "n1b", N1b )
+        , ( "empty", Empty )
         ]
 
 
@@ -459,6 +461,9 @@ getGridByRef ref =
 
             N1b ->
                 configN
+
+            Empty ->
+                [ Array.fromList [ True ] ]
         )
 
 
