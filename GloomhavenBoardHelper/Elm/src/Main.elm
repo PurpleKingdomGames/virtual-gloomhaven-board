@@ -109,7 +109,7 @@ main =
 
 
 initScenario =
-    50
+    82
 
 
 init : Int -> ( Model, Cmd Msg )
@@ -746,12 +746,18 @@ getMapTileHtml visibleRooms roomData =
         , style "top" (String.fromInt yPx ++ "px")
         , style "left" (String.fromInt xPx ++ "px")
         ]
-        [ img
-            [ src ("/img/map-tiles/" ++ ref ++ ".png")
-            , class ("ref-" ++ ref)
-            ]
-            []
-        ]
+        (case roomData.ref of
+            Empty ->
+                []
+
+            _ ->
+                [ img
+                    [ src ("/img/map-tiles/" ++ ref ++ ".png")
+                    , class ("ref-" ++ ref)
+                    ]
+                    []
+                ]
+        )
 
 
 getBoardHtml : Model -> Game -> Int -> Array Cell -> Html.Html Msg
@@ -1042,8 +1048,15 @@ overlayToHtml model coords overlay =
                 StartingLocation ->
                     "start-location"
 
-                Treasure _ ->
-                    "treasure"
+                Treasure t ->
+                    "treasure "
+                        ++ (case t of
+                                Coin _ ->
+                                    "coin"
+
+                                Chest _ ->
+                                    "chest"
+                           )
 
                 Obstacle _ ->
                     "obstacle"
@@ -1054,8 +1067,15 @@ overlayToHtml model coords overlay =
                 DifficultTerrain _ ->
                     "difficult-terrain"
 
-                Door _ _ ->
+                Door c _ ->
                     "door"
+                        ++ (case c of
+                                Corridor _ _ ->
+                                    " corridor"
+
+                                _ ->
+                                    ""
+                           )
 
                 Trap _ ->
                     "trap"
