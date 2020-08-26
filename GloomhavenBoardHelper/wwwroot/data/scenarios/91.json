@@ -1,0 +1,469 @@
+{
+    "id": 91,
+    "title": "Wild Melee",
+    "mapTileData": {
+        "ref": "h2b",
+        "doors": [
+            {
+                "subType": "light-fog",
+                "direction": "default",
+                "room1X": 3,
+                "room1Y": 7,
+                "room2X": 3,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "g1a",
+                    "doors": [
+                        {
+                            "subType": "light-fog",
+                            "direction": "default",
+                            "room1X": 6,
+                            "room1Y": 3,
+                            "room2X": 2,
+                            "room2Y": -1,
+                            "mapTileData": {
+                                "ref": "m1b",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "bear"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 1]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "bear"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [3, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "bear"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [5, 2]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "bear"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 3]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "stump"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [4, 5]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "difficult-terrain",
+                                            "subType": "log"
+                                        },
+                                        "direction": "diagonal-left",
+                                        "cells": [
+                                            [1, 4], [1, 5]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "bandit-guard",
+                                        "initialX": 4,
+                                        "initialY": 0,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "bandit-guard",
+                                        "initialX": 4,
+                                        "initialY": 1,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "bandit-guard",
+                                        "initialX": 2,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "bandit-guard",
+                                        "initialX": 4,
+                                        "initialY": 3,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "bandit-guard",
+                                        "initialX": 3,
+                                        "initialY": 6,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "bandit-archer",
+                                        "initialX": 3,
+                                        "initialY": 3,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "bandit-archer",
+                                        "initialX": 5,
+                                        "initialY": 4,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "bandit-archer",
+                                        "initialX": 3,
+                                        "initialY": 5,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "bandit-archer",
+                                        "initialX": 4,
+                                        "initialY": 6,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "living-spirit",
+                                        "initialX": 0,
+                                        "initialY": 3,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "living-spirit",
+                                        "initialX": 0,
+                                        "initialY": 5,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "living-spirit",
+                                        "initialX": 2,
+                                        "initialY": 6,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 0
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "bear"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [1, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "bear"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [6, 2]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "stump"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [4, 2]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "bandit-guard",
+                            "initialX": 6,
+                            "initialY": 0,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "bandit-guard",
+                            "initialX": 3,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "bandit-guard",
+                            "initialX": 6,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "bandit-guard",
+                            "initialX": 2,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "bandit-archer",
+                            "initialX": 1,
+                            "initialY": 0,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "bandit-archer",
+                            "initialX": 7,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "bandit-archer",
+                            "initialX": 3,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "bandit-archer",
+                            "initialX": 7,
+                            "initialY": 2,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "hound",
+                            "initialX": 0,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "none"
+                        },
+                        {
+                            "monster": "hound",
+                            "initialX": 0,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "none",
+                            "fourPlayer": "none"
+                        },
+                        {
+                            "monster": "living-spirit",
+                            "initialX": 4,
+                            "initialY": 1,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "stump"
+                },
+                "direction": "default",
+                "cells": [
+                    [4, 0]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "stump"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 5]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "bandit-guard",
+                "initialX": 4,
+                "initialY": 1,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "bandit-guard",
+                "initialX": 3,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "bandit-guard",
+                "initialX": 4,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "bandit-guard",
+                "initialX": 2,
+                "initialY": 3,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "bandit-guard",
+                "initialX": 4,
+                "initialY": 4,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "bandit-archer",
+                "initialX": 3,
+                "initialY": 5,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "bandit-archer",
+                "initialX": 3,
+                "initialY": 6,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "bandit-archer",
+                "initialX": 4,
+                "initialY": 6,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "cave-bear",
+                "initialX": 5,
+                "initialY": 1,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "hound",
+                "initialX": 6,
+                "initialY": 0,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "none"
+            },
+            {
+                "monster": "hound",
+                "initialX": 6,
+                "initialY": 1,
+                "twoPlayer": "normal",
+                "threePlayer": "none",
+                "fourPlayer": "none"
+            }
+        ],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
