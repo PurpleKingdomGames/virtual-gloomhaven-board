@@ -38,25 +38,8 @@ namespace GloomhavenBoardHelper
             app.UseStaticFiles();
             app.UseDefaultFiles();
 
-            int keepAlive = Configuration.GetValue<int>("KeepAlive");
-            int bufferSize = Configuration.GetValue<int>("BufferSizeKb") * 1024;
-
-            app.UseWebSockets(new WebSocketOptions {
-                KeepAliveInterval = TimeSpan.FromSeconds(keepAlive),
-                ReceiveBufferSize = bufferSize
-            });
-
-            app.Use(async (context, next) => {
-                if (context.Request.Path == "/ws")
-                    if (context.WebSockets.IsWebSocketRequest)
-                    {
-                        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                        await SignallingHandler.Init(context, webSocket, bufferSize, keepAlive, context.RequestServices.GetRequiredService<ISubscriber>());
-                    }
-                    else
-                        context.Response.StatusCode = 400;
-                else
-                    await next();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapHub<SignalRHandler>("/ws");
             });
         }
     }
