@@ -107,10 +107,8 @@ init ( oldState, seed ) =
                         Ok val ->
                             val
 
-                        Err e ->
-                            Debug.log
-                                (Decode.errorToString e)
-                                AppStorage.empty
+                        Err _ ->
+                            AppStorage.empty
 
                 Nothing ->
                     AppStorage.empty
