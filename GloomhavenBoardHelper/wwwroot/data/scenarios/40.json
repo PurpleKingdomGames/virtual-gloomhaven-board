@@ -234,8 +234,8 @@
                                         "monster": "flame-demon",
                                         "initialX": 1,
                                         "initialY": 4,
-                                        "twoPlayer": "normal",
-                                        "threePlayer": "normal",
+                                        "twoPlayer": "none",
+                                        "threePlayer": "none",
                                         "fourPlayer": "normal"
                                     }
                                 ],

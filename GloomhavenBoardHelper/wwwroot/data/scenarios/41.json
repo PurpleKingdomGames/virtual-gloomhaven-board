@@ -159,38 +159,6 @@
                     ],
                     "monsters": [
                         {
-                            "monster": "ancient-artillery",
-                            "initialX": 0,
-                            "initialY": 0,
-                            "twoPlayer": "none",
-                            "threePlayer": "normal",
-                            "fourPlayer": "normal"
-                        },
-                        {
-                            "monster": "ancient-artillery",
-                            "initialX": 4,
-                            "initialY": 0,
-                            "twoPlayer": "normal",
-                            "threePlayer": "normal",
-                            "fourPlayer": "normal"
-                        },
-                        {
-                            "monster": "ancient-artillery",
-                            "initialX": 0,
-                            "initialY": 6,
-                            "twoPlayer": "none",
-                            "threePlayer": "none",
-                            "fourPlayer": "normal"
-                        },
-                        {
-                            "monster": "ancient-artillery",
-                            "initialX": 4,
-                            "initialY": 6,
-                            "twoPlayer": "normal",
-                            "threePlayer": "normal",
-                            "fourPlayer": "normal"
-                        },
-                        {
                             "monster": "living-corpse",
                             "initialX": 1,
                             "initialY": 1,
@@ -213,22 +181,6 @@
                             "twoPlayer": "none",
                             "threePlayer": "normal",
                             "fourPlayer": "normal"
-                        },
-                        {
-                            "monster": "stone-golem",
-                            "initialX": 2,
-                            "initialY": 0,
-                            "twoPlayer": "none",
-                            "threePlayer": "normal",
-                            "fourPlayer": "elite"
-                        },
-                        {
-                            "monster": "stone-golem",
-                            "initialX": 2,
-                            "initialY": 6,
-                            "twoPlayer": "normal",
-                            "threePlayer": "elite",
-                            "fourPlayer": "elite"
                         },
                         {
                             "monster": "living-spirit",
@@ -405,5 +357,5 @@
         "turns": 0
     },
     "angle": 0,
-    "additionalMonsters": []
+    "additionalMonsters": ["ancient-artillery", "stone-golem"]
 }
