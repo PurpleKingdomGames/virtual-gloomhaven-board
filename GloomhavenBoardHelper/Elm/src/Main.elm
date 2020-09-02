@@ -9,17 +9,17 @@ import Character exposing (CharacterClass(..), characterToString)
 import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, Game, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
-import GameSync exposing (ClientOrServer(..), Msg, pushGameState, pushInitGameState, pushUpdatedGameState, receiveGameState)
+import Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+import GameSync exposing (Msg(..), update)
 import Html exposing (div, img)
-import Html.Attributes exposing (attribute, class, hidden, src, style)
+import Html.Attributes exposing (attribute, checked, class, hidden, maxlength, required, src, style, value)
 import Http exposing (Error)
-import Json.Decode exposing (decodeValue)
 import List exposing (any, filter, filterMap, head, map, reverse, sort)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Random exposing (Seed)
 import Scenario exposing (DoorData(..), Scenario)
 import ScenarioSync exposing (loadScenarioById)
+import String exposing (join, split)
 
 
 type alias Model =
@@ -29,7 +29,7 @@ type alias Model =
     , clientsConnected : List String
     , currentScenarioInput : Int
     , currentPlayers : List CharacterClass
-    , currentServerSettings : Maybe ( ClientOrServer, String )
+    , clientSettings : Maybe ( String, Bool )
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
     }
@@ -37,8 +37,8 @@ type alias Model =
 
 type alias Config =
     { appMode : AppModeType
-    , clientOrServer : ClientOrServer
-    , joinCode : String
+    , roomCode : Maybe String
+    , showRoomCode : Bool
     }
 
 
@@ -77,11 +77,7 @@ type Msg
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
     | MoveCompleted MoveablePiece ( Int, Int )
-      -- LEGACY
-    | GameStatePushed Json.Decode.Value
-      -- END LEGACY
     | GameStateUpdated Game.GameState
-    | ClientListUpdated (List String)
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
     | ChangeGameMode GameModeType
@@ -89,8 +85,10 @@ type Msg
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
     | ChangeScenario Int
     | EnterScenarioNumber String
-    | ChangeClientServerType String
-    | ChangeJoinCode String
+    | ChangeRoomCodeInputStart String
+    | ChangeRoomCodeInputEnd String
+    | ChangeShowRoomCode Bool
+    | ChangeClientSettings (Maybe ( String, Bool ))
     | GameSyncMsg GameSync.Msg
 
 
@@ -109,16 +107,20 @@ main =
 
 
 initScenario =
-    82
+    32
 
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing (Config Game Client "join-1") (Loading initScenario) [] 0 [ Berserker, Quartermaster, Tinkerer ] Nothing DragDrop.initialState Nothing, loadScenarioById initScenario (Loaded (Random.initialSeed seed) Nothing) )
+    ( Model Nothing (Config Game Nothing True) (Loading initScenario) [] 0 [ Berserker, Quartermaster, Tinkerer ] Nothing DragDrop.initialState Nothing, loadScenarioById initScenario (Loaded (Random.initialSeed seed) Nothing) )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    let
+        roomCode =
+            Maybe.withDefault "" model.config.roomCode
+    in
     case msg of
         Loaded seed initGameState result ->
             case result of
@@ -129,7 +131,7 @@ update msg model =
                     else
                         let
                             game =
-                                generateGameMap scenario ThreePlayer seed
+                                generateGameMap scenario roomCode ThreePlayer seed
                                     |> assignPlayers model.currentPlayers
 
                             gameState =
@@ -140,7 +142,7 @@ update msg model =
                                     Nothing ->
                                         game.state
                         in
-                        ( { model | game = Just { game | state = gameState }, currentMode = MovePiece, currentScenarioInput = scenario.id }, pushInitGameState game.state )
+                        ( { model | game = Just { game | state = gameState }, currentMode = MovePiece, currentScenarioInput = scenario.id }, pushGameState model game.state )
 
                 Err _ ->
                     ( { model | currentMode = LoadFailed }, Cmd.none )
@@ -225,28 +227,7 @@ update msg model =
                                 Nothing ->
                                     oldGame
                     in
-                    ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = Just game, currentDraggable = Nothing }, pushGameState game.state )
-
-        GameStatePushed val ->
-            case model.game of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just game ->
-                    let
-                        gameState =
-                            case decodeValue GameSync.decodeGameState val of
-                                Ok s ->
-                                    if s.scenario == game.state.scenario && s.numPlayers == game.state.numPlayers && s.updateCount > game.state.updateCount then
-                                        s
-
-                                    else
-                                        game.state
-
-                                Err _ ->
-                                    game.state
-                    in
-                    ( { model | game = Just { game | state = gameState } }, pushUpdatedGameState gameState )
+                    ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = Just game, currentDraggable = Nothing }, pushGameState model game.state )
 
         RemoveOverlay overlay ->
             case model.game of
@@ -261,7 +242,7 @@ update msg model =
                         newState =
                             { gameState | overlays = List.filter (\o -> o.cells /= overlay.cells || o.ref /= overlay.ref) gameState.overlays }
                     in
-                    ( { model | game = Just { game | state = newState } }, pushGameState newState )
+                    ( { model | game = Just { game | state = newState } }, pushGameState model newState )
 
         RemovePiece piece ->
             case model.game of
@@ -273,7 +254,7 @@ update msg model =
                         newGame =
                             removePieceFromBoard piece game
                     in
-                    ( { model | game = Just newGame }, pushGameState newGame.state )
+                    ( { model | game = Just newGame }, pushGameState model newGame.state )
 
         ChangeGameMode mode ->
             ( { model | currentMode = mode }, Cmd.none )
@@ -315,7 +296,7 @@ update msg model =
                         newGame =
                             { updatedGame | state = { newState | overlays = doorToCorridor } }
                     in
-                    ( { model | game = Just newGame }, pushGameState newGame.state )
+                    ( { model | game = Just newGame }, pushGameState model newGame.state )
 
         ChangeAppMode mode ->
             let
@@ -351,37 +332,38 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        ChangeClientServerType typeStr ->
+        ChangeRoomCodeInputStart startCode ->
             let
-                currentJoinCode =
-                    case model.currentServerSettings of
-                        Just ( _, j ) ->
-                            j
-
-                        Nothing ->
-                            model.config.joinCode
+                ( ( _, roomCode2 ), showRoomCode ) =
+                    getSplitRoomCodeSettings model
             in
-            case String.toLower typeStr of
-                "client" ->
-                    ( { model | currentServerSettings = Just ( Client, currentJoinCode ) }, Cmd.none )
+            ( { model | clientSettings = Just ( startCode ++ "-" ++ roomCode2, showRoomCode ) }, Cmd.none )
 
-                "server" ->
-                    ( { model | currentServerSettings = Just ( Server, currentJoinCode ) }, Cmd.none )
+        ChangeRoomCodeInputEnd endCode ->
+            let
+                ( ( roomCode1, _ ), showRoomCode ) =
+                    getSplitRoomCodeSettings model
+            in
+            ( { model | clientSettings = Just ( roomCode1 ++ "-" ++ endCode, showRoomCode ) }, Cmd.none )
 
-                _ ->
+        ChangeShowRoomCode showRoomCode ->
+            let
+                ( ( roomCode1, roomCode2 ), _ ) =
+                    getSplitRoomCodeSettings model
+            in
+            ( { model | clientSettings = Just ( roomCode1 ++ "-" ++ roomCode2, showRoomCode ) }, Cmd.none )
+
+        ChangeClientSettings maybeSettings ->
+            case maybeSettings of
+                Just ( newRoomCode, showRoomCode ) ->
+                    let
+                        config =
+                            model.config
+                    in
+                    update (GameSyncMsg (JoinRoom newRoomCode)) { model | config = { config | showRoomCode = showRoomCode } }
+
+                Nothing ->
                     ( model, Cmd.none )
-
-        ChangeJoinCode newCode ->
-            let
-                clientOrServer =
-                    case model.currentServerSettings of
-                        Just ( s, _ ) ->
-                            s
-
-                        Nothing ->
-                            model.config.clientOrServer
-            in
-            ( { model | currentServerSettings = Just ( clientOrServer, newCode ) }, Cmd.none )
 
         GameSyncMsg gameSyncMsg ->
             let
@@ -392,10 +374,7 @@ update msg model =
                     GameSync.update
                         gameSyncMsg
                         gameState
-                        model.config.clientOrServer
-                        model.clientsConnected
                         GameStateUpdated
-                        ClientListUpdated
             in
             case updateMsg of
                 Just u ->
@@ -419,9 +398,6 @@ update msg model =
 
                 Nothing ->
                     ( { model | currentMode = Loading gameState.scenario }, loadScenarioById gameState.scenario (Loaded (Random.initialSeed gameState.scenario) (Just gameState)) )
-
-        ClientListUpdated clientList ->
-            ( { model | clientsConnected = clientList }, Cmd.none )
 
 
 view : Model -> Html.Html Msg
@@ -456,8 +432,7 @@ view model =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ receiveGameState GameStatePushed
-        , Sub.map (\s -> GameSyncMsg s) GameSync.subscriptions
+        [ Sub.map (\s -> GameSyncMsg s) GameSync.subscriptions
         ]
 
 
@@ -565,7 +540,7 @@ getDialogForAppMode model =
                             Dom.appendChild (getScenarioDialog model)
 
                         ServerConfigDialog ->
-                            Dom.appendChild (getServerSettingsDialog model)
+                            Dom.appendChild (getClientSettingsDialog model)
 
                         Game ->
                             \e -> e
@@ -606,59 +581,57 @@ getScenarioDialog model =
             ]
 
 
-getServerSettingsDialog : Model -> Element Msg
-getServerSettingsDialog model =
+getClientSettingsDialog : Model -> Element Msg
+getClientSettingsDialog model =
     let
-        ( clientOrServer, joinCode ) =
-            case model.currentServerSettings of
-                Just s ->
-                    s
-
-                Nothing ->
-                    ( model.config.clientOrServer, model.config.joinCode )
+        ( ( roomCode1, roomCode2 ), showRoomCode ) =
+            getSplitRoomCodeSettings model
     in
     Dom.element "div"
-        |> Dom.addClass "scenario-form"
+        |> Dom.addClass "client-form"
         |> Dom.appendChildList
             [ Dom.element "div"
                 |> Dom.addClass "input-wrapper"
                 |> Dom.appendChildList
                     [ Dom.element "label"
-                        |> Dom.addAttribute (attribute "for" "clientServerType")
-                        |> Dom.appendText "Type"
-                    , Dom.element "select"
-                        |> Dom.addAttribute (attribute "id" "clientServerType")
-                        |> Dom.addChangeHandler ChangeClientServerType
+                        |> Dom.addAttribute (attribute "for" "roomCodeInput1")
+                        |> Dom.appendText "Room Code"
+                    , Dom.element "div"
+                        |> Dom.addClass "split-input"
                         |> Dom.appendChildList
-                            [ Dom.element "option"
-                                |> Dom.addAttribute (attribute "value" "client")
-                                |> Dom.addAttributeConditional (attribute "selected" "selected") (clientOrServer == Client)
-                                |> Dom.appendText "Client"
-                            , Dom.element "option"
-                                |> Dom.addAttribute (attribute "value" "server")
-                                |> Dom.addAttributeConditional (attribute "selected" "selected") (clientOrServer == Server)
-                                |> Dom.appendText "Server"
+                            [ Dom.element "input"
+                                |> Dom.addAttribute (attribute "id" "roomCodeInput1")
+                                |> Dom.addChangeHandler ChangeRoomCodeInputStart
+                                |> Dom.addAttribute (maxlength 5)
+                                |> Dom.addAttribute (required True)
+                                |> Dom.addAttribute (value roomCode1)
+                            , Dom.element "input"
+                                |> Dom.addAttribute (attribute "id" "roomCodeInput2")
+                                |> Dom.addChangeHandler ChangeRoomCodeInputEnd
+                                |> Dom.addAttribute (maxlength 5)
+                                |> Dom.addAttribute (required True)
+                                |> Dom.addAttribute (value roomCode2)
                             ]
                     ]
             , Dom.element "div"
                 |> Dom.addClass "input-wrapper"
-                |> Dom.addAttributeConditional (attribute "hidden" "hidden") (clientOrServer == Server)
                 |> Dom.appendChildList
                     [ Dom.element "label"
-                        |> Dom.addAttribute (attribute "for" "clientServerJoinCode")
-                        |> Dom.appendText "Join Code"
+                        |> Dom.addAttribute (attribute "for" "showRoomCode")
+                        |> Dom.appendText "Show Room Code"
                     , Dom.element "input"
-                        |> Dom.addAttribute (attribute "id" "clientServerJoinCode")
-                        |> Dom.addAttribute (attribute "value" joinCode)
-                        |> Dom.addAttribute (attribute "type" "text")
-                        |> Dom.addChangeHandler ChangeJoinCode
+                        |> Dom.addAttribute (attribute "id" "showRoomCode")
+                        |> Dom.addAttribute (attribute "type" "checkbox")
+                        |> Dom.addAttribute (attribute "value" "1")
+                        |> Dom.addAttribute (checked showRoomCode)
+                        |> Dom.addToggleHandler ChangeShowRoomCode
                     ]
             , Dom.element "div"
                 |> Dom.addClass "button-wrapper"
                 |> Dom.appendChildList
                     [ Dom.element "button"
                         |> Dom.appendText "OK"
-                        |> Dom.addAction ( "click", ChangeScenario model.currentScenarioInput )
+                        |> Dom.addAction ( "click", ChangeClientSettings model.clientSettings )
                     , Dom.element "button"
                         |> Dom.appendText "Cancel"
                         |> Dom.addAction ( "click", ChangeAppMode Game )
@@ -1243,3 +1216,27 @@ addActionsForCell currentMode coords overlays element =
 
         _ ->
             element
+
+
+getSplitRoomCodeSettings : Model -> ( ( String, String ), Bool )
+getSplitRoomCodeSettings model =
+    let
+        ( fullCode, b ) =
+            case model.clientSettings of
+                Just s ->
+                    s
+
+                Nothing ->
+                    ( Maybe.withDefault "" model.config.roomCode, model.config.showRoomCode )
+    in
+    case split "-" fullCode of
+        head :: rest ->
+            ( ( head, join "" rest ), b )
+
+        _ ->
+            ( ( "", "" ), b )
+
+
+pushGameState : Model -> GameState -> Cmd Msg
+pushGameState model state =
+    GameSync.pushGameState (Maybe.withDefault "" model.config.roomCode) state

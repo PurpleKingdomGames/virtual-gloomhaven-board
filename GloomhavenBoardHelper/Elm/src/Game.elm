@@ -60,6 +60,7 @@ type alias GameState =
     , overlays : List BoardOverlay
     , pieces : List Piece
     , availableMonsters : Dict String (Array Int)
+    , roomCode : String
     }
 
 
@@ -106,8 +107,8 @@ getPieceName piece =
             ""
 
 
-generateGameMap : Scenario -> NumPlayers -> Seed -> Game
-generateGameMap scenario numPlayers seed =
+generateGameMap : Scenario -> String -> NumPlayers -> Seed -> Game
+generateGameMap scenario roomCode numPlayers seed =
     let
         ( mapTiles, bounds ) =
             mapTileDataToList scenario.mapTilesData Nothing
@@ -126,6 +127,7 @@ generateGameMap scenario numPlayers seed =
                 []
                 []
                 availableMonsters
+                roomCode
 
         initOverlays =
             mapTileDataToOverlayList scenario.mapTilesData
