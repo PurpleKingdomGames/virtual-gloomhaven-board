@@ -1,4 +1,4 @@
-port module GameSync exposing (Msg(..), decodeGameState, encodeGameState, pushGameState, subscriptions, update)
+port module GameSync exposing (Msg(..), connectToServer, decodeGameState, encodeGameState, pushGameState, subscriptions, update)
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -11,6 +11,12 @@ import Json.Encode as Encode exposing (int, list, object, string)
 import List exposing (map)
 import Monster exposing (MonsterLevel(..), monsterTypeToString)
 import SharedSync exposing (decodeBoardOverlay, decodeMapRefList, decodeMonster)
+
+
+port connect : () -> Cmd msg
+
+
+port createRoom : () -> Cmd msg
 
 
 port sendUpdate : ( String, Encode.Value ) -> Cmd msg
@@ -55,14 +61,31 @@ type Msg
     | RoomCodeInvalid ()
 
 
+connectToServer : Cmd msg
+connectToServer =
+    connect ()
+
+
 pushGameState : String -> GameState -> Cmd msg
 pushGameState roomCode gameState =
-    sendUpdate ( roomCode, encodeGameState { gameState | updateCount = gameState.updateCount + 1 } )
+    sendUpdate ( roomCode, encodeGameState { gameState | updateCount = gameState.updateCount + 1, roomCode = roomCode } )
 
 
 update : Msg -> Maybe GameState -> (GameState -> msg) -> ( Maybe msg, Cmd msg )
 update msg gameState gameStateUpdateMsg =
     case msg of
+        Connected _ ->
+            case gameState of
+                Just g ->
+                    if g.roomCode == "" then
+                        ( Nothing, createRoom () )
+
+                    else
+                        ( Nothing, joinRoom ( Nothing, g.roomCode ) )
+
+                Nothing ->
+                    ( Nothing, createRoom () )
+
         UpdateReceived val ->
             let
                 newGameState =
@@ -70,12 +93,15 @@ update msg gameState gameStateUpdateMsg =
             in
             ( Maybe.map (\s -> gameStateUpdateMsg s) newGameState, Cmd.none )
 
+        RoomCodeReceived roomCode ->
+            ( Maybe.map (\g -> gameStateUpdateMsg { g | updateCount = 0, roomCode = roomCode }) gameState, Cmd.none )
+
         JoinRoom roomCode ->
             let
                 oldRoomCode =
                     Maybe.map (\s -> s.roomCode) gameState
             in
-            ( Maybe.map (\g -> gameStateUpdateMsg { g | updateCount = 0 }) gameState, joinRoom ( oldRoomCode, roomCode ) )
+            ( Maybe.map (\g -> gameStateUpdateMsg { g | updateCount = 0, roomCode = roomCode }) gameState, joinRoom ( oldRoomCode, roomCode ) )
 
         _ ->
             ( Nothing, Cmd.none )
@@ -87,7 +113,7 @@ decodeAndUpdateGameState gameState val =
         Ok s ->
             case gameState of
                 Just g ->
-                    if s.updateCount > g.updateCount then
+                    if s.updateCount > g.updateCount && s.roomCode == g.roomCode then
                         Just s
 
                     else
@@ -137,6 +163,7 @@ encodeGameState gameState =
         , ( "overlays", Encode.list Encode.object (encodeOverlays gameState.overlays) )
         , ( "pieces", Encode.list Encode.object (encodePieces gameState.pieces) )
         , ( "availableMonsters", Encode.list Encode.object (encodeAvailableMonsters gameState.availableMonsters) )
+        , ( "roomCode", Encode.string gameState.roomCode )
         ]
 
 

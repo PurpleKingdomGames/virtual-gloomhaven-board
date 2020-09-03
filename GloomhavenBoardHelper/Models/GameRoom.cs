@@ -22,7 +22,7 @@ namespace GloomhavenBoardHelper.Models {
             for (int i = 0; i < CODE_LENGTH; i++)
                 code += ValidChars[rnd.Next(0, ValidChars.Length)];
 
-            return code.Substring(0, 4) + "-" + code.Substring(4);
+            return code.Substring(0, 5) + "-" + code.Substring(5);
         }
 
         public static bool ValidateCode(string roomCode) {

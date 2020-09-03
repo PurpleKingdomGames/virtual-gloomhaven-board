@@ -10,16 +10,18 @@ import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
-import GameSync exposing (Msg(..), update)
+import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (div, img)
 import Html.Attributes exposing (attribute, checked, class, hidden, maxlength, required, src, style, value)
 import Http exposing (Error)
 import List exposing (any, filter, filterMap, head, map, reverse, sort)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
+import Process
 import Random exposing (Seed)
 import Scenario exposing (DoorData(..), Scenario)
 import ScenarioSync exposing (loadScenarioById)
 import String exposing (join, split)
+import Task
 
 
 type alias Model =
@@ -32,6 +34,7 @@ type alias Model =
     , clientSettings : Maybe ( String, Bool )
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
+    , connectionStatus : ConnectionStatus
     }
 
 
@@ -57,6 +60,12 @@ type GameModeType
     | LootCell
     | RevealRoom
     | AddPiece
+
+
+type ConnectionStatus
+    = Connected
+    | Disconnected
+    | Reconnecting
 
 
 type AppModeType
@@ -90,6 +99,7 @@ type Msg
     | ChangeShowRoomCode Bool
     | ChangeClientSettings (Maybe ( String, Bool ))
     | GameSyncMsg GameSync.Msg
+    | PushGameState
 
 
 main : Program Int Model Msg
@@ -106,13 +116,16 @@ main =
 -- PLACEHOLDER
 
 
+initScenario : Int
 initScenario =
     32
 
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing (Config Game Nothing True) (Loading initScenario) [] 0 [ Berserker, Quartermaster, Tinkerer ] Nothing DragDrop.initialState Nothing, loadScenarioById initScenario (Loaded (Random.initialSeed seed) Nothing) )
+    ( Model Nothing (Config Game Nothing True) (Loading initScenario) [] 0 [ Berserker, Quartermaster, Tinkerer ] Nothing DragDrop.initialState Nothing Disconnected
+    , Cmd.batch [ connectToServer, loadScenarioById initScenario (Loaded (Random.initialSeed seed) Nothing) ]
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -137,12 +150,23 @@ update msg model =
                             gameState =
                                 case initGameState of
                                     Just gs ->
-                                        gs
+                                        if gs.scenario == scenario.id then
+                                            gs
+
+                                        else
+                                            let
+                                                state =
+                                                    game.state
+                                            in
+                                            { state | roomCode = gs.roomCode, updateCount = gs.updateCount }
 
                                     Nothing ->
                                         game.state
+
+                            newModel =
+                                { model | game = Just { game | state = gameState }, currentMode = MovePiece, currentScenarioInput = scenario.id }
                         in
-                        ( { model | game = Just { game | state = gameState }, currentMode = MovePiece, currentScenarioInput = scenario.id }, pushGameState model game.state )
+                        ( newModel, pushGameState newModel gameState )
 
                 Err _ ->
                     ( { model | currentMode = LoadFailed }, Cmd.none )
@@ -315,10 +339,13 @@ update msg model =
                         Nothing ->
                             Random.initialSeed 0
 
+                gameState =
+                    Maybe.map (\g -> g.state) model.game
+
                 config =
                     model.config
             in
-            ( { model | config = { config | appMode = Game }, currentMode = Loading newScenario, currentDraggable = Nothing, game = Nothing }, loadScenarioById newScenario (Loaded seed Nothing) )
+            ( { model | config = { config | appMode = Game }, currentMode = Loading newScenario, currentDraggable = Nothing, game = Nothing }, loadScenarioById newScenario (Loaded seed gameState) )
 
         EnterScenarioNumber strId ->
             case String.toInt strId of
@@ -360,13 +387,49 @@ update msg model =
                         config =
                             model.config
                     in
-                    update (GameSyncMsg (JoinRoom newRoomCode)) { model | config = { config | showRoomCode = showRoomCode } }
+                    update (GameSyncMsg (JoinRoom newRoomCode)) { model | config = { config | showRoomCode = showRoomCode, appMode = Game } }
 
                 Nothing ->
                     ( model, Cmd.none )
 
         GameSyncMsg gameSyncMsg ->
             let
+                connectedState =
+                    case gameSyncMsg of
+                        GameSync.Connected _ ->
+                            Connected
+
+                        GameSync.Disconnected _ ->
+                            Disconnected
+
+                        GameSync.Reconnecting _ ->
+                            Reconnecting
+
+                        _ ->
+                            model.connectionStatus
+
+                config =
+                    case gameSyncMsg of
+                        GameSync.RoomCodeReceived r ->
+                            let
+                                c =
+                                    model.config
+                            in
+                            { c | roomCode = Just r }
+
+                        GameSync.JoinRoom r ->
+                            let
+                                c =
+                                    model.config
+                            in
+                            { c | roomCode = Just r }
+
+                        _ ->
+                            model.config
+
+                updatedConfigModel =
+                    { model | config = config, connectionStatus = connectedState }
+
                 gameState =
                     Maybe.map (\g -> g.state) model.game
 
@@ -380,12 +443,12 @@ update msg model =
                 Just u ->
                     let
                         ( newModel, msgs ) =
-                            update u model
+                            update u updatedConfigModel
                     in
                     ( newModel, Cmd.batch [ cmdMsg, msgs ] )
 
                 Nothing ->
-                    ( model, cmdMsg )
+                    ( updatedConfigModel, cmdMsg )
 
         GameStateUpdated gameState ->
             case model.game of
@@ -394,10 +457,18 @@ update msg model =
                         ( { model | game = Just { game | state = gameState } }, Cmd.none )
 
                     else
-                        ( { model | currentMode = Loading gameState.scenario }, loadScenarioById gameState.scenario (Loaded (Random.initialSeed gameState.scenario) (Just gameState)) )
+                        ( { model | currentMode = Loading gameState.scenario }, loadScenarioById gameState.scenario (Loaded game.seed (Just gameState)) )
 
                 Nothing ->
                     ( { model | currentMode = Loading gameState.scenario }, loadScenarioById gameState.scenario (Loaded (Random.initialSeed gameState.scenario) (Just gameState)) )
+
+        PushGameState ->
+            case model.game of
+                Just g ->
+                    ( model, pushGameState model g.state )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
 
 view : Model -> Html.Html Msg
@@ -531,7 +602,7 @@ getMenuHtml =
 getDialogForAppMode : Model -> Html.Html Msg
 getDialogForAppMode model =
     Dom.element "div"
-        |> Dom.addClass "overlay"
+        |> Dom.addClass "overlay-dialog"
         |> Dom.appendChild
             (Dom.element "div"
                 |> Dom.addClass "dialog"
@@ -1239,4 +1310,9 @@ getSplitRoomCodeSettings model =
 
 pushGameState : Model -> GameState -> Cmd Msg
 pushGameState model state =
-    GameSync.pushGameState (Maybe.withDefault "" model.config.roomCode) state
+    if model.connectionStatus /= Connected || model.config.roomCode == Nothing then
+        Process.sleep 500
+            |> Task.perform (\_ -> PushGameState)
+
+    else
+        GameSync.pushGameState (Maybe.withDefault "" model.config.roomCode) state

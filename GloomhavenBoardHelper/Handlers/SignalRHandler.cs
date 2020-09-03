@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 namespace GloomhavenBoardHelper.Handlers
 {
     public class SignalRHandler : Hub {
-        public async Task SendGameState(string joinCode, string gameState) =>
-            await Clients.Group(joinCode).SendAsync("ReceiveGameState", gameState);
+        public async Task SendGameState(string roomCode, object gameState) {
+            if (!string.IsNullOrEmpty(roomCode))
+                await Clients.Group(roomCode).SendAsync("ReceiveGameState", gameState);
+        }
 
         public async Task CreateRoom() {
             string roomCode = GameRoom.GenerateCode();
@@ -15,12 +17,18 @@ namespace GloomhavenBoardHelper.Handlers
             await JoinRoom(roomCode);
         }
 
-        public async Task LeaveRoom(string roomCode) =>
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
+        public async Task LeaveRoom(string roomCode) {
+            if (!string.IsNullOrEmpty(roomCode))
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
+        }
 
         public async Task JoinRoom(string roomCode) {
-            await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
-            await Clients.GroupExcept(roomCode, Context.ConnectionId).SendAsync("PushGameState");
+            if (!GameRoom.ValidateCode(roomCode)) {
+                await Clients.Client(Context.ConnectionId).SendAsync("InvalidRoomCode");
+            } else {
+                await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
+                await Clients.GroupExcept(roomCode, Context.ConnectionId).SendAsync("PushGameState");
+            }
         }
     }
 }
