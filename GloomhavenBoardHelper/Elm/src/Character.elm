@@ -7,27 +7,45 @@ import List exposing (head)
 characterDict : Dict String CharacterClass
 characterDict =
     fromList
-        [ ( "berserker", Berserker )
-        , ( "brute", Brute )
+        [ ( "brute", Brute )
+        , ( "tinkerer", Tinkerer )
+        , ( "scoundrel", Scoundrel )
         , ( "cragheart", Cragheart )
         , ( "mindthief", Mindthief )
-        , ( "plagueherald", PlagueHerald )
-        , ( "quartermaster", Quartermaster )
-        , ( "scoundrel", Scoundrel )
         , ( "spellweaver", Spellweaver )
-        , ( "tinkerer", Tinkerer )
+
+        -- Unlockable Characters
+        , ( "phoenix-face", BeastTyrant )
+        , ( "lightning-bolt", Berserker )
+        , ( "angry-face", Doomstalker )
+        , ( "triforce", Elementalist )
+        , ( "eclipse", Nightshroud )
+        , ( "cthulhu", PlagueHerald )
+        , ( "three-spears", Quartermaster )
+        , ( "saw", Sawbones )
+        , ( "music-note", Soothsinger )
+        , ( "concentric-circles", Summoner )
+        , ( "sun", Sunkeeper )
         ]
 
 
 type CharacterClass
-    = Berserker
+    = BeastTyrant
+    | Berserker
     | Brute
     | Cragheart
+    | Doomstalker
+    | Elementalist
     | Mindthief
+    | Nightshroud
     | PlagueHerald
     | Quartermaster
+    | Sawbones
     | Scoundrel
+    | Soothsinger
     | Spellweaver
+    | Summoner
+    | Sunkeeper
     | Tinkerer
 
 
