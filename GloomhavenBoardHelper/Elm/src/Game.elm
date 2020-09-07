@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+module Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
@@ -21,13 +21,7 @@ empty =
 
 emptyState : GameState
 emptyState =
-    GameState 0 TwoPlayer 0 [] [] [] Dict.empty ""
-
-
-type NumPlayers
-    = TwoPlayer
-    | ThreePlayer
-    | FourPlayer
+    GameState 0 [] 0 [] [] [] Dict.empty ""
 
 
 type AIType
@@ -64,7 +58,7 @@ type alias Game =
 
 type alias GameState =
     { scenario : Int
-    , numPlayers : NumPlayers
+    , players : List CharacterClass
     , updateCount : Int
     , visibleRooms : List MapTileRef
     , overlays : List BoardOverlay
@@ -117,7 +111,7 @@ getPieceName piece =
             ""
 
 
-generateGameMap : Scenario -> String -> NumPlayers -> Seed -> Game
+generateGameMap : Scenario -> String -> Int -> Seed -> Game
 generateGameMap scenario roomCode numPlayers seed =
     let
         ( mapTiles, bounds ) =
@@ -131,7 +125,7 @@ generateGameMap scenario roomCode numPlayers seed =
 
         initGameState =
             GameState scenario.id
-                numPlayers
+                []
                 0
                 []
                 []
@@ -230,10 +224,10 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
                 Just ( o, m ) ->
                     ( filter (filterByCoord tile.originalX tile.originalY) o
                         |> map (mapOverlayCoord tile.originalX tile.originalY x y tile.turns)
-                    , filter (filterMonsterLevel game.state.numPlayers) m
+                    , filter (filterMonsterLevel (List.length game.state.players)) m
                         |> filter (\f -> f.initialX == tile.originalX && f.initialY == tile.originalY)
                         |> head
-                        |> getPieceFromMonster game.state.numPlayers
+                        |> getPieceFromMonster (List.length game.state.players)
                         |> mapPieceCoord tile.originalX tile.originalY x y
                     )
 
@@ -331,33 +325,31 @@ setCellFromMapTile game overlays offsetX offsetY tile seed =
         ( { game | seed = newSeed }, newSeed )
 
 
-filterMonsterLevel : NumPlayers -> ScenarioMonster -> Bool
+filterMonsterLevel : Int -> ScenarioMonster -> Bool
 filterMonsterLevel numPlayers monster =
-    case numPlayers of
-        TwoPlayer ->
-            monster.twoPlayer /= Monster.None
+    if numPlayers < 3 then
+        monster.twoPlayer /= Monster.None
 
-        ThreePlayer ->
-            monster.threePlayer /= Monster.None
+    else if numPlayers < 4 then
+        monster.threePlayer /= Monster.None
 
-        FourPlayer ->
-            monster.fourPlayer /= Monster.None
+    else
+        monster.fourPlayer /= Monster.None
 
 
-getLevelForMonster : NumPlayers -> ScenarioMonster -> MonsterLevel
+getLevelForMonster : Int -> ScenarioMonster -> MonsterLevel
 getLevelForMonster numPlayers monster =
-    case numPlayers of
-        TwoPlayer ->
-            monster.twoPlayer
+    if numPlayers < 3 then
+        monster.twoPlayer
 
-        ThreePlayer ->
-            monster.threePlayer
+    else if numPlayers < 4 then
+        monster.threePlayer
 
-        FourPlayer ->
-            monster.fourPlayer
+    else
+        monster.fourPlayer
 
 
-getPieceFromMonster : NumPlayers -> Maybe ScenarioMonster -> Piece
+getPieceFromMonster : Int -> Maybe ScenarioMonster -> Piece
 getPieceFromMonster numPlayers monster =
     case monster of
         Just p ->

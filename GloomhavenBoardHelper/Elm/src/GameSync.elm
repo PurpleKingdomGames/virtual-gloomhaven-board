@@ -5,7 +5,7 @@ import BoardMapTile exposing (MapTileRef(..), refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
-import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
+import Game exposing (AIType(..), GameState, Piece, PieceType(..))
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, int, list, map3, map8, string, succeed)
 import Json.Encode as Encode exposing (int, list, object, string)
 import List exposing (map)
@@ -144,7 +144,7 @@ decodeGameState : Decoder GameState
 decodeGameState =
     map8 GameState
         (field "scenario" Decode.int)
-        (field "numPlayers" Decode.int |> andThen decodeNumPlayers)
+        (field "players" (Decode.list decodeCharacter))
         (field "updateCount" Decode.int)
         (field "visibleRooms" (Decode.list Decode.string) |> andThen decodeMapRefList)
         (field "overlays" (Decode.list decodeBoardOverlay))
@@ -157,7 +157,7 @@ encodeGameState : GameState -> Encode.Value
 encodeGameState gameState =
     object
         [ ( "scenario", Encode.int gameState.scenario )
-        , ( "numPlayers", Encode.int (encodeNumPlayers gameState.numPlayers) )
+        , ( "players", Encode.list Encode.string (encodeCharacters gameState.players) )
         , ( "updateCount", Encode.int gameState.updateCount )
         , ( "visibleRooms", Encode.list Encode.string (encodeMapTileRefList gameState.visibleRooms) )
         , ( "overlays", Encode.list Encode.object (encodeOverlays gameState.overlays) )
@@ -165,22 +165,6 @@ encodeGameState gameState =
         , ( "availableMonsters", Encode.list Encode.object (encodeAvailableMonsters gameState.availableMonsters) )
         , ( "roomCode", Encode.string gameState.roomCode )
         ]
-
-
-decodeNumPlayers : Int -> Decoder NumPlayers
-decodeNumPlayers numPlayers =
-    case numPlayers of
-        2 ->
-            succeed TwoPlayer
-
-        3 ->
-            succeed ThreePlayer
-
-        4 ->
-            succeed FourPlayer
-
-        p ->
-            fail ("Cannot decode a " ++ String.fromInt p ++ " game")
 
 
 decodePiece : Decoder Piece
@@ -249,19 +233,6 @@ decodeAvailableMonsters =
                             succeed ( m, b )
                         )
             )
-
-
-encodeNumPlayers : NumPlayers -> Int
-encodeNumPlayers numPlayers =
-    case numPlayers of
-        TwoPlayer ->
-            2
-
-        ThreePlayer ->
-            3
-
-        FourPlayer ->
-            4
 
 
 encodeMapTileRefList : List MapTileRef -> List String
@@ -569,6 +540,11 @@ encodePieces pieces =
             ]
         )
         pieces
+
+
+encodeCharacters : List CharacterClass -> List String
+encodeCharacters characters =
+    List.filterMap (\c -> characterToString c) characters
 
 
 encodePieceType : PieceType -> List ( String, Encode.Value )

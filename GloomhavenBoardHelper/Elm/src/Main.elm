@@ -9,7 +9,7 @@ import Character exposing (CharacterClass(..), characterToString)
 import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
-import Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (div, img)
 import Html.Attributes exposing (attribute, checked, class, hidden, maxlength, required, src, style, value)
@@ -27,10 +27,8 @@ import Task
 type alias Model =
     { game : Game
     , config : Config
-    , currentMode : GameModeType
     , currentLoadState : LoadingState
     , currentScenarioInput : Int
-    , currentPlayers : List CharacterClass
     , clientSettings : Maybe ( String, Bool )
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
@@ -40,6 +38,7 @@ type alias Model =
 
 type alias Config =
     { appMode : AppModeType
+    , gameMode : GameModeType
     , roomCode : Maybe String
     , showRoomCode : Bool
     }
@@ -174,7 +173,7 @@ update msg model =
                                     game.state
 
                         newModel =
-                            { model | game = { game | state = gameState }, currentMode = MovePiece, currentScenarioInput = scenario.id }
+                            { model | game = { game | state = gameState }, currentLoadState = Loaded, currentScenarioInput = scenario.id }
                     in
                     ( newModel, pushGameState newModel gameState )
 
