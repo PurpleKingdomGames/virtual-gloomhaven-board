@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+module Game exposing (AIType(..), Cell, Game, GameState, NumPlayers(..), Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
@@ -12,6 +12,16 @@ import List.Extra exposing (uniqueBy)
 import Monster exposing (Monster, MonsterLevel(..), getMonsterBucketSize, monsterTypeToString)
 import Random exposing (Seed)
 import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
+
+
+empty : Game
+empty =
+    Game emptyState (Random.initialSeed 0) [] Array.empty
+
+
+emptyState : GameState
+emptyState =
+    GameState 0 TwoPlayer 0 [] [] [] Dict.empty ""
 
 
 type NumPlayers

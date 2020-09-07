@@ -25,10 +25,10 @@ import Task
 
 
 type alias Model =
-    { game : Maybe Game
+    { game : Game
     , config : Config
     , currentMode : GameModeType
-    , clientsConnected : List String
+    , currentLoadState : LoadingState
     , currentScenarioInput : Int
     , currentPlayers : List CharacterClass
     , clientSettings : Maybe ( String, Bool )
@@ -51,15 +51,19 @@ type MoveablePieceType
 
 
 type GameModeType
-    = Loading Int
-    | LoadFailed
-    | MovePiece
+    = MovePiece
     | KillPiece
     | MoveOverlay
     | DestroyOverlay
     | LootCell
     | RevealRoom
     | AddPiece
+
+
+type LoadingState
+    = Loaded
+    | Loading Int
+    | Failed
 
 
 type ConnectionStatus
@@ -81,7 +85,7 @@ type alias MoveablePiece =
 
 
 type Msg
-    = Loaded Seed (Maybe Game.GameState) (Result Error Scenario)
+    = LoadedScenario Seed (Maybe Game.GameState) (Result Error Scenario)
     | MoveStarted MoveablePiece
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
@@ -123,8 +127,8 @@ initScenario =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Nothing (Config Game Nothing True) (Loading initScenario) [] 0 [ Berserker, Quartermaster, Tinkerer ] Nothing DragDrop.initialState Nothing Disconnected
-    , Cmd.batch [ connectToServer, loadScenarioById initScenario (Loaded (Random.initialSeed seed) Nothing) ]
+    ( Model Game.empty (Config Game Nothing True) MovePiece (Loading initScenario) 0 [ Berserker, Quartermaster, Tinkerer ] Nothing DragDrop.initialState Nothing Disconnected
+    , Cmd.batch [ connectToServer, loadScenarioById initScenario (LoadedScenario (Random.initialSeed seed) Nothing) ]
     )
 
 
@@ -135,192 +139,179 @@ update msg model =
             Maybe.withDefault "" model.config.roomCode
     in
     case msg of
-        Loaded seed initGameState result ->
+        LoadedScenario seed initGameState result ->
             case result of
                 Ok scenario ->
-                    if List.length model.currentPlayers > 4 || List.length model.currentPlayers < 2 then
-                        ( { model | currentMode = LoadFailed }, Cmd.none )
+                    let
+                        numPlayers =
+                            if List.length model.currentPlayers < 3 then
+                                TwoPlayer
 
-                    else
-                        let
-                            game =
-                                generateGameMap scenario roomCode ThreePlayer seed
-                                    |> assignPlayers model.currentPlayers
+                            else if List.length model.currentPlayers < 4 then
+                                ThreePlayer
 
-                            gameState =
-                                case initGameState of
-                                    Just gs ->
-                                        if gs.scenario == scenario.id then
-                                            gs
+                            else
+                                FourPlayer
 
-                                        else
-                                            let
-                                                state =
-                                                    game.state
-                                            in
-                                            { state | roomCode = gs.roomCode, updateCount = gs.updateCount }
+                        game =
+                            generateGameMap scenario roomCode numPlayers seed
+                                |> assignPlayers model.currentPlayers
 
-                                    Nothing ->
-                                        game.state
+                        gameState =
+                            case initGameState of
+                                Just gs ->
+                                    if gs.scenario == scenario.id then
+                                        gs
 
-                            newModel =
-                                { model | game = Just { game | state = gameState }, currentMode = MovePiece, currentScenarioInput = scenario.id }
-                        in
-                        ( newModel, pushGameState newModel gameState )
+                                    else
+                                        let
+                                            state =
+                                                game.state
+                                        in
+                                        { state | roomCode = gs.roomCode, updateCount = gs.updateCount }
+
+                                Nothing ->
+                                    game.state
+
+                        newModel =
+                            { model | game = { game | state = gameState }, currentMode = MovePiece, currentScenarioInput = scenario.id }
+                    in
+                    ( newModel, pushGameState newModel gameState )
 
                 Err _ ->
-                    ( { model | currentMode = LoadFailed }, Cmd.none )
+                    ( { model | currentLoadState = Failed }, Cmd.none )
 
         MoveStarted piece ->
             ( { model | dragDropState = DragDrop.startDragging model.dragDropState piece, currentDraggable = Just piece }, Cmd.none )
 
         MoveTargetChanged coords ->
-            case model.game of
-                Nothing ->
-                    ( model, Cmd.none )
+            let
+                newDraggable =
+                    case model.currentDraggable of
+                        Just m ->
+                            case m.ref of
+                                OverlayType o prevCoords ->
+                                    let
+                                        ( _, newOverlay, newCoords ) =
+                                            moveOverlay o m.coords prevCoords coords model.game
+                                    in
+                                    Just (MoveablePiece (OverlayType newOverlay newCoords) m.coords)
 
-                Just game ->
-                    let
-                        newDraggable =
-                            case model.currentDraggable of
-                                Just m ->
-                                    case m.ref of
-                                        OverlayType o prevCoords ->
-                                            let
-                                                ( _, newOverlay, newCoords ) =
-                                                    moveOverlay o m.coords prevCoords coords game
-                                            in
-                                            Just (MoveablePiece (OverlayType newOverlay newCoords) m.coords)
+                                PieceType p ->
+                                    let
+                                        newPiece =
+                                            Tuple.second (movePiece p m.coords coords model.game)
+                                    in
+                                    Just (MoveablePiece (PieceType newPiece) m.coords)
 
-                                        PieceType p ->
-                                            let
-                                                newPiece =
-                                                    Tuple.second (movePiece p m.coords coords game)
-                                            in
-                                            Just (MoveablePiece (PieceType newPiece) m.coords)
-
-                                Nothing ->
-                                    model.currentDraggable
-                    in
-                    ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, currentDraggable = newDraggable }, Cmd.none )
+                        Nothing ->
+                            model.currentDraggable
+            in
+            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, currentDraggable = newDraggable }, Cmd.none )
 
         MoveCanceled ->
             ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
 
         MoveCompleted _ coords ->
-            case model.game of
-                Nothing ->
-                    ( model, Cmd.none )
+            let
+                oldGame =
+                    model.game
 
-                Just oldGame ->
-                    let
-                        game =
-                            case model.currentDraggable of
-                                Just m ->
-                                    case m.ref of
-                                        OverlayType o prevCoords ->
-                                            let
-                                                ( g, _, _ ) =
-                                                    moveOverlay o m.coords prevCoords coords oldGame
-                                            in
-                                            g
+                game =
+                    case model.currentDraggable of
+                        Just m ->
+                            case m.ref of
+                                OverlayType o prevCoords ->
+                                    let
+                                        ( g, _, _ ) =
+                                            moveOverlay o m.coords prevCoords coords oldGame
+                                    in
+                                    g
 
-                                        PieceType p ->
-                                            case p.ref of
-                                                AI (Enemy monster) ->
-                                                    (if monster.id == 0 then
-                                                        assignIdentifier oldGame.state.availableMonsters p
+                                PieceType p ->
+                                    case p.ref of
+                                        AI (Enemy monster) ->
+                                            (if monster.id == 0 then
+                                                assignIdentifier oldGame.state.availableMonsters p
 
-                                                     else
-                                                        ( p, oldGame.state.availableMonsters )
-                                                    )
-                                                        |> (\( p2, d ) ->
-                                                                let
-                                                                    newGame =
-                                                                        Tuple.first (movePiece p2 m.coords coords oldGame)
+                                             else
+                                                ( p, oldGame.state.availableMonsters )
+                                            )
+                                                |> (\( p2, d ) ->
+                                                        let
+                                                            newGame =
+                                                                Tuple.first (movePiece p2 m.coords coords oldGame)
 
-                                                                    newState =
-                                                                        newGame.state
-                                                                in
-                                                                { newGame | state = { newState | availableMonsters = d } }
-                                                           )
+                                                            newState =
+                                                                newGame.state
+                                                        in
+                                                        { newGame | state = { newState | availableMonsters = d } }
+                                                   )
 
-                                                _ ->
-                                                    Tuple.first (movePiece p m.coords coords oldGame)
+                                        _ ->
+                                            Tuple.first (movePiece p m.coords coords oldGame)
 
-                                Nothing ->
-                                    oldGame
-                    in
-                    ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = Just game, currentDraggable = Nothing }, pushGameState model game.state )
+                        Nothing ->
+                            oldGame
+            in
+            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = game, currentDraggable = Nothing }, pushGameState model game.state )
 
         RemoveOverlay overlay ->
-            case model.game of
-                Nothing ->
-                    ( model, Cmd.none )
+            let
+                game =
+                    model.game
 
-                Just game ->
-                    let
-                        gameState =
-                            game.state
+                gameState =
+                    game.state
 
-                        newState =
-                            { gameState | overlays = List.filter (\o -> o.cells /= overlay.cells || o.ref /= overlay.ref) gameState.overlays }
-                    in
-                    ( { model | game = Just { game | state = newState } }, pushGameState model newState )
+                newState =
+                    { gameState | overlays = List.filter (\o -> o.cells /= overlay.cells || o.ref /= overlay.ref) gameState.overlays }
+            in
+            ( { model | game = { game | state = newState } }, pushGameState model newState )
 
         RemovePiece piece ->
-            case model.game of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just game ->
-                    let
-                        newGame =
-                            removePieceFromBoard piece game
-                    in
-                    ( { model | game = Just newGame }, pushGameState model newGame.state )
+            let
+                newGame =
+                    removePieceFromBoard piece model.game
+            in
+            ( { model | game = newGame }, pushGameState model newGame.state )
 
         ChangeGameMode mode ->
             ( { model | currentMode = mode }, Cmd.none )
 
         RevealRoomMsg rooms ( x, y ) ->
-            case model.game of
-                Nothing ->
-                    ( model, Cmd.none )
+            let
+                updatedGame =
+                    revealRooms model.game rooms
 
-                Just game ->
-                    let
-                        updatedGame =
-                            revealRooms game rooms
+                newState =
+                    updatedGame.state
 
-                        newState =
-                            updatedGame.state
+                doorToCorridor =
+                    newState.overlays
+                        |> map
+                            (\o ->
+                                case head o.cells of
+                                    Just ( oX, oY ) ->
+                                        if x == oX && y == oY then
+                                            case o.ref of
+                                                Door BreakableWall tiles ->
+                                                    { o | ref = Door (Corridor NaturalStone BoardOverlay.One) tiles }
 
-                        doorToCorridor =
-                            newState.overlays
-                                |> map
-                                    (\o ->
-                                        case head o.cells of
-                                            Just ( oX, oY ) ->
-                                                if x == oX && y == oY then
-                                                    case o.ref of
-                                                        Door BreakableWall tiles ->
-                                                            { o | ref = Door (Corridor NaturalStone BoardOverlay.One) tiles }
-
-                                                        _ ->
-                                                            o
-
-                                                else
+                                                _ ->
                                                     o
 
-                                            Nothing ->
-                                                o
-                                    )
+                                        else
+                                            o
 
-                        newGame =
-                            { updatedGame | state = { newState | overlays = doorToCorridor } }
-                    in
-                    ( { model | game = Just newGame }, pushGameState model newGame.state )
+                                    Nothing ->
+                                        o
+                            )
+
+                newGame =
+                    { updatedGame | state = { newState | overlays = doorToCorridor } }
+            in
+            ( { model | game = newGame }, pushGameState model newGame.state )
 
         ChangeAppMode mode ->
             let
@@ -332,20 +323,15 @@ update msg model =
         ChangeScenario newScenario ->
             let
                 seed =
-                    case model.game of
-                        Just game ->
-                            game.seed
-
-                        Nothing ->
-                            Random.initialSeed 0
+                    model.game.seed
 
                 gameState =
-                    Maybe.map (\g -> g.state) model.game
+                    model.game.state
 
                 config =
                     model.config
             in
-            ( { model | config = { config | appMode = Game }, currentMode = Loading newScenario, currentDraggable = Nothing, game = Nothing }, loadScenarioById newScenario (Loaded seed gameState) )
+            ( { model | config = { config | appMode = Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing }, loadScenarioById newScenario (LoadedScenario seed (Just gameState)) )
 
         EnterScenarioNumber strId ->
             case String.toInt strId of
@@ -431,12 +417,12 @@ update msg model =
                     { model | config = config, connectionStatus = connectedState }
 
                 gameState =
-                    Maybe.map (\g -> g.state) model.game
+                    model.game.state
 
                 ( updateMsg, cmdMsg ) =
                     GameSync.update
                         gameSyncMsg
-                        gameState
+                        (Just gameState)
                         GameStateUpdated
             in
             case updateMsg of
@@ -451,23 +437,22 @@ update msg model =
                     ( updatedConfigModel, cmdMsg )
 
         GameStateUpdated gameState ->
-            case model.game of
-                Just game ->
-                    if game.state.scenario == gameState.scenario then
-                        ( { model | game = Just { game | state = gameState } }, Cmd.none )
+            let
+                game =
+                    model.game
+            in
+            if game.state.scenario == gameState.scenario then
+                ( { model | game = { game | state = gameState } }, Cmd.none )
 
-                    else
-                        ( { model | currentMode = Loading gameState.scenario }, loadScenarioById gameState.scenario (Loaded game.seed (Just gameState)) )
-
-                Nothing ->
-                    ( { model | currentMode = Loading gameState.scenario }, loadScenarioById gameState.scenario (Loaded (Random.initialSeed gameState.scenario) (Just gameState)) )
+            else
+                ( { model | currentLoadState = Loading gameState.scenario }, loadScenarioById gameState.scenario (LoadedScenario game.seed (Just gameState)) )
 
         PushGameState ->
-            case model.game of
-                Just g ->
-                    ( model, pushGameState model g.state )
+            case model.currentLoadState of
+                Loaded ->
+                    ( model, pushGameState model model.game.state )
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none )
 
 
@@ -478,25 +463,24 @@ view model =
             model.config
     in
     div [ class "content" ]
-        (case model.game of
-            Nothing ->
-                []
+        (let
+            game =
+                model.game
+         in
+         [ div [ class "menu" ] [ getMenuHtml ]
+         , div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
+         , div [ class "board-wrapper" ]
+            [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) game.roomData)
+            , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
+            ]
+         ]
+            ++ (case config.appMode of
+                    Game ->
+                        []
 
-            Just game ->
-                [ div [ class "menu" ] [ getMenuHtml ]
-                , div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
-                , div [ class "board-wrapper" ]
-                    [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) game.roomData)
-                    , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
-                    ]
-                ]
-                    ++ (case config.appMode of
-                            Game ->
-                                []
-
-                            _ ->
-                                [ getDialogForAppMode model ]
-                       )
+                    _ ->
+                        [ getDialogForAppMode model ]
+               )
         )
 
 
