@@ -111,8 +111,8 @@ getPieceName piece =
             ""
 
 
-generateGameMap : Scenario -> String -> Int -> Seed -> Game
-generateGameMap scenario roomCode numPlayers seed =
+generateGameMap : Scenario -> String -> List CharacterClass -> Seed -> Game
+generateGameMap scenario roomCode players seed =
     let
         ( mapTiles, bounds ) =
             mapTileDataToList scenario.mapTilesData Nothing
@@ -125,7 +125,7 @@ generateGameMap scenario roomCode numPlayers seed =
 
         initGameState =
             GameState scenario.id
-                []
+                players
                 0
                 []
                 []
@@ -854,7 +854,7 @@ assignPlayers players game =
                 )
                 state.overlays
     in
-    { game | state = { state | pieces = assignPlayersToPiece players filteredPieces statingLocations } }
+    { game | state = { state | players = players, pieces = assignPlayersToPiece players filteredPieces statingLocations } }
 
 
 assignPlayersToPiece : List CharacterClass -> List Piece -> List BoardOverlay -> List Piece

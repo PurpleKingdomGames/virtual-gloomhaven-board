@@ -28,8 +28,9 @@ type alias Model =
     { game : Game
     , config : Config
     , currentLoadState : LoadingState
-    , currentScenarioInput : Int
-    , clientSettings : Maybe ( String, Bool )
+    , currentScenarioInput : Maybe Int
+    , currentClientSettings : Maybe ( String, Bool )
+    , currentPlayerList : Maybe (List CharacterClass)
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
     , connectionStatus : ConnectionStatus
@@ -75,6 +76,7 @@ type AppModeType
     = Game
     | ScenarioDialog
     | ServerConfigDialog
+    | PlayerChoiceDialog
 
 
 type alias MoveablePiece =
@@ -85,6 +87,7 @@ type alias MoveablePiece =
 
 type Msg
     = LoadedScenario Seed (Maybe Game.GameState) (Result Error Scenario)
+    | ReloadScenario
     | MoveStarted MoveablePiece
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
@@ -95,7 +98,9 @@ type Msg
     | ChangeGameMode GameModeType
     | ChangeAppMode AppModeType
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
-    | ChangeScenario Int
+    | ChangeScenario Int Bool
+    | ToggleCharacter CharacterClass Bool
+    | ChangePlayerList
     | EnterScenarioNumber String
     | ChangeRoomCodeInputStart String
     | ChangeRoomCodeInputEnd String
@@ -126,7 +131,7 @@ initScenario =
 
 init : Int -> ( Model, Cmd Msg )
 init seed =
-    ( Model Game.empty (Config Game Nothing True) MovePiece (Loading initScenario) 0 [ Berserker, Quartermaster, Tinkerer ] Nothing DragDrop.initialState Nothing Disconnected
+    ( Model Game.empty (Config Game MovePiece Nothing True) (Loading initScenario) Nothing Nothing Nothing DragDrop.initialState Nothing Disconnected
     , Cmd.batch [ connectToServer, loadScenarioById initScenario (LoadedScenario (Random.initialSeed seed) Nothing) ]
     )
 
@@ -142,19 +147,9 @@ update msg model =
             case result of
                 Ok scenario ->
                     let
-                        numPlayers =
-                            if List.length model.currentPlayers < 3 then
-                                TwoPlayer
-
-                            else if List.length model.currentPlayers < 4 then
-                                ThreePlayer
-
-                            else
-                                FourPlayer
-
                         game =
-                            generateGameMap scenario roomCode numPlayers seed
-                                |> assignPlayers model.currentPlayers
+                            generateGameMap scenario roomCode model.game.state.players seed
+                                |> assignPlayers model.game.state.players
 
                         gameState =
                             case initGameState of
@@ -173,12 +168,15 @@ update msg model =
                                     game.state
 
                         newModel =
-                            { model | game = { game | state = gameState }, currentLoadState = Loaded, currentScenarioInput = scenario.id }
+                            { model | game = { game | state = { gameState | players = model.game.state.players } }, currentLoadState = Loaded }
                     in
                     ( newModel, pushGameState newModel gameState )
 
                 Err _ ->
                     ( { model | currentLoadState = Failed }, Cmd.none )
+
+        ReloadScenario ->
+            update (ChangeScenario model.game.state.scenario True) model
 
         MoveStarted piece ->
             ( { model | dragDropState = DragDrop.startDragging model.dragDropState piece, currentDraggable = Just piece }, Cmd.none )
@@ -276,7 +274,11 @@ update msg model =
             ( { model | game = newGame }, pushGameState model newGame.state )
 
         ChangeGameMode mode ->
-            ( { model | currentMode = mode }, Cmd.none )
+            let
+                config =
+                    model.config
+            in
+            ( { model | config = { config | gameMode = mode } }, Cmd.none )
 
         RevealRoomMsg rooms ( x, y ) ->
             let
@@ -319,24 +321,22 @@ update msg model =
             in
             ( { model | config = { config | appMode = mode } }, Cmd.none )
 
-        ChangeScenario newScenario ->
+        ChangeScenario newScenario forceReload ->
             let
-                seed =
-                    model.game.seed
-
-                gameState =
-                    model.game.state
-
                 config =
                     model.config
             in
-            ( { model | config = { config | appMode = Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing }, loadScenarioById newScenario (LoadedScenario seed (Just gameState)) )
+            if forceReload || newScenario /= model.game.state.scenario then
+                ( { model | config = { config | appMode = Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed Nothing) )
+
+            else
+                ( { model | config = { config | appMode = Game } }, Cmd.none )
 
         EnterScenarioNumber strId ->
             case String.toInt strId of
                 Just scenarioId ->
                     if scenarioId > 0 && scenarioId < 94 then
-                        ( { model | currentScenarioInput = scenarioId }, Cmd.none )
+                        ( { model | currentScenarioInput = Just scenarioId }, Cmd.none )
 
                     else
                         ( model, Cmd.none )
@@ -349,21 +349,21 @@ update msg model =
                 ( ( _, roomCode2 ), showRoomCode ) =
                     getSplitRoomCodeSettings model
             in
-            ( { model | clientSettings = Just ( startCode ++ "-" ++ roomCode2, showRoomCode ) }, Cmd.none )
+            ( { model | currentClientSettings = Just ( startCode ++ "-" ++ roomCode2, showRoomCode ) }, Cmd.none )
 
         ChangeRoomCodeInputEnd endCode ->
             let
                 ( ( roomCode1, _ ), showRoomCode ) =
                     getSplitRoomCodeSettings model
             in
-            ( { model | clientSettings = Just ( roomCode1 ++ "-" ++ endCode, showRoomCode ) }, Cmd.none )
+            ( { model | currentClientSettings = Just ( roomCode1 ++ "-" ++ endCode, showRoomCode ) }, Cmd.none )
 
         ChangeShowRoomCode showRoomCode ->
             let
                 ( ( roomCode1, roomCode2 ), _ ) =
                     getSplitRoomCodeSettings model
             in
-            ( { model | clientSettings = Just ( roomCode1 ++ "-" ++ roomCode2, showRoomCode ) }, Cmd.none )
+            ( { model | currentClientSettings = Just ( roomCode1 ++ "-" ++ roomCode2, showRoomCode ) }, Cmd.none )
 
         ChangeClientSettings maybeSettings ->
             case maybeSettings of
@@ -376,6 +376,44 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
+
+        ToggleCharacter character enabled ->
+            let
+                playerList =
+                    getCharacterListSettings model
+                        |> List.filter (\c -> c /= character)
+                        |> (if enabled then
+                                List.append [ character ]
+
+                            else
+                                List.append []
+                           )
+            in
+            ( { model | currentPlayerList = Just playerList }, Cmd.none )
+
+        ChangePlayerList ->
+            let
+                playerList =
+                    getCharacterListSettings model
+
+                config =
+                    model.config
+
+                game =
+                    model.game
+
+                gameState =
+                    model.game.state
+            in
+            if playerList == model.game.state.players then
+                ( model, Cmd.none )
+
+            else
+                let
+                    newModel =
+                        { model | config = { config | appMode = Game }, game = { game | state = { gameState | players = playerList } }, currentPlayerList = Nothing }
+                in
+                update ReloadScenario newModel
 
         GameSyncMsg gameSyncMsg ->
             let
@@ -493,7 +531,7 @@ subscriptions _ =
 getNewPieceHtml : Model -> Game -> Html.Html Msg
 getNewPieceHtml model game =
     Dom.element "div"
-        |> Dom.addAttributeConditional (hidden True) (model.currentMode /= AddPiece)
+        |> Dom.addAttributeConditional (hidden True) (model.config.gameMode /= AddPiece)
         |> Dom.addClass "new-piece-list"
         |> Dom.appendChild
             (Dom.element "ul"
@@ -574,6 +612,12 @@ getMenuHtml =
                     [ Dom.element "li"
                         |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
                         |> Dom.appendText "Change Scenario"
+                    ,Dom.element "li"
+                        |> Dom.addAction ( "click", ReloadScenario )
+                        |> Dom.appendText "Reload Scenario"
+                    , Dom.element "li"
+                        |> Dom.addAction ( "click", ChangeAppMode PlayerChoiceDialog )
+                        |> Dom.appendText "Change Players"
                     , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeAppMode ServerConfigDialog )
                         |> Dom.appendText "Connection Settings"
@@ -596,6 +640,9 @@ getDialogForAppMode model =
                         ServerConfigDialog ->
                             Dom.appendChild (getClientSettingsDialog model)
 
+                        PlayerChoiceDialog ->
+                            Dom.appendChild (getPlayerChoiceDialog model)
+
                         Game ->
                             \e -> e
                    )
@@ -605,6 +652,10 @@ getDialogForAppMode model =
 
 getScenarioDialog : Model -> Element Msg
 getScenarioDialog model =
+    let
+        scenarioInput =
+            Maybe.withDefault model.game.state.scenario model.currentScenarioInput
+    in
     Dom.element "div"
         |> Dom.addClass "scenario-form"
         |> Dom.appendChildList
@@ -619,7 +670,7 @@ getScenarioDialog model =
                         |> Dom.addAttribute (attribute "type" "number")
                         |> Dom.addAttribute (attribute "min" "1")
                         |> Dom.addAttribute (attribute "max" "93")
-                        |> Dom.addAttribute (attribute "value" (String.fromInt model.currentScenarioInput))
+                        |> Dom.addAttribute (attribute "value" (String.fromInt scenarioInput))
                         |> Dom.addChangeHandler EnterScenarioNumber
                     ]
             , Dom.element "div"
@@ -627,7 +678,7 @@ getScenarioDialog model =
                 |> Dom.appendChildList
                     [ Dom.element "button"
                         |> Dom.appendText "OK"
-                        |> Dom.addAction ( "click", ChangeScenario model.currentScenarioInput )
+                        |> Dom.addAction ( "click", ChangeScenario scenarioInput False )
                     , Dom.element "button"
                         |> Dom.appendText "Cancel"
                         |> Dom.addAction ( "click", ChangeAppMode Game )
@@ -685,11 +736,59 @@ getClientSettingsDialog model =
                 |> Dom.appendChildList
                     [ Dom.element "button"
                         |> Dom.appendText "OK"
-                        |> Dom.addAction ( "click", ChangeClientSettings model.clientSettings )
+                        |> Dom.addAction ( "click", ChangeClientSettings model.currentClientSettings )
                     , Dom.element "button"
                         |> Dom.appendText "Cancel"
                         |> Dom.addAction ( "click", ChangeAppMode Game )
                     ]
+            ]
+
+
+getPlayerChoiceDialog : Model -> Element Msg
+getPlayerChoiceDialog model =
+    let
+        playerList =
+            getCharacterListSettings model
+
+        checkboxes =
+            Dict.toList Character.characterDictionary
+                |> List.map
+                    (\( k, v ) ->
+                        getCharacterChoiceInput k v (List.member v playerList)
+                    )
+    in
+    Dom.element "div"
+        |> Dom.addClass "character-form"
+        |> Dom.appendChildList
+            checkboxes
+        |> Dom.appendChild
+            (Dom.element "div"
+                |> Dom.addClass "button-wrapper"
+                |> Dom.appendChildList
+                    [ Dom.element "button"
+                        |> Dom.appendText "OK"
+                        |> Dom.addAction ( "click", ChangePlayerList )
+                    , Dom.element "button"
+                        |> Dom.appendText "Cancel"
+                        |> Dom.addAction ( "click", ChangeAppMode Game )
+                    ]
+            )
+
+
+getCharacterChoiceInput : String -> CharacterClass -> Bool -> Element Msg
+getCharacterChoiceInput name class enabled =
+    Dom.element "div"
+        |> Dom.addClass "input-wrapper"
+        |> Dom.appendChildList
+            [ Dom.element "label"
+                |> Dom.addAttribute (attribute "for" ("characterChoice_" ++ name))
+                |> Dom.appendText name
+            , Dom.element "input"
+                |> Dom.addAttribute (attribute "id" ("characterChoice_" ++ name))
+                |> Dom.addAttribute (attribute "type" "checkbox")
+                |> Dom.addAttribute (attribute "value" "1")
+                |> Dom.addAttribute (checked enabled)
+                |> Dom.addToggleHandler (ToggleCharacter class)
             ]
 
 
@@ -702,37 +801,37 @@ getNavHtml model =
                     [ Dom.element "li"
                         |> Dom.addAction ( "click", ChangeGameMode MovePiece )
                         |> Dom.addClass "move-piece"
-                        |> Dom.addClassConditional "active" (model.currentMode == MovePiece)
+                        |> Dom.addClassConditional "active" (model.config.gameMode == MovePiece)
                         |> Dom.appendText "Move Piece"
                     , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeGameMode KillPiece )
                         |> Dom.addClass "kill-piece"
-                        |> Dom.addClassConditional "active" (model.currentMode == KillPiece)
+                        |> Dom.addClassConditional "active" (model.config.gameMode == KillPiece)
                         |> Dom.appendText "Kill Piece"
                     , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeGameMode LootCell )
                         |> Dom.addClass "loot"
-                        |> Dom.addClassConditional "active" (model.currentMode == LootCell)
+                        |> Dom.addClassConditional "active" (model.config.gameMode == LootCell)
                         |> Dom.appendText "Loot"
                     , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeGameMode MoveOverlay )
                         |> Dom.addClass "move-overlay"
-                        |> Dom.addClassConditional "active" (model.currentMode == MoveOverlay)
+                        |> Dom.addClassConditional "active" (model.config.gameMode == MoveOverlay)
                         |> Dom.appendText "Move Overlay"
                     , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeGameMode DestroyOverlay )
                         |> Dom.addClass "destroy-overlay"
-                        |> Dom.addClassConditional "active" (model.currentMode == DestroyOverlay)
+                        |> Dom.addClassConditional "active" (model.config.gameMode == DestroyOverlay)
                         |> Dom.appendText "Destroy Overlay"
                     , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeGameMode RevealRoom )
                         |> Dom.addClass "reveal-room"
-                        |> Dom.addClassConditional "active" (model.currentMode == RevealRoom)
+                        |> Dom.addClassConditional "active" (model.config.gameMode == RevealRoom)
                         |> Dom.appendText "Reveal Room"
                     , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeGameMode AddPiece )
                         |> Dom.addClass "add-piece"
-                        |> Dom.addClassConditional "active" (model.currentMode == AddPiece)
+                        |> Dom.addClassConditional "active" (model.config.gameMode == AddPiece)
                         |> Dom.appendText "Add Piece"
                     ]
             )
@@ -912,7 +1011,7 @@ getCellHtml model game y x cellValue =
                         Nothing ->
                             \e -> e
                    )
-                |> addActionsForCell model.currentMode ( x, y ) overlaysForCell
+                |> addActionsForCell model.config.gameMode ( x, y ) overlaysForCell
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
@@ -1002,13 +1101,13 @@ pieceToHtml model coords piece =
                 Game.None ->
                     Dom.addClass "none"
            )
-        |> (if (model.currentMode == MovePiece && coords /= Nothing) || (model.currentMode == AddPiece && coords == Nothing) then
+        |> (if (model.config.gameMode == MovePiece && coords /= Nothing) || (model.config.gameMode == AddPiece && coords == Nothing) then
                 DragDrop.makeDraggable model.dragDropState (MoveablePiece (PieceType piece) coords) dragDropMessages
 
             else
                 Dom.addAttribute (attribute "draggable" "false")
            )
-        |> (if model.currentMode == KillPiece then
+        |> (if model.config.gameMode == KillPiece then
                 Dom.addAction ( "click", RemovePiece piece )
 
             else
@@ -1165,7 +1264,7 @@ overlayToHtml model coords overlay =
                 _ ->
                     \e -> e
            )
-        |> (if (model.currentMode == MoveOverlay && coords /= Nothing) || (model.currentMode == AddPiece && coords == Nothing) then
+        |> (if (model.config.gameMode == MoveOverlay && coords /= Nothing) || (model.config.gameMode == AddPiece && coords == Nothing) then
                 case overlay.ref of
                     Obstacle _ ->
                         DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay Nothing) coords) dragDropMessages
@@ -1272,11 +1371,21 @@ addActionsForCell currentMode coords overlays element =
             element
 
 
+getCharacterListSettings : Model -> List CharacterClass
+getCharacterListSettings model =
+    case model.currentPlayerList of
+        Just c ->
+            c
+
+        Nothing ->
+            model.game.state.players
+
+
 getSplitRoomCodeSettings : Model -> ( ( String, String ), Bool )
 getSplitRoomCodeSettings model =
     let
         ( fullCode, b ) =
-            case model.clientSettings of
+            case model.currentClientSettings of
                 Just s ->
                     s
 

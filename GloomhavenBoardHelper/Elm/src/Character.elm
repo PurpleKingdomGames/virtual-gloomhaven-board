@@ -1,11 +1,11 @@
-module Character exposing (CharacterClass(..), characterToString, stringToCharacter)
+module Character exposing (CharacterClass(..), characterDictionary, characterToString, stringToCharacter)
 
 import Dict exposing (Dict, filter, fromList, get, toList)
 import List exposing (head)
 
 
-characterDict : Dict String CharacterClass
-characterDict =
+characterDictionary : Dict String CharacterClass
+characterDictionary =
     fromList
         [ ( "brute", Brute )
         , ( "tinkerer", Tinkerer )
@@ -53,11 +53,11 @@ characterToString : CharacterClass -> Maybe String
 characterToString character =
     let
         maybeKey =
-            head (toList (filter (\_ v -> v == character) characterDict))
+            head (toList (filter (\_ v -> v == character) characterDictionary))
     in
     Maybe.map (\( k, _ ) -> k) maybeKey
 
 
 stringToCharacter : String -> Maybe CharacterClass
 stringToCharacter character =
-    get (String.toLower character) characterDict
+    get (String.toLower character) characterDictionary
