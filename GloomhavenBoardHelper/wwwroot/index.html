@@ -5,88 +5,113 @@
     <title>Virtual Gloomhaven Board</title>
     <link rel="stylesheet" href="css/main.css">
     <script src="js/main.min.js"></script>
+    <script src="js/signalr.min.js"></script>
 </head>
 <body>
     <div id="elm-node"></div>
     <script>
-        document.body.addEventListener("dragstart", event => {
-            if (event.target && event.target.draggable) {
-                // absurdly, this is needed for Firefox; see https://medium.com/elm-shorts/elm-drag-and-drop-game-630205556d2
-                event.dataTransfer.setData("text/html", "blank");
-                var emptyImage = document.createElement('img');
-                // Set the src to be a 0x0 gif
-                emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-                event.dataTransfer.setDragImage(emptyImage, 0, 0);
-            }
-        });
+        "use strict";
+        (() => {
+            document.body.addEventListener("dragstart", event => {
+                if (event.target && event.target.draggable) {
+                    // Absurdly, this is needed for Firefox; see https://medium.com/elm-shorts/elm-drag-and-drop-game-630205556d2
+                    event.dataTransfer.setData("text/html", "blank");
+                    let emptyImage = document.createElement('img');
+                    // Set the src to be a 0x0 gif
+                    emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+                    event.dataTransfer.setDragImage(emptyImage, 0, 0);
+                }
+            });
 
-        document.body.addEventListener("dragover", event => {
-            // this is needed in order to make dragging work
-            return false;
-        });
+            document.body.addEventListener("dragover", event => {
+                // This is needed in order to make dragging work
+                return false;
+            });
 
-        const app = Elm.Main.init({
-            node: document.getElementById("elm-node"),
-            flags: Math.floor(Math.random() * Math.floor(4000))
-        });
+            const app = Elm.Main.init({
+                node: document.getElementById("elm-node"),
+                flags: [
+                    JSON.parse(window.localStorage.getItem("state"))
+                    , Math.floor(Math.random() * Math.floor(4000))
+                ]
+            });
 
-        const signalSocket = new WebSocket('ws://' + location.host + '/ws');
-        let offerTimeout = null;
+            const conn = new signalR
+                .HubConnectionBuilder()
+                .withUrl("/ws")
+                .configureLogging(signalR.LogLevel.Information)
+                .withAutomaticReconnect([0, 3000, 5000, 10000, 15000, 30000])
+                .build()
+            ;
 
-        /** SERVER IMPLEMENTATION **/
-        // Create a server - register a client code/request a new one
-        // Return the client code to Elm
-        // When a client connects, notify Elm
-        // Elm puhes the current state to the new client - updates the client list
-        // When pushing a new client state, Elm should push to all clients
+            let lastGameState = null;
+            let roomCode = null;
 
-        /** CLIENT IMPLEMENTATION **/
-        // Create a client - check client code
-        // Return a connected/disconnected state
-        // Elm pushes the current state to the server
+            conn.onreconnected(connId => app.ports.connected.send(null));
+            conn.onreconnecting(err => app.ports.reconnecting.send(null));
+            conn.onclose(err => app.ports.disconnected.send(null));
 
+            conn.on("RoomCreated", (newRoomCode) => {
+                roomCode = newRoomCode;
+                app.ports.receiveRoomCode.send(newRoomCode)
+            });
 
+            conn.on("InvalidRoomCode", (roomCode) =>
+                app.ports.invalidRoomCode.send(null)
+            );
 
-        app.ports.pushGameStatePort.subscribe(function(message) {
-            console.log(message);
-            signalSocket.send("UPDATE 127.0.0.1 " + JSON.stringify(message) + "\r\n");
-            signalSocket.send("UPDATE ::1 " + JSON.stringify(message) + "\r\n");
-        });
+            conn.on("ReceiveGameState", (state) => {
+                app.ports.receiveUpdate.send(state)
+            });
 
-        async function sendOffer() {
-            // Send 2, one IPV6 and 1 IPV4
-            signalSocket.send("OFFER 127.0.0.1 {}\r\n");
-            signalSocket.send("OFFER ::1 {}\r\n");
-        }
+            conn.on("PushGameState", () => {
+                if (lastGameState !== null && roomCode !== null)
+                    conn
+                        .invoke("SendGameState", roomCode, lastGameState)
+                        .catch(err => console.error(err))
+                    ;
+            });
 
-        var pingInterval = null;
-        signalSocket.onopen = function() {
-            sendOffer();
-            pingInterval = setInterval(ping, 10000);
-            offerTimeout = setInterval(sendOffer, 5000);
-        }
+            app.ports.saveData.subscribe((data) =>
+                window.localStorage.setItem("state", JSON.stringify(data))
+            );
 
-        signalSocket.onclose = function() {
-            clearInterval(pingInterval)
-            pingInterval = null;
-        }
+            app.ports.connect.subscribe (async () => {
+                if (conn.state === signalR.HubConnectionState.Disconnected) {
+                    try {
+                        await conn.start();
+                        app.ports.connected.send(null);
+                    } catch (err) {
+                        console.log(err);
+                        app.ports.disconnected.send(null);
+                    }
+                }
+            });
 
-        signalSocket.onmessage = async function(m) {
-            let splitData = m.data.replace('\r\n', '').split(' ')
-            let cmd = splitData.shift();
-            let ip = splitData.shift();
-            let data = splitData.join(' ');
+            app.ports.createRoom.subscribe (() => {
+                if (conn.state === signalR.HubConnectionState.Connected)
+                    conn
+                        .invoke("CreateRoom")
+                        .catch(err => console.error(err))
+                    ;
+            });
 
-            if (cmd == 'ANSWER')
-                clearInterval(offerTimeout);
-            else if (cmd == 'UPDATE')
-                app.ports.receiveGameState.send(JSON.parse(data));
-        }
+            app.ports.joinRoom.subscribe ((args) => {
+                const oldCode = args[0];
+                const newCode = args[1];
 
-        function ping() {
-            if (pingInterval != null)
-                signalSocket.send("PING\r\n");
-        }
+                if (oldCode !== null)
+                    conn.invoke("LeaveRoom", oldCode).catch(err => console.error(err));
+
+                roomCode = newCode;
+                conn.invoke("JoinRoom", newCode).catch(err => console.error(err));
+            });
+
+            app.ports.sendUpdate.subscribe ((args) => {
+                lastGameState = args[1];
+                conn.invoke("SendGameState", args[0], args[1]).catch(err => console.error(err));
+            });
+        })();
     </script>
 </body>
 </html>
