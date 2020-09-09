@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import AppStorage exposing (AppModeType(..), Config, GameModeType(..), loadFromStorage, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
 import Bitwise
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -14,6 +15,7 @@ import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (div, img)
 import Html.Attributes exposing (attribute, checked, class, hidden, maxlength, required, src, style, value)
 import Http exposing (Error)
+import Json.Decode as Decode
 import List exposing (any, filter, filterMap, head, map, reverse, sort)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Process
@@ -37,27 +39,9 @@ type alias Model =
     }
 
 
-type alias Config =
-    { appMode : AppModeType
-    , gameMode : GameModeType
-    , roomCode : Maybe String
-    , showRoomCode : Bool
-    }
-
-
 type MoveablePieceType
     = OverlayType BoardOverlay (Maybe ( Int, Int ))
     | PieceType Piece
-
-
-type GameModeType
-    = MovePiece
-    | KillPiece
-    | MoveOverlay
-    | DestroyOverlay
-    | LootCell
-    | RevealRoom
-    | AddPiece
 
 
 type LoadingState
@@ -70,13 +54,6 @@ type ConnectionStatus
     = Connected
     | Disconnected
     | Reconnecting
-
-
-type AppModeType
-    = Game
-    | ScenarioDialog
-    | ServerConfigDialog
-    | PlayerChoiceDialog
 
 
 type alias MoveablePiece =
@@ -110,7 +87,7 @@ type Msg
     | PushGameState
 
 
-main : Program Int Model Msg
+main : Program ( Maybe Decode.Value, Int ) Model Msg
 main =
     Browser.element
         { init = init
@@ -120,19 +97,32 @@ main =
         }
 
 
+init : ( Maybe Decode.Value, Int ) -> ( Model, Cmd Msg )
+init ( oldState, seed ) =
+    let
+        ( initGameState, initConfig ) =
+            case oldState of
+                Just s ->
+                    case loadFromStorage s of
+                        Ok val ->
+                            val
 
--- PLACEHOLDER
+                        Err e ->
+                            Debug.log
+                                (Decode.errorToString e)
+                                AppStorage.empty
 
+                Nothing ->
+                    AppStorage.empty
 
-initScenario : Int
-initScenario =
-    32
-
-
-init : Int -> ( Model, Cmd Msg )
-init seed =
-    ( Model Game.empty (Config Game MovePiece Nothing True) (Loading initScenario) Nothing Nothing Nothing DragDrop.initialState Nothing Disconnected
-    , Cmd.batch [ connectToServer, loadScenarioById initScenario (LoadedScenario (Random.initialSeed seed) Nothing) ]
+        initGame =
+            Game.empty
+    in
+    ( Model { initGame | state = initGameState } initConfig (Loading initGameState.scenario) Nothing Nothing Nothing DragDrop.initialState Nothing Disconnected
+    , Cmd.batch
+        [ connectToServer
+        , loadScenarioById initGameState.scenario (LoadedScenario (Random.initialSeed seed) (Just initGameState))
+        ]
     )
 
 
@@ -170,7 +160,7 @@ update msg model =
                         newModel =
                             { model | game = { game | state = { gameState | players = model.game.state.players } }, currentLoadState = Loaded }
                     in
-                    ( newModel, pushGameState newModel gameState )
+                    ( newModel, pushGameState newModel newModel.game.state )
 
                 Err _ ->
                     ( { model | currentLoadState = Failed }, Cmd.none )
@@ -277,8 +267,11 @@ update msg model =
             let
                 config =
                     model.config
+
+                newModel =
+                    { model | config = { config | gameMode = mode } }
             in
-            ( { model | config = { config | gameMode = mode } }, Cmd.none )
+            ( newModel, saveToStorage newModel.game.state newModel.config )
 
         RevealRoomMsg rooms ( x, y ) ->
             let
@@ -318,8 +311,11 @@ update msg model =
             let
                 config =
                     model.config
+
+                newModel =
+                    { model | config = { config | appMode = mode } }
             in
-            ( { model | config = { config | appMode = mode } }, Cmd.none )
+            ( newModel, saveToStorage newModel.game.state newModel.config )
 
         ChangeScenario newScenario forceReload ->
             let
@@ -327,10 +323,10 @@ update msg model =
                     model.config
             in
             if forceReload || newScenario /= model.game.state.scenario then
-                ( { model | config = { config | appMode = Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed Nothing) )
+                ( { model | config = { config | appMode = AppStorage.Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed Nothing) )
 
             else
-                ( { model | config = { config | appMode = Game } }, Cmd.none )
+                ( { model | config = { config | appMode = AppStorage.Game } }, Cmd.none )
 
         EnterScenarioNumber strId ->
             case String.toInt strId of
@@ -372,7 +368,7 @@ update msg model =
                         config =
                             model.config
                     in
-                    update (GameSyncMsg (JoinRoom newRoomCode)) { model | config = { config | showRoomCode = showRoomCode, appMode = Game } }
+                    update (GameSyncMsg (JoinRoom newRoomCode)) { model | config = { config | showRoomCode = showRoomCode, appMode = AppStorage.Game } }
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -406,12 +402,12 @@ update msg model =
                     model.game.state
             in
             if playerList == model.game.state.players then
-                ( model, Cmd.none )
+                update (ChangeAppMode AppStorage.Game) model
 
             else
                 let
                     newModel =
-                        { model | config = { config | appMode = Game }, game = { game | state = { gameState | players = playerList } }, currentPlayerList = Nothing }
+                        { model | config = { config | appMode = AppStorage.Game }, game = { game | state = { gameState | players = playerList } }, currentPlayerList = Nothing }
                 in
                 update ReloadScenario newModel
 
@@ -479,10 +475,12 @@ update msg model =
                     model.game
             in
             if game.state.scenario == gameState.scenario then
-                ( { model | game = { game | state = gameState } }, Cmd.none )
+                ( { model | game = { game | state = gameState } }, saveToStorage gameState model.config )
 
             else
-                ( { model | currentLoadState = Loading gameState.scenario }, loadScenarioById gameState.scenario (LoadedScenario game.seed (Just gameState)) )
+                ( { model | currentLoadState = Loading gameState.scenario }
+                , loadScenarioById gameState.scenario (LoadedScenario game.seed (Just gameState))
+                )
 
         PushGameState ->
             case model.currentLoadState of
@@ -512,7 +510,7 @@ view model =
             ]
          ]
             ++ (case config.appMode of
-                    Game ->
+                    AppStorage.Game ->
                         []
 
                     _ ->
@@ -665,7 +663,7 @@ getDialogForAppMode model =
                         PlayerChoiceDialog ->
                             Dom.appendChild (getPlayerChoiceDialog model)
 
-                        Game ->
+                        AppStorage.Game ->
                             \e -> e
                    )
             )
@@ -703,7 +701,7 @@ getScenarioDialog model =
                         |> Dom.addAction ( "click", ChangeScenario scenarioInput False )
                     , Dom.element "button"
                         |> Dom.appendText "Cancel"
-                        |> Dom.addAction ( "click", ChangeAppMode Game )
+                        |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
                     ]
             ]
 
@@ -761,7 +759,7 @@ getClientSettingsDialog model =
                         |> Dom.addAction ( "click", ChangeClientSettings model.currentClientSettings )
                     , Dom.element "button"
                         |> Dom.appendText "Cancel"
-                        |> Dom.addAction ( "click", ChangeAppMode Game )
+                        |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
                     ]
             ]
 
@@ -792,7 +790,7 @@ getPlayerChoiceDialog model =
                         |> Dom.addAction ( "click", ChangePlayerList )
                     , Dom.element "button"
                         |> Dom.appendText "Cancel"
-                        |> Dom.addAction ( "click", ChangeAppMode Game )
+                        |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
                     ]
             )
 
@@ -1424,9 +1422,12 @@ getSplitRoomCodeSettings model =
 
 pushGameState : Model -> GameState -> Cmd Msg
 pushGameState model state =
-    if model.connectionStatus /= Connected || model.config.roomCode == Nothing then
-        Process.sleep 500
-            |> Task.perform (\_ -> PushGameState)
+    Cmd.batch
+        [ if model.connectionStatus /= Connected || model.config.roomCode == Nothing then
+            Process.sleep 500
+                |> Task.perform (\_ -> PushGameState)
 
-    else
-        GameSync.pushGameState (Maybe.withDefault "" model.config.roomCode) state
+          else
+            GameSync.pushGameState (Maybe.withDefault "" model.config.roomCode) state
+        , saveToStorage state model.config
+        ]

@@ -157,7 +157,7 @@ encodeGameState : GameState -> Encode.Value
 encodeGameState gameState =
     object
         [ ( "scenario", Encode.int gameState.scenario )
-        , ( "players", Encode.list Encode.string (encodeCharacters gameState.players) )
+        , ( "players", Encode.list Encode.object (encodeCharacters gameState.players) )
         , ( "updateCount", Encode.int gameState.updateCount )
         , ( "visibleRooms", Encode.list Encode.string (encodeMapTileRefList gameState.visibleRooms) )
         , ( "overlays", Encode.list Encode.object (encodeOverlays gameState.overlays) )
@@ -542,9 +542,14 @@ encodePieces pieces =
         pieces
 
 
-encodeCharacters : List CharacterClass -> List String
+encodeCharacters : List CharacterClass -> List (List ( String, Encode.Value ))
 encodeCharacters characters =
     List.filterMap (\c -> characterToString c) characters
+        |> List.map
+            (\c ->
+                [ ( "class", Encode.string c )
+                ]
+            )
 
 
 encodePieceType : PieceType -> List ( String, Encode.Value )

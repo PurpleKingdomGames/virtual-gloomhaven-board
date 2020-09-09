@@ -21,7 +21,7 @@ empty =
 
 emptyState : GameState
 emptyState =
-    GameState 0 [] 0 [] [] [] Dict.empty ""
+    GameState 1 [] 0 [] [] [] Dict.empty ""
 
 
 type AIType
