@@ -576,6 +576,28 @@ getNewPieceHtml model game =
                             (overlayToHtml model Nothing (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]))
                     )
                 |> Dom.appendChildList
+                    (let
+                        playerPieces =
+                            game.state.pieces
+                                |> List.filterMap
+                                    (\p ->
+                                        case p.ref of
+                                            Player c ->
+                                                Just c
+
+                                            _ ->
+                                                Nothing
+                                    )
+                     in
+                     game.state.players
+                        |> List.filter (\p -> List.member p playerPieces == False)
+                        |> List.map
+                            (\p ->
+                                Dom.element "li"
+                                    |> Dom.appendChild (pieceToHtml model Nothing (Piece (Player p) 0 0))
+                            )
+                    )
+                |> Dom.appendChildList
                     (Dict.toList game.state.availableMonsters
                         |> List.filter (\( _, v ) -> length v > 0)
                         |> List.map (\( k, _ ) -> k)
@@ -612,7 +634,7 @@ getMenuHtml =
                     [ Dom.element "li"
                         |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
                         |> Dom.appendText "Change Scenario"
-                    ,Dom.element "li"
+                    , Dom.element "li"
                         |> Dom.addAction ( "click", ReloadScenario )
                         |> Dom.appendText "Reload Scenario"
                     , Dom.element "li"
