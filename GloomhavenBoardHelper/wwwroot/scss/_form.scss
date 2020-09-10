@@ -1,0 +1,41 @@
+.input-wrapper {
+    display: flex;
+    flex-direction: column;
+
+    label {
+        font-size: 1.3rem;
+        padding-bottom: 5px;
+    }
+
+    input:not([type="checkbox"]) {
+        border-radius: 0;
+        background-color: rgba(0, 0, 0, 0);
+        border-color: #000;
+        border-width: 1px;
+        padding: 5px;
+        font-size: 1.1rem;
+        outline: none;
+
+        &:focus {
+            border-color: #ccc;
+            -webkit-box-shadow: 0px 0px 8px 0px rgba(0,0,0,0.75);
+            -moz-box-shadow: 0px 0px 8px 0px rgba(0,0,0,0.75);
+            box-shadow: 0px 0px 8px 0px rgba(0,0,0,0.75);
+        }
+    }
+}
+
+.button-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+
+    button {
+        border-radius: 0;
+        border-radius: 0;
+        font-size: 0.8rem;
+        padding: 10px;
+        width: 80px;
+    }
+}

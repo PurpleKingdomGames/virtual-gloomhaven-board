@@ -1,0 +1,16 @@
+@font-face {
+    font-family: 'PirateOne';
+    src: url('/fonts/PirataOne-Gloomhaven.eot');
+    src: url('/fonts/PirataOne-Gloomhaven.woff2') format('woff2'),url('/fonts/PirataOne-Gloomhaven.woff') format('woff'), url('/fonts/PirataOne-Gloomhaven.ttf') format('truetype'), url('/fonts/PirataOne-Gloomhaven.svg') format('svg');
+}
+
+:root {
+    font-size: 1rem;
+}
+
+html {
+    font-family: 'PirateOne', Nyala, Georgia, serif;
+    background-image: radial-gradient(circle, rgba(241, 236, 232, 0.5) 31%, rgba(156, 124, 108, 0.3) 85%, rgba(81, 64, 30, 0.1) 100%), url("/img/bg.png");
+    background-repeat: repeat;
+    box-shadow: inset 0 0 100px rgba(0, 0, 20, 0.7), 0 5px 15px rgba(0, 0, 0, 0.5);
+}
