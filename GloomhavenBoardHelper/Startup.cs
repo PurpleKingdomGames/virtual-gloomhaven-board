@@ -34,8 +34,7 @@ namespace GloomhavenBoardHelper
             app.UseResponseCompression();
             app.UseResponseCaching();
             //app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.UseDefaultFiles();
+            app.UseFileServer();
 
             app.UseRouting();
             app.UseEndpoints(endpoints => {
