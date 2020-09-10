@@ -85,6 +85,7 @@ type Msg
     | ChangeClientSettings (Maybe ( String, Bool ))
     | GameSyncMsg GameSync.Msg
     | PushGameState
+    | NoOp
 
 
 main : Program ( Maybe Decode.Value, Int ) Model Msg
@@ -267,7 +268,7 @@ update msg model =
                     model.config
 
                 newModel =
-                    { model | config = { config | gameMode = mode } }
+                    { model | config = { config | gameMode = mode }, currentClientSettings = Nothing, currentPlayerList = Nothing, currentScenarioInput = Nothing }
             in
             ( newModel, saveToStorage newModel.game.state newModel.config )
 
@@ -488,6 +489,9 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        NoOp ->
+            ( model, Cmd.none )
+
 
 view : Model -> Html.Html Msg
 view model =
@@ -664,7 +668,9 @@ getDialogForAppMode model =
                         AppStorage.Game ->
                             \e -> e
                    )
+                |> Dom.addActionStopPropagation ( "click", NoOp )
             )
+        |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
         |> Dom.render
 
 
@@ -728,6 +734,8 @@ getClientSettingsDialog model =
                                 |> Dom.addAttribute (maxlength 5)
                                 |> Dom.addAttribute (required True)
                                 |> Dom.addAttribute (value roomCode1)
+                            , Dom.element "span"
+                                |> Dom.appendText "-"
                             , Dom.element "input"
                                 |> Dom.addAttribute (attribute "id" "roomCodeInput2")
                                 |> Dom.addChangeHandler ChangeRoomCodeInputEnd
@@ -738,17 +746,19 @@ getClientSettingsDialog model =
                     ]
             , Dom.element "div"
                 |> Dom.addClass "input-wrapper"
-                |> Dom.appendChildList
-                    [ Dom.element "label"
+                |> Dom.appendChild
+                    (Dom.element "label"
                         |> Dom.addAttribute (attribute "for" "showRoomCode")
                         |> Dom.appendText "Show Room Code"
-                    , Dom.element "input"
-                        |> Dom.addAttribute (attribute "id" "showRoomCode")
-                        |> Dom.addAttribute (attribute "type" "checkbox")
-                        |> Dom.addAttribute (attribute "value" "1")
-                        |> Dom.addAttribute (checked showRoomCode)
-                        |> Dom.addToggleHandler ChangeShowRoomCode
-                    ]
+                        |> Dom.appendChild
+                            (Dom.element "input"
+                                |> Dom.addAttribute (attribute "id" "showRoomCode")
+                                |> Dom.addAttribute (attribute "type" "checkbox")
+                                |> Dom.addAttribute (attribute "value" "1")
+                                |> Dom.addAttribute (checked showRoomCode)
+                                |> Dom.addActionStopPropagation ( "click", ChangeShowRoomCode (showRoomCode == False) )
+                            )
+                    )
             , Dom.element "div"
                 |> Dom.addClass "button-wrapper"
                 |> Dom.appendChildList
@@ -797,17 +807,21 @@ getCharacterChoiceInput : String -> CharacterClass -> Bool -> Element Msg
 getCharacterChoiceInput name class enabled =
     Dom.element "div"
         |> Dom.addClass "input-wrapper"
-        |> Dom.appendChildList
-            [ Dom.element "label"
+        |> Dom.appendChild
+            (Dom.element "label"
                 |> Dom.addAttribute (attribute "for" ("characterChoice_" ++ name))
+                |> Dom.addClass name
+                |> Dom.addClassConditional "selected" enabled
                 |> Dom.appendText name
-            , Dom.element "input"
-                |> Dom.addAttribute (attribute "id" ("characterChoice_" ++ name))
-                |> Dom.addAttribute (attribute "type" "checkbox")
-                |> Dom.addAttribute (attribute "value" "1")
-                |> Dom.addAttribute (checked enabled)
-                |> Dom.addToggleHandler (ToggleCharacter class)
-            ]
+                |> Dom.appendChild
+                    (Dom.element "input"
+                        |> Dom.addAttribute (attribute "id" ("characterChoice_" ++ name))
+                        |> Dom.addAttribute (attribute "type" "checkbox")
+                        |> Dom.addAttribute (attribute "value" "1")
+                        |> Dom.addAttribute (checked enabled)
+                        |> Dom.addActionStopPropagation ( "click", ToggleCharacter class (enabled == False) )
+                    )
+            )
 
 
 getNavHtml : Model -> Html.Html Msg
