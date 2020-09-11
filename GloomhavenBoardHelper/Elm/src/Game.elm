@@ -16,7 +16,7 @@ import Scenario exposing (Scenario, ScenarioMonster, mapTileDataToList, mapTileD
 
 empty : Game
 empty =
-    Game emptyState (Random.initialSeed 0) [] Array.empty
+    Game emptyState Scenario.empty (Random.initialSeed 0) [] Array.empty
 
 
 emptyState : GameState
@@ -50,6 +50,7 @@ type alias Cell =
 
 type alias Game =
     { state : GameState
+    , scenario : Scenario
     , seed : Random.Seed
     , roomData : List RoomData
     , staticBoard : Array (Array Cell)
@@ -161,7 +162,7 @@ generateGameMap scenario roomCode players seed =
             initialize arrSize (always (initialize arrSize (always (Cell [] False))))
 
         initGame =
-            setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY seed (Game initGameState seed [] initMap)
+            setCellsFromMapTiles mapTiles initOverlays bounds.minX offsetY seed (Game initGameState scenario seed [] initMap)
                 |> ensureUniqueOverlays
 
         startRooms =

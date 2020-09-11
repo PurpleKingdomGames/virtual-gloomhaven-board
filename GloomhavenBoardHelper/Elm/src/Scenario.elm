@@ -1,6 +1,6 @@
-module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, mapTileDataToList, mapTileDataToOverlayList)
+module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, empty, mapTileDataToList, mapTileDataToOverlayList)
 
-import BoardMapTile exposing (MapTile, MapTileRef, getMapTileListByRef, refToString)
+import BoardMapTile exposing (MapTile, MapTileRef(..), getMapTileListByRef, refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DoorSubType(..))
 import Dict exposing (Dict, empty, singleton, union)
 import Hexagon exposing (cubeToOddRow, oddRowToCube, rotate)
@@ -47,6 +47,11 @@ type alias Scenario =
     }
 
 
+empty : Scenario
+empty =
+    Scenario 0 "" (MapTileData A1a [] [] [] 0) 0 []
+
+
 mapTileDataToOverlayList : MapTileData -> Dict String ( List BoardOverlay, List ScenarioMonster )
 mapTileDataToOverlayList data =
     let
@@ -86,7 +91,7 @@ mapTileDataToOverlayList data =
                         |> singleton ref
 
                 Nothing ->
-                    empty
+                    Dict.empty
 
         doorData =
             List.map
@@ -96,7 +101,7 @@ mapTileDataToOverlayList data =
                             mapTileDataToOverlayList map
                 )
                 data.doors
-                |> List.foldl (\a b -> union a b) empty
+                |> List.foldl (\a b -> union a b) Dict.empty
     in
     union initData doorData
 

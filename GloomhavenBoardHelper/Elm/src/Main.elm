@@ -12,8 +12,8 @@ import Dom exposing (Element)
 import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
-import Html exposing (div, img)
-import Html.Attributes exposing (attribute, checked, class, hidden, maxlength, required, src, style, value)
+import Html exposing (a, div, footer, header, iframe, img, span, text)
+import Html.Attributes exposing (attribute, checked, class, hidden, href, maxlength, required, src, style, title, value)
 import Http exposing (Error)
 import Json.Decode as Decode
 import List exposing (any, filter, filterMap, head, map, reverse, sort)
@@ -517,11 +517,36 @@ view model =
             game =
                 model.game
          in
-         [ div [ class "menu" ] [ getMenuHtml ]
+         [ div [ class "header" ]
+            [ div [ class "menu" ] [ getMenuHtml ]
+            , header []
+                [ span [ class "number" ] [ text (String.fromInt game.scenario.id) ]
+                , span [ class "title" ] [ text game.scenario.title ]
+                ]
+            ]
          , div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
          , div [ class "board-wrapper" ]
             [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) game.roomData)
             , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
+            ]
+         , footer []
+            [ div [ class "credits" ]
+                [ span [ class "gloomCopy" ]
+                    [ text "Gloomhaven properties and images &copy;"
+                    , a [ href "http://www.cephalofair.com/" ] [ text "Cephalofair Games" ]
+                    ]
+                , span [ class "any2CardCopy" ]
+                    [ text "Additional card scans courtesy of "
+                    , a [ href "https://github.com/any2cards/gloomhaven" ] [ text "Any2Cards" ]
+                    ]
+                , span [ class "pkgCopy" ]
+                    [ text "Developed by "
+                    , a [ href "https://purplekingdomgames.com/" ] [ text "Purple Kingdom Games" ]
+                    ]
+                ]
+            , div [ class "sponsor" ]
+                [ iframe [ class "sponsor-button", src "https://github.com/sponsors/PurpleKingdomGames/button", title "Sponsor PurpleKingdomGames" ] []
+                ]
             ]
          ]
             ++ (case config.appMode of
