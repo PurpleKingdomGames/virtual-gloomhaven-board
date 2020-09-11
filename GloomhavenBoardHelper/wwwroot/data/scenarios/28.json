@@ -144,7 +144,7 @@
                     ],
                     "monsters": [
                         {
-                            "monster": "flame-demon",
+                            "monster": "sun-demon",
                             "initialX": 2,
                             "initialY": 0,
                             "twoPlayer": "normal",
@@ -152,7 +152,7 @@
                             "fourPlayer": "elite"
                         },
                         {
-                            "monster": "flame-demon",
+                            "monster": "sun-demon",
                             "initialX": 0,
                             "initialY": 1,
                             "twoPlayer": "elite",
@@ -160,7 +160,7 @@
                             "fourPlayer": "elite"
                         },
                         {
-                            "monster": "flame-demon",
+                            "monster": "sun-demon",
                             "initialX": 3,
                             "initialY": 2,
                             "twoPlayer": "none",
@@ -168,7 +168,7 @@
                             "fourPlayer": "normal"
                         },
                         {
-                            "monster": "flame-demon",
+                            "monster": "sun-demon",
                             "initialX": 0,
                             "initialY": 3,
                             "twoPlayer": "none",
