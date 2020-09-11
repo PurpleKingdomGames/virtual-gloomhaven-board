@@ -101,7 +101,7 @@ main =
 init : ( Maybe Decode.Value, Int ) -> ( Model, Cmd Msg )
 init ( oldState, seed ) =
     let
-        ( initGameState, initConfig ) =
+        ( gs, initConfig ) =
             case oldState of
                 Just s ->
                     case loadFromStorage s of
@@ -113,6 +113,9 @@ init ( oldState, seed ) =
 
                 Nothing ->
                     AppStorage.empty
+
+        initGameState =
+            { gs | updateCount = 0 }
 
         initGame =
             Game.empty
@@ -138,7 +141,17 @@ update msg model =
                     let
                         game =
                             generateGameMap scenario roomCode model.game.state.players seed
-                                |> assignPlayers model.game.state.players
+                                |> (let
+                                        players =
+                                            case initGameState of
+                                                Just gs ->
+                                                    gs.players
+
+                                                Nothing ->
+                                                    model.game.state.players
+                                    in
+                                    assignPlayers players
+                                   )
 
                         gameState =
                             case initGameState of
@@ -157,7 +170,7 @@ update msg model =
                                     game.state
 
                         newModel =
-                            { model | game = { game | state = { gameState | players = model.game.state.players } }, currentLoadState = Loaded }
+                            { model | game = { game | state = gameState }, currentLoadState = Loaded }
                     in
                     ( newModel, pushGameState newModel newModel.game.state )
 
