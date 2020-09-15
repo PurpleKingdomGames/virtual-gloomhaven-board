@@ -18,6 +18,7 @@ import Html.Events exposing (onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
 import List exposing (any, filter, filterMap, head, map, reverse, sort)
+import List.Extra exposing (uniqueBy)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Process
 import Random exposing (Seed)
@@ -550,7 +551,7 @@ view model =
          , div [ class "main" ]
             [ div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
             , div [ class "board-wrapper" ]
-                [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) game.roomData)
+                [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) game.roomData))
                 , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
                 ]
             ]
@@ -977,30 +978,76 @@ getMapTileHtml visibleRooms roomData =
             y * 67
     in
     div
-        [ class "mapTile"
-        , class ("rotate-" ++ String.fromInt roomData.turns)
-        , class
-            (if any (\r -> r == roomData.ref) visibleRooms then
-                "visible"
+        []
+        [ div
+            [ class "mapTile"
+            , class ("rotate-" ++ String.fromInt roomData.turns)
+            , class
+                (if any (\r -> r == roomData.ref) visibleRooms then
+                    "visible"
 
-             else
-                "hidden"
-            )
-        , style "top" (String.fromInt yPx ++ "px")
-        , style "left" (String.fromInt xPx ++ "px")
-        ]
-        (case roomData.ref of
-            Empty ->
-                []
-
-            _ ->
-                [ img
-                    [ src ("/img/map-tiles/" ++ ref ++ ".png")
-                    , class ("ref-" ++ ref)
-                    ]
+                 else
+                    "hidden"
+                )
+            , style "top" (String.fromInt yPx ++ "px")
+            , style "left" (String.fromInt xPx ++ "px")
+            ]
+            (case roomData.ref of
+                Empty ->
                     []
-                ]
-        )
+
+                _ ->
+                    [ img
+                        [ src ("/img/map-tiles/" ++ ref ++ ".png")
+                        , class ("ref-" ++ ref)
+                        ]
+                        []
+                    ]
+            )
+        , div
+            [ class "mapTile outline"
+            , class ("rotate-" ++ String.fromInt roomData.turns)
+            , class
+                (if any (\r -> r == roomData.ref) visibleRooms then
+                    "hidden"
+
+                 else
+                    "visible"
+                )
+            , style "top" (String.fromInt yPx ++ "px")
+            , style "left" (String.fromInt xPx ++ "px")
+            ]
+            (case roomData.ref of
+                Empty ->
+                    []
+
+                r ->
+                    let
+                        overlayPrefix =
+                            case r of
+                                J1a ->
+                                    "ja"
+
+                                J2a ->
+                                    "ja"
+
+                                J1b ->
+                                    "jb"
+
+                                J2b ->
+                                    "jb"
+
+                                _ ->
+                                    String.left 1 ref
+                    in
+                    [ img
+                        [ src ("/img/map-tiles/" ++ overlayPrefix ++ "-outline.png")
+                        , class ("ref-" ++ ref)
+                        ]
+                        []
+                    ]
+            )
+        ]
 
 
 getBoardHtml : Model -> Game -> Int -> Array Cell -> Html.Html Msg

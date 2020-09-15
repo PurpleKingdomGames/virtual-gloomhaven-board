@@ -221,6 +221,12 @@ $tiles:
             }
         }
 
+        &.outline {
+            img {
+                opacity: 0.08;
+            }
+        }
+
 
         &.hidden img {
             opacity: 0;
