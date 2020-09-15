@@ -13,7 +13,8 @@ import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
-import Html.Attributes exposing (attribute, checked, class, hidden, href, maxlength, required, src, style, title, value)
+import Html.Attributes exposing (attribute, checked, class, href, maxlength, required, src, style, title, value)
+import Html.Events exposing (onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
 import List exposing (any, filter, filterMap, head, map, reverse, sort)
@@ -36,6 +37,7 @@ type alias Model =
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
     , connectionStatus : ConnectionStatus
+    , menuOpen : Bool
     }
 
 
@@ -86,6 +88,7 @@ type Msg
     | GameSyncMsg GameSync.Msg
     | PushGameState
     | NoOp
+    | ToggleMenu
 
 
 main : Program ( Maybe Decode.Value, Int ) Model Msg
@@ -120,7 +123,7 @@ init ( oldState, seed ) =
         initGame =
             Game.empty
     in
-    ( Model { initGame | state = initGameState } initConfig (Loading initGameState.scenario) Nothing Nothing Nothing DragDrop.initialState Nothing Disconnected
+    ( Model { initGame | state = initGameState } initConfig (Loading initGameState.scenario) Nothing Nothing Nothing DragDrop.initialState Nothing Disconnected False
     , Cmd.batch
         [ connectToServer
         , loadScenarioById initGameState.scenario (LoadedScenario (Random.initialSeed seed) (Just initGameState))
@@ -502,6 +505,9 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        ToggleMenu ->
+            ( { model | menuOpen = model.menuOpen == False }, Cmd.none )
+
         NoOp ->
             ( model, Cmd.none )
 
@@ -518,34 +524,56 @@ view model =
                 model.game
          in
          [ div [ class "header" ]
-            [ div [ class "menu" ] [ getMenuHtml ]
-            , header []
-                [ span [ class "number" ] [ text (String.fromInt game.scenario.id) ]
-                , span [ class "title" ] [ text game.scenario.title ]
+            [ div
+                [ class
+                    ("menu"
+                        ++ (if model.menuOpen then
+                                " show"
+
+                            else
+                                ""
+                           )
+                    )
+                , onClick ToggleMenu
                 ]
+                [ getMenuHtml ]
+            , header []
+                (if game.scenario.id /= 0 then
+                    [ span [ class "number" ] [ text (String.fromInt game.scenario.id) ]
+                    , span [ class "title" ] [ text game.scenario.title ]
+                    ]
+
+                 else
+                    []
+                )
             ]
-         , div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
-         , div [ class "board-wrapper" ]
-            [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) game.roomData)
-            , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
+         , div [ class "main" ]
+            [ div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
+            , div [ class "board-wrapper" ]
+                [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) game.roomData)
+                , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
+                ]
             ]
          , footer []
             [ div [ class "credits" ]
                 [ span [ class "gloomCopy" ]
-                    [ text "Gloomhaven properties and images &copy;"
+                    [ text "Gloomhaven and all related properties and images are owned by "
                     , a [ href "http://www.cephalofair.com/" ] [ text "Cephalofair Games" ]
                     ]
                 , span [ class "any2CardCopy" ]
                     [ text "Additional card scans courtesy of "
                     , a [ href "https://github.com/any2cards/gloomhaven" ] [ text "Any2Cards" ]
                     ]
-                , span [ class "pkgCopy" ]
+                ]
+            , div [ class "pkg" ]
+                [ span [ class "pkgCopy" ]
                     [ text "Developed by "
                     , a [ href "https://purplekingdomgames.com/" ] [ text "Purple Kingdom Games" ]
                     ]
-                ]
-            , div [ class "sponsor" ]
-                [ iframe [ class "sponsor-button", src "https://github.com/sponsors/PurpleKingdomGames/button", title "Sponsor PurpleKingdomGames" ] []
+                , div
+                    [ class "sponsor" ]
+                    [ iframe [ class "sponsor-button", src "https://github.com/sponsors/PurpleKingdomGames/button", title "Sponsor PurpleKingdomGames" ] []
+                    ]
                 ]
             ]
          ]
@@ -569,95 +597,99 @@ subscriptions _ =
 getNewPieceHtml : Model -> Game -> Html.Html Msg
 getNewPieceHtml model game =
     Dom.element "div"
-        |> Dom.addAttributeConditional (hidden True) (model.config.gameMode /= AddPiece)
-        |> Dom.addClass "new-piece-list"
+        |> Dom.addClassConditional "show" (model.config.gameMode == AddPiece)
+        |> Dom.addClass "new-piece-wrapper"
         |> Dom.appendChild
-            (Dom.element "ul"
+            (Dom.element "div"
+                |> Dom.addClass "new-piece-list"
                 |> Dom.appendChild
-                    (Dom.element "li"
+                    (Dom.element "ul"
                         |> Dom.appendChild
-                            (let
-                                maxSummons =
-                                    filterMap
-                                        (\p ->
-                                            case p.ref of
-                                                AI (Summons i) ->
-                                                    Just i
+                            (Dom.element "li"
+                                |> Dom.appendChild
+                                    (let
+                                        maxSummons =
+                                            filterMap
+                                                (\p ->
+                                                    case p.ref of
+                                                        AI (Summons i) ->
+                                                            Just i
 
-                                                _ ->
-                                                    Nothing
-                                        )
-                                        game.state.pieces
-                                        |> sort
-                                        |> reverse
-                                        |> head
+                                                        _ ->
+                                                            Nothing
+                                                )
+                                                game.state.pieces
+                                                |> sort
+                                                |> reverse
+                                                |> head
 
-                                nextId =
-                                    case maxSummons of
-                                        Just i ->
-                                            i + 1
+                                        nextId =
+                                            case maxSummons of
+                                                Just i ->
+                                                    i + 1
 
-                                        Nothing ->
-                                            1
-                             in
-                             pieceToHtml model Nothing (Piece (AI (Summons nextId)) 0 0)
-                            )
-                    )
-                |> Dom.appendChild
-                    (Dom.element "li"
-                        |> Dom.appendChild
-                            (overlayToHtml model Nothing (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]))
-                    )
-                |> Dom.appendChild
-                    (Dom.element "li"
-                        |> Dom.appendChild
-                            (overlayToHtml model Nothing (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]))
-                    )
-                |> Dom.appendChildList
-                    (let
-                        playerPieces =
-                            game.state.pieces
-                                |> List.filterMap
-                                    (\p ->
-                                        case p.ref of
-                                            Player c ->
-                                                Just c
-
-                                            _ ->
-                                                Nothing
+                                                Nothing ->
+                                                    1
+                                     in
+                                     pieceToHtml model Nothing (Piece (AI (Summons nextId)) 0 0)
                                     )
-                     in
-                     game.state.players
-                        |> List.filter (\p -> List.member p playerPieces == False)
-                        |> List.map
-                            (\p ->
-                                Dom.element "li"
-                                    |> Dom.appendChild (pieceToHtml model Nothing (Piece (Player p) 0 0))
                             )
-                    )
-                |> Dom.appendChildList
-                    (Dict.toList game.state.availableMonsters
-                        |> List.filter (\( _, v ) -> length v > 0)
-                        |> List.map (\( k, _ ) -> k)
-                        |> List.sort
-                        |> List.reverse
-                        |> filterMap (\k -> stringToMonsterType k)
-                        |> List.map
-                            (\k ->
-                                (Dom.element "li"
-                                    |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Normal))) 0 0))
-                                )
-                                    :: (case k of
-                                            NormalType _ ->
-                                                [ Dom.element "li"
-                                                    |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Elite))) 0 0))
-                                                ]
+                        |> Dom.appendChild
+                            (Dom.element "li"
+                                |> Dom.appendChild
+                                    (overlayToHtml model Nothing (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]))
+                            )
+                        |> Dom.appendChild
+                            (Dom.element "li"
+                                |> Dom.appendChild
+                                    (overlayToHtml model Nothing (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]))
+                            )
+                        |> Dom.appendChildList
+                            (let
+                                playerPieces =
+                                    game.state.pieces
+                                        |> List.filterMap
+                                            (\p ->
+                                                case p.ref of
+                                                    Player c ->
+                                                        Just c
 
-                                            _ ->
-                                                []
-                                       )
+                                                    _ ->
+                                                        Nothing
+                                            )
+                             in
+                             game.state.players
+                                |> List.filter (\p -> List.member p playerPieces == False)
+                                |> List.map
+                                    (\p ->
+                                        Dom.element "li"
+                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (Player p) 0 0))
+                                    )
                             )
-                        |> List.foldl (++) []
+                        |> Dom.appendChildList
+                            (Dict.toList game.state.availableMonsters
+                                |> List.filter (\( _, v ) -> length v > 0)
+                                |> List.map (\( k, _ ) -> k)
+                                |> List.sort
+                                |> List.reverse
+                                |> filterMap (\k -> stringToMonsterType k)
+                                |> List.map
+                                    (\k ->
+                                        (Dom.element "li"
+                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Normal))) 0 0))
+                                        )
+                                            :: (case k of
+                                                    NormalType _ ->
+                                                        [ Dom.element "li"
+                                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Elite))) 0 0))
+                                                        ]
+
+                                                    _ ->
+                                                        []
+                                               )
+                                    )
+                                |> List.foldl (++) []
+                            )
                     )
             )
         |> Dom.render
@@ -864,46 +896,50 @@ getCharacterChoiceInput name class enabled =
 
 getNavHtml : Model -> Html.Html Msg
 getNavHtml model =
-    Dom.element "nav"
+    Dom.element "div"
+        |> Dom.addClass "sidebar-wrapper"
         |> Dom.appendChild
-            (Dom.element "ul"
-                |> Dom.appendChildList
-                    [ Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeGameMode MovePiece )
-                        |> Dom.addClass "move-piece"
-                        |> Dom.addClassConditional "active" (model.config.gameMode == MovePiece)
-                        |> Dom.appendText "Move Piece"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeGameMode KillPiece )
-                        |> Dom.addClass "kill-piece"
-                        |> Dom.addClassConditional "active" (model.config.gameMode == KillPiece)
-                        |> Dom.appendText "Kill Piece"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeGameMode LootCell )
-                        |> Dom.addClass "loot"
-                        |> Dom.addClassConditional "active" (model.config.gameMode == LootCell)
-                        |> Dom.appendText "Loot"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeGameMode MoveOverlay )
-                        |> Dom.addClass "move-overlay"
-                        |> Dom.addClassConditional "active" (model.config.gameMode == MoveOverlay)
-                        |> Dom.appendText "Move Overlay"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeGameMode DestroyOverlay )
-                        |> Dom.addClass "destroy-overlay"
-                        |> Dom.addClassConditional "active" (model.config.gameMode == DestroyOverlay)
-                        |> Dom.appendText "Destroy Overlay"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeGameMode RevealRoom )
-                        |> Dom.addClass "reveal-room"
-                        |> Dom.addClassConditional "active" (model.config.gameMode == RevealRoom)
-                        |> Dom.appendText "Reveal Room"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeGameMode AddPiece )
-                        |> Dom.addClass "add-piece"
-                        |> Dom.addClassConditional "active" (model.config.gameMode == AddPiece)
-                        |> Dom.appendText "Add Piece"
-                    ]
+            (Dom.element "nav"
+                |> Dom.appendChild
+                    (Dom.element "ul"
+                        |> Dom.appendChildList
+                            [ Dom.element "li"
+                                |> Dom.addAction ( "click", ChangeGameMode MovePiece )
+                                |> Dom.addClass "move-piece"
+                                |> Dom.addClassConditional "active" (model.config.gameMode == MovePiece)
+                                |> Dom.appendText "Move Piece"
+                            , Dom.element "li"
+                                |> Dom.addAction ( "click", ChangeGameMode KillPiece )
+                                |> Dom.addClass "kill-piece"
+                                |> Dom.addClassConditional "active" (model.config.gameMode == KillPiece)
+                                |> Dom.appendText "Kill Piece"
+                            , Dom.element "li"
+                                |> Dom.addAction ( "click", ChangeGameMode LootCell )
+                                |> Dom.addClass "loot"
+                                |> Dom.addClassConditional "active" (model.config.gameMode == LootCell)
+                                |> Dom.appendText "Loot"
+                            , Dom.element "li"
+                                |> Dom.addAction ( "click", ChangeGameMode MoveOverlay )
+                                |> Dom.addClass "move-overlay"
+                                |> Dom.addClassConditional "active" (model.config.gameMode == MoveOverlay)
+                                |> Dom.appendText "Move Overlay"
+                            , Dom.element "li"
+                                |> Dom.addAction ( "click", ChangeGameMode DestroyOverlay )
+                                |> Dom.addClass "destroy-overlay"
+                                |> Dom.addClassConditional "active" (model.config.gameMode == DestroyOverlay)
+                                |> Dom.appendText "Destroy Overlay"
+                            , Dom.element "li"
+                                |> Dom.addAction ( "click", ChangeGameMode RevealRoom )
+                                |> Dom.addClass "reveal-room"
+                                |> Dom.addClassConditional "active" (model.config.gameMode == RevealRoom)
+                                |> Dom.appendText "Reveal Room"
+                            , Dom.element "li"
+                                |> Dom.addAction ( "click", ChangeGameMode AddPiece )
+                                |> Dom.addClass "add-piece"
+                                |> Dom.addClassConditional "active" (model.config.gameMode == AddPiece)
+                                |> Dom.appendText "Add Piece"
+                            ]
+                    )
             )
         |> Dom.render
 
