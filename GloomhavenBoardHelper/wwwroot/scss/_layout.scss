@@ -10,13 +10,16 @@
 
 html {
     font-family: 'PirateOne', Nyala, Georgia, serif;
-    box-sizing: border-box;
 
     &, body {
         margin: 0;
         padding: 0;
         height: 100vh;
         width: 100vw;
+    }
+
+    * {
+        box-sizing: border-box;
     }
 
 
@@ -26,7 +29,7 @@ html {
         transition: 0.5s;
 
         &:hover {
-            color: #999;
+            color: #be514f;
         }
     }
 
@@ -37,18 +40,28 @@ html {
         border-bottom: 1px solid black;
         box-shadow: 0 5px 40px 0 black;
         z-index: 4;
+        min-height: 3.4rem;
 
         .menu {
             &:before {
-                content: "\2630";
+                content: "";
                 font-size: 3rem;
                 color: #ccc;
                 text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
                 cursor: pointer;
                 position: relative;
                 left: 1rem;
-                top: -0.35rem;
+                top: 0.3rem;
                 font-family: serif;
+                display: block;
+                width: 45px;
+                height: 45px;
+                background-image: url("/img/icons.png");
+                background-size: 256px;
+                background-position: -90px -45px;
+                filter: invert(100%) drop-shadow(2px 1px 0 black);
+                transition: 0.2s;
+                z-index: 5;
             }
 
             nav {
@@ -57,9 +70,53 @@ html {
                 opacity: 0;
                 visibility: hidden;
                 transition: 0.3s;
+                background-image: url('/img/plank.jpg');
+                border: 2px solid #222;
+                background-size: 190%;
+                top: 4rem;
+                left: 1.2rem;
+                font-size: 1.4rem;
+                color: #aaa;
+                text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                padding: 1rem;
+                border-radius: 0.5rem;
+
+                &:after {
+                    content: '';
+                    border: solid #222;
+                    border-width: 0 3px 3px 0;
+                    display: inline-block;
+                    padding: 3px;
+                    transform: rotate(225deg);
+                    width: 5px;
+                    position: absolute;
+                    left: 0.7rem;
+                    height: 5px;
+                    top: -0.5rem;
+                    background-image: url("/img/plank.jpg");
+                }
+
+                ul {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+
+                    li {
+                        cursor: pointer;
+                        margin-bottom: 0.4rem;
+
+                        &:hover {
+                            color: #fff;
+                        }
+                    }
+                }
             }
 
             &.show {
+                &:before {
+                    filter: invert(75%) drop-shadow(2px 1px 0 black);
+                }
+
                 nav {
                     opacity: 1;
                     visibility: visible;
@@ -75,7 +132,6 @@ html {
             color: #aaa;
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
             position: relative;
-            top: -0.4rem;
 
             .number {
                 margin-right: 1rem;
@@ -100,22 +156,23 @@ html {
 
             .action-list {
                 flex-grow: 1;
+                flex-shrink: 0;
                 height: 100%;
                 display: flex;
                 position: relative;
                 overflow: hidden;
                 background-image: url("/img/bg.jpg");
                 box-shadow: 10px 0px 40px 10px rgba(0, 0, 0, 0.75);
-                padding-right: 65px;
+                padding-right: 26px;
 
                 .sidebar-wrapper {
                     z-index: 3;
                     box-shadow: 25px 0px 25px -5px rgba(0, 0, 0, 0.75);
                     margin-right: 15px;
-                    width: 125px;
+                    width: 85px;
 
                     nav {
-                        width: 140px;
+                        width: 110px;
                         height: 100%;
                         overflow: hidden;
                         background-image: url("/img/bg.jpg");
@@ -128,9 +185,10 @@ html {
 
                         ul {
                             list-style: none;
-                            padding: 0;
+                            padding: 0 0 0 17px;
                             margin: 0;
                             height: 100%;
+                            width: 90px;
                             overflow: auto;
                             overflow-x: hidden;
                             scrollbar-width: thin;
@@ -139,9 +197,48 @@ html {
                                 display: inline-block;
                                 padding: 5px 10px;
                                 transition: all 0.25s;
+                                background-image: url('/img/icons.png');
+                                font-size: 0;
+                                text-indent: -9999rem;
+                                width: 45px;
+                                height: 45px;
+                                background-size: 256px;
+                                cursor: pointer;
+
+                                &:hover {
+                                    filter: drop-shadow(0 0 5px #aaa);
+                                }
 
                                 &.active {
-                                    text-shadow: 0px 0px 4px yellow;
+                                    filter: drop-shadow(0 0 5px #93292e);
+                                }
+
+                                &.move-piece {
+                                    background-position: -45px -45px;
+                                }
+
+                                &.kill-piece {
+                                    background-position: -135px 0;
+                                }
+
+                                &.loot {
+                                    background-position: 0 -45px;
+                                }
+
+                                &.move-overlay {
+                                    background-position: -180px 0;
+                                }
+
+                                &.destroy-overlay {
+                                    background-position: -45px 0;
+                                }
+
+                                &.reveal-room {
+                                    background-position: 0 0;
+                                }
+
+                                &.add-piece {
+                                    background-position: -90px 0;
                                 }
                             }
                         }
@@ -150,10 +247,10 @@ html {
 
                 .new-piece-wrapper {
                     width: 110px;
-                    margin-left: -120px;
+                    margin-left: -100px;
                     height: 100%;
                     overflow: hidden;
-                    box-shadow: 73px 0px 40px 10px rgba(0, 0, 0, 0.75);
+                    box-shadow: 50px 0px 40px 10px rgba(0, 0, 0, 0.75);
                     margin-right: 9px;
                     transition: 0.5s;
                     overflow: visible;
@@ -172,7 +269,7 @@ html {
 
                     .new-piece-list {
                         height: 100%;
-                        width: 130px;
+                        width: 140px;
                         mask-image: url('/img/page-mask.png');
                         mask-type: alpha;
                         mask-position: bottom right;

@@ -13,7 +13,7 @@ import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
-import Html.Attributes exposing (attribute, checked, class, href, maxlength, required, src, style, title, value)
+import Html.Attributes exposing (attribute, checked, class, href, maxlength, minlength, required, src, style, title, value)
 import Html.Events exposing (onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
@@ -801,6 +801,7 @@ getClientSettingsDialog model =
                             [ Dom.element "input"
                                 |> Dom.addAttribute (attribute "id" "roomCodeInput1")
                                 |> Dom.addChangeHandler ChangeRoomCodeInputStart
+                                |> Dom.addAttribute (minlength 5)
                                 |> Dom.addAttribute (maxlength 5)
                                 |> Dom.addAttribute (required True)
                                 |> Dom.addAttribute (value roomCode1)
@@ -809,6 +810,7 @@ getClientSettingsDialog model =
                             , Dom.element "input"
                                 |> Dom.addAttribute (attribute "id" "roomCodeInput2")
                                 |> Dom.addChangeHandler ChangeRoomCodeInputEnd
+                                |> Dom.addAttribute (minlength 5)
                                 |> Dom.addAttribute (maxlength 5)
                                 |> Dom.addAttribute (required True)
                                 |> Dom.addAttribute (value roomCode2)
@@ -818,6 +820,8 @@ getClientSettingsDialog model =
                 |> Dom.addClass "input-wrapper"
                 |> Dom.appendChild
                     (Dom.element "label"
+                        |> Dom.addClass "checkbox"
+                        |> Dom.addClassConditional "checked" showRoomCode
                         |> Dom.addAttribute (attribute "for" "showRoomCode")
                         |> Dom.appendText "Show Room Code"
                         |> Dom.appendChild
@@ -906,35 +910,42 @@ getNavHtml model =
                             [ Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode MovePiece )
                                 |> Dom.addClass "move-piece"
+                                |> Dom.addAttribute (title "Move Monsters or Players")
                                 |> Dom.addClassConditional "active" (model.config.gameMode == MovePiece)
                                 |> Dom.appendText "Move Piece"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode KillPiece )
+                                |> Dom.addAttribute (title "Remove Monsters or Players")
                                 |> Dom.addClass "kill-piece"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == KillPiece)
                                 |> Dom.appendText "Kill Piece"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode LootCell )
+                                |> Dom.addAttribute (title "Loot a tile")
                                 |> Dom.addClass "loot"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == LootCell)
                                 |> Dom.appendText "Loot"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode MoveOverlay )
+                                |> Dom.addAttribute (title "Move Obstacles or Traps")
                                 |> Dom.addClass "move-overlay"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == MoveOverlay)
                                 |> Dom.appendText "Move Overlay"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode DestroyOverlay )
+                                |> Dom.addAttribute (title "Remove Obstacles or Traps")
                                 |> Dom.addClass "destroy-overlay"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == DestroyOverlay)
                                 |> Dom.appendText "Destroy Overlay"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode RevealRoom )
+                                |> Dom.addAttribute (title "Open a door")
                                 |> Dom.addClass "reveal-room"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == RevealRoom)
                                 |> Dom.appendText "Reveal Room"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode AddPiece )
+                                |> Dom.addAttribute (title "Add a piece to the board")
                                 |> Dom.addClass "add-piece"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == AddPiece)
                                 |> Dom.appendText "Add Piece"

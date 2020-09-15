@@ -2,20 +2,30 @@
     position: fixed;
     top: 0;
     left: 0;
-    background-color: rgba(0,0,0, 0.25);
+    background-color: rgba(0,0,0, 0.5);
     width: 100vw;
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
+    opacity: 0;
+    animation-duration: 0.5s;
+    animation-name: fadeIn;
+    animation-fill-mode: both;
 
     .dialog {
-        padding: 25px;
-        background-color: white;
-        -webkit-box-shadow: 3px 9px 11px -1px rgba(0,0,0,0.75);
-        -moz-box-shadow: 3px 9px 11px -1px rgba(0,0,0,0.75);
-        box-shadow: 3px 9px 11px -1px rgba(0,0,0,0.75);
+        padding: 45px;
+        color: #aaa;
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        border-image: url('/img/border.png') 0 fill;
+        background-color: transparent;
+        border-style: solid;
+        transform: scaleX(0);
+        animation-delay: 0.55s;
+        animation-duration: 0.5s;
+        animation-name: unroll;
+        animation-fill-mode: both;
 
         .scenario-form {
             input[type="number"] {
@@ -43,6 +53,7 @@
             width: 75vw;
             max-width: 810px;
             flex-wrap: wrap;
+            padding: 15px 85px;
 
             .input-wrapper {
                 label {
@@ -55,6 +66,7 @@
                     filter: grayscale(100%);
                     transition: filter 0.25s, transform 0.15s;
                     position: relative;
+                    cursor: pointer;
 
                     &.brute {
                         background-position: -180px 1px;
@@ -143,5 +155,35 @@
                 flex-shrink: 0;
             }
         }
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes unroll {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
     }
 }
