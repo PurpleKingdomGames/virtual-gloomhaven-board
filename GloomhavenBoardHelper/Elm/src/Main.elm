@@ -92,6 +92,11 @@ type Msg
     | ToggleMenu
 
 
+version : String
+version =
+    "1.0.0"
+
+
 main : Program ( Maybe Decode.Value, Int ) Model Msg
 main =
     Browser.element
@@ -547,6 +552,23 @@ view model =
                  else
                     []
                 )
+            , div
+                [ class
+                    "roomCode"
+                ]
+                (case model.config.roomCode of
+                    Nothing ->
+                        []
+
+                    Just c ->
+                        if model.config.showRoomCode then
+                            [ span [] [ text "Room Code" ]
+                            , span [] [ text c ]
+                            ]
+
+                        else
+                            []
+                )
             ]
          , div [ class "main" ]
             [ div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
@@ -575,6 +597,7 @@ view model =
                     [ class "sponsor" ]
                     [ iframe [ class "sponsor-button", src "https://github.com/sponsors/PurpleKingdomGames/button", title "Sponsor PurpleKingdomGames" ] []
                     ]
+                , div [ class "version" ] [ text ("Version " ++ version) ]
                 ]
             ]
          ]

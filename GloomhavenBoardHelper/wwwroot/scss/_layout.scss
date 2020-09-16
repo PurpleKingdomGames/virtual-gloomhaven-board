@@ -128,7 +128,7 @@ html {
             flex: 1;
             text-align: center;
             align-self: center;
-            font-size: 2rem;;
+            font-size: 2rem;
             color: #aaa;
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
             position: relative;
@@ -138,6 +138,21 @@ html {
 
                 &:before {
                     content: '# ';
+                }
+            }
+        }
+
+        .roomCode {
+            font-size: 1.2rem;
+            color: #aaa;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            display: flex;
+            flex-direction: column;
+            padding-right: 2rem;
+
+            span {
+                &:last-child {
+                    font-family: Arial, Helvetica, sans-serif;
                 }
             }
         }
@@ -338,7 +353,10 @@ html {
 
             .pkg {
                 padding: 1rem;
-                display: flex;
+                display: flex;;
+                flex-wrap: wrap;
+                justify-content: end;
+
                 .sponsor {
                     position: relative;
                     top: -9px;
@@ -351,6 +369,14 @@ html {
                         border: none;
                         transform: scale(.65);
                     }
+                }
+
+                .version {
+                    width: 100%;
+                    padding-right: 1.7rem;
+                    position: relative;
+                    top: -0.4rem;
+                    text-align: right;
                 }
             }
         }

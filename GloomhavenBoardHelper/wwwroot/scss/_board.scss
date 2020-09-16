@@ -86,25 +86,9 @@ $hexHeight: 90px;
     user-select: none;
 
     &[draggable="true"] {
-        /* Required to make elements draggable in old WebKit */
-        -khtml-user-drag: element;
-        -webkit-user-drag: element;
-        -moz-user-drag: element;
-        -o-user-drag: element;
-        user-drag: element;
-
         &:hover {
             cursor: move;
         }
-    }
-
-    &[draggable="false"] {
-        /* Required to make elements draggable in old WebKit */
-        -khtml-user-drag: none;
-        -webkit-user-drag: none;
-        -moz-user-drag: none;
-        -o-user-drag: none;
-        user-drag: none;
     }
 
     &.being-dragged {
