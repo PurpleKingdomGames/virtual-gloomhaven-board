@@ -1,1 +1,1 @@
-dotnet publish -c Release --self-contained true -r osx-x64  GloomhavenBoardHelper
+dotnet publish -c Release --self-contained true -r osx-x64 VirtualGloomhavenBoard

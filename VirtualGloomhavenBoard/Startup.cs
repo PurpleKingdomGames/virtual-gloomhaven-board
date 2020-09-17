@@ -1,12 +1,11 @@
+using VirtualGloomhavenBoard.Handlers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.StaticFiles;
 
-using GloomhavenBoardHelper.Handlers;
-
-namespace GloomhavenBoardHelper
+namespace VirtualGloomhavenBoard
 {
     public class Startup
     {

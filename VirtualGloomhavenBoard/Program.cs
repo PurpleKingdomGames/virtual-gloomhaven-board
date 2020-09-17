@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.IO;
 
-namespace GloomhavenBoardHelper
+namespace VirtualGloomhavenBoard
 {
     public class Program
     {

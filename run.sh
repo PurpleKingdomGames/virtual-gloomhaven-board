@@ -1,1 +1,1 @@
-dotnet watch --project GloomhavenBoardHelper/GloomhavenBoardHelper.csproj run
+dotnet watch --project VirtualGloomhavenBoard/VirtualGloomhavenBoard.csproj run

@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace GloomhavenBoardHelper.Models {
+namespace VirtualGloomhavenBoard.Models {
     public static class GameRoom {
 
         private const int CODE_LENGTH = 10;

@@ -1,8 +1,8 @@
-using GloomhavenBoardHelper.Models;
+using VirtualGloomhavenBoard.Models;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 
-namespace GloomhavenBoardHelper.Handlers
+namespace VirtualGloomhavenBoard.Handlers
 {
     public class SignalRHandler : Hub {
         public async Task SendGameState(string roomCode, object gameState) {
