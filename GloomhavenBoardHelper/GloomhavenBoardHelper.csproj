@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <DefaultItemExcludes>$(DefaultItemExcludes);Elm\**\*;.DS_Store</DefaultItemExcludes>
         <EnableDefaultContentItems>false</EnableDefaultContentItems>
+        <ApplicationIcon>wwwroot/img/favicons/app.ico</ApplicationIcon>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
