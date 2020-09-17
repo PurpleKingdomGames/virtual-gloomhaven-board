@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.StaticFiles;
+
 using GloomhavenBoardHelper.Handlers;
 
 namespace GloomhavenBoardHelper
@@ -31,10 +32,16 @@ namespace GloomhavenBoardHelper
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
 
+            FileExtensionContentTypeProvider contentTypeProvider = new FileExtensionContentTypeProvider();
+            contentTypeProvider.Mappings[".scss"] = "text/x-scss";
+
+            FileServerOptions fileOptions = new FileServerOptions();
+            fileOptions.StaticFileOptions.ContentTypeProvider = contentTypeProvider;
+
             app.UseResponseCompression();
             app.UseResponseCaching();
             //app.UseHttpsRedirection();
-            app.UseFileServer();
+            app.UseFileServer(fileOptions);
 
             app.UseRouting();
             app.UseEndpoints(endpoints => {
