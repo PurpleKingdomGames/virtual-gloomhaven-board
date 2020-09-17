@@ -2,6 +2,17 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
+        <Nullable>enable</Nullable>
+        <DefaultItemExcludes>$(DefaultItemExcludes);Elm\**\*;.DS_Store</DefaultItemExcludes>
+        <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <OutputPath>publish</OutputPath>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <PublishTrimmed>true</PublishTrimmed>
+        <PublishSingleFile>true</PublishSingleFile>
+        <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
     </PropertyGroup>
     <ItemGroup>
         <Watch
@@ -9,8 +20,23 @@
         Exclude="bin\**\*;obj\**\*;Elm\tests\*;Elm\elm-stuff;\*;wwwroot\js\main.min.js"
         />
     </ItemGroup>
+
     <ItemGroup>
-      <PackageReference Include="StackExchange.Redis" Version="2.1.39" />
+        <None Include="appsettings.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </None>
+
+        <Content Include="wwwroot\**\*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <TrimmerRootAssembly Include="System.Xml" />
     </ItemGroup>
 
     <Target Name="BuildDebug" BeforeTargets="Build" Condition="'$(Configuration)'=='Debug'">
@@ -20,8 +46,8 @@
     </Target>
 
     <Target Name="BuildElmRelease" BeforeTargets="Build" Condition="'$(Configuration)'=='Release'">
-        <!-- build elm optomised (in release)-->
-        <Exec Command="cd $(MSBuildProjectDirectory)/Elm &amp;&amp; elm make Elm/src/Main.elm --output=../wwwroot/js/main.js --optimize" />
+        <!-- build elm optimised (in release)-->
+        <Exec Command="cd $(MSBuildProjectDirectory)/Elm &amp;&amp; elm make $(MSBuildProjectDirectory)/Elm/src/Main.elm --output=../wwwroot/js/main.js --optimize" />
         <Exec Command="uglifyjs wwwroot/js/main.js --compress 'pure_funcs=&quot;F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9&quot;,pure_getters,keep_fargs=false,unsafe_comps,unsafe' | uglifyjs --mangle --output=wwwroot/js/main.min.js" />
         <Exec Command="sass wwwroot/scss/main.scss:wwwroot/css/main.css --update --stop-on-error --style compressed" />
     </Target>
