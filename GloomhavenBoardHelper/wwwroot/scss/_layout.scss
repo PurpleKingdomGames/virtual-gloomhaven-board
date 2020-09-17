@@ -143,12 +143,12 @@ html {
         }
 
         .roomCode {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #aaa;
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
             display: flex;
             flex-direction: column;
-            padding-right: 2rem;
+            padding: 0.3rem 2rem 0 0;
 
             span {
                 &:last-child {
@@ -179,6 +179,7 @@ html {
                 background-image: url("/img/bg.jpg");
                 box-shadow: 10px 0px 40px 10px rgba(0, 0, 0, 0.75);
                 padding-right: 26px;
+                z-index: 1;
 
                 .sidebar-wrapper {
                     z-index: 3;
@@ -324,7 +325,19 @@ html {
                 background-repeat: repeat;
                 background-attachment: local;
                 scrollbar-width: thin;
+                position: relative;
                 padding: 40px;
+
+                &:after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    background-image: url('/img/compass.png');
+                    width: 175px;
+                    height: 254px;
+                    opacity: 0.55;
+                }
             }
         }
 
