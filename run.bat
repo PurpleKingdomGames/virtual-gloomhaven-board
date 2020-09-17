@@ -1,1 +1,0 @@
-dotnet watch --project GloomhavenBoardHelper/GloomhavenBoardHelper.csproj run

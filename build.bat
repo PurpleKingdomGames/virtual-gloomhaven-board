@@ -1,0 +1,1 @@
+dotnet publish -c Release --self-contained true -r win-x64  GloomhavenBoardHelper
