@@ -28,9 +28,12 @@ namespace GloomhavenBoardHelper
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (!env.IsDevelopment())
+            string? configHost = Configuration.GetValue<string>("HostUrl");
+            if (configHost?.ToLower().StartsWith("https://") == true) {
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
+                app.UseHttpsRedirection();
+            }
 
             FileExtensionContentTypeProvider contentTypeProvider = new FileExtensionContentTypeProvider();
             contentTypeProvider.Mappings[".scss"] = "text/x-scss";
@@ -40,7 +43,6 @@ namespace GloomhavenBoardHelper
 
             app.UseResponseCompression();
             app.UseResponseCaching();
-            //app.UseHttpsRedirection();
             app.UseFileServer(fileOptions);
 
             app.UseRouting();
