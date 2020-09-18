@@ -969,7 +969,7 @@ getNavHtml model =
                                 |> Dom.appendText "Reveal Room"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode AddPiece )
-                                |> Dom.addAttribute (title "Add a piece to the board")
+                                |> Dom.addAttribute (title "Summon a piece to the board")
                                 |> Dom.addClass "add-piece"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == AddPiece)
                                 |> Dom.appendText "Add Piece"
