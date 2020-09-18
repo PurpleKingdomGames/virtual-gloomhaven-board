@@ -131,6 +131,7 @@ type alias Monster =
     { monster : MonsterType
     , id : Int
     , level : MonsterLevel
+    , wasSummoned : Bool
     }
 
 

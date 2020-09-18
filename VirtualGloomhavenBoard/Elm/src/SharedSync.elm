@@ -2,7 +2,7 @@ module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, dec
 
 import BoardMapTile exposing (MapTileRef(..), stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
-import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, string, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, map4, maybe, string, succeed)
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
 
@@ -369,10 +369,11 @@ decodeBoardOverlayDirection dir =
 
 decodeMonster : Decoder Monster
 decodeMonster =
-    map3 Monster
+    map4 Monster
         (field "class" Decode.string |> andThen decodeMonsterType)
         (field "id" Decode.int)
         (field "level" Decode.string |> andThen decodeMonsterLevel)
+        (maybe (field "wasSummoned" Decode.bool) |> andThen (\s -> succeed (Maybe.withDefault False s)))
 
 
 decodeMonsterType : String -> Decoder MonsterType

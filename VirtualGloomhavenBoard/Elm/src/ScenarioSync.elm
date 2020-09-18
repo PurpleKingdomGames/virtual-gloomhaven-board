@@ -96,7 +96,7 @@ decodeScenarioMonster =
                 (\m ->
                     case stringToMonsterType m of
                         Just monster ->
-                            succeed (Monster monster 0 Monster.None)
+                            succeed (Monster monster 0 Monster.None False)
 
                         Nothing ->
                             fail ("Could not decode monster " ++ m)

@@ -668,8 +668,11 @@ removePieceFromBoard piece game =
 
         newOverlays =
             case piece.ref of
-                AI (Enemy _) ->
-                    if
+                AI (Enemy m) ->
+                    if m.wasSummoned then
+                        gameState.overlays
+
+                    else if
                         any
                             (\o ->
                                 case o.ref of

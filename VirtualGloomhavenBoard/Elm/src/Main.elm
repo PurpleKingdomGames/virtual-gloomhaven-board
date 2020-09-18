@@ -700,12 +700,12 @@ getNewPieceHtml model game =
                                 |> List.map
                                     (\k ->
                                         (Dom.element "li"
-                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Normal))) 0 0))
+                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0))
                                         )
                                             :: (case k of
                                                     NormalType _ ->
                                                         [ Dom.element "li"
-                                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Elite))) 0 0))
+                                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0))
                                                         ]
 
                                                     _ ->

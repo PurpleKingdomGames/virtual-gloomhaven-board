@@ -573,6 +573,7 @@ encodePieceType pieceType =
             , ( "class", Encode.string (Maybe.withDefault "" (monsterTypeToString monster.monster)) )
             , ( "id", Encode.int monster.id )
             , ( "level", Encode.string (encodeMonsterLevel monster.level) )
+            , ( "wasSummoned", Encode.bool monster.wasSummoned )
             ]
 
 
