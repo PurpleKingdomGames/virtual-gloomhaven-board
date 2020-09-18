@@ -24,9 +24,12 @@ adddress).
 
 ### Room Codes
 At this stage you will all be connected with randomly generated room codes. The room code is shown in the top right, and needs to be the same for everyone who wants
-to join your game. Share your room code via a chat app, SMS, email, or [carrier pigeon](https://tools.ietf.org/html/rfc2549) and ask everyone to change to that code.
-The room code can be changed by using the menu icon in the top left, and selecting `Connection Settings`. If you're streaming or recording your game then you may want
-to hide your room code using the same menu.
+to join your game. Share your room code via a chat app, SMS, email, or [carrier pigeon](https://tools.ietf.org/html/rfc2549) and ask everyone to change to
+that code. The room code can be changed by using the menu icon in the top left, and selecting `Connection Settings`. If you're streaming or recording your game
+then you may want to hide your room code using the same menu.
+
+### Adding Players
+Player characters can be added, removed, and changed by clicking the menu icon in the top right and selecting `Change Players`. Clicking on a character icon will select it, bringing that icon into full colour (except for the Triforce icon, which is always grey, but does get a lovely shadow effect). Once you're happy with your selection, click 'OK'.
 
 ## Useful Additional Software
 Playing with a virtual board is fun, but to really get the (remote) party going we recomend the following additional software:
