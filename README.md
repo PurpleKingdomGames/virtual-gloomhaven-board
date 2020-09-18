@@ -1,6 +1,5 @@
 # Virtual Gloomhaven Board
 The Virtual Gloomhaven Board is designed to help people to play Gloomhaven remotely, without the need for a physical board.
-This works best with a chat application , and the .
 
 ## Getting Started
 
@@ -11,7 +10,7 @@ from a terminal). This will start the application listening on port 5000 by defa
 choice (currently Firefox, Chrome and Edge are supported).
 
 ### Port Forwarding
-Once set up it's time to let others play with you! For this you will need to use port forwarding to send all traffice on port `5000` to your IP address. This can be
+Once set up it's time to let others play with you! For this you will need to use port forwarding to send all traffic on port `5000` to your IP address. This can be
 tricky if you haven't done it before as it requires you to change your router settings. Each manufacturer is different so you'll need to look up exact details
 for the router you have, but the steps are broadly the same:
  * Log into your router
