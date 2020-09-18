@@ -1,6 +1,4 @@
-$hexRotation: 60deg;
-$hexClip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-$hexWidth: 76px;
+$hexWidth: 90px;
 $hexHeight: 90px;
 
 .player,
@@ -12,15 +10,17 @@ $hexHeight: 90px;
     overflow: visible;
     text-align: center;
 
-    &:not(.summons) {
-        clip-path: $hexClip;
-        overflow: visible;
-    }
-
     img {
         height: 100%;
         width: auto;
     }
+}
+
+.hex-mask {
+    mask-image: url('/img/hex-mask.png');
+    mask-type: alpha;
+    mask-position: top right;
+    mask-size: 90px;
 }
 
 .summons {
@@ -46,8 +46,10 @@ $hexHeight: 90px;
     span {
         position: absolute;
         top: 69px;
-        left: 34px;
+        left: 0;
         z-index: 2;
+        display: inline-block;
+        width: 100%;
     }
 
     &.boss span {
@@ -60,22 +62,24 @@ $hexHeight: 90px;
         height: 100%;
         position: absolute;
         display: block;
-        top: 1px;
+        top: 0;
         left: 0;
-        background-size: contain;
-        background-repeat: no-repeat;
+        mask-image: url("/img/border-mask.png");
+        mask-type: alpha;
+        mask-position: top right;
+        mask-size: 90px;
     }
 
     &.normal:after {
-        background-image: url("/img/monsters/normal-border.png");
+        background-color: #fff;
     }
 
     &.elite:after {
-        background-image: url("/img/monsters/elite-border.png");
+        background-color: #d9c200;
     }
 
     &.boss:after {
-        background-image: url("/img/monsters/boss-border.png");
+        background-color: #bc1717;
     }
 }
 
@@ -252,11 +256,13 @@ $tiles:
                 height: 90px;
                 position:relative;
                 z-index: 1;
+                overflow: visible;
 
                 .hexagon {
-                    width: 100%;
-                    height: 100%;
+                    width: 90px;
+                    height: 90px;
                     position: relative;
+                    left: -7px;
 
                     > div {
                         position: absolute;
@@ -325,7 +331,7 @@ $tiles:
                         }
 
                         img {
-                            width:100%;
+                            width: auto;
                             height: 100%;
                         }
                     }

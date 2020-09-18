@@ -5,7 +5,7 @@ namespace VirtualGloomhavenBoard.Models {
     public static class GameRoom {
 
         private const int CODE_LENGTH = 10;
-        private static char[] ValidChars = new[] {
+        private static readonly char[] ValidChars = new[] {
             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
             'j', 'k', 'm', 'n', 'p', 'q', 'r', 's',
             't', 'w', 'x', 'y', 'z', 'A', 'B', 'C',
@@ -22,7 +22,7 @@ namespace VirtualGloomhavenBoard.Models {
             for (int i = 0; i < CODE_LENGTH; i++)
                 code += ValidChars[rnd.Next(0, ValidChars.Length)];
 
-            return code.Substring(0, 5) + "-" + code.Substring(5);
+            return code.Substring(0, 5) + "-" + code[5..];
         }
 
         public static bool ValidateCode(string roomCode) {

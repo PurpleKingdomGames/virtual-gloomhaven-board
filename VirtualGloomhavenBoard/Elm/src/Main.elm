@@ -1268,6 +1268,7 @@ pieceToHtml model coords piece =
                     in
                     Dom.appendChild
                         (Dom.element "img"
+                            |> Dom.addClass "hex-mask"
                             |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ player ++ ".png"))
                             |> Dom.addAttribute (attribute "draggable" "false")
                         )
@@ -1323,6 +1324,7 @@ enemyToHtml monster element =
     in
     element
         |> Dom.addClass class
+        |> Dom.addClass "hex-mask"
         |> Dom.appendChildList
             [ Dom.element "img"
                 |> Dom.addAttribute
