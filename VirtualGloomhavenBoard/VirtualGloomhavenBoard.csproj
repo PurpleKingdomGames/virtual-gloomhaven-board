@@ -14,6 +14,7 @@
         <PublishTrimmed>true</PublishTrimmed>
         <PublishSingleFile>true</PublishSingleFile>
         <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
+         <DefineConstants>RELEASE</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
         <Watch
