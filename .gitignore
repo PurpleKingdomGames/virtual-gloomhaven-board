@@ -1,10 +1,8 @@
 elm-stuff/
 build/
-.temp-build/
 .metals/
 .vscode
 obj/
 bin/
-publish/
 **/wwwroot/js/main*
 **/wwwroot/css/
