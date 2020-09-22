@@ -1,3 +1,5 @@
+@use 'mixins';
+
 $hexWidth: 90px;
 $hexHeight: 90px;
 
@@ -17,10 +19,7 @@ $hexHeight: 90px;
 }
 
 .hex-mask {
-    mask-image: url('/img/hex-mask.png');
-    mask-type: alpha;
-    mask-position: top right;
-    mask-size: 90px;
+    @include mixins.mask(url('/img/hex-mask.png'), alpha, top right, 90px);
 }
 
 .summons {
@@ -64,10 +63,7 @@ $hexHeight: 90px;
         display: block;
         top: 0;
         left: 0;
-        mask-image: url("/img/border-mask.png");
-        mask-type: alpha;
-        mask-position: top right;
-        mask-size: 90px;
+        @include mixins.mask(url('/img/border-mask.png'), alpha, top right, 90px);
     }
 
     &.normal:after {

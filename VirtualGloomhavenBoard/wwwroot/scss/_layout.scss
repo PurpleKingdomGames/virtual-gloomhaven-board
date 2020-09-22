@@ -1,3 +1,5 @@
+@use 'mixins';
+
 @font-face {
     font-family: 'PirateOne';
     src: url('/fonts/PirataOne-Gloomhaven.eot');
@@ -194,10 +196,8 @@ html {
                         background-image: url("/img/bg.jpg");
                         background-repeat: repeat;
                         background-attachment: local;
-                        mask-image: url('/img/page-mask.png');
-                        mask-type: alpha;
-                        mask-position: top right;
-                        mask-repeat: repeat-y;
+                        @include mixins.mask(url('/img/page-mask.png'), alpha, top right);
+                        @include mixins.mask-repeat(repeat-y);
 
                         ul {
                             list-style: none;
@@ -286,10 +286,8 @@ html {
                     .new-piece-list {
                         height: 100%;
                         width: 140px;
-                        mask-image: url('/img/page-mask.png');
-                        mask-type: alpha;
-                        mask-position: bottom right;
-                        mask-repeat: repeat-y;
+                        @include mixins.mask(url('/img/page-mask.png'), alpha, bottom right);
+                        @include mixins.mask-repeat(repeat-y);
                         padding-right: 16px;
                         background-image: url("/img/bg.jpg");
                         background-repeat: repeat;
