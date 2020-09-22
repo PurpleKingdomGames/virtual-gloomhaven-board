@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <Nullable>enable</Nullable>
-        <DefaultItemExcludes>$(DefaultItemExcludes);Elm\**\*;.DS_Store</DefaultItemExcludes>
+        <DefaultItemExcludes>$(DefaultItemExcludes);.DS_Store</DefaultItemExcludes>
         <EnableDefaultContentItems>false</EnableDefaultContentItems>
         <ApplicationIcon>wwwroot/img/favicons/app.ico</ApplicationIcon>
     </PropertyGroup>
@@ -34,6 +34,12 @@
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
+
+        <None Include="Elm\**\*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
@@ -42,13 +48,13 @@
 
     <Target Name="BuildDebug" BeforeTargets="Build" Condition="'$(Configuration)'=='Debug'">
         <!-- build elm normally (in dev)-->
-        <Exec Command="cd &quot;$(MSBuildProjectDirectory)/Elm&quot; &amp;&amp; elm make src/Main.elm --output=../wwwroot/js/main.min.js" />
+        <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=../wwwroot/js/main.min.js" />
         <Exec Command="sass wwwroot/scss/main.scss:wwwroot/css/main.css --update --stop-on-error" />
     </Target>
 
     <Target Name="BuildElmRelease" BeforeTargets="Build" Condition="'$(Configuration)'=='Release'">
         <!-- build elm optimised (in release)-->
-        <Exec Command="cd &quot;$(MSBuildProjectDirectory)/Elm&quot; &amp;&amp; elm make &quot;$(MSBuildProjectDirectory)/Elm/src/Main.elm&quot; --output=../wwwroot/js/main.js --optimize" />
+        <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=../wwwroot/js/main.js --optimize" />
         <Exec Command="uglifyjs wwwroot/js/main.js --compress pure_funcs=['F2','F3','F4','F5','F6','F7','F8','F9','A2','A3','A4','A5','A6','A7','A8','A9'],pure_getters,keep_fargs=false,unsafe_comps,unsafe | uglifyjs --mangle --output wwwroot/js/main.min.js" />
         <Exec Command="sass wwwroot/scss/main.scss:wwwroot/css/main.css --update --stop-on-error --style compressed" />
     </Target>
