@@ -13,7 +13,7 @@ import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
-import Html.Attributes exposing (attribute, checked, class, href, maxlength, minlength, required, src, style, title, value)
+import Html.Attributes exposing (attribute, checked, class, href, maxlength, minlength, required, src, style, target, title, value)
 import Html.Events exposing (onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
@@ -647,7 +647,11 @@ view model =
                     [ class "sponsor" ]
                     [ iframe [ class "sponsor-button", src "https://github.com/sponsors/PurpleKingdomGames/button", title "Sponsor PurpleKingdomGames" ] []
                     ]
-                , div [ class "version" ] [ text ("Version " ++ version) ]
+                , div
+                    [ class "version" ]
+                    [ a [ target "_new", href "https://github.com/PurpleKingdomGames/virtual-gloomhaven-board/issues/new/choose" ] [ text "Report a bug" ]
+                    , span [] [ text ("Version " ++ version) ]
+                    ]
                 ]
             ]
          ]
