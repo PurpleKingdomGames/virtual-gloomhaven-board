@@ -17,7 +17,7 @@ import Html.Attributes exposing (attribute, checked, class, href, maxlength, min
 import Html.Events exposing (onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
-import List exposing (any, filter, filterMap, head, map, reverse, sort)
+import List exposing (any, filter, filterMap, head, map, member, reverse, sort, take)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Process
@@ -38,6 +38,7 @@ type alias Model =
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
     , connectionStatus : ConnectionStatus
+    , undoStack : List GameState
     , menuOpen : Bool
     }
 
@@ -66,7 +67,7 @@ type alias MoveablePiece =
 
 
 type Msg
-    = LoadedScenario Seed (Maybe Game.GameState) (Result Error Scenario)
+    = LoadedScenario Seed (Maybe Game.GameState) Bool (Result Error Scenario)
     | ReloadScenario
     | MoveStarted MoveablePiece
     | MoveTargetChanged ( Int, Int )
@@ -87,14 +88,21 @@ type Msg
     | ChangeShowRoomCode Bool
     | ChangeClientSettings (Maybe ( String, Bool ))
     | GameSyncMsg GameSync.Msg
-    | PushGameState
+    | PushToUndoStack GameState
+    | Undo
+    | PushGameState Bool
     | NoOp
     | ToggleMenu
 
 
 version : String
 version =
-    "1.0.0"
+    "1.1.0"
+
+
+undoLimit : Int
+undoLimit =
+    25
 
 
 main : Program ( Maybe Decode.Value, Int ) Model Msg
@@ -129,10 +137,10 @@ init ( oldState, seed ) =
         initGame =
             Game.empty
     in
-    ( Model { initGame | state = initGameState } initConfig (Loading initGameState.scenario) Nothing Nothing Nothing DragDrop.initialState Nothing Disconnected False
+    ( Model { initGame | state = initGameState } initConfig (Loading initGameState.scenario) Nothing Nothing Nothing DragDrop.initialState Nothing Disconnected [] False
     , Cmd.batch
         [ connectToServer
-        , loadScenarioById initGameState.scenario (LoadedScenario (Random.initialSeed seed) (Just initGameState))
+        , loadScenarioById initGameState.scenario (LoadedScenario (Random.initialSeed seed) (Just initGameState) False)
         ]
     )
 
@@ -144,7 +152,7 @@ update msg model =
             Maybe.withDefault "" model.config.roomCode
     in
     case msg of
-        LoadedScenario seed initGameState result ->
+        LoadedScenario seed initGameState addToUndo result ->
             case result of
                 Ok scenario ->
                     let
@@ -181,7 +189,7 @@ update msg model =
                         newModel =
                             { model | game = { game | state = gameState }, currentLoadState = Loaded }
                     in
-                    ( newModel, pushGameState newModel newModel.game.state )
+                    ( newModel, pushGameState model newModel.game.state addToUndo )
 
                 Err _ ->
                     ( { model | currentLoadState = Failed }, Cmd.none )
@@ -262,7 +270,7 @@ update msg model =
                         Nothing ->
                             oldGame
             in
-            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = game, currentDraggable = Nothing }, pushGameState model game.state )
+            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = game, currentDraggable = Nothing }, pushGameState model game.state True )
 
         RemoveOverlay overlay ->
             let
@@ -275,14 +283,14 @@ update msg model =
                 newState =
                     { gameState | overlays = List.filter (\o -> o.cells /= overlay.cells || o.ref /= overlay.ref) gameState.overlays }
             in
-            ( { model | game = { game | state = newState } }, pushGameState model newState )
+            ( { model | game = { game | state = newState } }, pushGameState model newState True )
 
         RemovePiece piece ->
             let
                 newGame =
                     removePieceFromBoard piece model.game
             in
-            ( { model | game = newGame }, pushGameState model newGame.state )
+            ( { model | game = newGame }, pushGameState model newGame.state True )
 
         ChangeGameMode mode ->
             let
@@ -326,7 +334,7 @@ update msg model =
                 newGame =
                     { updatedGame | state = { newState | overlays = doorToCorridor } }
             in
-            ( { model | game = newGame }, pushGameState model newGame.state )
+            ( { model | game = newGame }, pushGameState model newGame.state True )
 
         ChangeAppMode mode ->
             let
@@ -344,7 +352,7 @@ update msg model =
                     model.config
             in
             if forceReload || newScenario /= model.game.state.scenario then
-                ( { model | config = { config | appMode = AppStorage.Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed Nothing) )
+                ( { model | config = { config | appMode = AppStorage.Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed Nothing True) )
 
             else
                 ( { model | config = { config | appMode = AppStorage.Game } }, Cmd.none )
@@ -494,19 +502,61 @@ update msg model =
             let
                 game =
                     model.game
+
+                undoStack =
+                    case model.undoStack of
+                        head :: _ ->
+                            if { head | updateCount = model.game.state.updateCount } == model.game.state then
+                                model.undoStack
+
+                            else
+                                model.undoStack
+
+                        _ ->
+                            model.undoStack
             in
             if game.state.scenario == gameState.scenario then
-                ( { model | game = { game | state = gameState } }, saveToStorage gameState model.config )
+                ( { model | game = { game | state = gameState }, undoStack = take undoLimit undoStack }
+                , saveToStorage gameState model.config
+                )
 
             else
                 ( { model | currentLoadState = Loading gameState.scenario }
-                , loadScenarioById gameState.scenario (LoadedScenario game.seed (Just gameState))
+                , loadScenarioById gameState.scenario (LoadedScenario game.seed (Just gameState) True)
                 )
 
-        PushGameState ->
+        PushToUndoStack state ->
+            let
+                undoStack =
+                    state :: model.undoStack
+            in
+            ( { model | undoStack = take undoLimit undoStack }, Cmd.none )
+
+        Undo ->
+            case model.undoStack of
+                state :: rest ->
+                    let
+                        newModel =
+                            { model | undoStack = rest }
+
+                        newState =
+                            { state | updateCount = model.game.state.updateCount }
+                    in
+                    if state.scenario == model.game.state.scenario then
+                        ( newModel, pushGameState newModel newState False )
+
+                    else
+                        ( { newModel | currentLoadState = Loading state.scenario }
+                        , loadScenarioById state.scenario (LoadedScenario model.game.seed (Just newState) False)
+                        )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        PushGameState addToUndo ->
             case model.currentLoadState of
                 Loaded ->
-                    ( model, pushGameState model model.game.state )
+                    ( model, pushGameState model model.game.state addToUndo )
 
                 _ ->
                     ( model, Cmd.none )
@@ -737,6 +787,9 @@ getMenuHtml =
                     , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeAppMode ServerConfigDialog )
                         |> Dom.appendText "Connection Settings"
+                    , Dom.element "li"
+                        |> Dom.addAction ( "click", Undo )
+                        |> Dom.appendText "Undo"
                     ]
             )
         |> Dom.render
@@ -1589,14 +1642,24 @@ getSplitRoomCodeSettings model =
             ( ( "", "" ), b )
 
 
-pushGameState : Model -> GameState -> Cmd Msg
-pushGameState model state =
+pushGameState : Model -> GameState -> Bool -> Cmd Msg
+pushGameState model state addToUndo =
     Cmd.batch
-        [ if model.connectionStatus /= Connected || model.config.roomCode == Nothing then
-            Process.sleep 500
-                |> Task.perform (\_ -> PushGameState)
+        (saveToStorage state model.config
+            :: (if model.connectionStatus /= Connected || model.config.roomCode == Nothing then
+                    [ Process.sleep 500
+                        |> Task.perform (\_ -> PushGameState addToUndo)
+                    ]
 
-          else
-            GameSync.pushGameState (Maybe.withDefault "" model.config.roomCode) state
-        , saveToStorage state model.config
-        ]
+                else
+                    GameSync.pushGameState (Maybe.withDefault "" model.config.roomCode) state
+                        :: (if addToUndo then
+                                [ Process.sleep 100
+                                    |> Task.perform (\_ -> PushToUndoStack model.game.state)
+                                ]
+
+                            else
+                                []
+                           )
+               )
+        )
