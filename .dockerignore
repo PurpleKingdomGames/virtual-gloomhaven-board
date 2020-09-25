@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/build/
+**/.vscode/
+**/.github/
+**/node_modules/
+**/Dockerfile*
+**/.dockerignore*
+**/*.xcf

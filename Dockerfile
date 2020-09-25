@@ -1,4 +1,11 @@
-FROM alpine:3.7
-COPY build/vgb-linux-x64 .
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
 
-ENTRYPOINT [ "vgb-linux-x64" ]
+WORKDIR /build
+COPY VirtualGloomhavenBoard/. .
+
+RUN dotnet publish -c Release --self-contained true -r linux-musl-x64 VirtualGloomhavenBoard -o /publish/
+
+FROM alpine:3.7
+WORKDIR /app
+COPY --from=build-env /publish .
+ENTRYPOINT ["VirtualGloomhavenBoard"]
