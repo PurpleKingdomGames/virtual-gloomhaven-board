@@ -38,5 +38,12 @@ RUN dotnet publish -c Release --self-contained true -r linux-x64 -o ./publish
 FROM ubuntu:20.04
 EXPOSE 5000
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+
+RUN apt-get update; \
+    apt-get install -y apt-transport-https && \
+    apt-get update && \
+    apt-get install -y libssl1.1
+
+
 COPY --from=build-env /build/publish ./app
 ENTRYPOINT ["./app/VirtualGloomhavenBoard"]
