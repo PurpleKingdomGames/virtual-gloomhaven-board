@@ -3,13 +3,20 @@ The Virtual Gloomhaven Board is designed to help people to play Gloomhaven remot
 
 ## Getting Started
 
-### Installation
-You can find the latest release [here](https://github.com/PurpleKingdomGames/virtual-gloomhaven-board/releases/latest). Simply download the binary for your operating
-system (Windows, Mac, and Linux are all supprted), and then run that program (for Mac and Windows users simply double click, Linux users may need to run it
-from a terminal). This will start the application listening on port 5000 by default. You can test it's working by going to `http://localhost:5000` in the browser of your
-choice (currently Firefox, Chrome and Edge are supported).
+### Using the Hosted Solution
+The quickest and easiest way to get up and running is by opening [vgb.purplekingdomgames.com](https://vgb.purplekingdomgames.com/) in a browser!
 
-### Port Forwarding
+### Using a Local Server
+If you'd rather use a local server rather than the online version (perhaps you're playing ove LAN, or just fancy the technical challenge), then you can do that too!
+In essence all you need to do is download the correct file and set up port forwarding, but more detailed instructions are below:
+
+#### Installation
+You can find the latest release [here](https://github.com/PurpleKingdomGames/virtual-gloomhaven-board/releases/latest). Simply download the binary for your operating
+system (Windows, Mac, and Linux are all supprted), and then run that program (fWindows users simply double click, Mac and Linux users may need to grant
+executable privileges and run it from a terminal). This will start the application listening on port 5000 by default. You can test it's working by going
+to `http://localhost:5000` in the browser of your choice (currently Firefox, Chrome and Edge are supported).
+
+#### Port Forwarding
 Once set up it's time to let others play with you! For this you will need to use port forwarding to send all traffic on port `5000` to your IP address. This can be
 tricky if you haven't done it before as it requires you to change your router settings. Each manufacturer is different so you'll need to look up exact details
 for the router you have, but the steps are broadly the same:
@@ -17,7 +24,7 @@ for the router you have, but the steps are broadly the same:
  * Navigate to the Port Forwarding (sometimes called Virtual Server) section in the menu
  * Set up all incoming TCP traffic on port 5000 to forward to your *internal* IP on port 5000
 
-### Connecting Externally
+#### Connecting Externally
 With those setting complete, other people should now be able to use your Virtual Board! Find your *exteneral* IP address (you can use a site such as
 [this](https://www.whatsmyip.org/)) and then ask your friends to open a browser and navigate to `http://<YOUR_IP>:5000` (where `<YOUR_IP>` is your *external* IP
 adddress).
