@@ -177,17 +177,23 @@ update msg model =
                                         gs
 
                                     else
-                                        let
-                                            state =
-                                                game.state
-                                        in
-                                        { state | roomCode = gs.roomCode, updateCount = gs.updateCount }
+                                        game.state
 
                                 Nothing ->
                                     game.state
 
                         newModel =
-                            { model | game = { game | state = gameState }, currentLoadState = Loaded }
+                            { model
+                                | game =
+                                    { game
+                                        | state =
+                                            { gameState
+                                                | roomCode = model.game.state.roomCode
+                                                , updateCount = model.game.state.updateCount
+                                            }
+                                    }
+                                , currentLoadState = Loaded
+                            }
                     in
                     ( newModel, pushGameState model newModel.game.state addToUndo )
 
@@ -342,7 +348,12 @@ update msg model =
                     model.config
 
                 newModel =
-                    { model | config = { config | appMode = mode } }
+                    { model
+                        | config = { config | appMode = mode }
+                        , currentClientSettings = Nothing
+                        , currentPlayerList = Nothing
+                        , currentScenarioInput = Nothing
+                    }
             in
             ( newModel, saveToStorage newModel.game.state newModel.config )
 
