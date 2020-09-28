@@ -650,13 +650,16 @@ view model =
                     ]
                 ]
             , div [ class "pkg" ]
-                [ span [ class "pkgCopy" ]
-                    [ text "Developed by "
-                    , a [ href "https://purplekingdomgames.com/" ] [ text "Purple Kingdom Games" ]
-                    ]
-                , div
-                    [ class "sponsor" ]
-                    [ iframe [ class "sponsor-button", src "https://github.com/sponsors/PurpleKingdomGames/button", title "Sponsor PurpleKingdomGames" ] []
+                [ div
+                    [ class "copy-wrapper" ]
+                    [ span [ class "pkgCopy" ]
+                        [ text "Developed by "
+                        , a [ href "https://purplekingdomgames.com/" ] [ text "Purple Kingdom Games" ]
+                        ]
+                    , div
+                        [ class "sponsor" ]
+                        [ iframe [ class "sponsor-button", src "https://github.com/sponsors/PurpleKingdomGames/button", title "Sponsor PurpleKingdomGames" ] []
+                        ]
                     ]
                 , div
                     [ class "version" ]
@@ -791,6 +794,10 @@ getMenuHtml =
             (Dom.element "ul"
                 |> Dom.appendChildList
                     [ Dom.element "li"
+                        |> Dom.addAction ( "click", Undo )
+                        |> Dom.addClass "section-end"
+                        |> Dom.appendText "Undo"
+                    , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
                         |> Dom.appendText "Change Scenario"
                     , Dom.element "li"
@@ -801,10 +808,15 @@ getMenuHtml =
                         |> Dom.appendText "Change Players"
                     , Dom.element "li"
                         |> Dom.addAction ( "click", ChangeAppMode ServerConfigDialog )
+                        |> Dom.addClass "section-end"
                         |> Dom.appendText "Connection Settings"
                     , Dom.element "li"
-                        |> Dom.addAction ( "click", Undo )
-                        |> Dom.appendText "Undo"
+                        |> Dom.appendChild
+                            (Dom.element "a"
+                                |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
+                                |> Dom.addAttribute (target "_new")
+                                |> Dom.appendText "Donate"
+                            )
                     ]
             )
         |> Dom.render

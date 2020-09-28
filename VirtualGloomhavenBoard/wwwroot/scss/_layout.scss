@@ -107,8 +107,24 @@ html {
                         cursor: pointer;
                         margin-bottom: 0.4rem;
 
-                        &:hover {
+                        a {
+                            color: #aaa;
+                        }
+
+                        a:hover, &:hover {
                             color: #fff;
+                        }
+
+                        &.section-end {
+                            &:after {
+                                content: "";
+                                width: 100%;
+                                background-color: #333;
+                                border-bottom: 1px solid #666;
+                                height: 1px;
+                                display: block;
+                                margin: 5px 0;
+                            }
                         }
                     }
                 }
@@ -362,23 +378,34 @@ html {
                 }
             }
 
+
+
+
             .pkg {
                 padding: 1rem;
                 display: flex;;
                 flex-wrap: wrap;
                 justify-content: end;
 
-                .sponsor {
+                .copy-wrapper {
+                    width: 100%;
+                    display: flex;
+                    text-align: right;
+                    align-items: center;
                     position: relative;
-                    top: -9px;
-                    left: -5px;
+                    justify-content: flex-end;
+                    margin-bottom: 0.3rem;
 
-                    .sponsor-button {
-                        height: 35px;
-                        width: 128px;
-                        display: block;
-                        border: none;
-                        transform: scale(.65);
+                    .sponsor {
+                        position: relative;
+
+                        .sponsor-button {
+                            height: 35px;
+                            width: 128px;
+                            display: block;
+                            border: none;
+                            transform: scale(.65);
+                        }
                     }
                 }
 
