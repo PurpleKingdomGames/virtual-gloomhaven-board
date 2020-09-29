@@ -31,6 +31,9 @@ RUN apt-get update; \
     apt-get update && \
     apt-get install -y dotnet-sdk-3.1
 
+# Disable telemetry
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+
 # Build the app
 RUN dotnet publish -c Release --self-contained true -r linux-x64 -o ./publish
 
