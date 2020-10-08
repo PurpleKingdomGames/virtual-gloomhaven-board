@@ -843,7 +843,7 @@ getDialogForAppMode model =
                         AppStorage.Game ->
                             \e -> e
                    )
-                |> Dom.addActionStopPropagation ( "click", NoOp )
+                |> Dom.addActionStopAndPrevent ( "click", NoOp )
             )
         |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
         |> Dom.render
