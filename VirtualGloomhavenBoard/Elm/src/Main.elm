@@ -634,7 +634,8 @@ view model =
          , div [ class "main" ]
             [ div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
             , div [ class "board-wrapper" ]
-                [ div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) game.roomData))
+                [ div [ class "map-bg" ] []
+                , div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) game.roomData))
                 , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
                 ]
             ]

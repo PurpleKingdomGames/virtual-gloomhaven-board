@@ -342,8 +342,7 @@ html {
                 position: relative;
                 padding: 40px;
 
-                &:after {
-                    content: '';
+                .map-bg {
                     position: absolute;
                     top: 0;
                     right: 0;
