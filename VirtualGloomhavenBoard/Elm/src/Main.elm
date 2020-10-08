@@ -17,7 +17,7 @@ import Html.Attributes exposing (attribute, checked, class, href, maxlength, min
 import Html.Events exposing (onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
-import List exposing (any, filter, filterMap, head, map, member, reverse, sort, take)
+import List exposing (any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Process
@@ -1177,24 +1177,14 @@ getCellHtml model game y x cellValue =
         cellElement =
             Dom.element "div"
                 |> Dom.addClass "hexagon"
-                -- Doors
+                -- Everything except coins
                 |> Dom.appendChildList
                     (overlaysForCell
-                        |> List.filter
-                            (\o ->
-                                case o.ref of
-                                    Door _ _ ->
-                                        True
-
-                                    _ ->
-                                        False
+                        |> sortWith
+                            (\a b ->
+                                compare (getSortOrderForOverlay a.ref) (getSortOrderForOverlay b.ref)
                             )
-                        |> List.map (overlayToHtml model (Just ( x, y )))
-                    )
-                -- Treasure chests, obstacles, traps etc.
-                |> Dom.appendChildList
-                    (overlaysForCell
-                        |> List.filter
+                        |> filter
                             (\o ->
                                 case o.ref of
                                     Treasure t ->
@@ -1205,28 +1195,8 @@ getCellHtml model game y x cellValue =
                                             _ ->
                                                 False
 
-                                    Door _ _ ->
-                                        False
-
-                                    StartingLocation ->
-                                        False
-
                                     _ ->
                                         True
-                            )
-                        |> List.map (overlayToHtml model (Just ( x, y )))
-                    )
-                -- Starting locations
-                |> Dom.appendChildList
-                    (overlaysForCell
-                        |> List.filter
-                            (\o ->
-                                case o.ref of
-                                    StartingLocation ->
-                                        True
-
-                                    _ ->
-                                        False
                             )
                         |> List.map (overlayToHtml model (Just ( x, y )))
                     )
@@ -1691,3 +1661,33 @@ pushGameState model state addToUndo =
                            )
                )
         )
+
+
+getSortOrderForOverlay : BoardOverlayType -> Int
+getSortOrderForOverlay overlay =
+    case overlay of
+        Door _ _ ->
+            0
+
+        Hazard _ ->
+            1
+
+        DifficultTerrain _ ->
+            2
+
+        StartingLocation ->
+            3
+
+        Treasure t ->
+            case t of
+                Chest _ ->
+                    4
+
+                Coin _ ->
+                    5
+
+        Obstacle _ ->
+            6
+
+        Trap _ ->
+            7
