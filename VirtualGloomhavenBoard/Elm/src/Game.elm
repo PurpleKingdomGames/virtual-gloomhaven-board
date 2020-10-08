@@ -523,7 +523,7 @@ moveOverlay overlay fromCoords prevCoords ( toX, toY ) game =
         newGame =
             { game | state = newGamestate }
     in
-    if all (\c -> canMoveTo c newGame False) newOverlay.cells then
+    if all (\c -> canMoveTo c newGame True) newOverlay.cells then
         ( { game | state = { newGamestate | overlays = newOverlay :: newGamestate.overlays } }
         , newOverlay
         , Just ( toX, toY )
