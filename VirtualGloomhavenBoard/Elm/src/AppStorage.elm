@@ -1,9 +1,11 @@
-port module AppStorage exposing (AppModeType(..), Config, GameModeType(..), empty, loadFromStorage, saveToStorage)
+port module AppStorage exposing (AppModeType(..), AppOverrides, Config, GameModeType(..), empty, emptyOverrides, loadFromStorage, loadOverrides, saveToStorage)
 
+import Character exposing (CharacterClass, stringToCharacter)
 import Game exposing (GameState)
 import GameSync exposing (decodeGameState, encodeGameState)
-import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, string, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map6, maybe, string, succeed)
 import Json.Encode as Encode exposing (object, string)
+import List exposing (filterMap)
 
 
 port saveData : Encode.Value -> Cmd msg
@@ -20,6 +22,16 @@ type alias Config =
     , gameMode : GameModeType
     , roomCode : Maybe String
     , showRoomCode : Bool
+    }
+
+
+type alias AppOverrides =
+    { initScenario : Maybe Int
+    , initPlayers : Maybe (List CharacterClass)
+    , initRoomCodeSeed : Maybe Int
+    , lockScenario : Bool
+    , lockPlayers : Bool
+    , lockRoomCode : Bool
     }
 
 
@@ -50,6 +62,11 @@ empty =
     ( Game.emptyState, emptyConfig )
 
 
+emptyOverrides : AppOverrides
+emptyOverrides =
+    AppOverrides Nothing Nothing Nothing False False False
+
+
 saveToStorage : GameState -> Config -> Cmd msg
 saveToStorage gameState config =
     saveData (encodeStoredData (StoredData config gameState))
@@ -58,6 +75,11 @@ saveToStorage gameState config =
 loadFromStorage : Decode.Value -> Result Decode.Error ( GameState, Config )
 loadFromStorage value =
     decodeStoredData value
+
+
+loadOverrides : Decode.Value -> Result Decode.Error AppOverrides
+loadOverrides value =
+    decodeValue appOverridesDecoder value
 
 
 encodeStoredData : StoredData -> Encode.Value
@@ -141,6 +163,21 @@ storedDataDecoder =
     map2 StoredData
         (field "config" decodeConfig)
         (field "gameState" decodeGameState)
+
+
+appOverridesDecoder : Decoder AppOverrides
+appOverridesDecoder =
+    map6 AppOverrides
+        (maybe (field "initScenario" Decode.int))
+        (maybe
+            (field "initPlayers" (Decode.list Decode.string)
+                |> andThen (\s -> succeed (filterMap (\c -> stringToCharacter c) s))
+            )
+        )
+        (maybe (field "initRoomCodeSeed" Decode.int))
+        (field "lockScenario" Decode.bool)
+        (field "lockPlayers" Decode.bool)
+        (field "lockRoomCode" Decode.bool)
 
 
 decodeConfig : Decoder Config
