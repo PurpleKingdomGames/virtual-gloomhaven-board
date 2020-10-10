@@ -10,8 +10,8 @@ namespace VirtualGloomhavenBoard.Handlers
                 await Clients.Group(roomCode).SendAsync("ReceiveGameState", gameState);
         }
 
-        public async Task CreateRoom() {
-            string roomCode = GameRoom.GenerateCode();
+        public async Task CreateRoom(int? seed) {
+            string roomCode = GameRoom.GenerateCode(seed);
 
             await Clients.Client(Context.ConnectionId).SendAsync("RoomCreated", roomCode);
             await JoinRoom(roomCode);

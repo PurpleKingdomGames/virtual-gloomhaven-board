@@ -15,9 +15,9 @@ namespace VirtualGloomhavenBoard.Models {
             '9'
         };
 
-        public static string GenerateCode() {
+        public static string GenerateCode(int? seed) {
             string code = string.Empty;
-            Random rnd = new Random();
+            Random rnd = seed == null ? new Random() : new Random(seed.Value);
 
             for (int i = 0; i < CODE_LENGTH; i++)
                 code += ValidChars[rnd.Next(0, ValidChars.Length)];
