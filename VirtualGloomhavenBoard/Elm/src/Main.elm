@@ -158,6 +158,14 @@ init ( oldState, maybeOverrides, seed ) =
                 Nothing ->
                     AppStorage.empty
 
+        forceScenarioRefresh =
+            case overrides.initPlayers of
+                Nothing ->
+                    False
+
+                Just p ->
+                    p /= gs.players
+
         initGameState =
             { gs
                 | updateCount = 0
@@ -206,7 +214,16 @@ init ( oldState, maybeOverrides, seed ) =
                 Nothing ->
                     initGameState.scenario
             )
-            (LoadedScenario (Random.initialSeed seed) (Just initGameState) False)
+            (LoadedScenario
+                (Random.initialSeed seed)
+                (if forceScenarioRefresh then
+                    Nothing
+
+                 else
+                    Just initGameState
+                )
+                False
+            )
         ]
     )
 
