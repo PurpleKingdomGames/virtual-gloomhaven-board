@@ -666,7 +666,7 @@ view model =
                     )
                 , onClick ToggleMenu
                 ]
-                [ getMenuHtml ]
+                [ getMenuHtml model ]
             , header []
                 (if game.scenario.id /= 0 then
                     [ span [ class "number" ] [ text (String.fromInt game.scenario.id) ]
@@ -851,37 +851,52 @@ getNewPieceHtml model game =
         |> Dom.render
 
 
-getMenuHtml : Html.Html Msg
-getMenuHtml =
+getMenuHtml : Model -> Html.Html Msg
+getMenuHtml model =
     Dom.element "nav"
         |> Dom.appendChild
             (Dom.element "ul"
                 |> Dom.appendChildList
-                    [ Dom.element "li"
+                    ([ Dom.element "li"
                         |> Dom.addAction ( "click", Undo )
                         |> Dom.addClass "section-end"
                         |> Dom.appendText "Undo"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
-                        |> Dom.appendText "Change Scenario"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ReloadScenario )
-                        |> Dom.appendText "Reload Scenario"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeAppMode PlayerChoiceDialog )
-                        |> Dom.appendText "Change Players"
-                    , Dom.element "li"
-                        |> Dom.addAction ( "click", ChangeAppMode ServerConfigDialog )
-                        |> Dom.addClass "section-end"
-                        |> Dom.appendText "Connection Settings"
-                    , Dom.element "li"
-                        |> Dom.appendChild
-                            (Dom.element "a"
-                                |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
-                                |> Dom.addAttribute (target "_new")
-                                |> Dom.appendText "Donate"
-                            )
-                    ]
+                     ]
+                        ++ (if model.lockScenario then
+                                []
+
+                            else
+                                [ Dom.element "li"
+                                    |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
+                                    |> Dom.appendText "Change Scenario"
+                                ]
+                           )
+                        ++ [ Dom.element "li"
+                                |> Dom.addAction ( "click", ReloadScenario )
+                                |> Dom.appendText "Reload Scenario"
+                           ]
+                        ++ (if model.lockPlayers then
+                                []
+
+                            else
+                                [ Dom.element "li"
+                                    |> Dom.addAction ( "click", ChangeAppMode PlayerChoiceDialog )
+                                    |> Dom.appendText "Change Players"
+                                ]
+                           )
+                        ++ [ Dom.element "li"
+                                |> Dom.addAction ( "click", ChangeAppMode ServerConfigDialog )
+                                |> Dom.addClass "section-end"
+                                |> Dom.appendText "Connection Settings"
+                           , Dom.element "li"
+                                |> Dom.appendChild
+                                    (Dom.element "a"
+                                        |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
+                                        |> Dom.addAttribute (target "_new")
+                                        |> Dom.appendText "Donate"
+                                    )
+                           ]
+                    )
             )
         |> Dom.render
 
@@ -957,61 +972,68 @@ getClientSettingsDialog model =
     Dom.element "div"
         |> Dom.addClass "client-form"
         |> Dom.appendChildList
-            [ Dom.element "div"
-                |> Dom.addClass "input-wrapper"
-                |> Dom.appendChildList
-                    [ Dom.element "label"
-                        |> Dom.addAttribute (attribute "for" "roomCodeInput1")
-                        |> Dom.appendText "Room Code"
-                    , Dom.element "div"
-                        |> Dom.addClass "split-input"
-                        |> Dom.appendChildList
-                            [ Dom.element "input"
-                                |> Dom.addAttribute (attribute "id" "roomCodeInput1")
-                                |> Dom.addChangeHandler ChangeRoomCodeInputStart
-                                |> Dom.addAttribute (minlength 5)
-                                |> Dom.addAttribute (maxlength 5)
-                                |> Dom.addAttribute (required True)
-                                |> Dom.addAttribute (value roomCode1)
-                            , Dom.element "span"
-                                |> Dom.appendText "-"
-                            , Dom.element "input"
-                                |> Dom.addAttribute (attribute "id" "roomCodeInput2")
-                                |> Dom.addChangeHandler ChangeRoomCodeInputEnd
-                                |> Dom.addAttribute (minlength 5)
-                                |> Dom.addAttribute (maxlength 5)
-                                |> Dom.addAttribute (required True)
-                                |> Dom.addAttribute (value roomCode2)
-                            ]
-                    ]
-            , Dom.element "div"
-                |> Dom.addClass "input-wrapper"
-                |> Dom.appendChild
-                    (Dom.element "label"
-                        |> Dom.addClass "checkbox"
-                        |> Dom.addClassConditional "checked" showRoomCode
-                        |> Dom.addAttribute (attribute "for" "showRoomCode")
-                        |> Dom.appendText "Show Room Code"
+            ((if model.lockRoomCode then
+                []
+
+              else
+                [ Dom.element "div"
+                    |> Dom.addClass "input-wrapper"
+                    |> Dom.appendChildList
+                        [ Dom.element "label"
+                            |> Dom.addAttribute (attribute "for" "roomCodeInput1")
+                            |> Dom.appendText "Room Code"
+                        , Dom.element "div"
+                            |> Dom.addClass "split-input"
+                            |> Dom.appendChildList
+                                [ Dom.element "input"
+                                    |> Dom.addAttribute (attribute "id" "roomCodeInput1")
+                                    |> Dom.addChangeHandler ChangeRoomCodeInputStart
+                                    |> Dom.addAttribute (minlength 5)
+                                    |> Dom.addAttribute (maxlength 5)
+                                    |> Dom.addAttribute (required True)
+                                    |> Dom.addAttribute (value roomCode1)
+                                , Dom.element "span"
+                                    |> Dom.appendText "-"
+                                , Dom.element "input"
+                                    |> Dom.addAttribute (attribute "id" "roomCodeInput2")
+                                    |> Dom.addChangeHandler ChangeRoomCodeInputEnd
+                                    |> Dom.addAttribute (minlength 5)
+                                    |> Dom.addAttribute (maxlength 5)
+                                    |> Dom.addAttribute (required True)
+                                    |> Dom.addAttribute (value roomCode2)
+                                ]
+                        ]
+                ]
+             )
+                ++ [ Dom.element "div"
+                        |> Dom.addClass "input-wrapper"
                         |> Dom.appendChild
-                            (Dom.element "input"
-                                |> Dom.addAttribute (attribute "id" "showRoomCode")
-                                |> Dom.addAttribute (attribute "type" "checkbox")
-                                |> Dom.addAttribute (attribute "value" "1")
-                                |> Dom.addAttribute (checked showRoomCode)
-                                |> Dom.addActionStopPropagation ( "click", ChangeShowRoomCode (showRoomCode == False) )
+                            (Dom.element "label"
+                                |> Dom.addClass "checkbox"
+                                |> Dom.addClassConditional "checked" showRoomCode
+                                |> Dom.addAttribute (attribute "for" "showRoomCode")
+                                |> Dom.appendText "Show Room Code"
+                                |> Dom.appendChild
+                                    (Dom.element "input"
+                                        |> Dom.addAttribute (attribute "id" "showRoomCode")
+                                        |> Dom.addAttribute (attribute "type" "checkbox")
+                                        |> Dom.addAttribute (attribute "value" "1")
+                                        |> Dom.addAttribute (checked showRoomCode)
+                                        |> Dom.addActionStopPropagation ( "click", ChangeShowRoomCode (showRoomCode == False) )
+                                    )
                             )
-                    )
-            , Dom.element "div"
-                |> Dom.addClass "button-wrapper"
-                |> Dom.appendChildList
-                    [ Dom.element "button"
-                        |> Dom.appendText "OK"
-                        |> Dom.addAction ( "click", ChangeClientSettings model.currentClientSettings )
-                    , Dom.element "button"
-                        |> Dom.appendText "Cancel"
-                        |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
-                    ]
-            ]
+                   , Dom.element "div"
+                        |> Dom.addClass "button-wrapper"
+                        |> Dom.appendChildList
+                            [ Dom.element "button"
+                                |> Dom.appendText "OK"
+                                |> Dom.addAction ( "click", ChangeClientSettings model.currentClientSettings )
+                            , Dom.element "button"
+                                |> Dom.appendText "Cancel"
+                                |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
+                            ]
+                   ]
+            )
 
 
 getPlayerChoiceDialog : Model -> Element Msg
