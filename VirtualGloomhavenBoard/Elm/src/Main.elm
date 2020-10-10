@@ -1,6 +1,6 @@
 module Main exposing (main)
 
-import AppStorage exposing (AppModeType(..), Config, GameModeType(..), loadFromStorage, saveToStorage)
+import AppStorage exposing (AppModeType(..), Config, GameModeType(..), emptyOverrides, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
 import Bitwise
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -40,6 +40,9 @@ type alias Model =
     , connectionStatus : ConnectionStatus
     , undoStack : List GameState
     , menuOpen : Bool
+    , lockScenario : Bool
+    , lockPlayers : Bool
+    , lockRoomCode : Bool
     }
 
 
@@ -97,7 +100,7 @@ type Msg
 
 version : String
 version =
-    "1.1.0"
+    "1.2.0"
 
 
 undoLimit : Int
@@ -105,7 +108,7 @@ undoLimit =
     25
 
 
-main : Program ( Maybe Decode.Value, Int ) Model Msg
+main : Program ( Maybe Decode.Value, Maybe Decode.Value, Int ) Model Msg
 main =
     Browser.element
         { init = init
@@ -115,15 +118,38 @@ main =
         }
 
 
-init : ( Maybe Decode.Value, Int ) -> ( Model, Cmd Msg )
-init ( oldState, seed ) =
+init : ( Maybe Decode.Value, Maybe Decode.Value, Int ) -> ( Model, Cmd Msg )
+init ( oldState, maybeOverrides, seed ) =
     let
+        overrides =
+            case maybeOverrides of
+                Just o ->
+                    case loadOverrides o of
+                        Ok ov ->
+                            ov
+
+                        _ ->
+                            emptyOverrides
+
+                Nothing ->
+                    emptyOverrides
+
         ( gs, initConfig ) =
             case oldState of
                 Just s ->
                     case loadFromStorage s of
-                        Ok val ->
-                            val
+                        Ok ( g, c ) ->
+                            ( g
+                            , { c
+                                | roomCode =
+                                    case overrides.initRoomCodeSeed of
+                                        Just _ ->
+                                            Nothing
+
+                                        Nothing ->
+                                            c.roomCode
+                              }
+                            )
 
                         Err _ ->
                             AppStorage.empty
@@ -132,14 +158,51 @@ init ( oldState, seed ) =
                     AppStorage.empty
 
         initGameState =
-            { gs | updateCount = 0 }
+            { gs
+                | updateCount = 0
+                , scenario =
+                    case overrides.initScenario of
+                        Just i ->
+                            i
+
+                        Nothing ->
+                            gs.scenario
+                , players =
+                    case overrides.initPlayers of
+                        Just p ->
+                            p
+
+                        Nothing ->
+                            gs.players
+                , roomCode =
+                    case overrides.initRoomCodeSeed of
+                        Just _ ->
+                            ""
+
+                        Nothing ->
+                            gs.roomCode
+            }
 
         initGame =
             Game.empty
     in
-    ( Model { initGame | state = initGameState } initConfig (Loading initGameState.scenario) Nothing Nothing Nothing DragDrop.initialState Nothing Disconnected [] False
+    ( Model
+        { initGame | state = initGameState }
+        initConfig
+        (Loading initGameState.scenario)
+        Nothing
+        Nothing
+        Nothing
+        DragDrop.initialState
+        Nothing
+        Disconnected
+        []
+        False
+        overrides.lockScenario
+        overrides.lockPlayers
+        overrides.lockRoomCode
     , Cmd.batch
-        [ connectToServer
+        [ connectToServer overrides.initRoomCodeSeed
         , loadScenarioById initGameState.scenario (LoadedScenario (Random.initialSeed seed) (Just initGameState) False)
         ]
     )

@@ -13,7 +13,7 @@ import Monster exposing (MonsterLevel(..), monsterTypeToString)
 import SharedSync exposing (decodeBoardOverlay, decodeMapRefList, decodeMonster)
 
 
-port connect : () -> Cmd msg
+port connect : Maybe Int -> Cmd msg
 
 
 port createRoom : () -> Cmd msg
@@ -61,9 +61,9 @@ type Msg
     | RoomCodeInvalid ()
 
 
-connectToServer : Cmd msg
-connectToServer =
-    connect ()
+connectToServer : Maybe Int -> Cmd msg
+connectToServer seed =
+    connect seed
 
 
 pushGameState : String -> GameState -> Cmd msg
