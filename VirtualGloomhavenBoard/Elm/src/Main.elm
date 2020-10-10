@@ -43,6 +43,7 @@ type alias Model =
     , lockScenario : Bool
     , lockPlayers : Bool
     , lockRoomCode : Bool
+    , roomCodeSeed : Maybe Int
     }
 
 
@@ -201,8 +202,9 @@ init ( oldState, maybeOverrides, seed ) =
         overrides.lockScenario
         overrides.lockPlayers
         overrides.lockRoomCode
+        overrides.initRoomCodeSeed
     , Cmd.batch
-        [ connectToServer overrides.initRoomCodeSeed
+        [ connectToServer
         , loadScenarioById initGameState.scenario (LoadedScenario (Random.initialSeed seed) (Just initGameState) False)
         ]
     )
@@ -558,6 +560,7 @@ update msg model =
                 ( updateMsg, cmdMsg ) =
                     GameSync.update
                         gameSyncMsg
+                        model.roomCodeSeed
                         (Just gameState)
                         GameStateUpdated
             in

@@ -35,9 +35,9 @@
     let lastGameState = null;
     let roomCode = null;
 
-    conn.onreconnected(connId => app.ports.connected.send(null));
-    conn.onreconnecting(err => app.ports.reconnecting.send(null));
-    conn.onclose(err => app.ports.disconnected.send(null));
+    conn.onreconnected(() => app.ports.connected.send(null));
+    conn.onreconnecting(() => app.ports.reconnecting.send(null));
+    conn.onclose(() => app.ports.disconnected.send(null));
 
     conn.on("RoomCreated", (newRoomCode) => {
         roomCode = newRoomCode;
@@ -64,10 +64,10 @@
         window.localStorage.setItem("state", JSON.stringify(data))
     );
 
-    app.ports.connect.subscribe (async () => {
+    app.ports.connect.subscribe (async (seed) => {
         if (conn.state === signalR.HubConnectionState.Disconnected) {
             try {
-                await conn.start();
+                await conn.start(seed);
                 app.ports.connected.send(null);
             } catch (err) {
                 console.log(err);

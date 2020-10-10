@@ -13,10 +13,10 @@ import Monster exposing (MonsterLevel(..), monsterTypeToString)
 import SharedSync exposing (decodeBoardOverlay, decodeMapRefList, decodeMonster)
 
 
-port connect : Maybe Int -> Cmd msg
+port connect : () -> Cmd msg
 
 
-port createRoom : () -> Cmd msg
+port createRoom : Maybe Int -> Cmd msg
 
 
 port sendUpdate : ( String, Encode.Value ) -> Cmd msg
@@ -61,9 +61,9 @@ type Msg
     | RoomCodeInvalid ()
 
 
-connectToServer : Maybe Int -> Cmd msg
-connectToServer seed =
-    connect seed
+connectToServer : Cmd msg
+connectToServer =
+    connect ()
 
 
 pushGameState : String -> GameState -> Cmd msg
@@ -71,20 +71,20 @@ pushGameState roomCode gameState =
     sendUpdate ( roomCode, encodeGameState { gameState | updateCount = gameState.updateCount + 1, roomCode = roomCode } )
 
 
-update : Msg -> Maybe GameState -> (GameState -> msg) -> ( Maybe msg, Cmd msg )
-update msg gameState gameStateUpdateMsg =
+update : Msg -> Maybe Int -> Maybe GameState -> (GameState -> msg) -> ( Maybe msg, Cmd msg )
+update msg seed gameState gameStateUpdateMsg =
     case msg of
         Connected _ ->
             case gameState of
                 Just g ->
                     if g.roomCode == "" then
-                        ( Nothing, createRoom () )
+                        ( Nothing, createRoom seed )
 
                     else
                         ( Nothing, joinRoom ( Nothing, g.roomCode ) )
 
                 Nothing ->
-                    ( Nothing, createRoom () )
+                    ( Nothing, createRoom seed )
 
         UpdateReceived val ->
             let
