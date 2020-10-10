@@ -3,6 +3,7 @@ port module AppStorage exposing (AppModeType(..), AppOverrides, Config, GameMode
 import Character exposing (CharacterClass, stringToCharacter)
 import Game exposing (GameState)
 import GameSync exposing (decodeGameState, encodeGameState)
+import Html exposing (s)
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map6, maybe, string, succeed)
 import Json.Encode as Encode exposing (object, string)
 import List exposing (filterMap)
@@ -168,13 +169,17 @@ storedDataDecoder =
 appOverridesDecoder : Decoder AppOverrides
 appOverridesDecoder =
     map6 AppOverrides
-        (maybe (field "initScenario" Decode.int))
-        (maybe
-            (field "initPlayers" (Decode.list Decode.string)
-                |> andThen (\s -> succeed (filterMap (\c -> stringToCharacter c) s))
+        (field "initScenario" (maybe Decode.int))
+        (field "initPlayers"
+            (maybe (Decode.list Decode.string)
+                |> andThen
+                    (\s ->
+                        Maybe.map (\a -> filterMap (\c -> stringToCharacter c) a) s
+                            |> succeed
+                    )
             )
         )
-        (maybe (field "initRoomCodeSeed" Decode.int))
+        (field "initRoomCodeSeed" (maybe Decode.int))
         (field "lockScenario" Decode.bool)
         (field "lockPlayers" Decode.bool)
         (field "lockRoomCode" Decode.bool)

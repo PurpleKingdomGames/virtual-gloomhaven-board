@@ -20,6 +20,7 @@
         node: document.getElementById("elm-node"),
         flags: [
             JSON.parse(window.localStorage.getItem("state"))
+            , generateOverrides()
             , Math.floor(Math.random() * Math.floor(4000))
         ]
     });
@@ -64,10 +65,10 @@
         window.localStorage.setItem("state", JSON.stringify(data))
     );
 
-    app.ports.connect.subscribe (async (seed) => {
+    app.ports.connect.subscribe (async () => {
         if (conn.state === signalR.HubConnectionState.Disconnected) {
             try {
-                await conn.start(seed);
+                await conn.start();
                 app.ports.connected.send(null);
             } catch (err) {
                 console.log(err);
@@ -76,10 +77,10 @@
         }
     });
 
-    app.ports.createRoom.subscribe (() => {
+    app.ports.createRoom.subscribe (seed => {
         if (conn.state === signalR.HubConnectionState.Connected)
             conn
-                .invoke("CreateRoom")
+                .invoke("CreateRoom", seed)
                 .catch(err => console.error(err))
             ;
     });
@@ -99,4 +100,43 @@
         lastGameState = args[1];
         conn.invoke("SendGameState", args[0], args[1]).catch(err => console.error(err));
     });
+
+    function generateOverrides() {
+        const scenarioId = getUrlParameter('scenario');
+        const players = getUrlParameter('players');
+        const roomCodeSeed = getUrlParameter('seed');
+
+        let o = {
+            initScenario: null,
+            initPlayers: null,
+            initRoomCodeSeed: null,
+            lockScenario: getUrlParameter('lockScenario') === '1',
+            lockPlayers: getUrlParameter('lockPlayers') === '1',
+            lockRoomCode: getUrlParameter('lockRoomCode') === '1'
+        };
+
+        if (scenarioId !== undefined) {
+            const id = parseInt(scenarioId);
+            if (!isNaN(id))
+                o.initScenario = id;
+        }
+
+        if (players != undefined)
+            o.initPlayers = players.replace(/\s+/g, "").split(',');
+
+        if (roomCodeSeed !== undefined) {
+            const seed = parseInt(roomCodeSeed);
+            if (!isNaN(seed))
+                o.initRoomCodeSeed = seed;
+        }
+console.log(o);
+        return o;
+    }
+
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    };
 })();

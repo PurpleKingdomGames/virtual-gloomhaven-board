@@ -161,13 +161,6 @@ init ( oldState, maybeOverrides, seed ) =
         initGameState =
             { gs
                 | updateCount = 0
-                , scenario =
-                    case overrides.initScenario of
-                        Just i ->
-                            i
-
-                        Nothing ->
-                            gs.scenario
                 , players =
                     case overrides.initPlayers of
                         Just p ->
@@ -205,7 +198,15 @@ init ( oldState, maybeOverrides, seed ) =
         overrides.initRoomCodeSeed
     , Cmd.batch
         [ connectToServer
-        , loadScenarioById initGameState.scenario (LoadedScenario (Random.initialSeed seed) (Just initGameState) False)
+        , loadScenarioById
+            (case overrides.initScenario of
+                Just i ->
+                    i
+
+                Nothing ->
+                    initGameState.scenario
+            )
+            (LoadedScenario (Random.initialSeed seed) (Just initGameState) False)
         ]
     )
 
