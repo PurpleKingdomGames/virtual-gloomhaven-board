@@ -14,4 +14,4 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag virtual-gloomhaven-board:${GITHUB_REF#refs/tags/v*}
+      run: docker build . --file Dockerfile --tag docker.pkg.github.com/purplekingdomgames/virtual-gloomhaven-board:${GITHUB_REF#refs/tags/v*}
