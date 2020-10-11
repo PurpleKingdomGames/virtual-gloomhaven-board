@@ -39,6 +39,7 @@ RUN dotnet publish -c Release --self-contained true -r linux-x64 -o ./publish
 
 # Copy the app to a minimul Linux build
 FROM ubuntu:20.04
+LABEL vendor="Purple Kingdom Games Ltd."
 EXPOSE 5000
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
