@@ -47,16 +47,38 @@
         <TrimmerRootAssembly Include="System.Xml" />
     </ItemGroup>
 
-    <Target Name="BuildDebug" BeforeTargets="PrepareForBuild" Condition="'$(Configuration)'=='Debug'">
+    <Target Name="BuildDebug" BeforeTargets="BeforeBuild" Condition="'$(Configuration)'=='Debug'">
         <!-- build elm normally (in dev)-->
         <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=../wwwroot/js/main.min.js" />
         <Exec Command="sass wwwroot/scss/main.scss:wwwroot/css/main.css --update --stop-on-error" />
     </Target>
 
-    <Target Name="BuildElmRelease" BeforeTargets="PrepareForBuild" Condition="'$(Configuration)'=='Release'">
+    <Target Name="BuildElmRelease" BeforeTargets="BeforeBuild" Condition="'$(Configuration)'=='Release'">
         <!-- build elm optimised (in release)-->
         <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=../wwwroot/js/main.js --optimize" />
         <Exec Command="uglifyjs wwwroot/js/main.js --compress pure_funcs=['F2','F3','F4','F5','F6','F7','F8','F9','A2','A3','A4','A5','A6','A7','A8','A9'],pure_getters,keep_fargs=false,unsafe_comps,unsafe | uglifyjs --mangle --output wwwroot/js/main.min.js" />
         <Exec Command="sass wwwroot/scss/main.scss:wwwroot/css/main.css --update --stop-on-error --style compressed" />
+        <ItemGroup>
+            <Content Include="wwwroot\js\main.js">
+                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+                <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+                <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+            </Content>
+            <Content Include="wwwroot\js\main.min.js">
+                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+                <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+                <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+            </Content>
+            <Content Include="wwwroot\css\main.css">
+                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+                <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+                <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+            </Content>
+            <Content Include="wwwroot\css\main.css.map">
+                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+                <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+                <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+            </Content>
+        </ItemGroup>
     </Target>
 </Project>
