@@ -129,7 +129,7 @@
             if (!isNaN(seed))
                 o.initRoomCodeSeed = seed;
         }
-console.log(o);
+
         return o;
     }
 
