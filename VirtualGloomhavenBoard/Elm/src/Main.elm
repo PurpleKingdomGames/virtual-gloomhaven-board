@@ -101,7 +101,7 @@ type Msg
 
 version : String
 version =
-    "1.2.0"
+    "1.2.1"
 
 
 undoLimit : Int
@@ -942,7 +942,7 @@ getDialogForAppMode model =
                         AppStorage.Game ->
                             \e -> e
                    )
-                |> Dom.addActionStopAndPrevent ( "click", NoOp )
+                |> Dom.addActionStopPropagation ( "click", NoOp )
             )
         |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
         |> Dom.render
@@ -1080,7 +1080,7 @@ getPlayerChoiceDialog model =
                 |> Dom.appendChildList
                     [ Dom.element "button"
                         |> Dom.appendText "OK"
-                        |> Dom.addAction ( "click", ChangePlayerList )
+                        |> Dom.addActionStopPropagation ( "click", ChangePlayerList )
                     , Dom.element "button"
                         |> Dom.appendText "Cancel"
                         |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
