@@ -164,7 +164,7 @@ init ( oldState, maybeOverrides, seed ) =
                     False
 
                 Just p ->
-                    p /= gs.players
+                    List.length p > 0 && p /= gs.players
 
         initGameState =
             { gs
@@ -172,7 +172,11 @@ init ( oldState, maybeOverrides, seed ) =
                 , players =
                     case overrides.initPlayers of
                         Just p ->
-                            p
+                            if List.length p > 0 then
+                                p
+
+                            else
+                                gs.players
 
                         Nothing ->
                             gs.players
@@ -964,6 +968,7 @@ getScenarioDialog model =
                         |> Dom.addAttribute (attribute "for" "scenarioIdInput")
                         |> Dom.appendText "Scenario"
                     , Dom.element "input"
+                        |> Dom.addActionStopPropagation ( "click", NoOp )
                         |> Dom.addAttribute (attribute "id" "scenarioIdInput")
                         |> Dom.addAttribute (attribute "type" "number")
                         |> Dom.addAttribute (attribute "min" "1")
@@ -1007,6 +1012,7 @@ getClientSettingsDialog model =
                             |> Dom.addClass "split-input"
                             |> Dom.appendChildList
                                 [ Dom.element "input"
+                                    |> Dom.addActionStopPropagation ( "click", NoOp )
                                     |> Dom.addAttribute (attribute "id" "roomCodeInput1")
                                     |> Dom.addChangeHandler ChangeRoomCodeInputStart
                                     |> Dom.addAttribute (minlength 5)
@@ -1016,6 +1022,7 @@ getClientSettingsDialog model =
                                 , Dom.element "span"
                                     |> Dom.appendText "-"
                                 , Dom.element "input"
+                                    |> Dom.addActionStopPropagation ( "click", NoOp )
                                     |> Dom.addAttribute (attribute "id" "roomCodeInput2")
                                     |> Dom.addChangeHandler ChangeRoomCodeInputEnd
                                     |> Dom.addAttribute (minlength 5)
@@ -1423,12 +1430,12 @@ pieceToHtml model coords piece =
                         player =
                             Maybe.withDefault "" (characterToString p)
                     in
-                    Dom.appendChild
-                        (Dom.element "img"
-                            |> Dom.addClass "hex-mask"
-                            |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ player ++ ".png"))
-                            |> Dom.addAttribute (attribute "draggable" "false")
-                        )
+                    \e ->
+                        Dom.addClass "hex-mask" e
+                            |> Dom.appendChild
+                                (Dom.element "img"
+                                    |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ player ++ ".png"))
+                                )
 
                 AI t ->
                     case t of
