@@ -26,6 +26,8 @@
         animation-duration: 0.5s;
         animation-name: unroll;
         animation-fill-mode: both;
+        letter-spacing: 0.1rem;
+        min-width: 20rem;
 
         .scenario-form {
             input[type="number"] {

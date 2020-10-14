@@ -18,6 +18,7 @@ html {
         padding: 0;
         height: 100vh;
         width: 100vw;
+        overflow: hidden;
     }
 
     * {
@@ -35,169 +36,178 @@ html {
         }
     }
 
-    .header {
-        position: relative;
-        display: flex;
-        background-image: url('/img/plank.jpg');
-        border-bottom: 1px solid black;
-        box-shadow: 0 5px 40px 0 black;
-        z-index: 4;
-        min-height: 3.4rem;
-
-        .menu {
-            &:before {
-                content: "";
-                font-size: 3rem;
-                color: #ccc;
-                text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-                cursor: pointer;
-                position: relative;
-                left: 1rem;
-                top: 0.3rem;
-                font-family: serif;
-                display: block;
-                width: 45px;
-                height: 45px;
-                background-image: url("/img/icons.png");
-                background-size: 256px;
-                background-position: -90px -45px;
-                filter: invert(100%) drop-shadow(2px 1px 0 black);
-                transition: 0.2s;
-                z-index: 5;
-            }
-
-            nav {
-                position: absolute;
-                z-index: 4;
-                opacity: 0;
-                visibility: hidden;
-                transition: 0.3s;
-                background-image: url('/img/plank.jpg');
-                border: 2px solid #222;
-                background-size: 190%;
-                top: 4rem;
-                left: 1.2rem;
-                font-size: 1.4rem;
-                color: #aaa;
-                text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-                padding: 1rem;
-                border-radius: 0.5rem;
-
-                &:after {
-                    content: '';
-                    border: solid #222;
-                    border-width: 0 3px 3px 0;
-                    display: inline-block;
-                    padding: 3px;
-                    transform: rotate(225deg);
-                    width: 5px;
-                    position: absolute;
-                    left: 0.7rem;
-                    height: 5px;
-                    top: -0.5rem;
-                    background-image: url("/img/plank.jpg");
-                }
-
-                ul {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-
-                    li {
-                        cursor: pointer;
-                        margin-bottom: 0.4rem;
-
-                        a {
-                            color: #aaa;
-                        }
-
-                        a:hover, &:hover {
-                            color: #fff;
-                        }
-
-                        &.section-end {
-                            &:after {
-                                content: "";
-                                width: 100%;
-                                background-color: #333;
-                                border-bottom: 1px solid #666;
-                                height: 1px;
-                                display: block;
-                                margin: 5px 0;
-                            }
-                        }
-                    }
-                }
-            }
-
-            &.show {
-                &:before {
-                    filter: invert(75%) drop-shadow(2px 1px 0 black);
-                }
-
-                nav {
-                    opacity: 1;
-                    visibility: visible;
-                }
-            }
-        }
-
-        header {
-            flex: 1;
-            text-align: center;
-            align-self: center;
-            font-size: 2rem;
-            color: #aaa;
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-            position: relative;
-
-            .number {
-                margin-right: 1rem;
-
-                &:before {
-                    content: '# ';
-                }
-            }
-        }
-
-        .roomCode {
-            font-size: 1.1rem;
-            color: #aaa;
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-            display: flex;
-            flex-direction: column;
-            padding: 0.3rem 2rem 0 0;
-
-            span {
-                &:last-child {
-                    font-family: Arial, Helvetica, sans-serif;
-                }
-            }
-        }
-    }
-
     .content {
         display: flex;
         width: 100vw;
         flex-direction: column;
-        height: 100%;
+        height: 100vh;
+
+        .header {
+            position: absolute;
+            display: flex;
+            background-image: url('/img/plank.jpg');
+            border-bottom: 1px solid black;
+            box-shadow: 0 5px 40px 0 black;
+            z-index: 4;
+            height: 3.4rem;
+            top: 0;
+            transition: top 0.2s;
+            width: 100%;
+
+            .menu {
+                &:before {
+                    content: "";
+                    font-size: 3rem;
+                    color: #ccc;
+                    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                    cursor: pointer;
+                    position: relative;
+                    left: 1rem;
+                    top: 0.3rem;
+                    font-family: serif;
+                    display: block;
+                    width: 45px;
+                    height: 45px;
+                    background-image: url("/img/icons.png");
+                    background-size: 256px;
+                    background-position: -90px -45px;
+                    filter: invert(100%) drop-shadow(2px 1px 0 black);
+                    transition: 0.2s;
+                    z-index: 5;
+                }
+
+                nav {
+                    position: absolute;
+                    z-index: 4;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: 0.3s;
+                    background-image: url('/img/plank.jpg');
+                    border: 2px solid #222;
+                    background-size: 190%;
+                    top: 4rem;
+                    left: 1.2rem;
+                    font-size: 1.4rem;
+                    color: #aaa;
+                    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                    padding: 1rem;
+                    border-radius: 0.5rem;
+
+                    &:after {
+                        content: '';
+                        border: solid #222;
+                        border-width: 0 3px 3px 0;
+                        display: inline-block;
+                        padding: 3px;
+                        transform: rotate(225deg);
+                        width: 5px;
+                        position: absolute;
+                        left: 0.7rem;
+                        height: 5px;
+                        top: -0.5rem;
+                        background-image: url("/img/plank.jpg");
+                    }
+
+                    ul {
+                        list-style: none;
+                        padding: 0;
+                        margin: 0;
+
+                        li {
+                            cursor: pointer;
+                            margin-bottom: 0.4rem;
+
+                            a {
+                                color: #aaa;
+                            }
+
+                            a:hover, &:hover {
+                                color: #fff;
+                            }
+
+                            &.section-end {
+                                &:after {
+                                    content: "";
+                                    width: 100%;
+                                    background-color: #333;
+                                    border-bottom: 1px solid #666;
+                                    height: 1px;
+                                    display: block;
+                                    margin: 5px 0;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                &.show {
+                    &:before {
+                        filter: invert(75%) drop-shadow(2px 1px 0 black);
+                    }
+
+                    nav {
+                        opacity: 1;
+                        visibility: visible;
+                    }
+                }
+            }
+
+            header {
+                flex: 1;
+                text-align: center;
+                align-self: center;
+                font-size: 2rem;
+                color: #aaa;
+                text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                position: relative;
+
+                .number {
+                    margin-right: 1rem;
+
+                    &:before {
+                        content: '# ';
+                    }
+                }
+            }
+
+            .roomCode {
+                font-size: 1.1rem;
+                color: #aaa;
+                text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                display: flex;
+                flex-direction: column;
+                padding: 0.3rem 2rem 0 0;
+
+                span {
+                    &:last-child {
+                        font-family: Arial, Helvetica, sans-serif;
+                    }
+                }
+            }
+        }
 
         .main {
             flex: 1;
+            position: relative;
             overflow: hidden;
             display: flex;
+            margin-top: 3.4rem;
+            margin-bottom: 4.01rem;
+            transition: margin-top 0.2s, margin-bottom 0.2s;
 
             .action-list {
                 flex-grow: 1;
                 flex-shrink: 0;
                 height: 100%;
                 display: flex;
-                position: relative;
-                overflow: hidden;
+                position: absolute;
+                overflow: visible;
                 background-image: url("/img/bg.jpg");
                 box-shadow: 10px 0px 40px 10px rgba(0, 0, 0, 0.75);
-                padding-right: 26px;
                 z-index: 1;
+                left: 0;
+                width: 9.2rem;
+                transition: left 0.2s;
 
                 .sidebar-wrapper {
                     z-index: 3;
@@ -341,6 +351,8 @@ html {
                 scrollbar-width: thin;
                 position: relative;
                 padding: 40px;
+                margin-left: 9.2rem;
+                transition: margin-left 0.2s;
 
                 .map-bg {
                     position: absolute;
@@ -366,6 +378,11 @@ html {
             border-top: 1px solid black;
             box-shadow: 0 -5px 40px 0 black;
             z-index: 4;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 4rem;
+            transition: bottom 0.2s;
 
             .credits {
                 display: flex;
@@ -376,9 +393,6 @@ html {
                     margin-bottom: 0.4rem;
                 }
             }
-
-
-
 
             .pkg {
                 padding: 1rem;
@@ -419,6 +433,42 @@ html {
                         margin-right: 10.3rem;
                     }
                 }
+            }
+        }
+
+        &.board-only {
+            .header {
+                top: -3.4rem;
+                .menu {
+                    &:before {
+                        top: 4rem;
+                    }
+
+                    nav {
+                        top: 7.5rem;
+                    }
+                }
+            }
+
+            .main {
+                margin-top: 0;
+                margin-bottom: 0;
+
+                .action-list {
+                    left: - 9.2rem;
+
+                    .new-piece-wrapper {
+                        display: none;
+                    }
+                }
+
+                .board-wrapper {
+                    margin-left: 0;
+                }
+            }
+
+            footer {
+                bottom: -4rem;
             }
         }
     }
