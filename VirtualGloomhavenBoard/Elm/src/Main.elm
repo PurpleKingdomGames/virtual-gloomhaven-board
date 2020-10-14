@@ -33,7 +33,7 @@ type alias Model =
     , config : Config
     , currentLoadState : LoadingState
     , currentScenarioInput : Maybe Int
-    , currentClientSettings : Maybe ( String, Bool )
+    , currentClientSettings : Maybe ( String, Bool, Bool )
     , currentPlayerList : Maybe (List CharacterClass)
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
@@ -85,12 +85,13 @@ type Msg
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
     | ChangeScenario Int Bool
     | ToggleCharacter CharacterClass Bool
+    | ToggleBoardOnly Bool
     | ChangePlayerList
     | EnterScenarioNumber String
     | ChangeRoomCodeInputStart String
     | ChangeRoomCodeInputEnd String
     | ChangeShowRoomCode Bool
-    | ChangeClientSettings (Maybe ( String, Bool ))
+    | ChangeClientSettings (Maybe ( String, Bool, Bool ))
     | GameSyncMsg GameSync.Msg
     | PushToUndoStack GameState
     | Undo
@@ -469,33 +470,33 @@ update msg model =
 
         ChangeRoomCodeInputStart startCode ->
             let
-                ( ( _, roomCode2 ), showRoomCode ) =
+                ( ( _, roomCode2 ), showRoomCode, boardOnly ) =
                     getSplitRoomCodeSettings model
             in
-            ( { model | currentClientSettings = Just ( startCode ++ "-" ++ roomCode2, showRoomCode ) }, Cmd.none )
+            ( { model | currentClientSettings = Just ( startCode ++ "-" ++ roomCode2, showRoomCode, boardOnly ) }, Cmd.none )
 
         ChangeRoomCodeInputEnd endCode ->
             let
-                ( ( roomCode1, _ ), showRoomCode ) =
+                ( ( roomCode1, _ ), showRoomCode, boardOnly ) =
                     getSplitRoomCodeSettings model
             in
-            ( { model | currentClientSettings = Just ( roomCode1 ++ "-" ++ endCode, showRoomCode ) }, Cmd.none )
+            ( { model | currentClientSettings = Just ( roomCode1 ++ "-" ++ endCode, showRoomCode, boardOnly ) }, Cmd.none )
 
         ChangeShowRoomCode showRoomCode ->
             let
-                ( ( roomCode1, roomCode2 ), _ ) =
+                ( ( roomCode1, roomCode2 ), _, boardOnly ) =
                     getSplitRoomCodeSettings model
             in
-            ( { model | currentClientSettings = Just ( roomCode1 ++ "-" ++ roomCode2, showRoomCode ) }, Cmd.none )
+            ( { model | currentClientSettings = Just ( roomCode1 ++ "-" ++ roomCode2, showRoomCode, boardOnly ) }, Cmd.none )
 
         ChangeClientSettings maybeSettings ->
             case maybeSettings of
-                Just ( newRoomCode, showRoomCode ) ->
+                Just ( newRoomCode, showRoomCode, boardOnly ) ->
                     let
                         config =
                             model.config
                     in
-                    update (GameSyncMsg (JoinRoom newRoomCode)) { model | config = { config | showRoomCode = showRoomCode, appMode = AppStorage.Game } }
+                    update (GameSyncMsg (JoinRoom newRoomCode)) { model | config = { config | showRoomCode = showRoomCode, boardOnly = boardOnly, appMode = AppStorage.Game } }
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -513,6 +514,13 @@ update msg model =
                            )
             in
             ( { model | currentPlayerList = Just playerList }, Cmd.none )
+
+        ToggleBoardOnly boardOnly ->
+            let
+                ( ( roomCode1, roomCode2 ), showRoomCode, _ ) =
+                    getSplitRoomCodeSettings model
+            in
+            ( { model | currentClientSettings = Just ( roomCode1 ++ "-" ++ roomCode2, showRoomCode, boardOnly ) }, Cmd.none )
 
         ChangePlayerList ->
             let
@@ -673,7 +681,17 @@ view model =
         config =
             model.config
     in
-    div [ class "content" ]
+    div
+        [ class
+            ("content"
+                ++ (if config.boardOnly then
+                        " board-only"
+
+                    else
+                        ""
+                   )
+            )
+        ]
         (let
             game =
                 model.game
@@ -910,9 +928,9 @@ getMenuHtml model =
                                 ]
                            )
                         ++ [ Dom.element "li"
-                                |> Dom.addAction ( "click", ChangeAppMode ServerConfigDialog )
+                                |> Dom.addAction ( "click", ChangeAppMode ConfigDialog )
                                 |> Dom.addClass "section-end"
-                                |> Dom.appendText "Connection Settings"
+                                |> Dom.appendText "Settings"
                            , Dom.element "li"
                                 |> Dom.appendChild
                                     (Dom.element "a"
@@ -937,7 +955,7 @@ getDialogForAppMode model =
                         ScenarioDialog ->
                             Dom.appendChild (getScenarioDialog model)
 
-                        ServerConfigDialog ->
+                        ConfigDialog ->
                             Dom.appendChild (getClientSettingsDialog model)
 
                         PlayerChoiceDialog ->
@@ -992,7 +1010,7 @@ getScenarioDialog model =
 getClientSettingsDialog : Model -> Element Msg
 getClientSettingsDialog model =
     let
-        ( ( roomCode1, roomCode2 ), showRoomCode ) =
+        ( ( roomCode1, roomCode2 ), showRoomCode, showBoardOnly ) =
             getSplitRoomCodeSettings model
     in
     Dom.element "div"
@@ -1048,6 +1066,23 @@ getClientSettingsDialog model =
                                         |> Dom.addAttribute (attribute "value" "1")
                                         |> Dom.addAttribute (checked showRoomCode)
                                         |> Dom.addActionStopPropagation ( "click", ChangeShowRoomCode (showRoomCode == False) )
+                                    )
+                            )
+                   , Dom.element "div"
+                        |> Dom.addClass "input-wrapper"
+                        |> Dom.appendChild
+                            (Dom.element "label"
+                                |> Dom.addClass "checkbox"
+                                |> Dom.addClassConditional "checked" showBoardOnly
+                                |> Dom.addAttribute (attribute "for" "showBoardOnly")
+                                |> Dom.appendText "Hide UI"
+                                |> Dom.appendChild
+                                    (Dom.element "input"
+                                        |> Dom.addAttribute (attribute "id" "showBoardOnly")
+                                        |> Dom.addAttribute (attribute "type" "checkbox")
+                                        |> Dom.addAttribute (attribute "value" "1")
+                                        |> Dom.addAttribute (checked showBoardOnly)
+                                        |> Dom.addActionStopPropagation ( "click", ToggleBoardOnly (showBoardOnly == False) )
                                     )
                             )
                    , Dom.element "div"
@@ -1734,23 +1769,23 @@ getCharacterListSettings model =
             model.game.state.players
 
 
-getSplitRoomCodeSettings : Model -> ( ( String, String ), Bool )
+getSplitRoomCodeSettings : Model -> ( ( String, String ), Bool, Bool )
 getSplitRoomCodeSettings model =
     let
-        ( fullCode, b ) =
+        ( fullCode, b, c ) =
             case model.currentClientSettings of
                 Just s ->
                     s
 
                 Nothing ->
-                    ( Maybe.withDefault "" model.config.roomCode, model.config.showRoomCode )
+                    ( Maybe.withDefault "" model.config.roomCode, model.config.showRoomCode, model.config.boardOnly )
     in
     case split "-" fullCode of
         head :: rest ->
-            ( ( head, join "" rest ), b )
+            ( ( head, join "" rest ), b, c )
 
         _ ->
-            ( ( "", "" ), b )
+            ( ( "", "" ), b, c )
 
 
 pushGameState : Model -> GameState -> Bool -> Cmd Msg

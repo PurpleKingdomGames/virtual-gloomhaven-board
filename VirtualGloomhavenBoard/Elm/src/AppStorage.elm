@@ -4,7 +4,7 @@ import Character exposing (CharacterClass, stringToCharacter)
 import Game exposing (GameState)
 import GameSync exposing (decodeGameState, encodeGameState)
 import Html exposing (s)
-import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map6, maybe, string, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map5, map6, maybe, string, succeed)
 import Json.Encode as Encode exposing (object, string)
 import List exposing (filterMap)
 
@@ -23,6 +23,7 @@ type alias Config =
     , gameMode : GameModeType
     , roomCode : Maybe String
     , showRoomCode : Bool
+    , boardOnly : Bool
     }
 
 
@@ -49,13 +50,13 @@ type GameModeType
 type AppModeType
     = Game
     | ScenarioDialog
-    | ServerConfigDialog
+    | ConfigDialog
     | PlayerChoiceDialog
 
 
 emptyConfig : Config
 emptyConfig =
-    Config Game MovePiece Nothing True
+    Config Game MovePiece Nothing True False
 
 
 empty : ( GameState, Config )
@@ -115,6 +116,7 @@ encodeConfig config =
                     Encode.null
           )
         , ( "showRoomCode", Encode.bool config.showRoomCode )
+        , ( "boardOnly", Encode.bool config.boardOnly )
         ]
 
 
@@ -127,8 +129,8 @@ encodeAppMode appMode =
         ScenarioDialog ->
             "scenarioDialog"
 
-        ServerConfigDialog ->
-            "serverConfigDialog"
+        ConfigDialog ->
+            "ConfigDialog"
 
         PlayerChoiceDialog ->
             "playerChoiceDialog"
@@ -187,11 +189,12 @@ appOverridesDecoder =
 
 decodeConfig : Decoder Config
 decodeConfig =
-    map4 Config
+    map5 Config
         (field "appMode" (Decode.string |> Decode.andThen decodeAppMode))
         (field "gameMode" (Decode.string |> Decode.andThen decodeGameMode))
         (field "roomCode" (Decode.nullable Decode.string))
         (field "showRoomCode" Decode.bool)
+        (maybe (field "boardOnly" Decode.bool) |> andThen (\b -> succeed (Maybe.withDefault False b)))
 
 
 decodeAppMode : String -> Decoder AppModeType
@@ -203,8 +206,12 @@ decodeAppMode val =
         "scenariodialog" ->
             succeed ScenarioDialog
 
+        -- Legacy
         "serverconfigdialog" ->
-            succeed ServerConfigDialog
+            succeed ConfigDialog
+
+        "configdialog" ->
+            succeed ConfigDialog
 
         "playerchoicedialog" ->
             succeed PlayerChoiceDialog

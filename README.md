@@ -47,7 +47,7 @@ room code is shown in the top left, and needs to be the same for everyone who wa
 to join your game. Share your room code via a chat app, SMS, email, or
 [carrier pigeon](https://tools.ietf.org/html/rfc2549) and ask everyone to change to
 that code. The room code can be changed by using the menu icon in the top left,
-and selecting `Connection Settings`. If you're streaming or recording your game
+and selecting `Settings`. If you're streaming or recording your game
 then you may want to hide your room code using the same menu.
 
 ### Adding Players
