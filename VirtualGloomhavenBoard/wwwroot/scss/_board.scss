@@ -79,6 +79,87 @@ $hexHeight: 90px;
     }
 }
 
+.player {
+    &:after {
+        content: "";
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        display: block;
+        top: 0;
+        left: 0;
+        @include mixins.mask(url('/img/hex-border-mask.png'), alpha, top right, 90px);
+    }
+
+    &.brute:after {
+        background-color: #567cc7;
+    }
+
+    &.tinkerer:after {
+        background-color: #c0b37f;
+    }
+
+    &.scoundrel:after {
+        background-color: #9cd750;
+    }
+
+    &.cragheart:after {
+        background-color: #7c9427;
+    }
+
+    &.mindthief:after {
+        background-color: #61779f;
+    }
+
+    &.spellweaver:after {
+        background-color: #b562b8;
+    }
+
+    &.phoenix-face:after {
+        background-color: #a96852;
+    }
+
+    &.lightning-bolt:after {
+        background-color: #d13947;
+    }
+
+    &.angry-face:after {
+        background-color: #60c9f4;
+    }
+
+    &.triforce:after {
+        background-color: #9a9a9a;
+    }
+
+    &.eclipse:after {
+        background-color: #a099d4;
+    }
+
+    &.cthulhu:after {
+        background-color: #79ceb6;
+    }
+
+    &.three-spears:after {
+        background-color: #d67f19;
+    }
+
+    &.saw:after {
+        background-color: #e1dfc4;
+    }
+
+    &.music-note:after {
+        background-color: #df6872;
+    }
+
+    &.concentric-circles:after {
+        background-color: #b562b8;
+    }
+
+    &.sun:after {
+        background-color: #efc024;
+    }
+}
+
 [draggable] {
     -moz-user-select: none;
     -khtml-user-select: none;
