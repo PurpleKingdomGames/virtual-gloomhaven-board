@@ -13,7 +13,7 @@ import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
-import Html.Attributes exposing (attribute, checked, class, href, maxlength, minlength, required, src, style, target, title, value)
+import Html.Attributes exposing (attribute, checked, class, href, id, maxlength, minlength, required, src, style, target, title, value)
 import Html.Events exposing (onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
@@ -108,6 +108,7 @@ type Msg
     | PushGameState Bool
     | NoOp
     | ToggleMenu
+    | ExitFullscreen ()
 
 
 version : String
@@ -519,18 +520,26 @@ update msg model =
                                     settings.roomCode
                             in
                             one ++ "-" ++ two
-                    in
-                    update
-                        (GameSyncMsg (JoinRoom newRoomCode))
-                        { model
-                            | config =
-                                { config
-                                    | showRoomCode = settings.showRoomCode
-                                    , boardOnly = settings.boardOnly
-                                    , appMode = AppStorage.Game
+
+                        ( m, c ) =
+                            update
+                                (GameSyncMsg (JoinRoom newRoomCode))
+                                { model
+                                    | config =
+                                        { config
+                                            | showRoomCode = settings.showRoomCode
+                                            , boardOnly = settings.boardOnly
+                                            , appMode = AppStorage.Game
+                                        }
+                                    , currentClientSettings = Nothing
+                                    , fullscreen = settings.fullscreen
                                 }
-                            , fullscreen = settings.fullscreen
-                        }
+                    in
+                    if model.fullscreen /= settings.fullscreen then
+                        ( m, Cmd.batch [ c, Cmd.map (\s -> GameSyncMsg s) (GameSync.toggleFullscreen settings.fullscreen) ] )
+
+                    else
+                        ( m, c )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -720,6 +729,9 @@ update msg model =
         ToggleMenu ->
             ( { model | menuOpen = model.menuOpen == False }, Cmd.none )
 
+        ExitFullscreen _ ->
+            ( { model | fullscreen = False, currentClientSettings = Nothing }, Cmd.none )
+
         NoOp ->
             ( model, Cmd.none )
 
@@ -740,6 +752,7 @@ view model =
                         ""
                    )
             )
+        , id "content"
         ]
         (let
             game =
@@ -839,6 +852,7 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Sub.map (\s -> GameSyncMsg s) GameSync.subscriptions
+        , GameSync.exitFullscreen ExitFullscreen
         ]
 
 

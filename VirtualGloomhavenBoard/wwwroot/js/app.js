@@ -101,6 +101,19 @@
         conn.invoke("SendGameState", args[0], args[1]).catch(err => console.error(err));
     });
 
+    app.ports.toggleFullscreenPort.subscribe ((enabled) => {
+        const elem = document.getElementById('content')
+        if (enabled && document.fullscreenEnabled && !document.fullscreenElement) {
+            elem.requestFullscreen();
+            elem.onfullscreenchange = () => {
+                if (!document.fullscreenElement)
+                    app.ports.exitFullscreen.send(null)
+            };
+        }
+        else if (!enabled && document.fullscreenElement)
+            document.exitFullscreen();
+    });
+
     function generateOverrides() {
         const scenarioId = getUrlParameter('scenario');
         const players = getUrlParameter('players');

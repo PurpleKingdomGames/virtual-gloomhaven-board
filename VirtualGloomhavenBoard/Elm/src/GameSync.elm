@@ -1,4 +1,4 @@
-port module GameSync exposing (Msg(..), connectToServer, decodeGameState, encodeGameState, pushGameState, subscriptions, update)
+port module GameSync exposing (Msg(..), connectToServer, decodeGameState, encodeGameState, exitFullscreen, pushGameState, subscriptions, toggleFullscreen, update)
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -49,6 +49,12 @@ port receiveRoomCode : (String -> msg) -> Sub msg
 port invalidRoomCode : (() -> msg) -> Sub msg
 
 
+port toggleFullscreenPort : Bool -> Cmd msg
+
+
+port exitFullscreen : (() -> msg) -> Sub msg
+
+
 type Msg
     = ClientDisconnected ()
     | ClientConnected ()
@@ -59,6 +65,11 @@ type Msg
     | JoinRoom String
     | RoomCodeReceived String
     | RoomCodeInvalid ()
+
+
+toggleFullscreen : Bool -> Cmd Msg
+toggleFullscreen fullscreenEnabled =
+    toggleFullscreenPort fullscreenEnabled
 
 
 connectToServer : Cmd msg
