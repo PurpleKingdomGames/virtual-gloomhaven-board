@@ -6,6 +6,7 @@ import Bitwise
 import BoardMapTile exposing (MapTileRef(..), refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
+import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
 import Character exposing (CharacterClass(..), characterToString)
 import Dict
 import Dom exposing (Element)
@@ -45,6 +46,7 @@ type alias Model =
     , lockPlayers : Bool
     , lockRoomCode : Bool
     , roomCodeSeed : Maybe Int
+    , keysDown : List String
     }
 
 
@@ -96,6 +98,7 @@ type Msg
     | ToggleCharacter CharacterClass Bool
     | ToggleBoardOnly Bool
     | ToggleFullscreen Bool
+    | ToggleMenu
     | ChangePlayerList
     | EnterScenarioNumber String
     | ChangeRoomCodeInputStart String
@@ -105,10 +108,12 @@ type Msg
     | GameSyncMsg GameSync.Msg
     | PushToUndoStack GameState
     | Undo
+    | KeyDown String
+    | KeyUp String
+    | VisibilityChanged Visibility
     | PushGameState Bool
-    | NoOp
-    | ToggleMenu
     | ExitFullscreen ()
+    | NoOp
 
 
 version : String
@@ -221,6 +226,7 @@ init ( oldState, maybeOverrides, seed ) =
         overrides.lockPlayers
         overrides.lockRoomCode
         overrides.initRoomCodeSeed
+        []
     , Cmd.batch
         [ connectToServer
         , loadScenarioById
@@ -580,6 +586,9 @@ update msg model =
             , Cmd.none
             )
 
+        ToggleMenu ->
+            ( { model | menuOpen = model.menuOpen == False }, Cmd.none )
+
         ChangePlayerList ->
             let
                 playerList =
@@ -726,8 +735,23 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        ToggleMenu ->
-            ( { model | menuOpen = model.menuOpen == False }, Cmd.none )
+        KeyDown val ->
+            let
+                newModel =
+                    { model | keysDown = val :: model.keysDown }
+            in
+            ( newModel, Cmd.none )
+
+        KeyUp val ->
+            ( { model | keysDown = filter (\k -> k /= val) model.keysDown }, Cmd.none )
+
+        VisibilityChanged visibility ->
+            case visibility of
+                Hidden ->
+                    ( { model | keysDown = [] }, Cmd.none )
+
+                Visible ->
+                    ( model, Cmd.none )
 
         ExitFullscreen _ ->
             ( { model | fullscreen = False, currentClientSettings = Nothing }, Cmd.none )
@@ -853,6 +877,9 @@ subscriptions _ =
     Sub.batch
         [ Sub.map (\s -> GameSyncMsg s) GameSync.subscriptions
         , GameSync.exitFullscreen ExitFullscreen
+        , onKeyDown (Decode.map KeyDown keyDecoder)
+        , onKeyUp (Decode.map KeyUp keyDecoder)
+        , onVisibilityChange VisibilityChanged
         ]
 
 
@@ -1926,3 +1953,8 @@ getSortOrderForOverlay overlay =
 
         Trap _ ->
             7
+
+
+keyDecoder : Decode.Decoder String
+keyDecoder =
+    Decode.field "key" Decode.string
