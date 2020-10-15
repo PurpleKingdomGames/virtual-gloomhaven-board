@@ -119,6 +119,9 @@ html {
 
                             a {
                                 color: #aaa;
+                                display: inline-block;
+                                width: 100%;
+                                transition: 0s;
                             }
 
                             a:hover, &:hover {
