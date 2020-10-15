@@ -18,7 +18,7 @@ import Html.Attributes exposing (attribute, checked, class, href, id, maxlength,
 import Html.Events exposing (onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
-import List exposing (any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
+import List exposing (all, any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Process
@@ -738,12 +738,26 @@ update msg model =
         KeyDown val ->
             let
                 newModel =
-                    { model | keysDown = val :: model.keysDown }
+                    { model | keysDown = String.toLower val :: model.keysDown }
+
+                ctrlCombi =
+                    [ ( [ "control", "z" ], Undo )
+                    , ( [ "meta", "z" ], Undo )
+                    , ( [ "shift", "c" ], ChangeAppMode ScenarioDialog )
+                    , ( [ "shift", "r" ], ReloadScenario )
+                    , ( [ "shift", "p" ], ChangeAppMode PlayerChoiceDialog )
+                    , ( [ "shift", "s" ], ChangeAppMode ConfigDialog )
+                    ]
             in
-            ( newModel, Cmd.none )
+            case head (filter (\( keys, _ ) -> all (\k -> member k newModel.keysDown) keys) ctrlCombi) of
+                Just ( keys, cmd ) ->
+                    update cmd { newModel | keysDown = filter (\k -> member k keys == True) model.keysDown }
+
+                Nothing ->
+                    ( newModel, Cmd.none )
 
         KeyUp val ->
-            ( { model | keysDown = filter (\k -> k /= val) model.keysDown }, Cmd.none )
+            ( { model | keysDown = filter (\k -> k /= String.toLower val) model.keysDown }, Cmd.none )
 
         VisibilityChanged visibility ->
             case visibility of
