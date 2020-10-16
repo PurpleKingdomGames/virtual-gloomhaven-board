@@ -736,40 +736,44 @@ update msg model =
                     ( model, Cmd.none )
 
         KeyDown val ->
-            let
-                newModel =
-                    { model | keysDown = String.toLower val :: model.keysDown }
+            if model.config.appMode == AppStorage.Game then
+                let
+                    newModel =
+                        { model | keysDown = String.toLower val :: model.keysDown }
 
-                ctrlChars =
-                    [ "control"
-                    , "meta"
-                    , "alt"
-                    , "shift"
-                    ]
+                    ctrlChars =
+                        [ "control"
+                        , "meta"
+                        , "alt"
+                        , "shift"
+                        ]
 
-                ctrlCombi =
-                    [ ( [ "control", "z" ], Undo )
-                    , ( [ "meta", "z" ], Undo )
-                    , ( [ "shift", "c" ], ChangeAppMode ScenarioDialog )
-                    , ( [ "shift", "r" ], ReloadScenario )
-                    , ( [ "shift", "p" ], ChangeAppMode PlayerChoiceDialog )
-                    , ( [ "shift", "s" ], ChangeAppMode ConfigDialog )
-                    ]
-            in
-            case head (filter (\( keys, _ ) -> all (\k -> member k newModel.keysDown) keys) ctrlCombi) of
-                Just ( keys, cmd ) ->
-                    update cmd
-                        { newModel
-                            | keysDown =
-                                filter
-                                    (\k ->
-                                        member k ctrlChars || (member k keys == False)
-                                    )
-                                    model.keysDown
-                        }
+                    ctrlCombi =
+                        [ ( [ "control", "z" ], Undo )
+                        , ( [ "meta", "z" ], Undo )
+                        , ( [ "shift", "c" ], ChangeAppMode ScenarioDialog )
+                        , ( [ "shift", "r" ], ReloadScenario )
+                        , ( [ "shift", "p" ], ChangeAppMode PlayerChoiceDialog )
+                        , ( [ "shift", "s" ], ChangeAppMode ConfigDialog )
+                        ]
+                in
+                case head (filter (\( keys, _ ) -> all (\k -> member k newModel.keysDown) keys) ctrlCombi) of
+                    Just ( keys, cmd ) ->
+                        update cmd
+                            { newModel
+                                | keysDown =
+                                    filter
+                                        (\k ->
+                                            member k ctrlChars || (member k keys == False)
+                                        )
+                                        model.keysDown
+                            }
 
-                Nothing ->
-                    ( newModel, Cmd.none )
+                    Nothing ->
+                        ( newModel, Cmd.none )
+
+            else
+                ( model, Cmd.none )
 
         KeyUp val ->
             ( { model | keysDown = filter (\k -> k /= String.toLower val) model.keysDown }, Cmd.none )
@@ -1116,7 +1120,7 @@ getScenarioDialog model =
                         |> Dom.addAttribute (attribute "min" "1")
                         |> Dom.addAttribute (attribute "max" "93")
                         |> Dom.addAttribute (attribute "value" (String.fromInt scenarioInput))
-                        |> Dom.addChangeHandler EnterScenarioNumber
+                        |> Dom.addInputHandler EnterScenarioNumber
                     ]
             , Dom.element "div"
                 |> Dom.addClass "button-wrapper"
@@ -1159,7 +1163,7 @@ getClientSettingsDialog model =
                                 [ Dom.element "input"
                                     |> Dom.addActionStopPropagation ( "click", NoOp )
                                     |> Dom.addAttribute (attribute "id" "roomCodeInput1")
-                                    |> Dom.addChangeHandler ChangeRoomCodeInputStart
+                                    |> Dom.addInputHandler ChangeRoomCodeInputStart
                                     |> Dom.addAttribute (minlength 5)
                                     |> Dom.addAttribute (maxlength 5)
                                     |> Dom.addAttribute (required True)
@@ -1169,7 +1173,7 @@ getClientSettingsDialog model =
                                 , Dom.element "input"
                                     |> Dom.addActionStopPropagation ( "click", NoOp )
                                     |> Dom.addAttribute (attribute "id" "roomCodeInput2")
-                                    |> Dom.addChangeHandler ChangeRoomCodeInputEnd
+                                    |> Dom.addInputHandler ChangeRoomCodeInputEnd
                                     |> Dom.addAttribute (minlength 5)
                                     |> Dom.addAttribute (maxlength 5)
                                     |> Dom.addAttribute (required True)
