@@ -740,6 +740,13 @@ update msg model =
                 newModel =
                     { model | keysDown = String.toLower val :: model.keysDown }
 
+                ctrlChars =
+                    [ "control"
+                    , "meta"
+                    , "alt"
+                    , "shift"
+                    ]
+
                 ctrlCombi =
                     [ ( [ "control", "z" ], Undo )
                     , ( [ "meta", "z" ], Undo )
@@ -751,7 +758,15 @@ update msg model =
             in
             case head (filter (\( keys, _ ) -> all (\k -> member k newModel.keysDown) keys) ctrlCombi) of
                 Just ( keys, cmd ) ->
-                    update cmd { newModel | keysDown = filter (\k -> member k keys == True) model.keysDown }
+                    update cmd
+                        { newModel
+                            | keysDown =
+                                filter
+                                    (\k ->
+                                        member k ctrlChars || (member k keys == False)
+                                    )
+                                    model.keysDown
+                        }
 
                 Nothing ->
                     ( newModel, Cmd.none )
