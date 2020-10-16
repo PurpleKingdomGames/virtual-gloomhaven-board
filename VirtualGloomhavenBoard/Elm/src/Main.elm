@@ -1023,6 +1023,7 @@ getMenuHtml model =
                         |> Dom.addAction ( "click", Undo )
                         |> Dom.addClass "section-end"
                         |> Dom.appendText "Undo"
+                        |> shortcutHtml [ "ctrl", "z" ]
                      ]
                         ++ (if model.lockScenario then
                                 []
@@ -1031,11 +1032,13 @@ getMenuHtml model =
                                 [ Dom.element "li"
                                     |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
                                     |> Dom.appendText "Change Scenario"
+                                    |> shortcutHtml [ "⇧", "c" ]
                                 ]
                            )
                         ++ [ Dom.element "li"
                                 |> Dom.addAction ( "click", ReloadScenario )
                                 |> Dom.appendText "Reload Scenario"
+                                |> shortcutHtml [ "⇧", "r" ]
                            ]
                         ++ (if model.lockPlayers then
                                 []
@@ -1044,12 +1047,14 @@ getMenuHtml model =
                                 [ Dom.element "li"
                                     |> Dom.addAction ( "click", ChangeAppMode PlayerChoiceDialog )
                                     |> Dom.appendText "Change Players"
+                                    |> shortcutHtml [ "⇧", "p" ]
                                 ]
                            )
                         ++ [ Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeAppMode ConfigDialog )
                                 |> Dom.addClass "section-end"
                                 |> Dom.appendText "Settings"
+                                |> shortcutHtml [ "⇧", "s" ]
                            , Dom.element "li"
                                 |> Dom.appendChild
                                     (Dom.element "a"
@@ -1982,6 +1987,24 @@ getSortOrderForOverlay overlay =
 
         Trap _ ->
             7
+
+
+shortcutHtml : List String -> Element msg -> Element msg
+shortcutHtml keys element =
+    Dom.appendChild
+        (Dom.element "span"
+            |> Dom.addClass "shortcut"
+            |> Dom.appendChildList
+                (map
+                    (\k ->
+                        Dom.element "span"
+                            |> Dom.addClass "key"
+                            |> Dom.appendText k
+                    )
+                    keys
+                )
+        )
+        element
 
 
 keyDecoder : Decode.Decoder String

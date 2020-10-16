@@ -116,6 +116,30 @@ html {
                         li {
                             cursor: pointer;
                             margin-bottom: 0.4rem;
+                            position: relative;
+                            padding-right: 3.1rem;
+
+                            .shortcut {
+                                font-family: Arial, Helvetica, sans-serif;
+                                position: absolute;
+                                right: -0.9rem;
+                                display: flex;
+                                top: 0;
+                                font-size: 0.7rem;
+
+                                .key {
+                                    padding: 0.3rem 0.3rem;
+                                    display: inline-block;
+                                    border: 1px solid black;
+                                    margin-right: 0.2rem;
+                                    text-align: center;
+                                    background-color: rgba(128, 128, 128, 0.5);
+                                    color: white;
+                                    border-radius: 4px;
+                                    transition: 0.2s;
+                                    min-width: 1.5rem;
+                                }
+                            }
 
                             a {
                                 color: #aaa;
@@ -126,6 +150,12 @@ html {
 
                             a:hover, &:hover {
                                 color: #fff;
+
+                                .shortcut {
+                                    .key {
+                                        background-color: rgba(128, 128, 128, 1);
+                                    }
+                                }
                             }
 
                             &.section-end {
@@ -136,8 +166,11 @@ html {
                                     border-bottom: 1px solid #666;
                                     height: 1px;
                                     display: block;
-                                    margin: 5px 0;
+                                    position: absolute;
+                                    bottom: -5px;
                                 }
+
+                                margin-bottom: 10px;
                             }
                         }
                     }
