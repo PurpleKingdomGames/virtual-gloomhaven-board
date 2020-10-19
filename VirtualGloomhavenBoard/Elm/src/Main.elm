@@ -477,7 +477,7 @@ update msg model =
         EnterScenarioNumber strId ->
             case String.toInt strId of
                 Just scenarioId ->
-                    if scenarioId > 0 && scenarioId < 94 then
+                    if scenarioId > 0 && scenarioId < 96 then
                         ( { model | currentScenarioInput = Just scenarioId }, Cmd.none )
 
                     else
