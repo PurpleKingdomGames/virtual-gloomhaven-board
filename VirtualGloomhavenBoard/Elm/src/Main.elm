@@ -772,6 +772,27 @@ update msg model =
                     Nothing ->
                         ( newModel, Cmd.none )
 
+            else if val == "escape" then
+                update (ChangeAppMode AppStorage.Game) model
+
+            else if val == "enter" then
+                case model.config.appMode of
+                    ScenarioDialog ->
+                        let
+                            scenarioId =
+                                Maybe.withDefault model.game.state.scenario model.currentScenarioInput
+                        in
+                        update (ChangeScenario scenarioId False) model
+
+                    PlayerChoiceDialog ->
+                        update ChangePlayerList model
+
+                    ConfigDialog ->
+                        update (ChangeClientSettings model.currentClientSettings) model
+
+                    _ ->
+                        ( model, Cmd.none )
+
             else
                 ( model, Cmd.none )
 
@@ -2013,4 +2034,4 @@ shortcutHtml keys element =
 
 keyDecoder : Decode.Decoder String
 keyDecoder =
-    Decode.field "key" Decode.string
+    Decode.field "key" Decode.string |> Decode.andThen (\s -> Decode.succeed (String.toLower s))
