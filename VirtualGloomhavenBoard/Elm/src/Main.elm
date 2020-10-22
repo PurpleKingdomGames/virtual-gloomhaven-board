@@ -50,6 +50,7 @@ type alias Model =
     , lockRoomCode : Bool
     , roomCodeSeed : Maybe Int
     , keysDown : List String
+    , roomCodePassesServerCheck : Bool
     }
 
 
@@ -232,6 +233,7 @@ init ( oldState, maybeOverrides, seed ) =
         overrides.lockRoomCode
         overrides.initRoomCodeSeed
         []
+        True
     , Cmd.batch
         [ connectToServer
         , loadScenarioById
@@ -499,7 +501,12 @@ update msg model =
                 ( _, roomCode2 ) =
                     settings.roomCode
             in
-            ( { model | currentClientSettings = Just { settings | roomCode = ( startCode, roomCode2 ) } }, Cmd.none )
+            ( { model
+                | currentClientSettings = Just { settings | roomCode = ( startCode, roomCode2 ) }
+                , roomCodePassesServerCheck = True
+              }
+            , Cmd.none
+            )
 
         ChangeRoomCodeInputEnd endCode ->
             let
@@ -509,7 +516,12 @@ update msg model =
                 ( roomCode1, _ ) =
                     settings.roomCode
             in
-            ( { model | currentClientSettings = Just { settings | roomCode = ( roomCode1, endCode ) } }, Cmd.none )
+            ( { model
+                | currentClientSettings = Just { settings | roomCode = ( roomCode1, endCode ) }
+                , roomCodePassesServerCheck = True
+              }
+            , Cmd.none
+            )
 
         ChangeShowRoomCode showRoomCode ->
             let
@@ -653,8 +665,28 @@ update msg model =
                         _ ->
                             model.config
 
+                validRoomCode =
+                    case gameSyncMsg of
+                        GameSync.RoomCodeReceived _ ->
+                            True
+
+                        GameSync.RoomCodeInvalid _ ->
+                            False
+
+                        _ ->
+                            model.roomCodePassesServerCheck
+
                 updatedConfigModel =
-                    { model | config = config, connectionStatus = connectedState }
+                    { model
+                        | config =
+                            if validRoomCode then
+                                config
+
+                            else
+                                { config | appMode = ConfigDialog }
+                        , connectionStatus = connectedState
+                        , roomCodePassesServerCheck = validRoomCode
+                    }
 
                 gameState =
                     model.game.state
@@ -821,6 +853,7 @@ update msg model =
                                 ( { model
                                     | currentClientSettings =
                                         Just { settings | roomCode = ( first, join "" rest ) }
+                                    , roomCodePassesServerCheck = True
                                   }
                                 , Cmd.none
                                 )
@@ -1227,7 +1260,7 @@ getClientSettingsDialog model =
             settings.roomCode
 
         validRoomCode =
-            isValidRoomCode (roomCode1 ++ "-" ++ roomCode2)
+            isValidRoomCode (roomCode1 ++ "-" ++ roomCode2) && model.roomCodePassesServerCheck
     in
     Dom.element "div"
         |> Dom.addClass "client-form"

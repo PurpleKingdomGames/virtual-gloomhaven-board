@@ -45,7 +45,7 @@
         app.ports.receiveRoomCode.send(newRoomCode)
     });
 
-    conn.on("InvalidRoomCode", (roomCode) =>
+    conn.on("InvalidRoomCode", () =>
         app.ports.invalidRoomCode.send(null)
     );
 
