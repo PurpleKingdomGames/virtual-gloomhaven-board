@@ -811,7 +811,7 @@ update msg model =
             in
             case model.config.appMode of
                 ConfigDialog ->
-                    if String.length data == 11 && String.contains "-" data then
+                    if isValidRoomCode data then
                         case split "-" data of
                             first :: rest ->
                                 let
@@ -820,7 +820,7 @@ update msg model =
                                 in
                                 ( { model
                                     | currentClientSettings =
-                                        Just { settings | roomCode = ( String.left 5 first, String.left 5 (join "" rest) ) }
+                                        Just { settings | roomCode = ( first, join "" rest ) }
                                   }
                                 , Cmd.none
                                 )
@@ -1225,6 +1225,9 @@ getClientSettingsDialog model =
 
         ( roomCode1, roomCode2 ) =
             settings.roomCode
+
+        validRoomCode =
+            isValidRoomCode (roomCode1 ++ "-" ++ roomCode2)
     in
     Dom.element "div"
         |> Dom.addClass "client-form"
@@ -1241,8 +1244,9 @@ getClientSettingsDialog model =
                             |> Dom.appendText "Room Code"
                         , Dom.element "div"
                             |> Dom.addClass "split-input"
+                            |> Dom.addClassConditional "error" (validRoomCode == False)
                             |> Dom.appendChildList
-                                [ Dom.element "input"
+                                ([ Dom.element "input"
                                     |> Dom.addActionStopPropagation ( "click", NoOp )
                                     |> Dom.addAttribute (attribute "id" "roomCodeInput1")
                                     |> Dom.addInputHandler ChangeRoomCodeInputStart
@@ -1250,9 +1254,9 @@ getClientSettingsDialog model =
                                     |> Dom.addAttribute (maxlength 5)
                                     |> Dom.addAttribute (required True)
                                     |> Dom.addAttribute (value roomCode1)
-                                , Dom.element "span"
+                                 , Dom.element "span"
                                     |> Dom.appendText "-"
-                                , Dom.element "input"
+                                 , Dom.element "input"
                                     |> Dom.addActionStopPropagation ( "click", NoOp )
                                     |> Dom.addAttribute (attribute "id" "roomCodeInput2")
                                     |> Dom.addInputHandler ChangeRoomCodeInputEnd
@@ -1260,7 +1264,17 @@ getClientSettingsDialog model =
                                     |> Dom.addAttribute (maxlength 5)
                                     |> Dom.addAttribute (required True)
                                     |> Dom.addAttribute (value roomCode2)
-                                ]
+                                 ]
+                                    ++ (if validRoomCode == False then
+                                            [ Dom.element "div"
+                                                |> Dom.addClass "error-label"
+                                                |> Dom.appendText "Invalid room code"
+                                            ]
+
+                                        else
+                                            []
+                                       )
+                                )
                         ]
                 ]
              )
@@ -2091,6 +2105,26 @@ shortcutHtml keys element =
                 )
         )
         element
+
+
+isValidRoomCode : String -> Bool
+isValidRoomCode roomCode =
+    let
+        splitCode =
+            split "-" roomCode
+    in
+    case splitCode of
+        code1 :: code2 :: rest ->
+            (List.length rest == 0)
+                && all (\c -> Char.isAlphaNum c) (String.toList code1)
+                && all (\c -> Char.isAlphaNum c) (String.toList code2)
+                && String.length code1
+                == 5
+                && String.length code2
+                == 5
+
+        _ ->
+            False
 
 
 keyDecoder : Decode.Decoder String
