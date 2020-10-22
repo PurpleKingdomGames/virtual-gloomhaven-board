@@ -400,6 +400,56 @@ html {
                     opacity: 0.55;
                 }
             }
+
+            .connectionStatus {
+                position: absolute;
+                left: 50%;
+                right: 50%;
+                width: 27rem;
+                background-color: #a6192b;
+                padding: 0.5rem 1rem;
+                display: flex;
+                justify-content: space-between;
+                transform: translate(-50%, 0);
+                font-size: 1.4rem;
+                transition: top 0.5s;
+                top: -3rem;
+                -webkit-box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.75);
+                -moz-box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.75);
+                box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.75);
+                z-index: 1;
+
+                &.show {
+                    top: 0;
+                }
+
+                &:before, &:after {
+                    content: '';
+                    width: 4rem;
+                    height: 2.9rem;
+                    position: absolute;
+                    top: -1rem;
+                    background-color: #a6192b;
+                    z-index: -1;
+                }
+
+                &:before {
+                    transform: rotate(45deg);
+                    left: -2.4rem;
+                }
+
+                &:after {
+                    transform: rotate(-45deg);
+                    right: -2.4rem;
+                }
+
+                a {
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 1rem;
+                    line-height: 1.8rem;
+                    cursor: pointer;
+                }
+            }
         }
 
         footer {

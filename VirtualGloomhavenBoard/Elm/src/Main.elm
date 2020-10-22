@@ -117,6 +117,7 @@ type Msg
     | VisibilityChanged Visibility
     | PushGameState Bool
     | ExitFullscreen ()
+    | Reconnect
     | NoOp
 
 
@@ -852,6 +853,9 @@ update msg model =
         ExitFullscreen _ ->
             ( { model | fullscreen = False, currentClientSettings = Nothing }, Cmd.none )
 
+        Reconnect ->
+            ( model, GameSync.connectToServer )
+
         NoOp ->
             ( model, Cmd.none )
 
@@ -925,6 +929,20 @@ view model =
                 [ div [ class "map-bg" ] []
                 , div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) game.roomData))
                 , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
+                ]
+            , div
+                [ class
+                    ("connectionStatus"
+                        ++ (if model.connectionStatus == Disconnected || model.connectionStatus == Reconnecting then
+                                " show"
+
+                            else
+                                ""
+                           )
+                    )
+                ]
+                [ span [] [ text "You are currently offline" ]
+                , a [ onClick Reconnect ] [ text "Reconnect" ]
                 ]
             ]
          , footer []
