@@ -114,6 +114,11 @@
             document.exitFullscreen();
     });
 
+    document.addEventListener('paste', (event) => {
+        app.ports.onPaste.send((event.clipboardData || window.clipboardData).getData('text'));
+        event.preventDefault();
+    })
+
     function generateOverrides() {
         const scenarioId = getUrlParameter('scenario');
         const players = getUrlParameter('players');

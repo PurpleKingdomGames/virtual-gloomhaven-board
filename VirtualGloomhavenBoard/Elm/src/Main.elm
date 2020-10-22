@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import AppStorage exposing (AppModeType(..), Config, GameModeType(..), emptyOverrides, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
@@ -27,6 +27,9 @@ import Scenario exposing (DoorData(..), Scenario)
 import ScenarioSync exposing (loadScenarioById)
 import String exposing (join, split)
 import Task
+
+
+port onPaste : (String -> msg) -> Sub msg
 
 
 type alias Model =
@@ -110,6 +113,7 @@ type Msg
     | Undo
     | KeyDown String
     | KeyUp String
+    | Paste String
     | VisibilityChanged Visibility
     | PushGameState Bool
     | ExitFullscreen ()
@@ -799,6 +803,44 @@ update msg model =
         KeyUp val ->
             ( { model | keysDown = filter (\k -> k /= String.toLower val) model.keysDown }, Cmd.none )
 
+        Paste fullData ->
+            let
+                data =
+                    String.trim fullData
+            in
+            case model.config.appMode of
+                ConfigDialog ->
+                    if String.length data == 11 && String.contains "-" data then
+                        case split "-" data of
+                            first :: rest ->
+                                let
+                                    settings =
+                                        getSplitRoomCodeSettings model
+                                in
+                                ( { model
+                                    | currentClientSettings =
+                                        Just { settings | roomCode = ( String.left 5 first, String.left 5 (join "" rest) ) }
+                                  }
+                                , Cmd.none
+                                )
+
+                            _ ->
+                                ( model, Cmd.none )
+
+                    else
+                        ( model, Cmd.none )
+
+                ScenarioDialog ->
+                    case String.toInt data of
+                        Just i ->
+                            ( { model | currentScenarioInput = Just i }, Cmd.none )
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
         VisibilityChanged visibility ->
             case visibility of
                 Hidden ->
@@ -933,6 +975,7 @@ subscriptions _ =
         , GameSync.exitFullscreen ExitFullscreen
         , onKeyDown (Decode.map KeyDown keyDecoder)
         , onKeyUp (Decode.map KeyUp keyDecoder)
+        , onPaste Paste
         , onVisibilityChange VisibilityChanged
         ]
 
