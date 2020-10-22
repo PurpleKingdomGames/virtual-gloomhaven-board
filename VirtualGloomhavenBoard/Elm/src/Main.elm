@@ -36,7 +36,7 @@ type alias Model =
     { game : Game
     , config : Config
     , currentLoadState : LoadingState
-    , currentScenarioInput : Maybe Int
+    , currentScenarioInput : Maybe String
     , currentClientSettings : Maybe TransientClientSettings
     , currentPlayerList : Maybe (List CharacterClass)
     , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
@@ -482,16 +482,7 @@ update msg model =
                 ( { model | config = { config | appMode = AppStorage.Game } }, Cmd.none )
 
         EnterScenarioNumber strId ->
-            case String.toInt strId of
-                Just scenarioId ->
-                    if scenarioId > 0 && scenarioId < 96 then
-                        ( { model | currentScenarioInput = Just scenarioId }, Cmd.none )
-
-                    else
-                        ( model, Cmd.none )
-
-                Nothing ->
-                    ( model, Cmd.none )
+            ( { model | currentScenarioInput = Just strId }, Cmd.none )
 
         ChangeRoomCodeInputStart startCode ->
             let
@@ -817,9 +808,18 @@ update msg model =
                     ScenarioDialog ->
                         let
                             scenarioId =
-                                Maybe.withDefault model.game.state.scenario model.currentScenarioInput
+                                Maybe.withDefault (String.fromInt model.game.state.scenario) model.currentScenarioInput
                         in
-                        update (ChangeScenario scenarioId False) model
+                        if isValidScenario scenarioId then
+                            case String.toInt scenarioId of
+                                Just i ->
+                                    update (ChangeScenario i False) model
+
+                                Nothing ->
+                                    ( model, Cmd.none )
+
+                        else
+                            ( model, Cmd.none )
 
                     PlayerChoiceDialog ->
                         update ChangePlayerList model
@@ -865,12 +865,11 @@ update msg model =
                         ( model, Cmd.none )
 
                 ScenarioDialog ->
-                    case String.toInt data of
-                        Just i ->
-                            ( { model | currentScenarioInput = Just i }, Cmd.none )
+                    if isValidScenario data then
+                        ( { model | currentScenarioInput = Just data }, Cmd.none )
 
-                        Nothing ->
-                            ( model, Cmd.none )
+                    else
+                        ( model, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -1217,32 +1216,49 @@ getScenarioDialog : Model -> Element Msg
 getScenarioDialog model =
     let
         scenarioInput =
-            Maybe.withDefault model.game.state.scenario model.currentScenarioInput
+            Maybe.withDefault (String.fromInt model.game.state.scenario) model.currentScenarioInput
+
+        validScenario =
+            isValidScenario scenarioInput
+
+        intScenarioInput =
+            Maybe.withDefault 0 (String.toInt scenarioInput)
     in
     Dom.element "div"
         |> Dom.addClass "scenario-form"
         |> Dom.appendChildList
             [ Dom.element "div"
                 |> Dom.addClass "input-wrapper"
+                |> Dom.addClassConditional "error" (validScenario == False)
                 |> Dom.appendChildList
-                    [ Dom.element "label"
+                    ([ Dom.element "label"
                         |> Dom.addAttribute (attribute "for" "scenarioIdInput")
                         |> Dom.appendText "Scenario"
-                    , Dom.element "input"
+                     , Dom.element "input"
                         |> Dom.addActionStopPropagation ( "click", NoOp )
                         |> Dom.addAttribute (attribute "id" "scenarioIdInput")
                         |> Dom.addAttribute (attribute "type" "number")
                         |> Dom.addAttribute (attribute "min" "1")
-                        |> Dom.addAttribute (attribute "max" "93")
-                        |> Dom.addAttribute (attribute "value" (String.fromInt scenarioInput))
+                        |> Dom.addAttribute (attribute "max" "95")
+                        |> Dom.addAttribute (attribute "value" scenarioInput)
                         |> Dom.addInputHandler EnterScenarioNumber
-                    ]
+                     ]
+                        ++ (if validScenario then
+                                []
+
+                            else
+                                [ Dom.element "div"
+                                    |> Dom.addClass "error-label"
+                                    |> Dom.appendText "Invalid scenario number"
+                                ]
+                           )
+                    )
             , Dom.element "div"
                 |> Dom.addClass "button-wrapper"
                 |> Dom.appendChildList
                     [ Dom.element "button"
                         |> Dom.appendText "OK"
-                        |> Dom.addAction ( "click", ChangeScenario scenarioInput False )
+                        |> Dom.addActionConditional ( "click", ChangeScenario intScenarioInput False ) validScenario
                     , Dom.element "button"
                         |> Dom.appendText "Cancel"
                         |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
@@ -1271,15 +1287,15 @@ getClientSettingsDialog model =
               else
                 [ Dom.element "div"
                     |> Dom.addClass "input-wrapper"
+                    |> Dom.addClassConditional "error" (validRoomCode == False)
                     |> Dom.appendChildList
-                        [ Dom.element "label"
+                        ([ Dom.element "label"
                             |> Dom.addAttribute (attribute "for" "roomCodeInput1")
                             |> Dom.appendText "Room Code"
-                        , Dom.element "div"
+                         , Dom.element "div"
                             |> Dom.addClass "split-input"
-                            |> Dom.addClassConditional "error" (validRoomCode == False)
                             |> Dom.appendChildList
-                                ([ Dom.element "input"
+                                [ Dom.element "input"
                                     |> Dom.addActionStopPropagation ( "click", NoOp )
                                     |> Dom.addAttribute (attribute "id" "roomCodeInput1")
                                     |> Dom.addInputHandler ChangeRoomCodeInputStart
@@ -1287,9 +1303,9 @@ getClientSettingsDialog model =
                                     |> Dom.addAttribute (maxlength 5)
                                     |> Dom.addAttribute (required True)
                                     |> Dom.addAttribute (value roomCode1)
-                                 , Dom.element "span"
+                                , Dom.element "span"
                                     |> Dom.appendText "-"
-                                 , Dom.element "input"
+                                , Dom.element "input"
                                     |> Dom.addActionStopPropagation ( "click", NoOp )
                                     |> Dom.addAttribute (attribute "id" "roomCodeInput2")
                                     |> Dom.addInputHandler ChangeRoomCodeInputEnd
@@ -1297,18 +1313,18 @@ getClientSettingsDialog model =
                                     |> Dom.addAttribute (maxlength 5)
                                     |> Dom.addAttribute (required True)
                                     |> Dom.addAttribute (value roomCode2)
-                                 ]
-                                    ++ (if validRoomCode == False then
-                                            [ Dom.element "div"
-                                                |> Dom.addClass "error-label"
-                                                |> Dom.appendText "Invalid room code"
-                                            ]
+                                ]
+                         ]
+                            ++ (if validRoomCode == False then
+                                    [ Dom.element "div"
+                                        |> Dom.addClass "error-label"
+                                        |> Dom.appendText "Invalid room code"
+                                    ]
 
-                                        else
-                                            []
-                                       )
-                                )
-                        ]
+                                else
+                                    []
+                               )
+                        )
                 ]
              )
                 ++ [ Dom.element "div"
@@ -2138,6 +2154,16 @@ shortcutHtml keys element =
                 )
         )
         element
+
+
+isValidScenario : String -> Bool
+isValidScenario scenarioId =
+    case String.toInt scenarioId of
+        Just i ->
+            i > 0 && i < 96
+
+        Nothing ->
+            False
 
 
 isValidRoomCode : String -> Bool

@@ -37,9 +37,6 @@
 
         .client-form {
             .split-input {
-                position: relative;
-                margin-bottom: 0.7rem;
-
                 input {
                     max-width: 90px;
                     text-align: center;
@@ -49,16 +46,6 @@
                     margin: 0 15px;
                     font-size: 1.2rem;
                     font-weight: bold;
-                }
-
-                .error-label {
-                    position: absolute;
-                    font-family: Arial, Helvetica, sans-serif;
-                    letter-spacing: 0;
-                    line-height: 1.5rem;
-                    text-shadow: 0 0;
-                    font-weight: bold;
-                    color: red;
                 }
             }
         }

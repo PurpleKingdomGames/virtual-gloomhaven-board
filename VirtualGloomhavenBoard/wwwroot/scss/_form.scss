@@ -1,7 +1,8 @@
 .input-wrapper {
     display: flex;
     flex-direction: column;
-    margin-bottom: 1rem;
+    margin-bottom: 1.6rem;
+    position: relative;
 
     label {
         font-size: 1.3rem;
@@ -69,6 +70,19 @@
             &.checked:after {
                 opacity: 1;
             }
+        }
+    }
+
+    &.error {
+        .error-label {
+            position: absolute;
+            font-family: Arial, Helvetica, sans-serif;
+            letter-spacing: 0;
+            line-height: 1.5rem;
+            text-shadow: 0 0;
+            font-weight: bold;
+            color: red;
+            bottom: -1.4rem;
         }
     }
 }
