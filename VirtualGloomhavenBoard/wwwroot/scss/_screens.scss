@@ -1,0 +1,123 @@
+
+// Extra small devices (portrait phones, less than 576px)
+@media (max-width: 575px) {
+    :root {
+        font-size: 0.9rem;
+    }
+
+    html {
+        .content {
+            .header {
+                header {
+                    font-size: 1.5rem;
+                }
+
+                .roomCode {
+                    display: none;
+                }
+
+                .menu {
+                    nav {
+                        ul {
+                            li {
+                                .shortcut {
+                                    display: none;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            .main {
+                margin-bottom: 0;
+
+                .action-list {
+                    .new-piece-wrapper {
+                        .new-piece-list {
+                            ul {
+                                li {
+                                    transform: scale(0.8);
+                                    transform-origin: top;
+
+                                    :first-child {
+                                        margin-top: 1rem;
+                                    }
+
+                                    &:not(:first-child) {
+                                        margin: -1.3rem 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .board-wrapper {
+                    .map-bg, .mapTiles, .board {
+                        transform: scale(0.8);
+                        transform-origin: top;
+                    }
+                }
+
+                .connectionStatus {
+                    width: 75vw;
+                    font-size: 1rem;
+                    height: 3rem;
+
+                    a {
+                        line-height: 1.2rem;
+                    }
+                }
+            }
+
+            footer {
+                display: none;
+            }
+        }
+
+        .overlay-dialog {
+            .dialog {
+                border: none;
+                width: 100vw;
+                height: 100vh;
+                background-image: radial-gradient(circle, rgba(241, 236, 232, 0.3) 31%, rgba(156, 124, 108, 0.4) 85%, rgba(81, 64, 30, 0.3) 100%), url("/img/bg.jpg");
+                display: flex;
+                align-items: center;
+                overflow-x: scroll;
+                padding: 1.2rem;
+
+                & > div {
+                    width: 100%;
+                }
+
+                .character-form {
+                    width: 100%;
+                    padding: 0;
+                    justify-content: center;
+
+                    .button-wrapper {
+                        width: 100%;
+                    }
+                }
+            }
+        }
+    }
+ }
+
+
+// Small devices (landscape phones, 576px and up)
+@media (max-width: 767px) {
+
+}
+
+// Medium devices (tablets, 768px and up)
+@media (max-width: 991px) {
+
+}
+
+// Large devices (desktops, 992px and up)
+@media (max-width: 1199px) {
+
+}
+
