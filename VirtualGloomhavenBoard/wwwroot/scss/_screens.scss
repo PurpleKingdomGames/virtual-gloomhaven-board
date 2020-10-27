@@ -33,6 +33,20 @@
                 margin-bottom: 0;
 
                 .action-list {
+
+                    &:not(.show) {
+                        left: -17rem;
+
+                        .side-toggle {
+                            display: block;
+                            right: -10.2rem;
+                        }
+                    }
+
+                    .side-toggle {
+                        display: block;
+                    }
+
                     .new-piece-wrapper {
                         .new-piece-list {
                             ul {
@@ -54,9 +68,17 @@
                 }
 
                 .board-wrapper {
+                    margin-left: 0;
+
                     .map-bg, .mapTiles, .board {
                         transform: scale(0.8);
                         transform-origin: top;
+                    }
+                }
+
+                .action-list.show {
+                    & + .board-wrapper {
+                        margin-left: 9.2rem;
                     }
                 }
 

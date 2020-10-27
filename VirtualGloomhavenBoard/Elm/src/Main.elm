@@ -44,6 +44,7 @@ type alias Model =
     , connectionStatus : ConnectionStatus
     , undoStack : List GameState
     , menuOpen : Bool
+    , sideMenuOpen : Bool
     , fullscreen : Bool
     , lockScenario : Bool
     , lockPlayers : Bool
@@ -103,6 +104,7 @@ type Msg
     | ToggleBoardOnly Bool
     | ToggleFullscreen Bool
     | ToggleMenu
+    | ToggleSideMenu
     | ChangePlayerList
     | EnterScenarioNumber String
     | ChangeRoomCodeInputStart String
@@ -226,6 +228,7 @@ init ( oldState, maybeOverrides, seed ) =
         Nothing
         Disconnected
         []
+        False
         False
         False
         overrides.lockScenario
@@ -597,6 +600,9 @@ update msg model =
         ToggleMenu ->
             ( { model | menuOpen = model.menuOpen == False }, Cmd.none )
 
+        ToggleSideMenu ->
+            ( { model | sideMenuOpen = model.sideMenuOpen == False }, Cmd.none )
+
         ChangePlayerList ->
             let
                 playerList =
@@ -956,7 +962,21 @@ view model =
                 )
             ]
          , div [ class "main" ]
-            [ div [ class "action-list" ] [ getNavHtml model, getNewPieceHtml model game ]
+            [ div
+                [ class
+                    ("action-list"
+                        ++ (if model.sideMenuOpen then
+                                " show"
+
+                            else
+                                ""
+                           )
+                    )
+                ]
+                [ getNavHtml model
+                , getNewPieceHtml model game
+                , div [ class "side-toggle", onClick ToggleSideMenu ] []
+                ]
             , div [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
                 , div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) game.roomData))

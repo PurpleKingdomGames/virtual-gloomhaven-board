@@ -244,6 +244,37 @@ html {
                 width: 9.2rem;
                 transition: left 0.2s;
 
+                .side-toggle {
+                    width: 2.5rem;
+                    height: 3rem;
+                    position: absolute;
+                    top: 50vh;
+                    right: -2.5rem;
+                    bottom: 50vh;
+                    background-image: url('/img/plank.jpg');
+                    display: none;
+                    transition: right 0.5s;
+
+                    &:before {
+                        content: '>';
+                        color: white;
+                        display: block;
+                        font-family: serif;
+                        line-height: 2.9rem;
+                        font-size: 1.3rem;
+                        text-align: center;
+                        font-weight: bold;
+                    }
+                }
+
+                &.show {
+                    .side-toggle {
+                        &:before {
+                            content: '<';
+                        }
+                    }
+                }
+
                 .sidebar-wrapper {
                     z-index: 3;
                     box-shadow: 25px 0px 25px -5px rgba(0, 0, 0, 0.75);
@@ -341,6 +372,10 @@ html {
                                 overflow: auto;
                                 overflow-x: hidden;
                             }
+                        }
+
+                        & + .side-toggle {
+                            right: -10.1rem;
                         }
                     }
 
