@@ -70,7 +70,11 @@
                 .board-wrapper {
                     margin-left: 0;
 
-                    .map-bg, .mapTiles, .board {
+                    .map-bg {
+                        display: none;
+                    }
+
+                    .mapTiles, .board {
                         transform: scale(0.8);
                         transform-origin: top;
                     }
