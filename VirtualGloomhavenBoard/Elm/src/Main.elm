@@ -6,6 +6,7 @@ import Bitwise
 import BoardMapTile exposing (MapTileRef(..), refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Browser
+import Browser.Dom as BrowserDom exposing (Error)
 import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
 import Character exposing (CharacterClass(..), characterToString)
 import Dict
@@ -15,7 +16,7 @@ import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), R
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
 import Html.Attributes exposing (attribute, checked, class, href, id, maxlength, minlength, required, src, style, target, title, value)
-import Html.Events exposing (onClick)
+import Html.Events exposing (on, onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
 import List exposing (all, any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
@@ -52,6 +53,7 @@ type alias Model =
     , roomCodeSeed : Maybe Int
     , keysDown : List String
     , roomCodePassesServerCheck : Bool
+    , tooltipTarget : Maybe ( BrowserDom.Element, String )
     }
 
 
@@ -119,6 +121,9 @@ type Msg
     | Paste String
     | VisibilityChanged Visibility
     | PushGameState Bool
+    | InitTooltip String String
+    | SetTooltip String (Result BrowserDom.Error BrowserDom.Element)
+    | ResetTooltip
     | ExitFullscreen ()
     | Reconnect
     | NoOp
@@ -237,6 +242,7 @@ init ( oldState, maybeOverrides, seed ) =
         overrides.initRoomCodeSeed
         []
         True
+        Nothing
     , Cmd.batch
         [ connectToServer
         , loadScenarioById
@@ -888,6 +894,20 @@ update msg model =
                 Visible ->
                     ( model, Cmd.none )
 
+        InitTooltip identifier text ->
+            ( model, Task.attempt (SetTooltip text) (BrowserDom.getElement identifier) )
+
+        SetTooltip text result ->
+            case result of
+                Ok element ->
+                    ( { model | tooltipTarget = Just ( element, text ) }, Cmd.none )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
+        ResetTooltip ->
+            ( { model | tooltipTarget = Nothing }, Cmd.none )
+
         ExitFullscreen _ ->
             ( { model | fullscreen = False, currentClientSettings = Nothing }, Cmd.none )
 
@@ -1034,6 +1054,32 @@ view model =
 
                     _ ->
                         [ getDialogForAppMode model ]
+               )
+            ++ (case model.tooltipTarget of
+                    Nothing ->
+                        []
+
+                    Just ( e, t ) ->
+                        let
+                            x =
+                                (e.element.x
+                                    + e.element.width
+                                    |> String.fromFloat
+                                )
+                                    ++ "px"
+
+                            y =
+                                (e.element.y
+                                    + (e.element.height / 4)
+                                    |> String.fromFloat
+                                )
+                                    ++ "px"
+                        in
+                        [ div [ class "tooltip-wrapper", style "left" x, style "top" y ]
+                            [ div [ class "tooltip-text" ]
+                                [ text t ]
+                            ]
+                        ]
                )
         )
 
@@ -1476,42 +1522,42 @@ getNavHtml model =
                             [ Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode MovePiece )
                                 |> Dom.addClass "move-piece"
-                                |> Dom.addAttribute (title "Move Monsters or Players")
+                                |> tooltipHtml "moveAction" "Move Monsters or Players"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == MovePiece)
                                 |> Dom.appendText "Move Piece"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode KillPiece )
-                                |> Dom.addAttribute (title "Remove Monsters or Players")
+                                |> tooltipHtml "removeAction" "Remove Monsters or Players"
                                 |> Dom.addClass "kill-piece"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == KillPiece)
                                 |> Dom.appendText "Kill Piece"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode LootCell )
-                                |> Dom.addAttribute (title "Loot a tile")
+                                |> tooltipHtml "lootAction" "Loot a tile"
                                 |> Dom.addClass "loot"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == LootCell)
                                 |> Dom.appendText "Loot"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode MoveOverlay )
-                                |> Dom.addAttribute (title "Move Obstacles or Traps")
+                                |> tooltipHtml "moveObstacleAction" "Move Obstacles or Traps"
                                 |> Dom.addClass "move-overlay"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == MoveOverlay)
                                 |> Dom.appendText "Move Overlay"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode DestroyOverlay )
-                                |> Dom.addAttribute (title "Remove Obstacles or Traps")
+                                |> tooltipHtml "removeObstacleAction" "Remove Obstacles or Traps"
                                 |> Dom.addClass "destroy-overlay"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == DestroyOverlay)
                                 |> Dom.appendText "Destroy Overlay"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode RevealRoom )
-                                |> Dom.addAttribute (title "Open a door")
+                                |> tooltipHtml "openDoorAction" "Open a door"
                                 |> Dom.addClass "reveal-room"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == RevealRoom)
                                 |> Dom.appendText "Reveal Room"
                             , Dom.element "li"
                                 |> Dom.addAction ( "click", ChangeGameMode AddPiece )
-                                |> Dom.addAttribute (title "Summon a piece to the board")
+                                |> tooltipHtml "summonAction" "Summon a piece to the board"
                                 |> Dom.addClass "add-piece"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == AddPiece)
                                 |> Dom.appendText "Add Piece"
@@ -2174,6 +2220,14 @@ shortcutHtml keys element =
                 )
         )
         element
+
+
+tooltipHtml : String -> String -> Element Msg -> Element Msg
+tooltipHtml identifier tooltip element =
+    element
+        |> Dom.setId identifier
+        |> Dom.addAction ( "pointerover", InitTooltip identifier tooltip )
+        |> Dom.addAction ( "pointerout", ResetTooltip )
 
 
 isValidScenario : String -> Bool
