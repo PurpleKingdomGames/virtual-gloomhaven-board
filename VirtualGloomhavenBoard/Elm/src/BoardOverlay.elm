@@ -1,4 +1,4 @@
-module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 
 import BoardMapTile exposing (MapTileRef)
 
@@ -273,3 +273,176 @@ getBoardOverlayName overlay =
 
                 Coin _ ->
                     "treasure-coin"
+
+
+getOverlayLabel : BoardOverlayType -> String
+getOverlayLabel overlay =
+    case overlay of
+        Door d _ ->
+            case d of
+                AltarDoor ->
+                    "Altar"
+
+                Stone ->
+                    "Stone Door"
+
+                Wooden ->
+                    "Wooden Door"
+
+                BreakableWall ->
+                    "Breakable Wall"
+
+                Corridor c _ ->
+                    case c of
+                        Earth ->
+                            "Earth Corridor"
+
+                        ManmadeStone ->
+                            "Manmade Stone Corridor"
+
+                        NaturalStone ->
+                            "Natural Stone Corridor"
+
+                        PressurePlate ->
+                            "Pressure Plate"
+
+                        Wood ->
+                            "Wooden Corridor"
+
+                DarkFog ->
+                    "Dark Fog"
+
+                LightFog ->
+                    "Light Fog"
+
+        DifficultTerrain d ->
+            case d of
+                Log ->
+                    "Fallen Log"
+
+                Rubble ->
+                    "Rubble"
+
+                Stairs ->
+                    "Stairs"
+
+                VerticalStairs ->
+                    "Stairs"
+
+                Water ->
+                    "Water"
+
+        Hazard h ->
+            case h of
+                HotCoals ->
+                    "Hot Coals"
+
+                Thorns ->
+                    "Thorns"
+
+        Obstacle o ->
+            case o of
+                Altar ->
+                    "Altar"
+
+                Barrel ->
+                    "Barrel"
+
+                Bookcase ->
+                    "Bookcase"
+
+                Boulder1 ->
+                    "Boulder"
+
+                Boulder2 ->
+                    "Boulder"
+
+                Boulder3 ->
+                    "Boulder"
+
+                Bush ->
+                    "Bush"
+
+                Cabinet ->
+                    "Cabinet"
+
+                Crate ->
+                    "Crate"
+
+                Crystal ->
+                    "Crystal"
+
+                DarkPit ->
+                    "Dark Pit"
+
+                Fountain ->
+                    "Fountain"
+
+                Nest ->
+                    "Nest"
+
+                Pillar ->
+                    "Pillar"
+
+                RockColumn ->
+                    "Rock Column"
+
+                Sarcophagus ->
+                    "Sarcophagus"
+
+                Shelf ->
+                    "Sheelves"
+
+                Stalagmites ->
+                    "Stalagmites"
+
+                Stump ->
+                    "Tree Stump"
+
+                Table ->
+                    "Table"
+
+                Totem ->
+                    "Totem"
+
+                Tree3 ->
+                    "Tree"
+
+                WallSection ->
+                    "Wall"
+
+        StartingLocation ->
+            "Starting Location"
+
+        Trap t ->
+            case t of
+                BearTrap ->
+                    "Bear Trap"
+
+                Spike ->
+                    "Spike Trap"
+
+                Poison ->
+                    "Poison Trap"
+
+        Treasure t ->
+            case t of
+                Chest c ->
+                    "Treasure Chest "
+                        ++ (case c of
+                                Goal ->
+                                    "Goal"
+
+                                NormalChest i ->
+                                    String.fromInt i
+                           )
+
+                Coin i ->
+                    String.fromInt i
+                        ++ (case i of
+                                1 ->
+                                    "Coin"
+
+                                _ ->
+                                    "Coins"
+                           )

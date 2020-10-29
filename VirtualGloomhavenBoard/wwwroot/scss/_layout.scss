@@ -201,6 +201,7 @@ html {
 
                     &:before {
                         content: '# ';
+                        speak: never;
                     }
                 }
             }
@@ -216,6 +217,7 @@ html {
                 span {
                     &:last-child {
                         font-family: Arial, Helvetica, sans-serif;
+                        speak-as: spell-out;
                     }
                 }
             }

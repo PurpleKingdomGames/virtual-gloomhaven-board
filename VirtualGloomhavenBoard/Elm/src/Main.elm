@@ -4,7 +4,7 @@ import AppStorage exposing (AppModeType(..), Config, GameModeType(..), emptyOver
 import Array exposing (Array, fromList, length, toIndexedList, toList)
 import Bitwise
 import BoardMapTile exposing (MapTileRef(..), refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Browser
 import Browser.Dom as BrowserDom exposing (Error)
 import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
@@ -15,7 +15,7 @@ import Dom.DragDrop as DragDrop
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
-import Html.Attributes exposing (attribute, checked, class, href, id, maxlength, minlength, required, src, style, target, title, value)
+import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, src, style, tabindex, target, title, value)
 import Html.Events exposing (on, onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
@@ -779,7 +779,7 @@ update msg model =
             if model.config.appMode == AppStorage.Game then
                 let
                     newModel =
-                        { model | keysDown = String.toLower val :: model.keysDown }
+                        { model | keysDown = val :: model.keysDown }
 
                     ctrlChars =
                         [ "control"
@@ -797,20 +797,24 @@ update msg model =
                         , ( [ "shift", "s" ], ChangeAppMode ConfigDialog )
                         ]
                 in
-                case head (filter (\( keys, _ ) -> all (\k -> member k newModel.keysDown) keys) ctrlCombi) of
-                    Just ( keys, cmd ) ->
-                        update cmd
-                            { newModel
-                                | keysDown =
-                                    filter
-                                        (\k ->
-                                            member k ctrlChars || (member k keys == False)
-                                        )
-                                        model.keysDown
-                            }
+                if newModel.keysDown == [ "m" ] then
+                    update ToggleMenu newModel
 
-                    Nothing ->
-                        ( newModel, Cmd.none )
+                else
+                    case head (filter (\( keys, _ ) -> all (\k -> member k newModel.keysDown) keys) ctrlCombi) of
+                        Just ( keys, cmd ) ->
+                            update cmd
+                                { newModel
+                                    | keysDown =
+                                        filter
+                                            (\k ->
+                                                member k ctrlChars || (member k keys == False)
+                                            )
+                                            model.keysDown
+                                }
+
+                        Nothing ->
+                            ( newModel, Cmd.none )
 
             else if val == "escape" then
                 update (ChangeAppMode AppStorage.Game) model
@@ -952,9 +956,20 @@ view model =
                            )
                     )
                 , onClick ToggleMenu
+                , tabindex 0
+                , attribute "aria-label" "Toggle Menu"
+                , attribute "aria-keyshortcuts" "m"
+                , attribute "role" "button"
+                , attribute "aria-pressed"
+                    (if model.menuOpen then
+                        " true"
+
+                     else
+                        "false"
+                    )
                 ]
                 [ getMenuHtml model ]
-            , header []
+            , header [ attribute "aria-label" "Scenario" ]
                 (if game.scenario.id /= 0 then
                     [ span [ class "number" ] [ text (String.fromInt game.scenario.id) ]
                     , span [ class "title" ] [ text game.scenario.title ]
@@ -1012,6 +1027,13 @@ view model =
                                 ""
                            )
                     )
+                , attribute "aria-hidden"
+                    (if model.connectionStatus == Disconnected || model.connectionStatus == Reconnecting then
+                        "false"
+
+                     else
+                        "true"
+                    )
                 ]
                 [ span [] [ text "You are currently offline" ]
                 , a [ onClick Reconnect ] [ text "Reconnect" ]
@@ -1037,7 +1059,13 @@ view model =
                         ]
                     , div
                         [ class "sponsor" ]
-                        [ iframe [ class "sponsor-button", src "https://github.com/sponsors/PurpleKingdomGames/button", title "Sponsor PurpleKingdomGames" ] []
+                        [ iframe
+                            [ class "sponsor-button"
+                            , src "https://github.com/sponsors/PurpleKingdomGames/button"
+                            , title "Sponsor PurpleKingdomGames"
+                            , attribute "aria-hidden" "true"
+                            ]
+                            []
                         ]
                     ]
                 , div
@@ -1075,7 +1103,7 @@ view model =
                                 )
                                     ++ "px"
                         in
-                        [ div [ class "tooltip-wrapper", style "left" x, style "top" y ]
+                        [ div [ class "tooltip-wrapper", attribute "aria-hidden" "true", style "left" x, style "top" y ]
                             [ div [ class "tooltip-text" ]
                                 [ text t ]
                             ]
@@ -1200,10 +1228,23 @@ getNewPieceHtml model game =
 getMenuHtml : Model -> Html.Html Msg
 getMenuHtml model =
     Dom.element "nav"
+        |> Dom.addAttribute
+            (attribute
+                "aria-hidden"
+                (if model.menuOpen then
+                    "false"
+
+                 else
+                    "true"
+                )
+            )
         |> Dom.appendChild
             (Dom.element "ul"
+                |> Dom.addAttribute (attribute "role" "menu")
                 |> Dom.appendChildList
                     ([ Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
                         |> Dom.addAction ( "click", Undo )
                         |> Dom.addClass "section-end"
                         |> Dom.appendText "Undo"
@@ -1214,12 +1255,16 @@ getMenuHtml model =
 
                             else
                                 [ Dom.element "li"
+                                    |> Dom.addAttribute (attribute "role" "menuitem")
+                                    |> Dom.addAttribute (tabindex 0)
                                     |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
                                     |> Dom.appendText "Change Scenario"
                                     |> shortcutHtml [ "⇧", "c" ]
                                 ]
                            )
                         ++ [ Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "menuitem")
+                                |> Dom.addAttribute (tabindex 0)
                                 |> Dom.addAction ( "click", ReloadScenario )
                                 |> Dom.appendText "Reload Scenario"
                                 |> shortcutHtml [ "⇧", "r" ]
@@ -1229,12 +1274,16 @@ getMenuHtml model =
 
                             else
                                 [ Dom.element "li"
+                                    |> Dom.addAttribute (attribute "role" "menuitem")
+                                    |> Dom.addAttribute (tabindex 0)
                                     |> Dom.addAction ( "click", ChangeAppMode PlayerChoiceDialog )
                                     |> Dom.appendText "Change Players"
                                     |> shortcutHtml [ "⇧", "p" ]
                                 ]
                            )
                         ++ [ Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "menuitem")
+                                |> Dom.addAttribute (tabindex 0)
                                 |> Dom.addAction ( "click", ChangeAppMode ConfigDialog )
                                 |> Dom.addClass "section-end"
                                 |> Dom.appendText "Settings"
@@ -1242,6 +1291,7 @@ getMenuHtml model =
                            , Dom.element "li"
                                 |> Dom.appendChild
                                     (Dom.element "a"
+                                        |> Dom.addAttribute (tabindex 0)
                                         |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
                                         |> Dom.addAttribute (target "_new")
                                         |> Dom.appendText "Donate"
@@ -1255,9 +1305,30 @@ getMenuHtml model =
 getDialogForAppMode : Model -> Html.Html Msg
 getDialogForAppMode model =
     Dom.element "div"
+        |> Dom.addAttribute (tabindex 0)
+        |> Dom.addAttribute (attribute "aria-keyshortcuts" "escape")
         |> Dom.addClass "overlay-dialog"
         |> Dom.appendChild
             (Dom.element "div"
+                |> Dom.addAttribute (attribute "role" "dialog")
+                |> Dom.addAttribute
+                    (attribute "aria-label"
+                        (case model.config.appMode of
+                            ScenarioDialog ->
+                                "Choose a new Scenario"
+
+                            ConfigDialog ->
+                                "Change configuration settings"
+
+                            PlayerChoiceDialog ->
+                                "Change character classes"
+
+                            AppStorage.Game ->
+                                ""
+                        )
+                    )
+                |> Dom.addAttribute (tabindex 0)
+                |> Dom.addAttribute (attribute "aria-keyshortcuts" "enter")
                 |> Dom.addClass "dialog"
                 |> (case model.config.appMode of
                         ScenarioDialog ->
@@ -1520,42 +1591,119 @@ getNavHtml model =
                     (Dom.element "ul"
                         |> Dom.appendChildList
                             [ Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "button")
+                                |> Dom.addAttribute (tabindex 0)
+                                |> Dom.addAttribute
+                                    (attribute "aria-pressed"
+                                        (if model.config.gameMode == MovePiece then
+                                            " true"
+
+                                         else
+                                            "false"
+                                        )
+                                    )
                                 |> Dom.addAction ( "click", ChangeGameMode MovePiece )
                                 |> Dom.addClass "move-piece"
                                 |> tooltipHtml "moveAction" "Move Monsters or Players"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == MovePiece)
                                 |> Dom.appendText "Move Piece"
                             , Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "button")
+                                |> Dom.addAttribute (tabindex 0)
+                                |> Dom.addAttribute
+                                    (attribute "aria-pressed"
+                                        (if model.config.gameMode == KillPiece then
+                                            " true"
+
+                                         else
+                                            "false"
+                                        )
+                                    )
                                 |> Dom.addAction ( "click", ChangeGameMode KillPiece )
                                 |> tooltipHtml "removeAction" "Remove Monsters or Players"
                                 |> Dom.addClass "kill-piece"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == KillPiece)
                                 |> Dom.appendText "Kill Piece"
                             , Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "button")
+                                |> Dom.addAttribute (tabindex 0)
+                                |> Dom.addAttribute
+                                    (attribute "aria-pressed"
+                                        (if model.config.gameMode == LootCell then
+                                            " true"
+
+                                         else
+                                            "false"
+                                        )
+                                    )
                                 |> Dom.addAction ( "click", ChangeGameMode LootCell )
                                 |> tooltipHtml "lootAction" "Loot a tile"
                                 |> Dom.addClass "loot"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == LootCell)
                                 |> Dom.appendText "Loot"
                             , Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "button")
+                                |> Dom.addAttribute (tabindex 0)
+                                |> Dom.addAttribute
+                                    (attribute "aria-pressed"
+                                        (if model.config.gameMode == MoveOverlay then
+                                            " true"
+
+                                         else
+                                            "false"
+                                        )
+                                    )
                                 |> Dom.addAction ( "click", ChangeGameMode MoveOverlay )
                                 |> tooltipHtml "moveObstacleAction" "Move Obstacles or Traps"
                                 |> Dom.addClass "move-overlay"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == MoveOverlay)
                                 |> Dom.appendText "Move Overlay"
                             , Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "button")
+                                |> Dom.addAttribute (tabindex 0)
+                                |> Dom.addAttribute
+                                    (attribute "aria-pressed"
+                                        (if model.config.gameMode == DestroyOverlay then
+                                            " true"
+
+                                         else
+                                            "false"
+                                        )
+                                    )
                                 |> Dom.addAction ( "click", ChangeGameMode DestroyOverlay )
                                 |> tooltipHtml "removeObstacleAction" "Remove Obstacles or Traps"
                                 |> Dom.addClass "destroy-overlay"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == DestroyOverlay)
                                 |> Dom.appendText "Destroy Overlay"
                             , Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "button")
+                                |> Dom.addAttribute (tabindex 0)
+                                |> Dom.addAttribute
+                                    (attribute "aria-pressed"
+                                        (if model.config.gameMode == RevealRoom then
+                                            " true"
+
+                                         else
+                                            "false"
+                                        )
+                                    )
                                 |> Dom.addAction ( "click", ChangeGameMode RevealRoom )
                                 |> tooltipHtml "openDoorAction" "Open a door"
                                 |> Dom.addClass "reveal-room"
                                 |> Dom.addClassConditional "active" (model.config.gameMode == RevealRoom)
                                 |> Dom.appendText "Reveal Room"
                             , Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "button")
+                                |> Dom.addAttribute (tabindex 0)
+                                |> Dom.addAttribute
+                                    (attribute "aria-pressed"
+                                        (if model.config.gameMode == AddPiece then
+                                            " true"
+
+                                         else
+                                            "false"
+                                        )
+                                    )
                                 |> Dom.addAction ( "click", ChangeGameMode AddPiece )
                                 |> tooltipHtml "summonAction" "Summon a piece to the board"
                                 |> Dom.addClass "add-piece"
@@ -1611,6 +1759,14 @@ getMapTileHtml visibleRooms roomData =
                     [ img
                         [ src ("/img/map-tiles/" ++ ref ++ ".png")
                         , class ("ref-" ++ ref)
+                        , alt ("Map tile " ++ ref)
+                        , attribute "aria-hidden"
+                            (if any (\r -> r == roomData.ref) visibleRooms then
+                                "false"
+
+                             else
+                                "true"
+                            )
                         ]
                         []
                     ]
@@ -1627,6 +1783,13 @@ getMapTileHtml visibleRooms roomData =
                 )
             , style "top" (String.fromInt yPx ++ "px")
             , style "left" (String.fromInt xPx ++ "px")
+            , attribute "aria-hidden"
+                (if any (\r -> r == roomData.ref) visibleRooms then
+                    "true"
+
+                 else
+                    "false"
+                )
             ]
             (case roomData.ref of
                 Empty ->
@@ -1654,6 +1817,7 @@ getMapTileHtml visibleRooms roomData =
                     [ img
                         [ src ("/img/map-tiles/" ++ overlayPrefix ++ "-outline.png")
                         , class ("ref-" ++ ref)
+                        , alt ("The outline of map tile " ++ ref)
                         ]
                         []
                     ]
@@ -1814,8 +1978,59 @@ pieceToHtml model coords piece =
             , dragEnded = MoveCanceled
             , dropped = MoveCompleted
             }
+
+        label =
+            case piece.ref of
+                Player p ->
+                    Maybe.withDefault "" (characterToString p)
+                        |> String.replace "-" " "
+
+                AI t ->
+                    case t of
+                        Enemy m ->
+                            (case m.monster of
+                                NormalType _ ->
+                                    case m.level of
+                                        Elite ->
+                                            "Elite"
+
+                                        Normal ->
+                                            "Normal"
+
+                                        Monster.None ->
+                                            ""
+
+                                BossType _ ->
+                                    "Boss"
+                            )
+                                ++ " "
+                                ++ (Maybe.withDefault "" (monsterTypeToString m.monster)
+                                        |> String.replace "-" " "
+                                   )
+                                ++ (if m.id > 0 then
+                                        " (" ++ String.fromInt m.id ++ ")"
+
+                                    else
+                                        ""
+                                   )
+
+                        Summons i ->
+                            "Summons Number " ++ String.fromInt i
+
+                Game.None ->
+                    "None"
     in
     Dom.element "div"
+        |> Dom.addAttribute
+            (attribute "aria-label"
+                (case coords of
+                    Just ( x, y ) ->
+                        label ++ " at " ++ String.fromInt x ++ ", " ++ String.fromInt y
+
+                    Nothing ->
+                        "Add New " ++ label
+                )
+            )
         |> Dom.addClass (getPieceType piece.ref)
         |> Dom.addClass (getPieceName piece.ref)
         |> (case piece.ref of
@@ -1828,17 +2043,19 @@ pieceToHtml model coords piece =
                         Dom.addClass "hex-mask" e
                             |> Dom.appendChild
                                 (Dom.element "img"
+                                    |> Dom.addAttribute (alt label)
                                     |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ player ++ ".png"))
                                 )
 
                 AI t ->
                     case t of
                         Enemy m ->
-                            enemyToHtml m
+                            enemyToHtml m label
 
                         Summons i ->
                             Dom.appendChildList
                                 [ Dom.element "img"
+                                    |> Dom.addAttribute (alt label)
                                     |> Dom.addAttribute (attribute "src" "/img/characters/summons.png")
                                     |> Dom.addAttribute (attribute "draggable" "false")
                                 , Dom.element "span" |> Dom.appendText (String.fromInt i)
@@ -1861,8 +2078,8 @@ pieceToHtml model coords piece =
            )
 
 
-enemyToHtml : Monster -> Element msg -> Element msg
-enemyToHtml monster element =
+enemyToHtml : Monster -> String -> Element msg -> Element msg
+enemyToHtml monster altText element =
     let
         class =
             case monster.monster of
@@ -1892,6 +2109,7 @@ enemyToHtml monster element =
                             ++ ".png"
                         )
                     )
+                |> Dom.addAttribute (alt altText)
             , Dom.element "span"
                 |> Dom.appendText
                     (if monster.id == 0 then
@@ -1915,6 +2133,16 @@ overlayToHtml model coords overlay =
             }
     in
     Dom.element "div"
+        |> Dom.addAttribute
+            (attribute "aria-label"
+                (case coords of
+                    Just ( x, y ) ->
+                        getOverlayLabel overlay.ref ++ " at " ++ String.fromInt x ++ ", " ++ String.fromInt y
+
+                    Nothing ->
+                        "Add new " ++ getOverlayLabel overlay.ref
+                )
+            )
         |> Dom.addClass "overlay"
         |> Dom.addClass
             (case overlay.ref of
@@ -1998,6 +2226,7 @@ overlayToHtml model coords overlay =
             )
         |> Dom.appendChild
             (Dom.element "img"
+                |> Dom.addAttribute (alt (getOverlayLabel overlay.ref))
                 |> Dom.addAttribute (attribute "src" (getOverlayImageName overlay coords))
                 |> Dom.addAttribute (attribute "draggable" "false")
             )
@@ -2206,25 +2435,35 @@ getSortOrderForOverlay overlay =
 
 shortcutHtml : List String -> Element msg -> Element msg
 shortcutHtml keys element =
-    Dom.appendChild
-        (Dom.element "span"
-            |> Dom.addClass "shortcut"
-            |> Dom.appendChildList
-                (map
-                    (\k ->
-                        Dom.element "span"
-                            |> Dom.addClass "key"
-                            |> Dom.appendText k
-                    )
-                    keys
+    element
+        |> Dom.addAttribute
+            (attribute "aria-keyshortcuts"
+                (List.intersperse "+" keys
+                    |> List.foldr (++) ""
+                    |> String.replace "⇧" "shift"
+                    |> String.toLower
                 )
-        )
-        element
+            )
+        |> Dom.addAttribute (attribute "aria-hidden" "true")
+        |> Dom.appendChild
+            (Dom.element "span"
+                |> Dom.addClass "shortcut"
+                |> Dom.appendChildList
+                    (map
+                        (\k ->
+                            Dom.element "span"
+                                |> Dom.addClass "key"
+                                |> Dom.appendText k
+                        )
+                        keys
+                    )
+            )
 
 
 tooltipHtml : String -> String -> Element Msg -> Element Msg
 tooltipHtml identifier tooltip element =
     element
+        |> Dom.addAttribute (attribute "aria-label" tooltip)
         |> Dom.setId identifier
         |> Dom.addAction ( "pointerover", InitTooltip identifier tooltip )
         |> Dom.addAction ( "pointerout", ResetTooltip )
