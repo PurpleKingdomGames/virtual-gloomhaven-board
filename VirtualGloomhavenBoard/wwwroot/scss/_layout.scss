@@ -48,6 +48,7 @@ html {
             background-image: url('/img/plank.jpg');
             border-bottom: 1px solid black;
             box-shadow: 0 5px 40px 0 black;
+            background-size: contain;
             z-index: 4;
             height: 3.4rem;
             top: 0;
@@ -497,6 +498,7 @@ html {
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
             font-size: 0.75rem;
             background-image: url("/img/plank.jpg");
+            background-size: contain;
             border-top: 1px solid black;
             box-shadow: 0 -5px 40px 0 black;
             z-index: 4;

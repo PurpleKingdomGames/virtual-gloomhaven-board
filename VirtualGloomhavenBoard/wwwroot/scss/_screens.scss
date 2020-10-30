@@ -142,8 +142,61 @@
 
 }
 
-// Large devices (desktops, 992px and up)
-@media (max-width: 1199px) {
+// 4k+
+@media (min-width: 2800px) {
+    :root {
+        font-size: 1.5rem;
+    }
 
+    html {
+        .content {
+            .header {
+                .menu {
+                    &:before {
+                        transform: scale(1.5);
+                        transform-origin: top;
+                    }
+                }
+            }
+
+            .main {
+                .action-list {
+                    width: 6.2rem;
+                    transform: scale(1.25);
+                    transform-origin: top left;
+                }
+
+                .board-wrapper {
+                    margin-left: 8rem;
+                    transform: scale(1.25);
+                    transform-origin: top left;
+                }
+            }
+
+            footer {
+                .pkg {
+                    .copy-wrapper {
+                        .sponsor {
+                            .sponsor-button {
+                                transform: scale(0.85);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .summons {
+            span {
+                font-size: 0.75rem;
+            }
+        }
+
+        .monster {
+            span {
+                font-size: 0.75rem;
+            }
+        }
+    }
 }
 
