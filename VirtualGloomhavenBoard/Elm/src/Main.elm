@@ -1289,9 +1289,10 @@ getMenuHtml model =
                                 |> Dom.appendText "Settings"
                                 |> shortcutHtml [ "⇧", "s" ]
                            , Dom.element "li"
+                                |> Dom.addAttribute (attribute "role" "menuitem")
+                                |> Dom.addAttribute (tabindex 0)
                                 |> Dom.appendChild
                                     (Dom.element "a"
-                                        |> Dom.addAttribute (tabindex 0)
                                         |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
                                         |> Dom.addAttribute (target "_new")
                                         |> Dom.appendText "Donate"
