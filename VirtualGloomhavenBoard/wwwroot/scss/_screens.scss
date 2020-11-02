@@ -1,6 +1,8 @@
-
-// Extra small devices (portrait phones, less than 576px)
-@media (max-width: 575px) {
+@media
+    // Extra small devices (portrait phones, less than 576px)
+    (max-width: 575px),
+    // Small devices (landscape phones, 576px and up)
+    (max-width: 767px) {
     :root {
         font-size: 0.9rem;
     }
@@ -131,11 +133,6 @@
     }
  }
 
-
-// Small devices (landscape phones, 576px and up)
-@media (max-width: 767px) {
-
-}
 
 // Medium devices (tablets, 768px and up)
 @media (max-width: 991px) {
