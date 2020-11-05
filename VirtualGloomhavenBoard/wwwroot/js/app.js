@@ -114,6 +114,23 @@
             document.exitFullscreen();
     });
 
+    app.ports.getCellFromPoint.subscribe((args) => {
+        let elem = document.elementFromPoint(args[0], args[1])
+        let i = 0
+
+        while (i++ != 100 && elem != null && elem.className.substring(0, 7) != 'hexagon')
+            elem = elem.parentElement
+
+        if (elem == null || elem.className.substring(0, 7) != 'hexagon')
+            return;
+
+        app.ports.onCellFromPoint.send([
+            parseInt(elem.dataset.cellX),
+            parseInt(elem.dataset.cellY),
+            args[2]
+        ])
+    })
+
     document.addEventListener('paste', (event) => {
         app.ports.onPaste.send((event.clipboardData || window.clipboardData).getData('text'));
         event.preventDefault();

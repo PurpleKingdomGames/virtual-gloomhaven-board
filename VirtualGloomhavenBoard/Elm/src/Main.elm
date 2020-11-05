@@ -11,12 +11,13 @@ import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibility
 import Character exposing (CharacterClass(..), characterToString)
 import Dict
 import Dom exposing (Element)
-import Dom.DragDrop as DragDrop
+import Dom.DragDrop as DragDrop exposing (State)
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
 import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, src, style, tabindex, target, title, value)
 import Html.Events exposing (on, onClick)
+import Html.Events.Extra.Touch as Touch
 import Http exposing (Error)
 import Json.Decode as Decode
 import List exposing (all, any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
@@ -31,6 +32,12 @@ import Task
 
 
 port onPaste : (String -> msg) -> Sub msg
+
+
+port getCellFromPoint : ( Float, Float, Bool ) -> Cmd msg
+
+
+port onCellFromPoint : (( Int, Int, Bool ) -> msg) -> Sub msg
 
 
 type alias Model =
@@ -95,6 +102,11 @@ type Msg
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
     | MoveCompleted MoveablePiece ( Int, Int )
+    | TouchStart MoveablePiece
+    | TouchMove ( Float, Float )
+    | TouchCanceled
+    | TouchEnd ( Float, Float )
+    | CellFromPoint ( Int, Int, Bool )
     | GameStateUpdated Game.GameState
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
@@ -330,6 +342,10 @@ update msg model =
 
         MoveTargetChanged coords ->
             let
+                ( x, y ) =
+                    coords
+            in
+            let
                 newDraggable =
                     case model.currentDraggable of
                         Just m ->
@@ -399,6 +415,32 @@ update msg model =
                             oldGame
             in
             ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = game, currentDraggable = Nothing }, pushGameState model game.state True )
+
+        TouchStart piece ->
+            update (MoveStarted piece) model
+
+        TouchCanceled ->
+            update MoveCanceled model
+
+        TouchMove ( x, y ) ->
+            ( model, getCellFromPoint ( x, y, False ) )
+
+        TouchEnd ( x, y ) ->
+            ( model, getCellFromPoint ( x, y, True ) )
+
+        CellFromPoint ( x, y, endTouch ) ->
+            if endTouch then
+                case model.currentDraggable of
+                    Just d ->
+                        update
+                            (MoveCompleted d ( x, y ))
+                            model
+
+                    Nothing ->
+                        ( model, Cmd.none )
+
+            else
+                update (MoveTargetChanged ( x, y )) model
 
         RemoveOverlay overlay ->
             let
@@ -939,6 +981,7 @@ view model =
                    )
             )
         , id "content"
+        , Touch.onCancel (\_ -> TouchCanceled)
         ]
         (let
             game =
@@ -1121,6 +1164,7 @@ subscriptions _ =
         , onKeyUp (Decode.map KeyUp keyDecoder)
         , onPaste Paste
         , onVisibilityChange VisibilityChanged
+        , onCellFromPoint CellFromPoint
         ]
 
 
@@ -1834,14 +1878,6 @@ getBoardHtml model game y row =
 getCellHtml : Model -> Game -> Int -> Int -> Cell -> Html.Html Msg
 getCellHtml model game y x cellValue =
     let
-        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
-        dragDropMessages =
-            { dragStarted = MoveStarted
-            , dropTargetChanged = MoveTargetChanged
-            , dragEnded = MoveCanceled
-            , dropped = MoveCompleted
-            }
-
         overlaysForCell =
             List.filter (filterOverlaysForCoord x y) game.state.overlays
 
@@ -1849,6 +1885,8 @@ getCellHtml model game y x cellValue =
         cellElement =
             Dom.element "div"
                 |> Dom.addClass "hexagon"
+                |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
+                |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
                 -- Everything except coins
                 |> Dom.appendChildList
                     (overlaysForCell
@@ -1931,7 +1969,7 @@ getCellHtml model game y x cellValue =
                 |> Dom.addClass "cell"
                 |> Dom.appendChild
                     (if cellValue.passable == True then
-                        DragDrop.makeDroppable model.dragDropState ( x, y ) dragDropMessages cellElement
+                        makeDroppable ( x, y ) model.currentDraggable model.dragDropState cellElement
 
                      else
                         cellElement
@@ -1972,14 +2010,6 @@ getPieceForCoord x y pieces =
 pieceToHtml : Model -> Maybe ( Int, Int ) -> Piece -> Element Msg
 pieceToHtml model coords piece =
     let
-        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
-        dragDropMessages =
-            { dragStarted = MoveStarted
-            , dropTargetChanged = MoveTargetChanged
-            , dragEnded = MoveCanceled
-            , dropped = MoveCompleted
-            }
-
         label =
             case piece.ref of
                 Player p ->
@@ -2066,7 +2096,7 @@ pieceToHtml model coords piece =
                     Dom.addClass "none"
            )
         |> (if (model.config.gameMode == MovePiece && coords /= Nothing) || (model.config.gameMode == AddPiece && coords == Nothing) then
-                DragDrop.makeDraggable model.dragDropState (MoveablePiece (PieceType piece) coords) dragDropMessages
+                makeDraggable (PieceType piece) coords model.dragDropState
 
             else
                 Dom.addAttribute (attribute "draggable" "false")
@@ -2124,15 +2154,6 @@ enemyToHtml monster altText element =
 
 overlayToHtml : Model -> Maybe ( Int, Int ) -> BoardOverlay -> Element Msg
 overlayToHtml model coords overlay =
-    let
-        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
-        dragDropMessages =
-            { dragStarted = MoveStarted
-            , dropTargetChanged = MoveTargetChanged
-            , dragEnded = MoveCanceled
-            , dropped = MoveCompleted
-            }
-    in
     Dom.element "div"
         |> Dom.addAttribute
             (attribute "aria-label"
@@ -2244,10 +2265,10 @@ overlayToHtml model coords overlay =
         |> (if (model.config.gameMode == MoveOverlay && coords /= Nothing) || (model.config.gameMode == AddPiece && coords == Nothing) then
                 case overlay.ref of
                     Obstacle _ ->
-                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay Nothing) coords) dragDropMessages
+                        makeDraggable (OverlayType overlay Nothing) coords model.dragDropState
 
                     Trap _ ->
-                        DragDrop.makeDraggable model.dragDropState (MoveablePiece (OverlayType overlay Nothing) coords) dragDropMessages
+                        makeDraggable (OverlayType overlay Nothing) coords model.dragDropState
 
                     _ ->
                         Dom.addAttribute (attribute "draggable" "false")
@@ -2503,3 +2524,56 @@ isValidRoomCode roomCode =
 keyDecoder : Decode.Decoder String
 keyDecoder =
     Decode.field "key" Decode.string |> Decode.andThen (\s -> Decode.succeed (String.toLower s))
+
+
+makeDraggable : MoveablePieceType -> Maybe ( Int, Int ) -> DragDrop.State MoveablePiece ( Int, Int ) -> Element Msg -> Element Msg
+makeDraggable piece coords dragDropState element =
+    let
+        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
+        dragDropMessages =
+            { dragStarted = MoveStarted
+            , dropTargetChanged = MoveTargetChanged
+            , dragEnded = MoveCanceled
+            , dropped = MoveCompleted
+            }
+    in
+    element
+        |> DragDrop.makeDraggable dragDropState (MoveablePiece piece coords) dragDropMessages
+        |> Dom.addAttribute (Touch.onStart (\_ -> TouchStart (MoveablePiece piece coords)))
+
+
+makeDroppable : ( Int, Int ) -> Maybe MoveablePiece -> DragDrop.State MoveablePiece ( Int, Int ) -> Element Msg -> Element Msg
+makeDroppable coords piece dragDropState element =
+    let
+        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
+        dragDropMessages =
+            { dragStarted = MoveStarted
+            , dropTargetChanged = MoveTargetChanged
+            , dragEnded = MoveCanceled
+            , dropped = MoveCompleted
+            }
+    in
+    element
+        |> DragDrop.makeDroppable dragDropState coords dragDropMessages
+        |> Dom.addAttribute
+            (Touch.onMove
+                (\e ->
+                    case head e.touches of
+                        Just touch ->
+                            TouchMove touch.clientPos
+
+                        Nothing ->
+                            NoOp
+                )
+            )
+        |> Dom.addAttribute
+            (Touch.onEnd
+                (\e ->
+                    case head e.changedTouches of
+                        Just touch ->
+                            TouchEnd touch.clientPos
+
+                        Nothing ->
+                            NoOp
+                )
+            )
