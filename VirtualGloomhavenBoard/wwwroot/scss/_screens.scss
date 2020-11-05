@@ -63,6 +63,12 @@
                                     &:not(:first-child) {
                                         margin: -1.3rem 0;
                                     }
+
+                                    .summons {
+                                        span {
+                                            line-height: 3.5rem;
+                                        }
+                                    }
                                 }
                             }
                         }

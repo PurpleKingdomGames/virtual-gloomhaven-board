@@ -2540,21 +2540,6 @@ makeDraggable piece coords dragDropState element =
     element
         |> DragDrop.makeDraggable dragDropState (MoveablePiece piece coords) dragDropMessages
         |> Dom.addAttribute (Touch.onStart (\_ -> TouchStart (MoveablePiece piece coords)))
-
-
-makeDroppable : ( Int, Int ) -> Maybe MoveablePiece -> DragDrop.State MoveablePiece ( Int, Int ) -> Element Msg -> Element Msg
-makeDroppable coords piece dragDropState element =
-    let
-        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
-        dragDropMessages =
-            { dragStarted = MoveStarted
-            , dropTargetChanged = MoveTargetChanged
-            , dragEnded = MoveCanceled
-            , dropped = MoveCompleted
-            }
-    in
-    element
-        |> DragDrop.makeDroppable dragDropState coords dragDropMessages
         |> Dom.addAttribute
             (Touch.onMove
                 (\e ->
@@ -2577,3 +2562,18 @@ makeDroppable coords piece dragDropState element =
                             NoOp
                 )
             )
+
+
+makeDroppable : ( Int, Int ) -> Maybe MoveablePiece -> DragDrop.State MoveablePiece ( Int, Int ) -> Element Msg -> Element Msg
+makeDroppable coords piece dragDropState element =
+    let
+        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
+        dragDropMessages =
+            { dragStarted = MoveStarted
+            , dropTargetChanged = MoveTargetChanged
+            , dragEnded = MoveCanceled
+            , dropped = MoveCompleted
+            }
+    in
+    element
+        |> DragDrop.makeDroppable dragDropState coords dragDropMessages

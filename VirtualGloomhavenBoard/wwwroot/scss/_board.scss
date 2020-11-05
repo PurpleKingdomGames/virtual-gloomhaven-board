@@ -340,6 +340,7 @@ $tiles:
                     height: 90px;
                     position: relative;
                     left: -7px;
+                    touch-action: none;
 
                     > div {
                         position: absolute;
