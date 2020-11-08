@@ -203,10 +203,11 @@ init ( oldState, maybeOverrides, seed ) =
         forceScenarioRefresh =
             case overrides.initPlayers of
                 Nothing ->
-                    False
+                    List.length gs.players == 0
 
                 Just p ->
-                    List.length p > 0 && p /= gs.players
+                    (List.length p > 0 && p /= gs.players)
+                        || (List.length gs.players == 0)
 
         initGameState =
             { gs
