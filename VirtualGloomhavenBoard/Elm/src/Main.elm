@@ -18,6 +18,7 @@ import Html exposing (a, div, footer, header, iframe, img, span, text)
 import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, src, style, tabindex, target, title, value)
 import Html.Events exposing (on, onClick)
 import Html.Events.Extra.Touch as Touch
+import Html.Lazy exposing (lazy)
 import Http exposing (Error)
 import Json.Decode as Decode
 import List exposing (all, any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
@@ -1012,7 +1013,7 @@ view model =
                         "false"
                     )
                 ]
-                [ getMenuHtml model ]
+                [ lazy getMenuHtml model ]
             , header [ attribute "aria-label" "Scenario" ]
                 (if game.scenario.id /= 0 then
                     [ span [ class "number" ] [ text (String.fromInt game.scenario.id) ]
@@ -1058,7 +1059,7 @@ view model =
                 ]
             , div [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
-                , div [ class "mapTiles" ] (map (getMapTileHtml game.state.visibleRooms) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) game.roomData))
+                , div [ class "mapTiles" ] (map (lazy (getMapTileHtml game.state.visibleRooms)) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) game.roomData))
                 , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
                 ]
             , div
@@ -1125,7 +1126,7 @@ view model =
                         []
 
                     _ ->
-                        [ getDialogForAppMode model ]
+                        [ lazy getDialogForAppMode model ]
                )
             ++ (case model.tooltipTarget of
                     Nothing ->
@@ -1181,7 +1182,7 @@ getNewPieceHtml model game =
                     (Dom.element "ul"
                         |> Dom.appendChild
                             (Dom.element "li"
-                                |> Dom.appendChild
+                                |> Dom.setChildListWithKeys
                                     (let
                                         maxSummons =
                                             filterMap
@@ -1206,18 +1207,18 @@ getNewPieceHtml model game =
                                                 Nothing ->
                                                     1
                                      in
-                                     pieceToHtml model Nothing (Piece (AI (Summons nextId)) 0 0)
+                                     [ pieceToHtml model Nothing (Piece (AI (Summons nextId)) 0 0) ]
                                     )
                             )
                         |> Dom.appendChild
                             (Dom.element "li"
-                                |> Dom.appendChild
-                                    (overlayToHtml model Nothing (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]))
+                                |> Dom.setChildListWithKeys
+                                    [ overlayToHtml model Nothing (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]) ]
                             )
                         |> Dom.appendChild
                             (Dom.element "li"
-                                |> Dom.appendChild
-                                    (overlayToHtml model Nothing (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]))
+                                |> Dom.setChildListWithKeys
+                                    [ overlayToHtml model Nothing (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]) ]
                             )
                         |> Dom.appendChildList
                             (let
@@ -1238,7 +1239,7 @@ getNewPieceHtml model game =
                                 |> List.map
                                     (\p ->
                                         Dom.element "li"
-                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (Player p) 0 0))
+                                            |> Dom.setChildListWithKeys [ pieceToHtml model Nothing (Piece (Player p) 0 0) ]
                                     )
                             )
                         |> Dom.appendChildList
@@ -1251,12 +1252,12 @@ getNewPieceHtml model game =
                                 |> List.map
                                     (\k ->
                                         (Dom.element "li"
-                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0))
+                                            |> Dom.setChildListWithKeys [ pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0) ]
                                         )
                                             :: (case k of
                                                     NormalType _ ->
                                                         [ Dom.element "li"
-                                                            |> Dom.appendChild (pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0))
+                                                            |> Dom.setChildListWithKeys [ pieceToHtml model Nothing (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0) ]
                                                         ]
 
                                                     _ ->
@@ -1889,8 +1890,8 @@ getCellHtml model game y x cellValue =
                 |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
                 |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
                 -- Everything except coins
-                |> Dom.appendChildList
-                    (overlaysForCell
+                |> Dom.setChildListWithKeys
+                    ((overlaysForCell
                         |> sortWith
                             (\a b ->
                                 compare (getSortOrderForOverlay a.ref) (getSortOrderForOverlay b.ref)
@@ -1910,56 +1911,55 @@ getCellHtml model game y x cellValue =
                                         True
                             )
                         |> List.map (overlayToHtml model (Just ( x, y )))
-                    )
-                -- Players / Monsters / Summons
-                |> Dom.appendChildList
-                    (case getPieceForCoord x y game.state.pieces of
-                        Nothing ->
-                            []
+                     )
+                        ++ -- Players / Monsters / Summons
+                           (case getPieceForCoord x y game.state.pieces of
+                                Nothing ->
+                                    []
 
-                        Just p ->
-                            [ pieceToHtml model (Just ( x, y )) p ]
-                    )
-                -- Coins
-                |> Dom.appendChildList
-                    (overlaysForCell
-                        |> List.filter
-                            (\o ->
-                                case o.ref of
-                                    Treasure t ->
-                                        case t of
-                                            Chest _ ->
-                                                False
+                                Just p ->
+                                    [ pieceToHtml model (Just ( x, y )) p ]
+                           )
+                        ++ -- Coins
+                           (overlaysForCell
+                                |> List.filter
+                                    (\o ->
+                                        case o.ref of
+                                            Treasure t ->
+                                                case t of
+                                                    Chest _ ->
+                                                        False
+
+                                                    _ ->
+                                                        True
 
                                             _ ->
-                                                True
+                                                False
+                                    )
+                                |> List.map (overlayToHtml model (Just ( x, y )))
+                           )
+                        ++ -- The current draggable piece
+                           (case model.currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        PieceType p ->
+                                            if p.x == x && p.y == y then
+                                                [ pieceToHtml model (Just ( x, y )) p ]
 
-                                    _ ->
-                                        False
-                            )
-                        |> List.map (overlayToHtml model (Just ( x, y )))
+                                            else
+                                                []
+
+                                        OverlayType o _ ->
+                                            if any (\c -> c == ( x, y )) o.cells then
+                                                [ overlayToHtml model (Just ( x, y )) o ]
+
+                                            else
+                                                []
+
+                                Nothing ->
+                                    []
+                           )
                     )
-                -- The current draggable piece
-                |> (case model.currentDraggable of
-                        Just m ->
-                            case m.ref of
-                                PieceType p ->
-                                    if p.x == x && p.y == y then
-                                        Dom.appendChild (pieceToHtml model (Just ( x, y )) p)
-
-                                    else
-                                        \e -> e
-
-                                OverlayType o _ ->
-                                    if any (\c -> c == ( x, y )) o.cells then
-                                        Dom.appendChild (overlayToHtml model (Just ( x, y )) o)
-
-                                    else
-                                        \e -> e
-
-                        Nothing ->
-                            \e -> e
-                   )
                 |> addActionsForCell model.config.gameMode ( x, y ) overlaysForCell
     in
     Dom.element "div"
@@ -2008,7 +2008,7 @@ getPieceForCoord x y pieces =
         |> head
 
 
-pieceToHtml : Model -> Maybe ( Int, Int ) -> Piece -> Element Msg
+pieceToHtml : Model -> Maybe ( Int, Int ) -> Piece -> ( String, Element Msg )
 pieceToHtml model coords piece =
     let
         label =
@@ -2052,7 +2052,8 @@ pieceToHtml model coords piece =
                 Game.None ->
                     "None"
     in
-    Dom.element "div"
+    ( label
+    , Dom.element "div"
         |> Dom.addAttribute
             (attribute "aria-label"
                 (case coords of
@@ -2108,6 +2109,7 @@ pieceToHtml model coords piece =
             else
                 \e -> e
            )
+    )
 
 
 enemyToHtml : Monster -> String -> Element msg -> Element msg
@@ -2153,19 +2155,21 @@ enemyToHtml monster altText element =
             ]
 
 
-overlayToHtml : Model -> Maybe ( Int, Int ) -> BoardOverlay -> Element Msg
+overlayToHtml : Model -> Maybe ( Int, Int ) -> BoardOverlay -> ( String, Element Msg )
 overlayToHtml model coords overlay =
-    Dom.element "div"
-        |> Dom.addAttribute
-            (attribute "aria-label"
-                (case coords of
-                    Just ( x, y ) ->
-                        getOverlayLabel overlay.ref ++ " at " ++ String.fromInt x ++ ", " ++ String.fromInt y
+    let
+        label =
+            case coords of
+                Just ( x, y ) ->
+                    getOverlayLabel overlay.ref ++ " at " ++ String.fromInt x ++ ", " ++ String.fromInt y
 
-                    Nothing ->
-                        "Add new " ++ getOverlayLabel overlay.ref
-                )
-            )
+                Nothing ->
+                    "Add new " ++ getOverlayLabel overlay.ref
+    in
+    ( label
+    , Dom.element "div"
+        |> Dom.addAttribute
+            (attribute "aria-label" label)
         |> Dom.addClass "overlay"
         |> Dom.addClass
             (case overlay.ref of
@@ -2289,6 +2293,7 @@ overlayToHtml model coords overlay =
                 _ ->
                     \e -> e
            )
+    )
 
 
 getOverlayImageName : BoardOverlay -> Maybe ( Int, Int ) -> String

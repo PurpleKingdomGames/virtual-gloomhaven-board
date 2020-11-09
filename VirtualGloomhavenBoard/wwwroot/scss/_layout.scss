@@ -408,6 +408,15 @@ html {
                             li {
                                 display: inline-block;
                                 padding: 5px 10px;
+
+                                [draggable] {
+                                    transition: opacity 0.2s;
+
+                                    &.being-dragged {
+                                        visibility: visible;
+                                        opacity: 0.5;
+                                    }
+                                }
                             }
                         }
                     }
