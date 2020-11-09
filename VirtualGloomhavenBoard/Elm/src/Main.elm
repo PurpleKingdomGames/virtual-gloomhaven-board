@@ -65,6 +65,17 @@ type alias Model =
     }
 
 
+type alias HeaderModel =
+    { scenarioId : Int
+    , scenarioText : String
+    , roomCode : Maybe String
+    , showRoomCode : Bool
+    , lockScenario : Bool
+    , lockPlayers : Bool
+    , menuOpen : Bool
+    }
+
+
 type alias TransientClientSettings =
     { roomCode : ( String, String )
     , showRoomCode : Bool
@@ -989,58 +1000,17 @@ view model =
             game =
                 model.game
          in
-         [ div [ class "header" ]
-            [ div
-                [ class
-                    ("menu"
-                        ++ (if model.menuOpen then
-                                " show"
-
-                            else
-                                ""
-                           )
-                    )
-                , onClick ToggleMenu
-                , tabindex 0
-                , attribute "aria-label" "Toggle Menu"
-                , attribute "aria-keyshortcuts" "m"
-                , attribute "role" "button"
-                , attribute "aria-pressed"
-                    (if model.menuOpen then
-                        " true"
-
-                     else
-                        "false"
-                    )
-                ]
-                [ lazy getMenuHtml model ]
-            , header [ attribute "aria-label" "Scenario" ]
-                (if game.scenario.id /= 0 then
-                    [ span [ class "number" ] [ text (String.fromInt game.scenario.id) ]
-                    , span [ class "title" ] [ text game.scenario.title ]
-                    ]
-
-                 else
-                    []
-                )
-            , div
-                [ class
-                    "roomCode"
-                ]
-                (case model.config.roomCode of
-                    Nothing ->
-                        []
-
-                    Just c ->
-                        if model.config.showRoomCode then
-                            [ span [] [ text "Room Code" ]
-                            , span [] [ text c ]
-                            ]
-
-                        else
-                            []
-                )
-            ]
+         [ lazy
+            getHeaderHtml
+            (HeaderModel
+                model.game.scenario.id
+                model.game.scenario.title
+                model.config.roomCode
+                model.config.showRoomCode
+                model.lockScenario
+                model.lockPlayers
+                model.menuOpen
+            )
          , div [ class "main" ]
             [ div
                 [ class
@@ -1062,64 +1032,9 @@ view model =
                 , div [ class "mapTiles" ] (map (lazy (getMapTileHtml game.state.visibleRooms)) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) game.roomData))
                 , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
                 ]
-            , div
-                [ class
-                    ("connectionStatus"
-                        ++ (if model.connectionStatus == Disconnected || model.connectionStatus == Reconnecting then
-                                " show"
-
-                            else
-                                ""
-                           )
-                    )
-                , attribute "aria-hidden"
-                    (if model.connectionStatus == Disconnected || model.connectionStatus == Reconnecting then
-                        "false"
-
-                     else
-                        "true"
-                    )
-                ]
-                [ span [] [ text "You are currently offline" ]
-                , a [ onClick Reconnect ] [ text "Reconnect" ]
-                ]
+            , lazy getConnectionStatusHtml model.connectionStatus
             ]
-         , footer []
-            [ div [ class "credits" ]
-                [ span [ class "gloomCopy" ]
-                    [ text "Gloomhaven and all related properties and images are owned by "
-                    , a [ href "http://www.cephalofair.com/" ] [ text "Cephalofair Games" ]
-                    ]
-                , span [ class "any2CardCopy" ]
-                    [ text "Additional card scans courtesy of "
-                    , a [ href "https://github.com/any2cards/gloomhaven" ] [ text "Any2Cards" ]
-                    ]
-                ]
-            , div [ class "pkg" ]
-                [ div
-                    [ class "copy-wrapper" ]
-                    [ span [ class "pkgCopy" ]
-                        [ text "Developed by "
-                        , a [ href "https://purplekingdomgames.com/" ] [ text "Purple Kingdom Games" ]
-                        ]
-                    , div
-                        [ class "sponsor" ]
-                        [ iframe
-                            [ class "sponsor-button"
-                            , src "https://github.com/sponsors/PurpleKingdomGames/button"
-                            , title "Sponsor PurpleKingdomGames"
-                            , attribute "aria-hidden" "true"
-                            ]
-                            []
-                        ]
-                    ]
-                , div
-                    [ class "version" ]
-                    [ a [ target "_new", href "https://github.com/PurpleKingdomGames/virtual-gloomhaven-board/issues/new/choose" ] [ text "Report a bug" ]
-                    , span [] [ text ("Version " ++ version) ]
-                    ]
-                ]
-            ]
+         , lazy getFooterHtml version
          ]
             ++ (case config.appMode of
                     AppStorage.Game ->
@@ -1167,6 +1082,128 @@ subscriptions _ =
         , onPaste Paste
         , onVisibilityChange VisibilityChanged
         , onCellFromPoint CellFromPoint
+        ]
+
+
+getHeaderHtml : HeaderModel -> Html.Html Msg
+getHeaderHtml model =
+    div
+        [ class "header" ]
+        [ div
+            [ class
+                ("menu"
+                    ++ (if model.menuOpen then
+                            " show"
+
+                        else
+                            ""
+                       )
+                )
+            , onClick ToggleMenu
+            , tabindex 0
+            , attribute "aria-label" "Toggle Menu"
+            , attribute "aria-keyshortcuts" "m"
+            , attribute "role" "button"
+            , attribute "aria-pressed"
+                (if model.menuOpen then
+                    " true"
+
+                 else
+                    "false"
+                )
+            ]
+            [ getMenuHtml model.lockScenario model.lockPlayers model.menuOpen ]
+        , header [ attribute "aria-label" "Scenario" ]
+            (if model.scenarioId /= 0 then
+                [ span [ class "number" ] [ text (String.fromInt model.scenarioId) ]
+                , span [ class "title" ] [ text model.scenarioText ]
+                ]
+
+             else
+                []
+            )
+        , div
+            [ class
+                "roomCode"
+            ]
+            (case model.roomCode of
+                Nothing ->
+                    []
+
+                Just c ->
+                    if model.showRoomCode then
+                        [ span [] [ text "Room Code" ]
+                        , span [] [ text c ]
+                        ]
+
+                    else
+                        []
+            )
+        ]
+
+
+getConnectionStatusHtml : ConnectionStatus -> Html.Html Msg
+getConnectionStatusHtml connectionStatus =
+    div
+        [ class
+            ("connectionStatus"
+                ++ (if connectionStatus == Disconnected || connectionStatus == Reconnecting then
+                        " show"
+
+                    else
+                        ""
+                   )
+            )
+        , attribute "aria-hidden"
+            (if connectionStatus == Disconnected || connectionStatus == Reconnecting then
+                "false"
+
+             else
+                "true"
+            )
+        ]
+        [ span [] [ text "You are currently offline" ]
+        , a [ onClick Reconnect ] [ text "Reconnect" ]
+        ]
+
+
+getFooterHtml : String -> Html.Html Msg
+getFooterHtml v =
+    footer []
+        [ div [ class "credits" ]
+            [ span [ class "gloomCopy" ]
+                [ text "Gloomhaven and all related properties and images are owned by "
+                , a [ href "http://www.cephalofair.com/" ] [ text "Cephalofair Games" ]
+                ]
+            , span [ class "any2CardCopy" ]
+                [ text "Additional card scans courtesy of "
+                , a [ href "https://github.com/any2cards/gloomhaven" ] [ text "Any2Cards" ]
+                ]
+            ]
+        , div [ class "pkg" ]
+            [ div
+                [ class "copy-wrapper" ]
+                [ span [ class "pkgCopy" ]
+                    [ text "Developed by "
+                    , a [ href "https://purplekingdomgames.com/" ] [ text "Purple Kingdom Games" ]
+                    ]
+                , div
+                    [ class "sponsor" ]
+                    [ iframe
+                        [ class "sponsor-button"
+                        , src "https://github.com/sponsors/PurpleKingdomGames/button"
+                        , title "Sponsor PurpleKingdomGames"
+                        , attribute "aria-hidden" "true"
+                        ]
+                        []
+                    ]
+                ]
+            , div
+                [ class "version" ]
+                [ a [ target "_new", href "https://github.com/PurpleKingdomGames/virtual-gloomhaven-board/issues/new/choose" ] [ text "Report a bug" ]
+                , span [] [ text ("Version " ++ v) ]
+                ]
+            ]
         ]
 
 
@@ -1271,13 +1308,13 @@ getNewPieceHtml model game =
         |> Dom.render
 
 
-getMenuHtml : Model -> Html.Html Msg
-getMenuHtml model =
+getMenuHtml : Bool -> Bool -> Bool -> Html.Html Msg
+getMenuHtml lockScenario lockPlayers menuOpen =
     Dom.element "nav"
         |> Dom.addAttribute
             (attribute
                 "aria-hidden"
-                (if model.menuOpen then
+                (if menuOpen then
                     "false"
 
                  else
@@ -1296,7 +1333,7 @@ getMenuHtml model =
                         |> Dom.appendText "Undo"
                         |> shortcutHtml [ "ctrl", "z" ]
                      ]
-                        ++ (if model.lockScenario then
+                        ++ (if lockScenario then
                                 []
 
                             else
@@ -1315,7 +1352,7 @@ getMenuHtml model =
                                 |> Dom.appendText "Reload Scenario"
                                 |> shortcutHtml [ "⇧", "r" ]
                            ]
-                        ++ (if model.lockPlayers then
+                        ++ (if lockPlayers then
                                 []
 
                             else
