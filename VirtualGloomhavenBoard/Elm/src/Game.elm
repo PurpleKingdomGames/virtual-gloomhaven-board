@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+module Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
@@ -26,7 +26,12 @@ emptyState =
 
 type AIType
     = Enemy Monster
-    | Summons Int
+    | Summons SummonsType
+
+
+type SummonsType
+    = NormalSummons Int
+    | BearSummons
 
 
 type PieceType

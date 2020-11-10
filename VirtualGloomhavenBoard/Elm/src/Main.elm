@@ -12,7 +12,7 @@ import Character exposing (CharacterClass(..), characterToString)
 import Dict
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop exposing (State)
-import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
 import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, src, style, tabindex, target, title, value)
@@ -1225,7 +1225,7 @@ getNewPieceHtml model game =
                                             filterMap
                                                 (\p ->
                                                     case p.ref of
-                                                        AI (Summons i) ->
+                                                        AI (Summons (NormalSummons i)) ->
                                                             Just i
 
                                                         _ ->
@@ -1244,7 +1244,7 @@ getNewPieceHtml model game =
                                                 Nothing ->
                                                     1
                                      in
-                                     [ pieceToHtml model Nothing (Piece (AI (Summons nextId)) 0 0) ]
+                                     [ pieceToHtml model Nothing (Piece (AI (Summons (NormalSummons nextId))) 0 0) ]
                                     )
                             )
                         |> Dom.appendChild
@@ -2083,11 +2083,23 @@ pieceToHtml model coords piece =
                                         ""
                                    )
 
-                        Summons i ->
+                        Summons (NormalSummons i) ->
                             "Summons Number " ++ String.fromInt i
+
+                        Summons BearSummons ->
+                            "Beast Tyrant Bear Summons"
 
                 Game.None ->
                     "None"
+
+        playerHtml : String -> String -> Element Msg -> Element Msg
+        playerHtml l p e =
+            Dom.addClass "hex-mask" e
+                |> Dom.appendChild
+                    (Dom.element "img"
+                        |> Dom.addAttribute (alt l)
+                        |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ p ++ ".png"))
+                    )
     in
     ( label
     , Dom.element "div"
@@ -2105,24 +2117,14 @@ pieceToHtml model coords piece =
         |> Dom.addClass (getPieceName piece.ref)
         |> (case piece.ref of
                 Player p ->
-                    let
-                        player =
-                            Maybe.withDefault "" (characterToString p)
-                    in
-                    \e ->
-                        Dom.addClass "hex-mask" e
-                            |> Dom.appendChild
-                                (Dom.element "img"
-                                    |> Dom.addAttribute (alt label)
-                                    |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ player ++ ".png"))
-                                )
+                    playerHtml label (Maybe.withDefault "" (characterToString p))
 
                 AI t ->
                     case t of
                         Enemy m ->
                             enemyToHtml m label
 
-                        Summons i ->
+                        Summons (NormalSummons i) ->
                             Dom.appendChildList
                                 [ Dom.element "img"
                                     |> Dom.addAttribute (alt label)
@@ -2130,6 +2132,9 @@ pieceToHtml model coords piece =
                                     |> Dom.addAttribute (attribute "draggable" "false")
                                 , Dom.element "span" |> Dom.appendText (String.fromInt i)
                                 ]
+
+                        Summons BearSummons ->
+                            playerHtml label "bear"
 
                 Game.None ->
                     Dom.addClass "none"

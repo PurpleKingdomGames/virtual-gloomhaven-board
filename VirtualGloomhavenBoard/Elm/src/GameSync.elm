@@ -5,7 +5,8 @@ import BoardMapTile exposing (MapTileRef(..), refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
-import Game exposing (AIType(..), GameState, Piece, PieceType(..))
+import Game exposing (AIType(..), GameState, Piece, PieceType(..), SummonsType(..))
+import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, int, list, map3, map8, string, succeed)
 import Json.Encode as Encode exposing (int, list, object, string)
 import List exposing (map)
@@ -212,11 +213,19 @@ decodePieceType =
 
 decodeSummons : Decoder AIType
 decodeSummons =
-    field "id" Decode.int
-        |> andThen
-            (\i ->
-                succeed (Summons i)
-            )
+    Decode.oneOf
+        [ field "id" Decode.int |> andThen (\i -> succeed (Summons (NormalSummons i)))
+        , field "id" Decode.string
+            |> andThen
+                (\s ->
+                    case String.toLower s of
+                        "bear" ->
+                            succeed (Summons BearSummons)
+
+                        _ ->
+                            fail ("Cannot convert " ++ s ++ " to summons type")
+                )
+        ]
 
 
 decodeCharacter : Decoder CharacterClass
@@ -574,9 +583,16 @@ encodePieceType pieceType =
             , ( "class", Encode.string (Maybe.withDefault "" (characterToString p)) )
             ]
 
-        AI (Summons id) ->
+        AI (Summons t) ->
             [ ( "type", Encode.string "summons" )
-            , ( "id", Encode.int id )
+            , ( "id"
+              , case t of
+                    NormalSummons i ->
+                        Encode.int i
+
+                    BearSummons ->
+                        Encode.string "bear"
+              )
             ]
 
         AI (Enemy monster) ->
