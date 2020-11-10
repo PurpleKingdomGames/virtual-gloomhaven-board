@@ -1217,6 +1217,12 @@ getNewPieceHtml model game =
                 |> Dom.addClass "new-piece-list"
                 |> Dom.appendChild
                     (Dom.element "ul"
+                        |> Dom.appendChildConditional
+                            (Dom.element "li"
+                                |> Dom.setChildListWithKeys
+                                    [ pieceToHtml model Nothing (Piece (AI (Summons BearSummons)) 0 0) ]
+                            )
+                            (List.member BeastTyrant game.state.players && List.all (\p -> p.ref /= AI (Summons BearSummons)) game.state.pieces)
                         |> Dom.appendChild
                             (Dom.element "li"
                                 |> Dom.setChildListWithKeys
@@ -2134,7 +2140,9 @@ pieceToHtml model coords piece =
                                 ]
 
                         Summons BearSummons ->
-                            playerHtml label "bear"
+                            \e ->
+                                Dom.addClass "bear" e
+                                    |> playerHtml label "bear"
 
                 Game.None ->
                     Dom.addClass "none"

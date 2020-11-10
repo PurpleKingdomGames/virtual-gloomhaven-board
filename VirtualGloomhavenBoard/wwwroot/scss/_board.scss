@@ -22,7 +22,7 @@ $hexHeight: 90px;
     @include mixins.mask(url('/img/hex-mask.png'), alpha, top right, 90px);
 }
 
-.summons {
+.summons:not(.bear) {
     img {
         position: relative;
         height: 75px;
@@ -115,7 +115,7 @@ $hexHeight: 90px;
         background-color: #b562b8;
     }
 
-    &.phoenix-face:after {
+    &.phoenix-face:after, &.bear:after {
         background-color: #a96852;
     }
 
