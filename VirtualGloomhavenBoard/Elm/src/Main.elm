@@ -9,7 +9,7 @@ import Browser
 import Browser.Dom as BrowserDom exposing (Error)
 import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
 import Character exposing (CharacterClass(..), characterToString)
-import Dict
+import Dict exposing (Dict)
 import Dom exposing (Element)
 import Dom.DragDrop as DragDrop exposing (State)
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
@@ -73,6 +73,29 @@ type alias HeaderModel =
     , lockScenario : Bool
     , lockPlayers : Bool
     , menuOpen : Bool
+    }
+
+
+type alias NewPieceMenuModel =
+    { gameMode : GameModeType
+    , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
+    , bearSummoned : Bool
+    , nextSummonsId : Int
+    , availableMonsters : List String
+    , deadPlayers : List CharacterClass
+    }
+
+
+type alias CellModel =
+    { gameMode : GameModeType
+    , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
+    , overlays : List BoardOverlayModel
+    , piece : Maybe PieceModel
+    , currentDraggable : Maybe MoveablePiece
+    , passable : Bool
+    , hidden : Bool
+    , x : Int
+    , y : Int
     }
 
 
@@ -1039,8 +1062,65 @@ view model =
                            )
                     )
                 ]
-                [ getNavHtml model
-                , getNewPieceHtml model game
+                [ lazy getNavHtml model.config.gameMode
+                , let
+                    bearSummoned =
+                        (List.member BeastTyrant game.state.players == False)
+                            || List.any (\p -> p.ref == AI (Summons BearSummons)) game.state.pieces
+
+                    maxSummons =
+                        filterMap
+                            (\p ->
+                                case p.ref of
+                                    AI (Summons (NormalSummons i)) ->
+                                        Just i
+
+                                    _ ->
+                                        Nothing
+                            )
+                            game.state.pieces
+                            |> sort
+                            |> reverse
+                            |> head
+
+                    nextId =
+                        case maxSummons of
+                            Just i ->
+                                i + 1
+
+                            Nothing ->
+                                1
+
+                    playerPieces =
+                        game.state.pieces
+                            |> List.filterMap
+                                (\p ->
+                                    case p.ref of
+                                        Player c ->
+                                            Just c
+
+                                        _ ->
+                                            Nothing
+                                )
+
+                    deadPlayers =
+                        game.state.players
+                            |> List.filter (\p -> List.member p playerPieces == False)
+
+                    availableMonsters =
+                        Dict.toList model.game.state.availableMonsters
+                            |> List.filter (\( _, v ) -> length v > 0)
+                            |> List.map (\( k, _ ) -> k)
+                  in
+                  lazy getNewPieceHtml
+                    (NewPieceMenuModel
+                        model.config.gameMode
+                        model.dragDropState
+                        bearSummoned
+                        nextId
+                        availableMonsters
+                        deadPlayers
+                    )
                 , div [ class "side-toggle", onClick ToggleSideMenu ] []
                 ]
             , div [ class "board-wrapper" ]
@@ -1057,7 +1137,7 @@ view model =
                         []
 
                     _ ->
-                        [ lazy getDialogForAppMode model ]
+                        [ getDialogForAppMode model ]
                )
             ++ (case model.tooltipTarget of
                     Nothing ->
@@ -1223,10 +1303,10 @@ getFooterHtml v =
         ]
 
 
-getNewPieceHtml : Model -> Game -> Html.Html Msg
-getNewPieceHtml model game =
+getNewPieceHtml : NewPieceMenuModel -> Html.Html Msg
+getNewPieceHtml model =
     Dom.element "div"
-        |> Dom.addClassConditional "show" (model.config.gameMode == AddPiece)
+        |> Dom.addClassConditional "show" (model.gameMode == AddPiece)
         |> Dom.addClass "new-piece-wrapper"
         |> Dom.appendChild
             (Dom.element "div"
@@ -1238,57 +1318,32 @@ getNewPieceHtml model game =
                                 |> Dom.setChildListWithKeys
                                     [ pieceToHtml
                                         (PieceModel
-                                            model.config.gameMode
+                                            model.gameMode
                                             model.dragDropState
                                             Nothing
                                             (Piece (AI (Summons BearSummons)) 0 0)
                                         )
                                     ]
                             )
-                            (List.member BeastTyrant game.state.players && List.all (\p -> p.ref /= AI (Summons BearSummons)) game.state.pieces)
+                            (model.bearSummoned == False)
                         |> Dom.appendChild
                             (Dom.element "li"
                                 |> Dom.setChildListWithKeys
-                                    (let
-                                        maxSummons =
-                                            filterMap
-                                                (\p ->
-                                                    case p.ref of
-                                                        AI (Summons (NormalSummons i)) ->
-                                                            Just i
-
-                                                        _ ->
-                                                            Nothing
-                                                )
-                                                game.state.pieces
-                                                |> sort
-                                                |> reverse
-                                                |> head
-
-                                        nextId =
-                                            case maxSummons of
-                                                Just i ->
-                                                    i + 1
-
-                                                Nothing ->
-                                                    1
-                                     in
-                                     [ pieceToHtml
+                                    [ pieceToHtml
                                         (PieceModel
-                                            model.config.gameMode
+                                            model.gameMode
                                             model.dragDropState
                                             Nothing
-                                            (Piece (AI (Summons (NormalSummons nextId))) 0 0)
+                                            (Piece (AI (Summons (NormalSummons model.nextSummonsId))) 0 0)
                                         )
-                                     ]
-                                    )
+                                    ]
                             )
                         |> Dom.appendChild
                             (Dom.element "li"
                                 |> Dom.setChildListWithKeys
                                     [ overlayToHtml
                                         (BoardOverlayModel
-                                            model.config.gameMode
+                                            model.gameMode
                                             model.dragDropState
                                             Nothing
                                             (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ])
@@ -1300,7 +1355,7 @@ getNewPieceHtml model game =
                                 |> Dom.setChildListWithKeys
                                     [ overlayToHtml
                                         (BoardOverlayModel
-                                            model.config.gameMode
+                                            model.gameMode
                                             model.dragDropState
                                             Nothing
                                             (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ])
@@ -1308,28 +1363,14 @@ getNewPieceHtml model game =
                                     ]
                             )
                         |> Dom.appendChildList
-                            (let
-                                playerPieces =
-                                    game.state.pieces
-                                        |> List.filterMap
-                                            (\p ->
-                                                case p.ref of
-                                                    Player c ->
-                                                        Just c
-
-                                                    _ ->
-                                                        Nothing
-                                            )
-                             in
-                             game.state.players
-                                |> List.filter (\p -> List.member p playerPieces == False)
+                            (model.deadPlayers
                                 |> List.map
                                     (\p ->
                                         Dom.element "li"
                                             |> Dom.setChildListWithKeys
                                                 [ pieceToHtml
                                                     (PieceModel
-                                                        model.config.gameMode
+                                                        model.gameMode
                                                         model.dragDropState
                                                         Nothing
                                                         (Piece (Player p) 0 0)
@@ -1338,9 +1379,7 @@ getNewPieceHtml model game =
                                     )
                             )
                         |> Dom.appendChildList
-                            (Dict.toList game.state.availableMonsters
-                                |> List.filter (\( _, v ) -> length v > 0)
-                                |> List.map (\( k, _ ) -> k)
+                            (model.availableMonsters
                                 |> List.sort
                                 |> List.reverse
                                 |> filterMap (\k -> stringToMonsterType k)
@@ -1350,7 +1389,7 @@ getNewPieceHtml model game =
                                             |> Dom.setChildListWithKeys
                                                 [ pieceToHtml
                                                     (PieceModel
-                                                        model.config.gameMode
+                                                        model.gameMode
                                                         model.dragDropState
                                                         Nothing
                                                         (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0)
@@ -1363,7 +1402,7 @@ getNewPieceHtml model game =
                                                             |> Dom.setChildListWithKeys
                                                                 [ pieceToHtml
                                                                     (PieceModel
-                                                                        model.config.gameMode
+                                                                        model.gameMode
                                                                         model.dragDropState
                                                                         Nothing
                                                                         (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0)
@@ -1739,8 +1778,8 @@ getCharacterChoiceInput name class enabled =
             )
 
 
-getNavHtml : Model -> Html.Html Msg
-getNavHtml model =
+getNavHtml : GameModeType -> Html.Html Msg
+getNavHtml gameMode =
     Dom.element "div"
         |> Dom.addClass "sidebar-wrapper"
         |> Dom.appendChild
@@ -1753,7 +1792,7 @@ getNavHtml model =
                                 |> Dom.addAttribute (tabindex 0)
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
-                                        (if model.config.gameMode == MovePiece then
+                                        (if gameMode == MovePiece then
                                             " true"
 
                                          else
@@ -1763,14 +1802,14 @@ getNavHtml model =
                                 |> Dom.addAction ( "click", ChangeGameMode MovePiece )
                                 |> Dom.addClass "move-piece"
                                 |> tooltipHtml "moveAction" "Move Monsters or Players"
-                                |> Dom.addClassConditional "active" (model.config.gameMode == MovePiece)
+                                |> Dom.addClassConditional "active" (gameMode == MovePiece)
                                 |> Dom.appendText "Move Piece"
                             , Dom.element "li"
                                 |> Dom.addAttribute (attribute "role" "button")
                                 |> Dom.addAttribute (tabindex 0)
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
-                                        (if model.config.gameMode == KillPiece then
+                                        (if gameMode == KillPiece then
                                             " true"
 
                                          else
@@ -1780,14 +1819,14 @@ getNavHtml model =
                                 |> Dom.addAction ( "click", ChangeGameMode KillPiece )
                                 |> tooltipHtml "removeAction" "Remove Monsters or Players"
                                 |> Dom.addClass "kill-piece"
-                                |> Dom.addClassConditional "active" (model.config.gameMode == KillPiece)
+                                |> Dom.addClassConditional "active" (gameMode == KillPiece)
                                 |> Dom.appendText "Kill Piece"
                             , Dom.element "li"
                                 |> Dom.addAttribute (attribute "role" "button")
                                 |> Dom.addAttribute (tabindex 0)
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
-                                        (if model.config.gameMode == LootCell then
+                                        (if gameMode == LootCell then
                                             " true"
 
                                          else
@@ -1797,14 +1836,14 @@ getNavHtml model =
                                 |> Dom.addAction ( "click", ChangeGameMode LootCell )
                                 |> tooltipHtml "lootAction" "Loot a tile"
                                 |> Dom.addClass "loot"
-                                |> Dom.addClassConditional "active" (model.config.gameMode == LootCell)
+                                |> Dom.addClassConditional "active" (gameMode == LootCell)
                                 |> Dom.appendText "Loot"
                             , Dom.element "li"
                                 |> Dom.addAttribute (attribute "role" "button")
                                 |> Dom.addAttribute (tabindex 0)
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
-                                        (if model.config.gameMode == MoveOverlay then
+                                        (if gameMode == MoveOverlay then
                                             " true"
 
                                          else
@@ -1814,14 +1853,14 @@ getNavHtml model =
                                 |> Dom.addAction ( "click", ChangeGameMode MoveOverlay )
                                 |> tooltipHtml "moveObstacleAction" "Move Obstacles or Traps"
                                 |> Dom.addClass "move-overlay"
-                                |> Dom.addClassConditional "active" (model.config.gameMode == MoveOverlay)
+                                |> Dom.addClassConditional "active" (gameMode == MoveOverlay)
                                 |> Dom.appendText "Move Overlay"
                             , Dom.element "li"
                                 |> Dom.addAttribute (attribute "role" "button")
                                 |> Dom.addAttribute (tabindex 0)
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
-                                        (if model.config.gameMode == DestroyOverlay then
+                                        (if gameMode == DestroyOverlay then
                                             " true"
 
                                          else
@@ -1831,14 +1870,14 @@ getNavHtml model =
                                 |> Dom.addAction ( "click", ChangeGameMode DestroyOverlay )
                                 |> tooltipHtml "removeObstacleAction" "Remove Obstacles or Traps"
                                 |> Dom.addClass "destroy-overlay"
-                                |> Dom.addClassConditional "active" (model.config.gameMode == DestroyOverlay)
+                                |> Dom.addClassConditional "active" (gameMode == DestroyOverlay)
                                 |> Dom.appendText "Destroy Overlay"
                             , Dom.element "li"
                                 |> Dom.addAttribute (attribute "role" "button")
                                 |> Dom.addAttribute (tabindex 0)
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
-                                        (if model.config.gameMode == RevealRoom then
+                                        (if gameMode == RevealRoom then
                                             " true"
 
                                          else
@@ -1848,14 +1887,14 @@ getNavHtml model =
                                 |> Dom.addAction ( "click", ChangeGameMode RevealRoom )
                                 |> tooltipHtml "openDoorAction" "Open a door"
                                 |> Dom.addClass "reveal-room"
-                                |> Dom.addClassConditional "active" (model.config.gameMode == RevealRoom)
+                                |> Dom.addClassConditional "active" (gameMode == RevealRoom)
                                 |> Dom.appendText "Reveal Room"
                             , Dom.element "li"
                                 |> Dom.addAttribute (attribute "role" "button")
                                 |> Dom.addAttribute (tabindex 0)
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
-                                        (if model.config.gameMode == AddPiece then
+                                        (if gameMode == AddPiece then
                                             " true"
 
                                          else
@@ -1865,7 +1904,7 @@ getNavHtml model =
                                 |> Dom.addAction ( "click", ChangeGameMode AddPiece )
                                 |> tooltipHtml "summonAction" "Summon a piece to the board"
                                 |> Dom.addClass "add-piece"
-                                |> Dom.addClassConditional "active" (model.config.gameMode == AddPiece)
+                                |> Dom.addClassConditional "active" (gameMode == AddPiece)
                                 |> Dom.appendText "Add Piece"
                             ]
                     )
@@ -1985,31 +2024,95 @@ getMapTileHtml visibleRooms roomData =
 
 getBoardHtml : Model -> Game -> Int -> Array Cell -> Html.Html Msg
 getBoardHtml model game y row =
-    div [ class "row" ] (toList (Array.indexedMap (getCellHtml model game y) row))
+    --
+    div [ class "row" ]
+        (toList
+            (Array.indexedMap
+                (\x cell ->
+                    let
+                        overlaysForCell =
+                            List.filter (filterOverlaysForCoord x y) game.state.overlays
+                                |> map
+                                    (\o ->
+                                        BoardOverlayModel
+                                            model.config.gameMode
+                                            model.dragDropState
+                                            (Just ( x, y ))
+                                            o
+                                    )
+
+                        piece =
+                            Maybe.map
+                                (\p ->
+                                    PieceModel
+                                        model.config.gameMode
+                                        model.dragDropState
+                                        (Just ( x, y ))
+                                        p
+                                )
+                                (getPieceForCoord x y game.state.pieces)
+
+                        currentDraggable =
+                            case model.currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        PieceType p ->
+                                            if p.x == x && p.y == y then
+                                                model.currentDraggable
+
+                                            else
+                                                Nothing
+
+                                        OverlayType o _ ->
+                                            if any (\c -> c == ( x, y )) o.cells then
+                                                model.currentDraggable
+
+                                            else
+                                                Nothing
+
+                                Nothing ->
+                                    Nothing
+
+                        cellVisible =
+                            any (\r -> any (\a -> a == r) game.state.visibleRooms) cell.rooms
+                    in
+                    lazy getCellHtml
+                        (CellModel
+                            model.config.gameMode
+                            model.dragDropState
+                            overlaysForCell
+                            piece
+                            currentDraggable
+                            cell.passable
+                            (cellVisible == False)
+                            x
+                            y
+                        )
+                )
+                row
+            )
+        )
 
 
-getCellHtml : Model -> Game -> Int -> Int -> Cell -> Html.Html Msg
-getCellHtml model game y x cellValue =
+getCellHtml : CellModel -> Html.Html Msg
+getCellHtml model =
     let
-        overlaysForCell =
-            List.filter (filterOverlaysForCoord x y) game.state.overlays
-
         cellElement : Dom.Element Msg
         cellElement =
             Dom.element "div"
                 |> Dom.addClass "hexagon"
-                |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
-                |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
+                |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt model.x))
+                |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt model.y))
                 -- Everything except coins
                 |> Dom.setChildListWithKeys
-                    ((overlaysForCell
+                    ((model.overlays
                         |> sortWith
                             (\a b ->
-                                compare (getSortOrderForOverlay a.ref) (getSortOrderForOverlay b.ref)
+                                compare (getSortOrderForOverlay a.overlay.ref) (getSortOrderForOverlay b.overlay.ref)
                             )
                         |> filter
                             (\o ->
-                                case o.ref of
+                                case o.overlay.ref of
                                     Treasure t ->
                                         case t of
                                             Chest _ ->
@@ -2021,37 +2124,21 @@ getCellHtml model game y x cellValue =
                                     _ ->
                                         True
                             )
-                        |> List.map
-                            (\o ->
-                                overlayToHtml
-                                    (BoardOverlayModel
-                                        model.config.gameMode
-                                        model.dragDropState
-                                        (Just ( x, y ))
-                                        o
-                                    )
-                            )
+                        |> List.map overlayToHtml
                      )
                         ++ -- Players / Monsters / Summons
-                           (case getPieceForCoord x y game.state.pieces of
+                           (case model.piece of
                                 Nothing ->
                                     []
 
                                 Just p ->
-                                    [ pieceToHtml
-                                        (PieceModel
-                                            model.config.gameMode
-                                            model.dragDropState
-                                            (Just ( x, y ))
-                                            p
-                                        )
-                                    ]
+                                    [ pieceToHtml p ]
                            )
                         ++ -- Coins
-                           (overlaysForCell
+                           (model.overlays
                                 |> List.filter
                                     (\o ->
-                                        case o.ref of
+                                        case o.overlay.ref of
                                             Treasure t ->
                                                 case t of
                                                     Chest _ ->
@@ -2063,64 +2150,47 @@ getCellHtml model game y x cellValue =
                                             _ ->
                                                 False
                                     )
-                                |> List.map
-                                    (\o ->
-                                        overlayToHtml
-                                            (BoardOverlayModel
-                                                model.config.gameMode
-                                                model.dragDropState
-                                                (Just ( x, y ))
-                                                o
-                                            )
-                                    )
+                                |> List.map overlayToHtml
                            )
                         ++ -- The current draggable piece
                            (case model.currentDraggable of
                                 Just m ->
                                     case m.ref of
                                         PieceType p ->
-                                            if p.x == x && p.y == y then
-                                                [ pieceToHtml
-                                                    (PieceModel
-                                                        model.config.gameMode
-                                                        model.dragDropState
-                                                        (Just ( x, y ))
-                                                        p
-                                                    )
-                                                ]
-
-                                            else
-                                                []
+                                            [ pieceToHtml
+                                                (PieceModel
+                                                    model.gameMode
+                                                    model.dragDropState
+                                                    (Just ( model.x, model.y ))
+                                                    p
+                                                )
+                                            ]
 
                                         OverlayType o _ ->
-                                            if any (\c -> c == ( x, y )) o.cells then
-                                                [ overlayToHtml
-                                                    (BoardOverlayModel
-                                                        model.config.gameMode
-                                                        model.dragDropState
-                                                        (Just ( x, y ))
-                                                        o
-                                                    )
-                                                ]
-
-                                            else
-                                                []
+                                            [ overlayToHtml
+                                                (BoardOverlayModel
+                                                    model.gameMode
+                                                    model.dragDropState
+                                                    (Just ( model.x, model.y ))
+                                                    o
+                                                )
+                                            ]
 
                                 Nothing ->
                                     []
                            )
                     )
-                |> addActionsForCell model.config.gameMode ( x, y ) overlaysForCell
+                |> addActionsForCell model.gameMode ( model.x, model.y ) (List.map (\o -> o.overlay) model.overlays)
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
-        |> Dom.addClass (cellValueToString game cellValue)
+        |> Dom.addClass (cellValueToString model.passable model.hidden)
         |> Dom.appendChild
             (Dom.element "div"
                 |> Dom.addClass "cell"
                 |> Dom.appendChild
-                    (if cellValue.passable == True then
-                        makeDroppable ( x, y ) model.currentDraggable model.dragDropState cellElement
+                    (if model.passable == True && model.hidden == False then
+                        makeDroppable ( model.x, model.y ) model.dragDropState cellElement
 
                      else
                         cellElement
@@ -2129,17 +2199,16 @@ getCellHtml model game y x cellValue =
         |> Dom.render
 
 
-cellValueToString : Game -> Cell -> String
-cellValueToString game val =
-    if any (\r -> any (\x -> x == r) game.state.visibleRooms) val.rooms then
-        if val.passable == True then
-            "passable"
+cellValueToString : Bool -> Bool -> String
+cellValueToString passable hidden =
+    if hidden then
+        "hidden"
 
-        else
-            "impassable"
+    else if passable then
+        "passable"
 
     else
-        "hidden"
+        "impassable"
 
 
 filterOverlaysForCoord : Int -> Int -> BoardOverlay -> Bool
@@ -2715,8 +2784,8 @@ makeDraggable piece coords dragDropState element =
             )
 
 
-makeDroppable : ( Int, Int ) -> Maybe MoveablePiece -> DragDrop.State MoveablePiece ( Int, Int ) -> Element Msg -> Element Msg
-makeDroppable coords piece dragDropState element =
+makeDroppable : ( Int, Int ) -> DragDrop.State MoveablePiece ( Int, Int ) -> Element Msg -> Element Msg
+makeDroppable coords dragDropState element =
     let
         dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
         dragDropMessages =
