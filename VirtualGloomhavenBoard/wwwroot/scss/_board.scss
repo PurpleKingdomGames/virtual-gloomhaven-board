@@ -170,11 +170,11 @@ $hexHeight: 90px;
         &:hover {
             cursor: move;
         }
-    }
 
-    &.being-dragged {
-        visibility: hidden;
-        opacity: 0;
+        &.being-dragged {
+            visibility: hidden;
+            opacity: 0;
+        }
     }
 }
 

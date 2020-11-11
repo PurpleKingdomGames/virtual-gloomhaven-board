@@ -1115,10 +1115,10 @@ view model =
                         (case model.currentDraggable of
                             Just m ->
                                 case m.coords of
-                                    Just _ ->
+                                    Nothing ->
                                         model.currentDraggable
 
-                                    Nothing ->
+                                    Just _ ->
                                         Nothing
 
                             Nothing ->
@@ -1329,7 +1329,12 @@ getNewPieceHtml model =
                                             model.gameMode
                                             (case model.currentDraggable of
                                                 Just m ->
-                                                    m.ref == PieceType (Piece (AI (Summons BearSummons)) 0 0)
+                                                    case m.ref of
+                                                        PieceType p ->
+                                                            p.ref == AI (Summons BearSummons)
+
+                                                        _ ->
+                                                            False
 
                                                 Nothing ->
                                                     False
@@ -1348,7 +1353,12 @@ getNewPieceHtml model =
                                             model.gameMode
                                             (case model.currentDraggable of
                                                 Just m ->
-                                                    m.ref == PieceType (Piece (AI (Summons (NormalSummons model.nextSummonsId))) 0 0)
+                                                    case m.ref of
+                                                        PieceType p ->
+                                                            p.ref == AI (Summons (NormalSummons model.nextSummonsId))
+
+                                                        _ ->
+                                                            False
 
                                                 Nothing ->
                                                     False
@@ -1366,7 +1376,12 @@ getNewPieceHtml model =
                                             model.gameMode
                                             (case model.currentDraggable of
                                                 Just m ->
-                                                    m.ref == OverlayType (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]) Nothing
+                                                    case m.ref of
+                                                        OverlayType o _ ->
+                                                            o.ref == Trap BearTrap
+
+                                                        _ ->
+                                                            False
 
                                                 Nothing ->
                                                     False
@@ -1384,7 +1399,12 @@ getNewPieceHtml model =
                                             model.gameMode
                                             (case model.currentDraggable of
                                                 Just m ->
-                                                    m.ref == OverlayType (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]) Nothing
+                                                    case m.ref of
+                                                        OverlayType o _ ->
+                                                            o.ref == Obstacle Boulder1
+
+                                                        _ ->
+                                                            False
 
                                                 Nothing ->
                                                     False
@@ -1405,7 +1425,12 @@ getNewPieceHtml model =
                                                         model.gameMode
                                                         (case model.currentDraggable of
                                                             Just m ->
-                                                                m.ref == PieceType (Piece (Player p) 0 0)
+                                                                case m.ref of
+                                                                    PieceType piece ->
+                                                                        piece.ref == Player p
+
+                                                                    _ ->
+                                                                        False
 
                                                             Nothing ->
                                                                 False
@@ -1430,7 +1455,12 @@ getNewPieceHtml model =
                                                         model.gameMode
                                                         (case model.currentDraggable of
                                                             Just m ->
-                                                                m.ref == PieceType (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0)
+                                                                case m.ref of
+                                                                    PieceType piece ->
+                                                                        piece.ref == AI (Enemy (Monster k 0 Normal True))
+
+                                                                    _ ->
+                                                                        False
 
                                                             Nothing ->
                                                                 False
@@ -1449,7 +1479,12 @@ getNewPieceHtml model =
                                                                         model.gameMode
                                                                         (case model.currentDraggable of
                                                                             Just m ->
-                                                                                m.ref == PieceType (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0)
+                                                                                case m.ref of
+                                                                                    PieceType piece ->
+                                                                                        piece.ref == AI (Enemy (Monster k 0 Elite True))
+
+                                                                                    _ ->
+                                                                                        False
 
                                                                             Nothing ->
                                                                                 False
@@ -2074,7 +2109,6 @@ getMapTileHtml visibleRooms roomData =
 
 getBoardHtml : Model -> Game -> Int -> Array Cell -> Html.Html Msg
 getBoardHtml model game y row =
-    --
     div [ class "row" ]
         (toList
             (Array.indexedMap
@@ -2085,7 +2119,7 @@ getBoardHtml model game y row =
                                 Just m ->
                                     case m.ref of
                                         PieceType p ->
-                                            if p.x == x && p.y == y then
+                                            if (p.x == x && p.y == y) || (m.coords == Just ( x, y )) then
                                                 model.currentDraggable
 
                                             else
@@ -2130,7 +2164,12 @@ getBoardHtml model game y row =
                                         model.config.gameMode
                                         (case currentDraggable of
                                             Just m ->
-                                                m.ref == PieceType p
+                                                case m.ref of
+                                                    PieceType pieceType ->
+                                                        pieceType.ref == p.ref
+
+                                                    _ ->
+                                                        False
 
                                             Nothing ->
                                                 False
@@ -2223,24 +2262,32 @@ getCellHtml model =
                                 Just m ->
                                     case m.ref of
                                         PieceType p ->
-                                            [ pieceToHtml
-                                                (PieceModel
-                                                    model.gameMode
-                                                    False
-                                                    (Just ( model.x, model.y ))
-                                                    p
-                                                )
-                                            ]
+                                            if m.target == Just ( model.x, model.y ) then
+                                                [ pieceToHtml
+                                                    (PieceModel
+                                                        model.gameMode
+                                                        False
+                                                        (Just ( model.x, model.y ))
+                                                        p
+                                                    )
+                                                ]
+
+                                            else
+                                                []
 
                                         OverlayType o _ ->
-                                            [ overlayToHtml
-                                                (BoardOverlayModel
-                                                    model.gameMode
-                                                    False
-                                                    (Just ( model.x, model.y ))
-                                                    o
-                                                )
-                                            ]
+                                            if m.target == Just ( model.x, model.y ) then
+                                                [ overlayToHtml
+                                                    (BoardOverlayModel
+                                                        model.gameMode
+                                                        False
+                                                        (Just ( model.x, model.y ))
+                                                        o
+                                                    )
+                                                ]
+
+                                            else
+                                                []
 
                                 Nothing ->
                                     []
@@ -2857,9 +2904,9 @@ makeDroppable coords element =
         config =
             DragDrop.DropTargetConfig
                 DragDrop.NoDropEffect
-                (\_ v -> MoveTargetChanged coords)
+                (\_ _ -> NoOp)
                 (\_ -> NoOp)
-                Nothing
+                (Just (\_ -> MoveTargetChanged coords))
                 Nothing
     in
     element
