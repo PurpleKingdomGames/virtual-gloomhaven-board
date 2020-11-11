@@ -11,12 +11,12 @@ import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibility
 import Character exposing (CharacterClass(..), characterToString)
 import Dict exposing (Dict)
 import Dom exposing (Element)
-import Dom.DragDrop as DragDrop exposing (State)
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
 import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, src, style, tabindex, target, title, value)
 import Html.Events exposing (on, onClick)
+import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Lazy exposing (lazy)
 import Http exposing (Error)
@@ -48,7 +48,6 @@ type alias Model =
     , currentScenarioInput : Maybe String
     , currentClientSettings : Maybe TransientClientSettings
     , currentPlayerList : Maybe (List CharacterClass)
-    , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
     , connectionStatus : ConnectionStatus
     , undoStack : List GameState
@@ -78,7 +77,7 @@ type alias HeaderModel =
 
 type alias NewPieceMenuModel =
     { gameMode : GameModeType
-    , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
+    , currentDraggable : Maybe MoveablePiece
     , bearSummoned : Bool
     , nextSummonsId : Int
     , availableMonsters : List String
@@ -88,7 +87,6 @@ type alias NewPieceMenuModel =
 
 type alias CellModel =
     { gameMode : GameModeType
-    , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
     , overlays : List BoardOverlayModel
     , piece : Maybe PieceModel
     , currentDraggable : Maybe MoveablePiece
@@ -101,7 +99,7 @@ type alias CellModel =
 
 type alias PieceModel =
     { gameMode : GameModeType
-    , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
+    , isDragging : Bool
     , coords : Maybe ( Int, Int )
     , piece : Piece
     }
@@ -109,7 +107,7 @@ type alias PieceModel =
 
 type alias BoardOverlayModel =
     { gameMode : GameModeType
-    , dragDropState : DragDrop.State MoveablePiece ( Int, Int )
+    , isDragging : Bool
     , coords : Maybe ( Int, Int )
     , overlay : BoardOverlay
     }
@@ -143,6 +141,7 @@ type ConnectionStatus
 type alias MoveablePiece =
     { ref : MoveablePieceType
     , coords : Maybe ( Int, Int )
+    , target : Maybe ( Int, Int )
     }
 
 
@@ -152,7 +151,7 @@ type Msg
     | MoveStarted MoveablePiece
     | MoveTargetChanged ( Int, Int )
     | MoveCanceled
-    | MoveCompleted MoveablePiece ( Int, Int )
+    | MoveCompleted
     | TouchStart MoveablePiece
     | TouchMove ( Float, Float )
     | TouchCanceled
@@ -293,7 +292,6 @@ init ( oldState, maybeOverrides, seed ) =
         Nothing
         Nothing
         Nothing
-        DragDrop.initialState
         Nothing
         Disconnected
         []
@@ -390,13 +388,9 @@ update msg model =
             update (ChangeScenario model.game.state.scenario True) model
 
         MoveStarted piece ->
-            ( { model | dragDropState = DragDrop.startDragging model.dragDropState piece, currentDraggable = Just piece }, Cmd.none )
+            ( { model | currentDraggable = Just piece }, Cmd.none )
 
         MoveTargetChanged coords ->
-            let
-                ( x, y ) =
-                    coords
-            in
             let
                 newDraggable =
                     case model.currentDraggable of
@@ -407,24 +401,24 @@ update msg model =
                                         ( _, newOverlay, newCoords ) =
                                             moveOverlay o m.coords prevCoords coords model.game
                                     in
-                                    Just (MoveablePiece (OverlayType newOverlay newCoords) m.coords)
+                                    Just (MoveablePiece (OverlayType newOverlay newCoords) m.coords (Just coords))
 
                                 PieceType p ->
                                     let
                                         newPiece =
                                             Tuple.second (movePiece p m.coords coords model.game)
                                     in
-                                    Just (MoveablePiece (PieceType newPiece) m.coords)
+                                    Just (MoveablePiece (PieceType newPiece) m.coords (Just coords))
 
                         Nothing ->
                             model.currentDraggable
             in
-            ( { model | dragDropState = DragDrop.updateDropTarget model.dragDropState coords, currentDraggable = newDraggable }, Cmd.none )
+            ( { model | currentDraggable = newDraggable }, Cmd.none )
 
         MoveCanceled ->
-            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, currentDraggable = Nothing }, Cmd.none )
+            ( { model | currentDraggable = Nothing }, Cmd.none )
 
-        MoveCompleted _ coords ->
+        MoveCompleted ->
             let
                 oldGame =
                     model.game
@@ -432,15 +426,15 @@ update msg model =
                 game =
                     case model.currentDraggable of
                         Just m ->
-                            case m.ref of
-                                OverlayType o prevCoords ->
+                            case ( m.ref, m.target ) of
+                                ( OverlayType o prevCoords, Just coords ) ->
                                     let
                                         ( g, _, _ ) =
                                             moveOverlay o m.coords prevCoords coords oldGame
                                     in
                                     g
 
-                                PieceType p ->
+                                ( PieceType p, Just coords ) ->
                                     case p.ref of
                                         AI (Enemy monster) ->
                                             (if monster.id == 0 then
@@ -463,10 +457,13 @@ update msg model =
                                         _ ->
                                             Tuple.first (movePiece p m.coords coords oldGame)
 
+                                _ ->
+                                    oldGame
+
                         Nothing ->
                             oldGame
             in
-            ( { model | dragDropState = DragDrop.stopDragging model.dragDropState, game = game, currentDraggable = Nothing }, pushGameState model game.state True )
+            ( { model | game = game, currentDraggable = Nothing }, pushGameState model game.state True )
 
         TouchStart piece ->
             update (MoveStarted piece) model
@@ -485,7 +482,7 @@ update msg model =
                 case model.currentDraggable of
                     Just d ->
                         update
-                            (MoveCompleted d ( x, y ))
+                            MoveCompleted
                             model
 
                     Nothing ->
@@ -1115,7 +1112,18 @@ view model =
                   lazy getNewPieceHtml
                     (NewPieceMenuModel
                         model.config.gameMode
-                        model.dragDropState
+                        (case model.currentDraggable of
+                            Just m ->
+                                case m.coords of
+                                    Just _ ->
+                                        model.currentDraggable
+
+                                    Nothing ->
+                                        Nothing
+
+                            Nothing ->
+                                Nothing
+                        )
                         bearSummoned
                         nextId
                         availableMonsters
@@ -1319,7 +1327,13 @@ getNewPieceHtml model =
                                     [ pieceToHtml
                                         (PieceModel
                                             model.gameMode
-                                            model.dragDropState
+                                            (case model.currentDraggable of
+                                                Just m ->
+                                                    m.ref == PieceType (Piece (AI (Summons BearSummons)) 0 0)
+
+                                                Nothing ->
+                                                    False
+                                            )
                                             Nothing
                                             (Piece (AI (Summons BearSummons)) 0 0)
                                         )
@@ -1332,7 +1346,13 @@ getNewPieceHtml model =
                                     [ pieceToHtml
                                         (PieceModel
                                             model.gameMode
-                                            model.dragDropState
+                                            (case model.currentDraggable of
+                                                Just m ->
+                                                    m.ref == PieceType (Piece (AI (Summons (NormalSummons model.nextSummonsId))) 0 0)
+
+                                                Nothing ->
+                                                    False
+                                            )
                                             Nothing
                                             (Piece (AI (Summons (NormalSummons model.nextSummonsId))) 0 0)
                                         )
@@ -1344,7 +1364,13 @@ getNewPieceHtml model =
                                     [ overlayToHtml
                                         (BoardOverlayModel
                                             model.gameMode
-                                            model.dragDropState
+                                            (case model.currentDraggable of
+                                                Just m ->
+                                                    m.ref == OverlayType (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]) Nothing
+
+                                                Nothing ->
+                                                    False
+                                            )
                                             Nothing
                                             (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ])
                                         )
@@ -1356,7 +1382,13 @@ getNewPieceHtml model =
                                     [ overlayToHtml
                                         (BoardOverlayModel
                                             model.gameMode
-                                            model.dragDropState
+                                            (case model.currentDraggable of
+                                                Just m ->
+                                                    m.ref == OverlayType (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]) Nothing
+
+                                                Nothing ->
+                                                    False
+                                            )
                                             Nothing
                                             (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ])
                                         )
@@ -1371,7 +1403,13 @@ getNewPieceHtml model =
                                                 [ pieceToHtml
                                                     (PieceModel
                                                         model.gameMode
-                                                        model.dragDropState
+                                                        (case model.currentDraggable of
+                                                            Just m ->
+                                                                m.ref == PieceType (Piece (Player p) 0 0)
+
+                                                            Nothing ->
+                                                                False
+                                                        )
                                                         Nothing
                                                         (Piece (Player p) 0 0)
                                                     )
@@ -1390,7 +1428,13 @@ getNewPieceHtml model =
                                                 [ pieceToHtml
                                                     (PieceModel
                                                         model.gameMode
-                                                        model.dragDropState
+                                                        (case model.currentDraggable of
+                                                            Just m ->
+                                                                m.ref == PieceType (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0)
+
+                                                            Nothing ->
+                                                                False
+                                                        )
                                                         Nothing
                                                         (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0)
                                                     )
@@ -1403,7 +1447,13 @@ getNewPieceHtml model =
                                                                 [ pieceToHtml
                                                                     (PieceModel
                                                                         model.gameMode
-                                                                        model.dragDropState
+                                                                        (case model.currentDraggable of
+                                                                            Just m ->
+                                                                                m.ref == PieceType (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0)
+
+                                                                            Nothing ->
+                                                                                False
+                                                                        )
                                                                         Nothing
                                                                         (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0)
                                                                     )
@@ -2030,28 +2080,6 @@ getBoardHtml model game y row =
             (Array.indexedMap
                 (\x cell ->
                     let
-                        overlaysForCell =
-                            List.filter (filterOverlaysForCoord x y) game.state.overlays
-                                |> map
-                                    (\o ->
-                                        BoardOverlayModel
-                                            model.config.gameMode
-                                            model.dragDropState
-                                            (Just ( x, y ))
-                                            o
-                                    )
-
-                        piece =
-                            Maybe.map
-                                (\p ->
-                                    PieceModel
-                                        model.config.gameMode
-                                        model.dragDropState
-                                        (Just ( x, y ))
-                                        p
-                                )
-                                (getPieceForCoord x y game.state.pieces)
-
                         currentDraggable =
                             case model.currentDraggable of
                                 Just m ->
@@ -2073,13 +2101,51 @@ getBoardHtml model game y row =
                                 Nothing ->
                                     Nothing
 
+                        overlaysForCell =
+                            List.filter (filterOverlaysForCoord x y) game.state.overlays
+                                |> map
+                                    (\o ->
+                                        BoardOverlayModel
+                                            model.config.gameMode
+                                            (case currentDraggable of
+                                                Just m ->
+                                                    case m.ref of
+                                                        OverlayType ot _ ->
+                                                            ot.ref == o.ref
+
+                                                        _ ->
+                                                            False
+
+                                                Nothing ->
+                                                    False
+                                            )
+                                            (Just ( x, y ))
+                                            o
+                                    )
+
+                        piece =
+                            Maybe.map
+                                (\p ->
+                                    PieceModel
+                                        model.config.gameMode
+                                        (case currentDraggable of
+                                            Just m ->
+                                                m.ref == PieceType p
+
+                                            Nothing ->
+                                                False
+                                        )
+                                        (Just ( x, y ))
+                                        p
+                                )
+                                (getPieceForCoord x y game.state.pieces)
+
                         cellVisible =
                             any (\r -> any (\a -> a == r) game.state.visibleRooms) cell.rooms
                     in
                     lazy getCellHtml
                         (CellModel
                             model.config.gameMode
-                            model.dragDropState
                             overlaysForCell
                             piece
                             currentDraggable
@@ -2160,7 +2226,7 @@ getCellHtml model =
                                             [ pieceToHtml
                                                 (PieceModel
                                                     model.gameMode
-                                                    model.dragDropState
+                                                    False
                                                     (Just ( model.x, model.y ))
                                                     p
                                                 )
@@ -2170,7 +2236,7 @@ getCellHtml model =
                                             [ overlayToHtml
                                                 (BoardOverlayModel
                                                     model.gameMode
-                                                    model.dragDropState
+                                                    False
                                                     (Just ( model.x, model.y ))
                                                     o
                                                 )
@@ -2190,7 +2256,7 @@ getCellHtml model =
                 |> Dom.addClass "cell"
                 |> Dom.appendChild
                     (if model.passable == True && model.hidden == False then
-                        makeDroppable ( model.x, model.y ) model.dragDropState cellElement
+                        makeDroppable ( model.x, model.y ) cellElement
 
                      else
                         cellElement
@@ -2297,6 +2363,7 @@ pieceToHtml model =
             )
         |> Dom.addClass (getPieceType model.piece.ref)
         |> Dom.addClass (getPieceName model.piece.ref)
+        |> Dom.addClassConditional "being-dragged" model.isDragging
         |> (case model.piece.ref of
                 Player p ->
                     playerHtml label (Maybe.withDefault "" (characterToString p))
@@ -2324,7 +2391,7 @@ pieceToHtml model =
                     Dom.addClass "none"
            )
         |> (if (model.gameMode == MovePiece && model.coords /= Nothing) || (model.gameMode == AddPiece && model.coords == Nothing) then
-                makeDraggable (PieceType model.piece) model.coords model.dragDropState
+                makeDraggable (PieceType model.piece) model.coords
 
             else
                 Dom.addAttribute (attribute "draggable" "false")
@@ -2397,6 +2464,7 @@ overlayToHtml model =
         |> Dom.addAttribute
             (attribute "aria-label" label)
         |> Dom.addClass "overlay"
+        |> Dom.addClassConditional "being-dragged" model.isDragging
         |> Dom.addClass
             (case model.overlay.ref of
                 StartingLocation ->
@@ -2496,10 +2564,10 @@ overlayToHtml model =
         |> (if (model.gameMode == MoveOverlay && model.coords /= Nothing) || (model.gameMode == AddPiece && model.coords == Nothing) then
                 case model.overlay.ref of
                     Obstacle _ ->
-                        makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragDropState
+                        makeDraggable (OverlayType model.overlay Nothing) model.coords
 
                     Trap _ ->
-                        makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragDropState
+                        makeDraggable (OverlayType model.overlay Nothing) model.coords
 
                     _ ->
                         Dom.addAttribute (attribute "draggable" "false")
@@ -2746,20 +2814,19 @@ keyDecoder =
     Decode.field "key" Decode.string |> Decode.andThen (\s -> Decode.succeed (String.toLower s))
 
 
-makeDraggable : MoveablePieceType -> Maybe ( Int, Int ) -> DragDrop.State MoveablePiece ( Int, Int ) -> Element Msg -> Element Msg
-makeDraggable piece coords dragDropState element =
+makeDraggable : MoveablePieceType -> Maybe ( Int, Int ) -> Element Msg -> Element Msg
+makeDraggable piece coords element =
     let
-        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
-        dragDropMessages =
-            { dragStarted = MoveStarted
-            , dropTargetChanged = MoveTargetChanged
-            , dragEnded = MoveCanceled
-            , dropped = MoveCompleted
-            }
+        config =
+            DragDrop.DraggedSourceConfig
+                (DragDrop.EffectAllowed False False False)
+                (\_ _ -> MoveStarted (MoveablePiece piece coords Nothing))
+                (\_ -> MoveCompleted)
+                Nothing
     in
     element
-        |> DragDrop.makeDraggable dragDropState (MoveablePiece piece coords) dragDropMessages
-        |> Dom.addAttribute (Touch.onStart (\_ -> TouchStart (MoveablePiece piece coords)))
+        |> Dom.addAttributeList (DragDrop.onSourceDrag config)
+        |> Dom.addAttribute (Touch.onStart (\_ -> TouchStart (MoveablePiece piece coords Nothing)))
         |> Dom.addAttribute
             (Touch.onMove
                 (\e ->
@@ -2784,16 +2851,16 @@ makeDraggable piece coords dragDropState element =
             )
 
 
-makeDroppable : ( Int, Int ) -> DragDrop.State MoveablePiece ( Int, Int ) -> Element Msg -> Element Msg
-makeDroppable coords dragDropState element =
+makeDroppable : ( Int, Int ) -> Element Msg -> Element Msg
+makeDroppable coords element =
     let
-        dragDropMessages : DragDrop.Messages Msg MoveablePiece ( Int, Int )
-        dragDropMessages =
-            { dragStarted = MoveStarted
-            , dropTargetChanged = MoveTargetChanged
-            , dragEnded = MoveCanceled
-            , dropped = MoveCompleted
-            }
+        config =
+            DragDrop.DropTargetConfig
+                DragDrop.NoDropEffect
+                (\_ v -> MoveTargetChanged coords)
+                (\_ -> NoOp)
+                Nothing
+                Nothing
     in
     element
-        |> DragDrop.makeDroppable dragDropState coords dragDropMessages
+        |> Dom.addAttributeList (DragDrop.onDropTarget config)
