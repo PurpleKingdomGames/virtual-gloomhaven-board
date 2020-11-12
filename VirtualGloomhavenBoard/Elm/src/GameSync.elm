@@ -1,4 +1,4 @@
-port module GameSync exposing (Msg(..), connectToServer, decodeGameState, encodeGameState, exitFullscreen, pushGameState, subscriptions, toggleFullscreen, update)
+port module GameSync exposing (Msg(..), connectToServer, decodeGameState, decodePiece, encodeGameState, encodeOverlay, encodePiece, exitFullscreen, pushGameState, subscriptions, toggleFullscreen, update)
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -264,14 +264,15 @@ encodeMapTileRefList refs =
 
 encodeOverlays : List BoardOverlay -> List (List ( String, Encode.Value ))
 encodeOverlays overlays =
-    List.map
-        (\o ->
-            [ ( "ref", encodeOverlayType o.ref )
-            , ( "direction", Encode.string (encodeOverlayDirection o.direction) )
-            , ( "cells", Encode.list (Encode.list Encode.int) (encodeOverlayCells o.cells) )
-            ]
-        )
-        overlays
+    List.map encodeOverlay overlays
+
+
+encodeOverlay : BoardOverlay -> List ( String, Encode.Value )
+encodeOverlay o =
+    [ ( "ref", encodeOverlayType o.ref )
+    , ( "direction", Encode.string (encodeOverlayDirection o.direction) )
+    , ( "cells", Encode.list (Encode.list Encode.int) (encodeOverlayCells o.cells) )
+    ]
 
 
 encodeOverlayDirection : BoardOverlayDirectionType -> String
@@ -552,14 +553,15 @@ encodeTreasureChest chest =
 
 encodePieces : List Piece -> List (List ( String, Encode.Value ))
 encodePieces pieces =
-    List.map
-        (\p ->
-            [ ( "ref", object (encodePieceType p.ref) )
-            , ( "x", Encode.int p.x )
-            , ( "y", Encode.int p.y )
-            ]
-        )
-        pieces
+    List.map encodePiece pieces
+
+
+encodePiece : Piece -> List ( String, Encode.Value )
+encodePiece p =
+    [ ( "ref", Encode.object (encodePieceType p.ref) )
+    , ( "x", Encode.int p.x )
+    , ( "y", Encode.int p.y )
+    ]
 
 
 encodeCharacters : List CharacterClass -> List (List ( String, Encode.Value ))

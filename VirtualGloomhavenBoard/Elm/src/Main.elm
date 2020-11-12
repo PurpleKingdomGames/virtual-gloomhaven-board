@@ -1,6 +1,6 @@
 port module Main exposing (main)
 
-import AppStorage exposing (AppModeType(..), Config, GameModeType(..), emptyOverrides, loadFromStorage, loadOverrides, saveToStorage)
+import AppStorage exposing (AppModeType(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
 import Bitwise
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -18,9 +18,10 @@ import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxle
 import Html.Events exposing (on, onClick)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy6, lazy7, lazy8)
 import Http exposing (Error)
 import Json.Decode as Decode
+import Json.Encode as Encode
 import List exposing (all, any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
@@ -48,6 +49,7 @@ type alias Model =
     , currentScenarioInput : Maybe String
     , currentClientSettings : Maybe TransientClientSettings
     , currentPlayerList : Maybe (List CharacterClass)
+    , deadPlayerList : List CharacterClass
     , currentDraggable : Maybe MoveablePiece
     , connectionStatus : ConnectionStatus
     , undoStack : List GameState
@@ -64,17 +66,6 @@ type alias Model =
     }
 
 
-type alias HeaderModel =
-    { scenarioId : Int
-    , scenarioText : String
-    , roomCode : Maybe String
-    , showRoomCode : Bool
-    , lockScenario : Bool
-    , lockPlayers : Bool
-    , menuOpen : Bool
-    }
-
-
 type alias NewPieceMenuModel =
     { gameMode : GameModeType
     , currentDraggable : Maybe MoveablePiece
@@ -82,6 +73,15 @@ type alias NewPieceMenuModel =
     , nextSummonsId : Int
     , availableMonsters : List String
     , deadPlayers : List CharacterClass
+    }
+
+
+type alias RowModel =
+    { gameMode : GameModeType
+    , overlays : List BoardOverlayModel
+    , piece : Maybe PieceModel
+    , currentDraggable : Maybe MoveablePiece
+    , visibleRooms : List MapTileRef
     }
 
 
@@ -121,11 +121,6 @@ type alias TransientClientSettings =
     }
 
 
-type MoveablePieceType
-    = OverlayType BoardOverlay (Maybe ( Int, Int ))
-    | PieceType Piece
-
-
 type LoadingState
     = Loaded
     | Loading Int
@@ -136,13 +131,6 @@ type ConnectionStatus
     = Connected
     | Disconnected
     | Reconnecting
-
-
-type alias MoveablePiece =
-    { ref : MoveablePieceType
-    , coords : Maybe ( Int, Int )
-    , target : Maybe ( Int, Int )
-    }
 
 
 type Msg
@@ -292,6 +280,7 @@ init ( oldState, maybeOverrides, seed ) =
         Nothing
         Nothing
         Nothing
+        (getDeadPlayers initGameState)
         Nothing
         Disconnected
         []
@@ -463,7 +452,7 @@ update msg model =
                         Nothing ->
                             oldGame
             in
-            ( { model | game = game, currentDraggable = Nothing }, pushGameState model game.state True )
+            ( { model | game = game, deadPlayerList = getDeadPlayers game.state, currentDraggable = Nothing }, pushGameState model game.state True )
 
         TouchStart piece ->
             update (MoveStarted piece) model
@@ -509,7 +498,7 @@ update msg model =
                 newGame =
                     removePieceFromBoard piece model.game
             in
-            ( { model | game = newGame }, pushGameState model newGame.state True )
+            ( { model | game = newGame, deadPlayerList = getDeadPlayers newGame.state }, pushGameState model newGame.state True )
 
         ChangeGameMode mode ->
             let
@@ -1036,17 +1025,15 @@ view model =
             game =
                 model.game
          in
-         [ lazy
+         [ lazy7
             getHeaderHtml
-            (HeaderModel
-                model.game.scenario.id
-                model.game.scenario.title
-                model.config.roomCode
-                model.config.showRoomCode
-                model.lockScenario
-                model.lockPlayers
-                model.menuOpen
-            )
+            model.game.scenario.id
+            model.game.scenario.title
+            model.config.roomCode
+            model.config.showRoomCode
+            model.lockScenario
+            model.lockPlayers
+            model.menuOpen
          , div [ class "main" ]
             [ div
                 [ class
@@ -1087,54 +1074,44 @@ view model =
 
                             Nothing ->
                                 1
-
-                    playerPieces =
-                        game.state.pieces
-                            |> List.filterMap
-                                (\p ->
-                                    case p.ref of
-                                        Player c ->
-                                            Just c
-
-                                        _ ->
-                                            Nothing
-                                )
-
-                    deadPlayers =
-                        game.state.players
-                            |> List.filter (\p -> List.member p playerPieces == False)
-
-                    availableMonsters =
-                        Dict.toList model.game.state.availableMonsters
-                            |> List.filter (\( _, v ) -> length v > 0)
-                            |> List.map (\( k, _ ) -> k)
                   in
-                  lazy getNewPieceHtml
-                    (NewPieceMenuModel
-                        model.config.gameMode
-                        (case model.currentDraggable of
-                            Just m ->
-                                case m.coords of
-                                    Nothing ->
-                                        model.currentDraggable
+                  lazy6 getNewPieceHtml
+                    model.config.gameMode
+                    (case model.currentDraggable of
+                        Just m ->
+                            case m.coords of
+                                Nothing ->
+                                    case m.ref of
+                                        PieceType p ->
+                                            getLabelForPiece p
 
-                                    Just _ ->
-                                        Nothing
+                                        OverlayType o _ ->
+                                            getLabelForOverlay o Nothing
 
-                            Nothing ->
-                                Nothing
-                        )
-                        bearSummoned
-                        nextId
-                        availableMonsters
-                        deadPlayers
+                                Just _ ->
+                                    ""
+
+                        Nothing ->
+                            ""
                     )
+                    bearSummoned
+                    nextId
+                    model.game.state.availableMonsters
+                    model.deadPlayerList
                 , div [ class "side-toggle", onClick ToggleSideMenu ] []
                 ]
             , div [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
-                , div [ class "mapTiles" ] (map (lazy (getMapTileHtml game.state.visibleRooms)) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) game.roomData))
-                , div [ class "board" ] (toList (Array.indexedMap (getBoardHtml model game) game.staticBoard))
+                , lazy2 getAllMapTileHtml game.state.visibleRooms game.roomData
+                , div [ class "board" ]
+                    (toList
+                        (Array.indexedMap
+                            (\y ->
+                                getBoardHtml model game y
+                            )
+                            game.staticBoard
+                        )
+                    )
                 ]
             , lazy getConnectionStatusHtml model.connectionStatus
             ]
@@ -1189,14 +1166,14 @@ subscriptions _ =
         ]
 
 
-getHeaderHtml : HeaderModel -> Html.Html Msg
-getHeaderHtml model =
+getHeaderHtml : Int -> String -> Maybe String -> Bool -> Bool -> Bool -> Bool -> Html.Html Msg
+getHeaderHtml scenarioId scenarioTitle roomCode showRoomCode lockScenario lockPlayers menuOpen =
     div
         [ class "header" ]
         [ div
             [ class
                 ("menu"
-                    ++ (if model.menuOpen then
+                    ++ (if menuOpen then
                             " show"
 
                         else
@@ -1209,18 +1186,18 @@ getHeaderHtml model =
             , attribute "aria-keyshortcuts" "m"
             , attribute "role" "button"
             , attribute "aria-pressed"
-                (if model.menuOpen then
+                (if menuOpen then
                     " true"
 
                  else
                     "false"
                 )
             ]
-            [ getMenuHtml model.lockScenario model.lockPlayers model.menuOpen ]
+            [ lazy3 getMenuHtml lockScenario lockPlayers menuOpen ]
         , header [ attribute "aria-label" "Scenario" ]
-            (if model.scenarioId /= 0 then
-                [ span [ class "number" ] [ text (String.fromInt model.scenarioId) ]
-                , span [ class "title" ] [ text model.scenarioText ]
+            (if scenarioId /= 0 then
+                [ span [ class "number" ] [ text (String.fromInt scenarioId) ]
+                , span [ class "title" ] [ text scenarioTitle ]
                 ]
 
              else
@@ -1230,12 +1207,12 @@ getHeaderHtml model =
             [ class
                 "roomCode"
             ]
-            (case model.roomCode of
+            (case roomCode of
                 Nothing ->
                     []
 
                 Just c ->
-                    if model.showRoomCode then
+                    if showRoomCode then
                         [ span [] [ text "Room Code" ]
                         , span [] [ text c ]
                         ]
@@ -1311,10 +1288,10 @@ getFooterHtml v =
         ]
 
 
-getNewPieceHtml : NewPieceMenuModel -> Html.Html Msg
-getNewPieceHtml model =
+getNewPieceHtml : GameModeType -> String -> Bool -> Int -> Dict String (Array Int) -> List CharacterClass -> Html.Html Msg
+getNewPieceHtml gameMode currentDraggable bearSummoned nextSummonsId availableMonsters deadPlayers =
     Dom.element "div"
-        |> Dom.addClassConditional "show" (model.gameMode == AddPiece)
+        |> Dom.addClassConditional "show" (gameMode == AddPiece)
         |> Dom.addClass "new-piece-wrapper"
         |> Dom.appendChild
             (Dom.element "div"
@@ -1323,118 +1300,69 @@ getNewPieceHtml model =
                     (Dom.element "ul"
                         |> Dom.appendChildConditional
                             (Dom.element "li"
-                                |> Dom.setChildListWithKeys
-                                    [ pieceToHtml
-                                        (PieceModel
-                                            model.gameMode
-                                            (case model.currentDraggable of
-                                                Just m ->
-                                                    case m.ref of
-                                                        PieceType p ->
-                                                            p.ref == AI (Summons BearSummons)
-
-                                                        _ ->
-                                                            False
-
-                                                Nothing ->
-                                                    False
+                                |> Dom.appendChild
+                                    (Tuple.second
+                                        (pieceToHtml
+                                            (PieceModel
+                                                gameMode
+                                                (getLabelForPiece (Piece (AI (Summons BearSummons)) 0 0) == currentDraggable)
+                                                Nothing
+                                                (Piece (AI (Summons BearSummons)) 0 0)
                                             )
-                                            Nothing
-                                            (Piece (AI (Summons BearSummons)) 0 0)
                                         )
-                                    ]
+                                    )
                             )
-                            (model.bearSummoned == False)
+                            (bearSummoned == False)
                         |> Dom.appendChild
                             (Dom.element "li"
-                                |> Dom.setChildListWithKeys
-                                    [ pieceToHtml
-                                        (PieceModel
-                                            model.gameMode
-                                            (case model.currentDraggable of
-                                                Just m ->
-                                                    case m.ref of
-                                                        PieceType p ->
-                                                            p.ref == AI (Summons (NormalSummons model.nextSummonsId))
-
-                                                        _ ->
-                                                            False
-
-                                                Nothing ->
-                                                    False
+                                |> Dom.appendChild
+                                    (Tuple.second
+                                        (pieceToHtml
+                                            (PieceModel
+                                                gameMode
+                                                (getLabelForPiece (Piece (AI (Summons (NormalSummons nextSummonsId))) 0 0) == currentDraggable)
+                                                Nothing
+                                                (Piece (AI (Summons (NormalSummons nextSummonsId))) 0 0)
                                             )
-                                            Nothing
-                                            (Piece (AI (Summons (NormalSummons model.nextSummonsId))) 0 0)
                                         )
-                                    ]
+                                    )
+                            )
+                        |> Dom.appendChild
+                            (Dom.element "li"
+                                |> Dom.appendChild
+                                    (Tuple.second
+                                        (overlayToHtml
+                                            (BoardOverlayModel
+                                                gameMode
+                                                (getLabelForOverlay (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
+                                                Nothing
+                                                (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ])
+                                            )
+                                        )
+                                    )
                             )
                         |> Dom.appendChild
                             (Dom.element "li"
                                 |> Dom.setChildListWithKeys
                                     [ overlayToHtml
                                         (BoardOverlayModel
-                                            model.gameMode
-                                            (case model.currentDraggable of
-                                                Just m ->
-                                                    case m.ref of
-                                                        OverlayType o _ ->
-                                                            o.ref == Trap BearTrap
-
-                                                        _ ->
-                                                            False
-
-                                                Nothing ->
-                                                    False
-                                            )
-                                            Nothing
-                                            (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ])
-                                        )
-                                    ]
-                            )
-                        |> Dom.appendChild
-                            (Dom.element "li"
-                                |> Dom.setChildListWithKeys
-                                    [ overlayToHtml
-                                        (BoardOverlayModel
-                                            model.gameMode
-                                            (case model.currentDraggable of
-                                                Just m ->
-                                                    case m.ref of
-                                                        OverlayType o _ ->
-                                                            o.ref == Obstacle Boulder1
-
-                                                        _ ->
-                                                            False
-
-                                                Nothing ->
-                                                    False
-                                            )
+                                            gameMode
+                                            (getLabelForOverlay (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
                                             Nothing
                                             (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ])
                                         )
                                     ]
                             )
                         |> Dom.appendChildList
-                            (model.deadPlayers
+                            (deadPlayers
                                 |> List.map
                                     (\p ->
                                         Dom.element "li"
                                             |> Dom.setChildListWithKeys
                                                 [ pieceToHtml
                                                     (PieceModel
-                                                        model.gameMode
-                                                        (case model.currentDraggable of
-                                                            Just m ->
-                                                                case m.ref of
-                                                                    PieceType piece ->
-                                                                        piece.ref == Player p
-
-                                                                    _ ->
-                                                                        False
-
-                                                            Nothing ->
-                                                                False
-                                                        )
+                                                        gameMode
+                                                        (getLabelForPiece (Piece (Player p) 0 0) == currentDraggable)
                                                         Nothing
                                                         (Piece (Player p) 0 0)
                                                     )
@@ -1442,7 +1370,9 @@ getNewPieceHtml model =
                                     )
                             )
                         |> Dom.appendChildList
-                            (model.availableMonsters
+                            (Dict.toList availableMonsters
+                                |> List.filter (\( _, v ) -> length v > 0)
+                                |> List.map (\( k, _ ) -> k)
                                 |> List.sort
                                 |> List.reverse
                                 |> filterMap (\k -> stringToMonsterType k)
@@ -1452,19 +1382,8 @@ getNewPieceHtml model =
                                             |> Dom.setChildListWithKeys
                                                 [ pieceToHtml
                                                     (PieceModel
-                                                        model.gameMode
-                                                        (case model.currentDraggable of
-                                                            Just m ->
-                                                                case m.ref of
-                                                                    PieceType piece ->
-                                                                        piece.ref == AI (Enemy (Monster k 0 Normal True))
-
-                                                                    _ ->
-                                                                        False
-
-                                                            Nothing ->
-                                                                False
-                                                        )
+                                                        gameMode
+                                                        (getLabelForPiece (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0) == currentDraggable)
                                                         Nothing
                                                         (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0)
                                                     )
@@ -1476,19 +1395,8 @@ getNewPieceHtml model =
                                                             |> Dom.setChildListWithKeys
                                                                 [ pieceToHtml
                                                                     (PieceModel
-                                                                        model.gameMode
-                                                                        (case model.currentDraggable of
-                                                                            Just m ->
-                                                                                case m.ref of
-                                                                                    PieceType piece ->
-                                                                                        piece.ref == AI (Enemy (Monster k 0 Elite True))
-
-                                                                                    _ ->
-                                                                                        False
-
-                                                                            Nothing ->
-                                                                                False
-                                                                        )
+                                                                        gameMode
+                                                                        (getLabelForPiece (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0) == currentDraggable)
                                                                         Nothing
                                                                         (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0)
                                                                     )
@@ -1997,6 +1905,13 @@ getNavHtml gameMode =
         |> Dom.render
 
 
+getAllMapTileHtml : List MapTileRef -> List RoomData -> Html.Html msg
+getAllMapTileHtml visibleRooms roomData =
+    div
+        [ class "mapTiles" ]
+        (map (getMapTileHtml visibleRooms) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) roomData))
+
+
 getMapTileHtml : List MapTileRef -> RoomData -> Html.Html msg
 getMapTileHtml visibleRooms roomData =
     let
@@ -2130,87 +2045,108 @@ getBoardHtml model game y row =
                                                 model.currentDraggable
 
                                             else
-                                                Nothing
+                                                case m.coords of
+                                                    Just ( ox, oy ) ->
+                                                        if any (\c -> c == ( x, y )) o.cells then
+                                                            model.currentDraggable
+
+                                                        else
+                                                            Nothing
+
+                                                    Nothing ->
+                                                        Nothing
 
                                 Nothing ->
                                     Nothing
 
-                        overlaysForCell =
-                            List.filter (filterOverlaysForCoord x y) game.state.overlays
-                                |> map
-                                    (\o ->
-                                        BoardOverlayModel
-                                            model.config.gameMode
-                                            (case currentDraggable of
-                                                Just m ->
-                                                    case m.ref of
-                                                        OverlayType ot _ ->
-                                                            ot.ref == o.ref
-
-                                                        _ ->
-                                                            False
-
-                                                Nothing ->
-                                                    False
-                                            )
-                                            (Just ( x, y ))
-                                            o
-                                    )
-
-                        piece =
-                            Maybe.map
-                                (\p ->
-                                    PieceModel
-                                        model.config.gameMode
-                                        (case currentDraggable of
-                                            Just m ->
-                                                case m.ref of
-                                                    PieceType pieceType ->
-                                                        pieceType.ref == p.ref
-
-                                                    _ ->
-                                                        False
-
-                                            Nothing ->
-                                                False
-                                        )
-                                        (Just ( x, y ))
-                                        p
-                                )
-                                (getPieceForCoord x y game.state.pieces)
-
                         cellVisible =
                             any (\r -> any (\a -> a == r) game.state.visibleRooms) cell.rooms
                     in
-                    lazy getCellHtml
-                        (CellModel
-                            model.config.gameMode
-                            overlaysForCell
-                            piece
-                            currentDraggable
-                            cell.passable
-                            (cellVisible == False)
-                            x
-                            y
+                    lazy8 getCellHtml
+                        model.config.gameMode
+                        model.game.state.overlays
+                        model.game.state.pieces
+                        x
+                        y
+                        (case model.currentDraggable of
+                            Just c ->
+                                Encode.encode 0 (encodeMoveablePiece c)
+
+                            Nothing ->
+                                ""
                         )
+                        cell.passable
+                        (cellVisible == False)
                 )
                 row
             )
         )
 
 
-getCellHtml : CellModel -> Html.Html Msg
-getCellHtml model =
+getCellHtml : GameModeType -> List BoardOverlay -> List Piece -> Int -> Int -> String -> Bool -> Bool -> Html.Html Msg
+getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
     let
+        currentDraggable =
+            case Decode.decodeString decodeMoveablePiece encodedDraggable of
+                Ok d ->
+                    Just d
+
+                _ ->
+                    Nothing
+
+        overlaysForCell =
+            List.filter (filterOverlaysForCoord x y) overlays
+                |> map
+                    (\o ->
+                        BoardOverlayModel
+                            gameMode
+                            (case currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        OverlayType ot _ ->
+                                            ot.ref == o.ref
+
+                                        _ ->
+                                            False
+
+                                Nothing ->
+                                    False
+                            )
+                            (Just ( x, y ))
+                            o
+                    )
+
+        piece =
+            Maybe.map
+                (\p ->
+                    PieceModel
+                        gameMode
+                        (case currentDraggable of
+                            Just m ->
+                                case m.ref of
+                                    PieceType pieceType ->
+                                        pieceType.ref == p.ref
+
+                                    _ ->
+                                        False
+
+                            Nothing ->
+                                False
+                        )
+                        (Just ( x, y ))
+                        p
+                )
+                (getPieceForCoord x y pieces)
+
         cellElement : Dom.Element Msg
         cellElement =
             Dom.element "div"
                 |> Dom.addClass "hexagon"
-                |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt model.x))
-                |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt model.y))
+                |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
+                |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
                 -- Everything except coins
                 |> Dom.setChildListWithKeys
-                    ((model.overlays
+                    ((overlaysForCell
                         |> sortWith
                             (\a b ->
                                 compare (getSortOrderForOverlay a.overlay.ref) (getSortOrderForOverlay b.overlay.ref)
@@ -2232,7 +2168,7 @@ getCellHtml model =
                         |> List.map overlayToHtml
                      )
                         ++ -- Players / Monsters / Summons
-                           (case model.piece of
+                           (case piece of
                                 Nothing ->
                                     []
 
@@ -2240,7 +2176,7 @@ getCellHtml model =
                                     [ pieceToHtml p ]
                            )
                         ++ -- Coins
-                           (model.overlays
+                           (overlaysForCell
                                 |> List.filter
                                     (\o ->
                                         case o.overlay.ref of
@@ -2258,16 +2194,16 @@ getCellHtml model =
                                 |> List.map overlayToHtml
                            )
                         ++ -- The current draggable piece
-                           (case model.currentDraggable of
+                           (case currentDraggable of
                                 Just m ->
                                     case m.ref of
                                         PieceType p ->
-                                            if m.target == Just ( model.x, model.y ) then
+                                            if m.target == Just ( x, y ) then
                                                 [ pieceToHtml
                                                     (PieceModel
-                                                        model.gameMode
+                                                        gameMode
                                                         False
-                                                        (Just ( model.x, model.y ))
+                                                        (Just ( x, y ))
                                                         p
                                                     )
                                                 ]
@@ -2276,12 +2212,12 @@ getCellHtml model =
                                                 []
 
                                         OverlayType o _ ->
-                                            if m.target == Just ( model.x, model.y ) then
+                                            if any (\c -> c == ( x, y )) o.cells then
                                                 [ overlayToHtml
                                                     (BoardOverlayModel
-                                                        model.gameMode
+                                                        gameMode
                                                         False
-                                                        (Just ( model.x, model.y ))
+                                                        (Just ( x, y ))
                                                         o
                                                     )
                                                 ]
@@ -2293,17 +2229,17 @@ getCellHtml model =
                                     []
                            )
                     )
-                |> addActionsForCell model.gameMode ( model.x, model.y ) (List.map (\o -> o.overlay) model.overlays)
+                |> addActionsForCell gameMode ( x, y ) (List.map (\o -> o.overlay) overlaysForCell)
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
-        |> Dom.addClass (cellValueToString model.passable model.hidden)
+        |> Dom.addClass (cellValueToString passable hidden)
         |> Dom.appendChild
             (Dom.element "div"
                 |> Dom.addClass "cell"
                 |> Dom.appendChild
-                    (if model.passable == True && model.hidden == False then
-                        makeDroppable ( model.x, model.y ) cellElement
+                    (if passable == True && hidden == False then
+                        makeDroppable ( x, y ) cellElement
 
                      else
                         cellElement
@@ -2344,48 +2280,7 @@ pieceToHtml : PieceModel -> ( String, Element Msg )
 pieceToHtml model =
     let
         label =
-            case model.piece.ref of
-                Player p ->
-                    Maybe.withDefault "" (characterToString p)
-                        |> String.replace "-" " "
-
-                AI t ->
-                    case t of
-                        Enemy m ->
-                            (case m.monster of
-                                NormalType _ ->
-                                    case m.level of
-                                        Elite ->
-                                            "Elite"
-
-                                        Normal ->
-                                            "Normal"
-
-                                        Monster.None ->
-                                            ""
-
-                                BossType _ ->
-                                    "Boss"
-                            )
-                                ++ " "
-                                ++ (Maybe.withDefault "" (monsterTypeToString m.monster)
-                                        |> String.replace "-" " "
-                                   )
-                                ++ (if m.id > 0 then
-                                        " (" ++ String.fromInt m.id ++ ")"
-
-                                    else
-                                        ""
-                                   )
-
-                        Summons (NormalSummons i) ->
-                            "Summons Number " ++ String.fromInt i
-
-                        Summons BearSummons ->
-                            "Beast Tyrant Bear Summons"
-
-                Game.None ->
-                    "None"
+            getLabelForPiece model.piece
 
         playerHtml : String -> String -> Element Msg -> Element Msg
         playerHtml l p e =
@@ -2499,12 +2394,7 @@ overlayToHtml : BoardOverlayModel -> ( String, Element Msg )
 overlayToHtml model =
     let
         label =
-            case model.coords of
-                Just ( x, y ) ->
-                    getOverlayLabel model.overlay.ref ++ " at " ++ String.fromInt x ++ ", " ++ String.fromInt y
-
-                Nothing ->
-                    "Add new " ++ getOverlayLabel model.overlay.ref
+            getLabelForOverlay model.overlay model.coords
     in
     ( label
     , Dom.element "div"
@@ -2904,10 +2794,85 @@ makeDroppable coords element =
         config =
             DragDrop.DropTargetConfig
                 DragDrop.NoDropEffect
-                (\_ _ -> NoOp)
+                (\_ _ -> MoveTargetChanged coords)
                 (\_ -> NoOp)
-                (Just (\_ -> MoveTargetChanged coords))
+                Nothing
                 Nothing
     in
     element
         |> Dom.addAttributeList (DragDrop.onDropTarget config)
+
+
+getLabelForOverlay : BoardOverlay -> Maybe ( Int, Int ) -> String
+getLabelForOverlay overlay coords =
+    case coords of
+        Just ( x, y ) ->
+            getOverlayLabel overlay.ref ++ " at " ++ String.fromInt x ++ ", " ++ String.fromInt y
+
+        Nothing ->
+            "Add new " ++ getOverlayLabel overlay.ref
+
+
+getLabelForPiece : Piece -> String
+getLabelForPiece piece =
+    case piece.ref of
+        Player p ->
+            Maybe.withDefault "" (characterToString p)
+                |> String.replace "-" " "
+
+        AI t ->
+            case t of
+                Enemy m ->
+                    (case m.monster of
+                        NormalType _ ->
+                            case m.level of
+                                Elite ->
+                                    "Elite"
+
+                                Normal ->
+                                    "Normal"
+
+                                Monster.None ->
+                                    ""
+
+                        BossType _ ->
+                            "Boss"
+                    )
+                        ++ " "
+                        ++ (Maybe.withDefault "" (monsterTypeToString m.monster)
+                                |> String.replace "-" " "
+                           )
+                        ++ (if m.id > 0 then
+                                " (" ++ String.fromInt m.id ++ ")"
+
+                            else
+                                ""
+                           )
+
+                Summons (NormalSummons i) ->
+                    "Summons Number " ++ String.fromInt i
+
+                Summons BearSummons ->
+                    "Beast Tyrant Bear Summons"
+
+        Game.None ->
+            "None"
+
+
+getDeadPlayers : GameState -> List CharacterClass
+getDeadPlayers state =
+    let
+        playerPieces =
+            state.pieces
+                |> List.filterMap
+                    (\p ->
+                        case p.ref of
+                            Player c ->
+                                Just c
+
+                            _ ->
+                                Nothing
+                    )
+    in
+    state.players
+        |> List.filter (\p -> List.member p playerPieces == False)

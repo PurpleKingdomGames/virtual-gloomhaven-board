@@ -1,12 +1,14 @@
-port module AppStorage exposing (AppModeType(..), AppOverrides, Config, GameModeType(..), empty, emptyOverrides, loadFromStorage, loadOverrides, saveToStorage)
+port module AppStorage exposing (AppModeType(..), AppOverrides, Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, empty, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 
+import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass, stringToCharacter)
-import Game exposing (GameState)
-import GameSync exposing (decodeGameState, encodeGameState)
+import Game exposing (GameState, Piece)
+import GameSync exposing (decodeGameState, decodePiece, encodeGameState, encodeOverlay, encodePiece)
 import Html exposing (s)
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map5, map6, maybe, string, succeed)
 import Json.Encode as Encode exposing (object, string)
 import List exposing (filterMap)
+import SharedSync exposing (decodeBoardOverlay)
 
 
 port saveData : Encode.Value -> Cmd msg
@@ -52,6 +54,18 @@ type AppModeType
     | ScenarioDialog
     | ConfigDialog
     | PlayerChoiceDialog
+
+
+type alias MoveablePiece =
+    { ref : MoveablePieceType
+    , coords : Maybe ( Int, Int )
+    , target : Maybe ( Int, Int )
+    }
+
+
+type MoveablePieceType
+    = OverlayType BoardOverlay (Maybe ( Int, Int ))
+    | PieceType Piece
 
 
 emptyConfig : Config
@@ -246,3 +260,121 @@ decodeGameMode val =
 
         _ ->
             fail ("`" ++ val ++ "` is not a valid game mode")
+
+
+decodeMoveablePiece : Decoder MoveablePiece
+decodeMoveablePiece =
+    Decode.map3
+        MoveablePiece
+        (field "ref" decodeMoveablePieceType)
+        (field "coords" (Decode.nullable decodeCoords))
+        (field "target" (Decode.nullable decodeCoords))
+
+
+decodeMoveablePieceType : Decoder MoveablePieceType
+decodeMoveablePieceType =
+    field "type" Decode.string
+        |> andThen
+            (\s ->
+                case String.toLower s of
+                    "overlay" ->
+                        field "data" decodeBoardOverlay
+                            |> andThen
+                                (\o ->
+                                    field "ref" (Decode.nullable decodeCoords)
+                                        |> andThen
+                                            (\c ->
+                                                Decode.succeed (OverlayType o c)
+                                            )
+                                )
+
+                    "piece" ->
+                        field "data" decodePiece
+                            |> andThen
+                                (\p ->
+                                    Decode.succeed (PieceType p)
+                                )
+
+                    _ ->
+                        fail ("Cannot decode " ++ s ++ " as moveable piece")
+            )
+
+
+decodeCoords : Decoder ( Int, Int )
+decodeCoords =
+    field "x" Decode.int
+        |> andThen
+            (\x ->
+                field "y" Decode.int
+                    |> andThen (\y -> Decode.succeed ( x, y ))
+            )
+
+
+encodeMoveablePiece : MoveablePiece -> Encode.Value
+encodeMoveablePiece piece =
+    Encode.object
+        [ ( "ref", Encode.object (encodeMoveablePieceType piece.ref) )
+        , ( "coords"
+          , case piece.coords of
+                Just c ->
+                    Encode.object (encodeCoords c)
+
+                Nothing ->
+                    Encode.null
+          )
+        , ( "target"
+          , case piece.target of
+                Just c ->
+                    Encode.object (encodeCoords c)
+
+                Nothing ->
+                    Encode.null
+          )
+        ]
+
+
+encodeMoveablePieceType : MoveablePieceType -> List ( String, Encode.Value )
+encodeMoveablePieceType pieceType =
+    [ ( "type"
+      , Encode.string
+            (case pieceType of
+                OverlayType _ _ ->
+                    "overlay"
+
+                PieceType _ ->
+                    "piece"
+            )
+      )
+    , ( "data"
+      , Encode.object
+            (case pieceType of
+                OverlayType o _ ->
+                    encodeOverlay o
+
+                PieceType p ->
+                    encodePiece p
+            )
+      )
+    ]
+        ++ (case pieceType of
+                OverlayType _ c ->
+                    [ ( "ref"
+                      , case c of
+                            Just v ->
+                                Encode.object (encodeCoords v)
+
+                            Nothing ->
+                                Encode.null
+                      )
+                    ]
+
+                PieceType _ ->
+                    []
+           )
+
+
+encodeCoords : ( Int, Int ) -> List ( String, Encode.Value )
+encodeCoords ( x, y ) =
+    [ ( "x", Encode.int x )
+    , ( "y", Encode.int y )
+    ]
