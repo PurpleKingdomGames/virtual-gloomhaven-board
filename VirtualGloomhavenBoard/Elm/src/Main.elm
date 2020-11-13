@@ -390,15 +390,32 @@ update msg model =
                                     let
                                         ( _, newOverlay, newCoords ) =
                                             moveOverlay o m.coords prevCoords coords model.game
+
+                                        moveablePieceType =
+                                            OverlayType newOverlay newCoords
+
+                                        newTarget =
+                                            if moveablePieceType == m.ref then
+                                                m.target
+
+                                            else
+                                                Just coords
                                     in
-                                    Just (MoveablePiece (OverlayType newOverlay newCoords) m.coords (Just coords))
+                                    Just (MoveablePiece moveablePieceType m.coords newTarget)
 
                                 PieceType p ->
                                     let
                                         newPiece =
-                                            Tuple.second (movePiece p m.coords coords model.game)
+                                            PieceType (Tuple.second (movePiece p m.coords coords model.game))
+
+                                        newTarget =
+                                            if newPiece == m.ref then
+                                                m.target
+
+                                            else
+                                                Just coords
                                     in
-                                    Just (MoveablePiece (PieceType newPiece) m.coords (Just coords))
+                                    Just (MoveablePiece newPiece m.coords newTarget)
 
                         Nothing ->
                             model.currentDraggable
@@ -1022,11 +1039,7 @@ view model =
         , id "content"
         , Touch.onCancel (\_ -> TouchCanceled)
         ]
-        (let
-            game =
-                model.game
-         in
-         [ lazy7
+        ([ lazy7
             getHeaderHtml
             model.game.scenario.id
             model.game.scenario.title
@@ -1050,8 +1063,8 @@ view model =
                 [ lazy getNavHtml model.config.gameMode
                 , let
                     bearSummoned =
-                        (List.member BeastTyrant game.state.players == False)
-                            || List.any (\p -> p.ref == AI (Summons BearSummons)) game.state.pieces
+                        (List.member BeastTyrant model.game.state.players == False)
+                            || List.any (\p -> p.ref == AI (Summons BearSummons)) model.game.state.pieces
 
                     maxSummons =
                         filterMap
@@ -1063,7 +1076,7 @@ view model =
                                     _ ->
                                         Nothing
                             )
-                            game.state.pieces
+                            model.game.state.pieces
                             |> sort
                             |> reverse
                             |> head
@@ -1103,7 +1116,7 @@ view model =
                 ]
             , div [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
-                , lazy2 getAllMapTileHtml game.state.visibleRooms game.roomData
+                , lazy2 getAllMapTileHtml model.game.state.visibleRooms model.game.roomData
                 , div [ class "board" ]
                     (let
                         encodedDraggable =
@@ -1114,7 +1127,7 @@ view model =
                                 Nothing ->
                                     ""
                      in
-                     toList (Array.indexedMap (getBoardHtml model game encodedDraggable) game.staticBoard)
+                     toList (Array.indexedMap (getBoardHtml model model.game encodedDraggable) model.game.staticBoard)
                     )
                 ]
             , lazy getConnectionStatusHtml model.connectionStatus
