@@ -1104,13 +1104,16 @@ view model =
                 [ div [ class "map-bg" ] []
                 , lazy2 getAllMapTileHtml game.state.visibleRooms game.roomData
                 , div [ class "board" ]
-                    (toList
-                        (Array.indexedMap
-                            (\y ->
-                                getBoardHtml model game y
-                            )
-                            game.staticBoard
-                        )
+                    (let
+                        encodedDraggable =
+                            case model.currentDraggable of
+                                Just c ->
+                                    Encode.encode 0 (encodeMoveablePiece c)
+
+                                Nothing ->
+                                    ""
+                     in
+                     toList (Array.indexedMap (getBoardHtml model game encodedDraggable) game.staticBoard)
                     )
                 ]
             , lazy getConnectionStatusHtml model.connectionStatus
@@ -2022,42 +2025,34 @@ getMapTileHtml visibleRooms roomData =
         ]
 
 
-getBoardHtml : Model -> Game -> Int -> Array Cell -> Html.Html Msg
-getBoardHtml model game y row =
+getBoardHtml : Model -> Game -> String -> Int -> Array Cell -> Html.Html Msg
+getBoardHtml model game encodedDraggable y row =
     div [ class "row" ]
         (toList
             (Array.indexedMap
                 (\x cell ->
                     let
-                        currentDraggable =
+                        useDaggable =
                             case model.currentDraggable of
                                 Just m ->
                                     case m.ref of
                                         PieceType p ->
-                                            if (p.x == x && p.y == y) || (m.coords == Just ( x, y )) then
-                                                model.currentDraggable
-
-                                            else
-                                                Nothing
+                                            (p.x == x && p.y == y) || (m.coords == Just ( x, y ))
 
                                         OverlayType o _ ->
                                             if any (\c -> c == ( x, y )) o.cells then
-                                                model.currentDraggable
+                                                True
 
                                             else
                                                 case m.coords of
                                                     Just ( ox, oy ) ->
-                                                        if any (\c -> c == ( x, y )) o.cells then
-                                                            model.currentDraggable
-
-                                                        else
-                                                            Nothing
+                                                        any (\c -> c == ( x, y )) o.cells
 
                                                     Nothing ->
-                                                        Nothing
+                                                        False
 
                                 Nothing ->
-                                    Nothing
+                                    False
 
                         cellVisible =
                             any (\r -> any (\a -> a == r) game.state.visibleRooms) cell.rooms
@@ -2068,12 +2063,11 @@ getBoardHtml model game y row =
                         model.game.state.pieces
                         x
                         y
-                        (case model.currentDraggable of
-                            Just c ->
-                                Encode.encode 0 (encodeMoveablePiece c)
+                        (if useDaggable then
+                            encodedDraggable
 
-                            Nothing ->
-                                ""
+                         else
+                            ""
                         )
                         cell.passable
                         (cellVisible == False)
@@ -2085,26 +2079,49 @@ getBoardHtml model game y row =
 
 getCellHtml : GameModeType -> List BoardOverlay -> List Piece -> Int -> Int -> String -> Bool -> Bool -> Html.Html Msg
 getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
-    let
-        currentDraggable =
-            case Decode.decodeString decodeMoveablePiece encodedDraggable of
-                Ok d ->
-                    Just d
+    Debug.log
+        "cell"
+        (let
+            currentDraggable =
+                case Decode.decodeString decodeMoveablePiece encodedDraggable of
+                    Ok d ->
+                        Just d
 
-                _ ->
-                    Nothing
+                    _ ->
+                        Nothing
 
-        overlaysForCell =
-            List.filter (filterOverlaysForCoord x y) overlays
-                |> map
-                    (\o ->
-                        BoardOverlayModel
+            overlaysForCell =
+                List.filter (filterOverlaysForCoord x y) overlays
+                    |> map
+                        (\o ->
+                            BoardOverlayModel
+                                gameMode
+                                (case currentDraggable of
+                                    Just m ->
+                                        case m.ref of
+                                            OverlayType ot _ ->
+                                                ot.ref == o.ref
+
+                                            _ ->
+                                                False
+
+                                    Nothing ->
+                                        False
+                                )
+                                (Just ( x, y ))
+                                o
+                        )
+
+            piece =
+                Maybe.map
+                    (\p ->
+                        PieceModel
                             gameMode
                             (case currentDraggable of
                                 Just m ->
                                     case m.ref of
-                                        OverlayType ot _ ->
-                                            ot.ref == o.ref
+                                        PieceType pieceType ->
+                                            pieceType.ref == p.ref
 
                                         _ ->
                                             False
@@ -2113,139 +2130,119 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                                     False
                             )
                             (Just ( x, y ))
-                            o
+                            p
                     )
+                    (getPieceForCoord x y pieces)
 
-        piece =
-            Maybe.map
-                (\p ->
-                    PieceModel
-                        gameMode
-                        (case currentDraggable of
-                            Just m ->
-                                case m.ref of
-                                    PieceType pieceType ->
-                                        pieceType.ref == p.ref
+            cellElement : Dom.Element Msg
+            cellElement =
+                Dom.element "div"
+                    |> Dom.addClass "hexagon"
+                    |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
+                    |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
+                    -- Everything except coins
+                    |> Dom.setChildListWithKeys
+                        ((overlaysForCell
+                            |> sortWith
+                                (\a b ->
+                                    compare (getSortOrderForOverlay a.overlay.ref) (getSortOrderForOverlay b.overlay.ref)
+                                )
+                            |> filter
+                                (\o ->
+                                    case o.overlay.ref of
+                                        Treasure t ->
+                                            case t of
+                                                Chest _ ->
+                                                    True
 
-                                    _ ->
-                                        False
+                                                _ ->
+                                                    False
 
-                            Nothing ->
-                                False
+                                        _ ->
+                                            True
+                                )
+                            |> List.map overlayToHtml
+                         )
+                            ++ -- Players / Monsters / Summons
+                               (case piece of
+                                    Nothing ->
+                                        []
+
+                                    Just p ->
+                                        [ pieceToHtml p ]
+                               )
+                            ++ -- Coins
+                               (overlaysForCell
+                                    |> List.filter
+                                        (\o ->
+                                            case o.overlay.ref of
+                                                Treasure t ->
+                                                    case t of
+                                                        Chest _ ->
+                                                            False
+
+                                                        _ ->
+                                                            True
+
+                                                _ ->
+                                                    False
+                                        )
+                                    |> List.map overlayToHtml
+                               )
+                            ++ -- The current draggable piece
+                               (case currentDraggable of
+                                    Just m ->
+                                        case m.ref of
+                                            PieceType p ->
+                                                if m.target == Just ( x, y ) then
+                                                    [ pieceToHtml
+                                                        (PieceModel
+                                                            gameMode
+                                                            False
+                                                            (Just ( x, y ))
+                                                            p
+                                                        )
+                                                    ]
+
+                                                else
+                                                    []
+
+                                            OverlayType o _ ->
+                                                if any (\c -> c == ( x, y )) o.cells then
+                                                    [ overlayToHtml
+                                                        (BoardOverlayModel
+                                                            gameMode
+                                                            False
+                                                            (Just ( x, y ))
+                                                            o
+                                                        )
+                                                    ]
+
+                                                else
+                                                    []
+
+                                    Nothing ->
+                                        []
+                               )
                         )
-                        (Just ( x, y ))
-                        p
+                    |> addActionsForCell gameMode ( x, y ) (List.map (\o -> o.overlay) overlaysForCell)
+         in
+         Dom.element "div"
+            |> Dom.addClass "cell-wrapper"
+            |> Dom.addClass (cellValueToString passable hidden)
+            |> Dom.appendChild
+                (Dom.element "div"
+                    |> Dom.addClass "cell"
+                    |> Dom.appendChild
+                        (if passable == True && hidden == False then
+                            makeDroppable ( x, y ) cellElement
+
+                         else
+                            cellElement
+                        )
                 )
-                (getPieceForCoord x y pieces)
-
-        cellElement : Dom.Element Msg
-        cellElement =
-            Dom.element "div"
-                |> Dom.addClass "hexagon"
-                |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
-                |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
-                -- Everything except coins
-                |> Dom.setChildListWithKeys
-                    ((overlaysForCell
-                        |> sortWith
-                            (\a b ->
-                                compare (getSortOrderForOverlay a.overlay.ref) (getSortOrderForOverlay b.overlay.ref)
-                            )
-                        |> filter
-                            (\o ->
-                                case o.overlay.ref of
-                                    Treasure t ->
-                                        case t of
-                                            Chest _ ->
-                                                True
-
-                                            _ ->
-                                                False
-
-                                    _ ->
-                                        True
-                            )
-                        |> List.map overlayToHtml
-                     )
-                        ++ -- Players / Monsters / Summons
-                           (case piece of
-                                Nothing ->
-                                    []
-
-                                Just p ->
-                                    [ pieceToHtml p ]
-                           )
-                        ++ -- Coins
-                           (overlaysForCell
-                                |> List.filter
-                                    (\o ->
-                                        case o.overlay.ref of
-                                            Treasure t ->
-                                                case t of
-                                                    Chest _ ->
-                                                        False
-
-                                                    _ ->
-                                                        True
-
-                                            _ ->
-                                                False
-                                    )
-                                |> List.map overlayToHtml
-                           )
-                        ++ -- The current draggable piece
-                           (case currentDraggable of
-                                Just m ->
-                                    case m.ref of
-                                        PieceType p ->
-                                            if m.target == Just ( x, y ) then
-                                                [ pieceToHtml
-                                                    (PieceModel
-                                                        gameMode
-                                                        False
-                                                        (Just ( x, y ))
-                                                        p
-                                                    )
-                                                ]
-
-                                            else
-                                                []
-
-                                        OverlayType o _ ->
-                                            if any (\c -> c == ( x, y )) o.cells then
-                                                [ overlayToHtml
-                                                    (BoardOverlayModel
-                                                        gameMode
-                                                        False
-                                                        (Just ( x, y ))
-                                                        o
-                                                    )
-                                                ]
-
-                                            else
-                                                []
-
-                                Nothing ->
-                                    []
-                           )
-                    )
-                |> addActionsForCell gameMode ( x, y ) (List.map (\o -> o.overlay) overlaysForCell)
-    in
-    Dom.element "div"
-        |> Dom.addClass "cell-wrapper"
-        |> Dom.addClass (cellValueToString passable hidden)
-        |> Dom.appendChild
-            (Dom.element "div"
-                |> Dom.addClass "cell"
-                |> Dom.appendChild
-                    (if passable == True && hidden == False then
-                        makeDroppable ( x, y ) cellElement
-
-                     else
-                        cellElement
-                    )
-            )
-        |> Dom.render
+            |> Dom.render
+        )
 
 
 cellValueToString : Bool -> Bool -> String
