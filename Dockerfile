@@ -29,7 +29,7 @@ RUN dpkg -i dotnet.deb
 RUN apt-get update; \
     apt-get install -y apt-transport-https && \
     apt-get update && \
-    apt-get install -y dotnet-sdk-3.1
+    apt-get install -y dotnet-sdk-5.0
 
 # Disable telemetry
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
