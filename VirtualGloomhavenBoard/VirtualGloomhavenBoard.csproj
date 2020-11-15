@@ -12,6 +12,7 @@
         <PublishReadyToRun>true</PublishReadyToRun>
         <PublishTrimmed>true</PublishTrimmed>
         <PublishSingleFile>true</PublishSingleFile>
+        <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
         <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
         <DefineConstants>RELEASE</DefineConstants>
     </PropertyGroup>

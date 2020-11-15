@@ -35,7 +35,7 @@ namespace VirtualGloomhavenBoard
 
             IConfiguration config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory ?? Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.json", true, true)
                 .AddJsonFile(appSettings, true, true)
                 .AddCommandLine(args)
                 .Build()
