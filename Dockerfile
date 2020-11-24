@@ -10,8 +10,8 @@ RUN apt-get update -yq \
     && curl -L https://deb.nodesource.com/setup_12.x | bash \
     && apt-get update -yq \
     && apt-get install -yq \
-        nodejs \
-        curl
+    nodejs \
+    curl
 
 # Install Elm
 RUN curl -L -o elm.gz https://github.com/elm/compiler/releases/download/0.19.1/binary-for-linux-64-bit.gz
@@ -38,16 +38,10 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 RUN dotnet publish -c Release --self-contained true -r linux-x64 -o ./publish
 
 # Copy the app to a minimul Linux build
-FROM ubuntu:20.04
+FROM mcr.microsoft.com/dotnet/aspnet:5.0
 LABEL vendor="Purple Kingdom Games Ltd."
 EXPOSE 5000
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-
-RUN apt-get update; \
-    apt-get install -y apt-transport-https && \
-    apt-get update && \
-    apt-get install -y libssl1.1
-
 
 COPY --from=build-env /build/publish ./app
 ENTRYPOINT ["./app/VirtualGloomhavenBoard"]
