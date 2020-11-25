@@ -1,20 +1,36 @@
 "use strict";
 (() => {
-    document.body.addEventListener("dragstart", event => {
-        if (event.target && event.target.draggable) {
-            // Absurdly, this is needed for Firefox; see https://medium.com/elm-shorts/elm-drag-and-drop-game-630205556d2
-            event.dataTransfer.setData("text/html", "blank");
+    var DragPorts = (function () {
+        // data must be of the format:
+        // { effectAllowed: string, event: DragEvent }
+        function processDragStart(data) {
+            data.event.dataTransfer.setData("text/plain", null); // needed
+            data.event.dataTransfer.effectAllowed = data.effectAllowed;
+
             let emptyImage = document.createElement('img');
             // Set the src to be a 0x0 gif
             emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-            event.dataTransfer.setDragImage(emptyImage, 0, 0);
+            data.event.dataTransfer.setDragImage(emptyImage, 0, 0);
         }
-    });
 
-    document.body.addEventListener("dragover", event => {
-        // This is needed in order to make dragging work
-        return false;
-    });
+        // data must be of the format:
+        // { dropEffect: string, event: DragEvent }
+        function processDragOver(data) {
+            data.event.dataTransfer.dropEffect = data.dropEffect;
+        }
+
+        // Automatic setup of standard drag ports subscriptions.
+        function setup(elmApp) {
+            elmApp.ports.dragstart.subscribe(processDragStart);
+            elmApp.ports.dragover.subscribe(processDragOver);
+        }
+
+        return {
+            processDragStart: processDragStart,
+            processDragOver: processDragOver,
+            setup: setup
+        };
+    })();
 
     const app = Elm.Main.init({
         node: document.getElementById("elm-node"),
@@ -24,6 +40,7 @@
             , Math.floor(Math.random() * Math.floor(4000))
         ]
     });
+    DragPorts.setup(app)
 
     const conn = new signalR
         .HubConnectionBuilder()
@@ -31,7 +48,7 @@
         .configureLogging(signalR.LogLevel.Information)
         .withAutomaticReconnect([0, 3000, 5000, 10000, 15000, 30000])
         .build()
-    ;
+        ;
 
     let lastGameState = null;
     let roomCode = null;
@@ -58,14 +75,14 @@
             conn
                 .invoke("SendGameState", roomCode, lastGameState)
                 .catch(err => console.error(err))
-            ;
+                ;
     });
 
     app.ports.saveData.subscribe((data) =>
         window.localStorage.setItem("state", JSON.stringify(data))
     );
 
-    app.ports.connect.subscribe (async () => {
+    app.ports.connect.subscribe(async () => {
         if (conn.state === signalR.HubConnectionState.Disconnected) {
             try {
                 await conn.start();
@@ -77,15 +94,15 @@
         }
     });
 
-    app.ports.createRoom.subscribe (seed => {
+    app.ports.createRoom.subscribe(seed => {
         if (conn.state === signalR.HubConnectionState.Connected)
             conn
                 .invoke("CreateRoom", seed)
                 .catch(err => console.error(err))
-            ;
+                ;
     });
 
-    app.ports.joinRoom.subscribe ((args) => {
+    app.ports.joinRoom.subscribe((args) => {
         const oldCode = args[0];
         const newCode = args[1];
 
@@ -96,12 +113,12 @@
         conn.invoke("JoinRoom", newCode).catch(err => console.error(err));
     });
 
-    app.ports.sendUpdate.subscribe ((args) => {
+    app.ports.sendUpdate.subscribe((args) => {
         lastGameState = args[1];
         conn.invoke("SendGameState", args[0], args[1]).catch(err => console.error(err));
     });
 
-    app.ports.toggleFullscreenPort.subscribe ((enabled) => {
+    app.ports.toggleFullscreenPort.subscribe((enabled) => {
         const elem = document.getElementById('content')
         if (enabled && document.fullscreenEnabled && !document.fullscreenElement) {
             elem.requestFullscreen();

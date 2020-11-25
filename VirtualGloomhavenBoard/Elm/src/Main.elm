@@ -9,9 +9,9 @@ import Browser
 import Browser.Dom as BrowserDom exposing (Error)
 import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
 import Character exposing (CharacterClass(..), characterToString)
-import Debug
 import Dict exposing (Dict)
 import Dom exposing (Element)
+import DragPorts
 import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
@@ -137,8 +137,8 @@ type ConnectionStatus
 type Msg
     = LoadedScenario Seed (Maybe Game.GameState) Bool (Result Error Scenario)
     | ReloadScenario
-    | MoveStarted MoveablePiece
-    | MoveTargetChanged ( Int, Int )
+    | MoveStarted MoveablePiece (Maybe ( DragDrop.EffectAllowed, Decode.Value ))
+    | MoveTargetChanged ( Int, Int ) (Maybe ( DragDrop.DropEffect, Decode.Value ))
     | MoveCanceled
     | MoveCompleted
     | TouchStart MoveablePiece
@@ -377,10 +377,19 @@ update msg model =
         ReloadScenario ->
             update (ChangeScenario model.game.state.scenario True) model
 
-        MoveStarted piece ->
-            ( { model | currentDraggable = Just piece }, Cmd.none )
+        MoveStarted piece maybeDragData ->
+            let
+                cmd =
+                    case maybeDragData of
+                        Just ( e, v ) ->
+                            DragPorts.dragstart (DragDrop.startPortData e v)
 
-        MoveTargetChanged coords ->
+                        Nothing ->
+                            Cmd.none
+            in
+            ( { model | currentDraggable = Just piece }, cmd )
+
+        MoveTargetChanged coords maybeDragOver ->
             let
                 newDraggable =
                     case model.currentDraggable of
@@ -419,8 +428,16 @@ update msg model =
 
                         Nothing ->
                             model.currentDraggable
+
+                cmd =
+                    case maybeDragOver of
+                        Just ( e, v ) ->
+                            DragPorts.dragover (DragDrop.overPortData e v)
+
+                        Nothing ->
+                            Cmd.none
             in
-            ( { model | currentDraggable = newDraggable }, Cmd.none )
+            ( { model | currentDraggable = newDraggable }, cmd )
 
         MoveCanceled ->
             ( { model | currentDraggable = Nothing }, Cmd.none )
@@ -473,7 +490,7 @@ update msg model =
             ( { model | game = game, deadPlayerList = getDeadPlayers game.state, currentDraggable = Nothing }, pushGameState model game.state True )
 
         TouchStart piece ->
-            update (MoveStarted piece) model
+            update (MoveStarted piece Nothing) model
 
         TouchCanceled ->
             update MoveCanceled model
@@ -496,7 +513,7 @@ update msg model =
                         ( model, Cmd.none )
 
             else
-                update (MoveTargetChanged ( x, y )) model
+                update (MoveTargetChanged ( x, y ) Nothing) model
 
         RemoveOverlay overlay ->
             let
@@ -2270,14 +2287,15 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
         |> Dom.appendChild
             (Dom.element "div"
                 |> Dom.addClass "cell"
-                |> Dom.appendChild
-                    (if passable == True && hidden == False then
-                        makeDroppable ( x, y ) cellElement
-
-                     else
-                        cellElement
-                    )
+                |> Dom.appendChild cellElement
             )
+        |> (\e ->
+                if passable == True && hidden == False then
+                    makeDroppable ( x, y ) e
+
+                else
+                    e
+           )
         |> Dom.render
 
 
@@ -2789,9 +2807,9 @@ makeDraggable piece coords element =
     let
         config =
             DragDrop.DraggedSourceConfig
-                (DragDrop.EffectAllowed False False False)
-                (\_ _ -> MoveStarted (MoveablePiece piece coords Nothing))
-                (\_ -> MoveCompleted)
+                (DragDrop.EffectAllowed True False False)
+                (\e v -> MoveStarted (MoveablePiece piece coords Nothing) (Just ( e, v )))
+                (always MoveCanceled)
                 Nothing
     in
     element
@@ -2826,9 +2844,9 @@ makeDroppable coords element =
     let
         config =
             DragDrop.DropTargetConfig
-                DragDrop.NoDropEffect
-                (\_ _ -> MoveTargetChanged coords)
-                (\_ -> NoOp)
+                DragDrop.MoveOnDrop
+                (\e v -> MoveTargetChanged coords (Just ( e, v )))
+                (always MoveCompleted)
                 Nothing
                 Nothing
     in
