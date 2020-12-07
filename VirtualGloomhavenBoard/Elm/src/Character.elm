@@ -13,6 +13,7 @@ characterDictionary =
         , ( "cragheart", Cragheart )
         , ( "mindthief", Mindthief )
         , ( "spellweaver", Spellweaver )
+        , ( "diviner", Diviner )
 
         -- Unlockable Characters
         , ( "phoenix-face", BeastTyrant )
@@ -34,6 +35,7 @@ type CharacterClass
     | Berserker
     | Brute
     | Cragheart
+    | Diviner
     | Doomstalker
     | Elementalist
     | Mindthief
