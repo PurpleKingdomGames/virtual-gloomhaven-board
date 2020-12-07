@@ -182,7 +182,7 @@ type Msg
 
 version : String
 version =
-    "1.6.2"
+    "1.7.0"
 
 
 undoLimit : Int
