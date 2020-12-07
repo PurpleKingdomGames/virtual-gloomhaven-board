@@ -130,6 +130,9 @@ decodeBoardOverlayType =
                 "obstacle" ->
                     decodeObstacle
 
+                "rift" ->
+                    succeed Rift
+
                 "starting-location" ->
                     succeed StartingLocation
 

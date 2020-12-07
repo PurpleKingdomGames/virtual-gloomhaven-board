@@ -1083,6 +1083,9 @@ view model =
                         (List.member BeastTyrant model.game.state.players == False)
                             || List.any (\p -> p.ref == AI (Summons BearSummons)) model.game.state.pieces
 
+                    hasDiviner =
+                        List.member Diviner model.game.state.players
+
                     maxSummons =
                         filterMap
                             (\p ->
@@ -1106,7 +1109,7 @@ view model =
                             Nothing ->
                                 1
                   in
-                  lazy6 getNewPieceHtml
+                  lazy7 getNewPieceHtml
                     model.config.gameMode
                     (case model.currentDraggable of
                         Just m ->
@@ -1125,6 +1128,7 @@ view model =
                         Nothing ->
                             ""
                     )
+                    hasDiviner
                     bearSummoned
                     nextId
                     model.game.state.availableMonsters
@@ -1322,8 +1326,8 @@ getFooterHtml v =
         ]
 
 
-getNewPieceHtml : GameModeType -> String -> Bool -> Int -> Dict String (Array Int) -> List CharacterClass -> Html.Html Msg
-getNewPieceHtml gameMode currentDraggable bearSummoned nextSummonsId availableMonsters deadPlayers =
+getNewPieceHtml : GameModeType -> String -> Bool -> Bool -> Int -> Dict String (Array Int) -> List CharacterClass -> Html.Html Msg
+getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId availableMonsters deadPlayers =
     Dom.element "div"
         |> Dom.addClassConditional "show" (gameMode == AddPiece)
         |> Dom.addClass "new-piece-wrapper"
@@ -1347,6 +1351,21 @@ getNewPieceHtml gameMode currentDraggable bearSummoned nextSummonsId availableMo
                                     )
                             )
                             (bearSummoned == False)
+                        |> Dom.appendChildConditional
+                            (Dom.element "li"
+                                |> Dom.appendChild
+                                    (Tuple.second
+                                        (overlayToHtml
+                                            (BoardOverlayModel
+                                                gameMode
+                                                (getLabelForOverlay (BoardOverlay Rift Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
+                                                Nothing
+                                                (BoardOverlay Rift Default [ ( 0, 0 ) ])
+                                            )
+                                        )
+                                    )
+                            )
+                            hasDiviner
                         |> Dom.appendChild
                             (Dom.element "li"
                                 |> Dom.appendChild
@@ -2458,6 +2477,9 @@ overlayToHtml model =
                 StartingLocation ->
                     "start-location"
 
+                Rift ->
+                    "rift"
+
                 Treasure t ->
                     "treasure "
                         ++ (case t of
@@ -2552,6 +2574,9 @@ overlayToHtml model =
         |> (if (model.gameMode == MoveOverlay && model.coords /= Nothing) || (model.gameMode == AddPiece && model.coords == Nothing) then
                 case model.overlay.ref of
                     Obstacle _ ->
+                        makeDraggable (OverlayType model.overlay Nothing) model.coords
+
+                    Rift ->
                         makeDraggable (OverlayType model.overlay Nothing) model.coords
 
                     Trap _ ->
@@ -2716,19 +2741,22 @@ getSortOrderForOverlay overlay =
         StartingLocation ->
             3
 
+        Rift ->
+            4
+
         Treasure t ->
             case t of
                 Chest _ ->
-                    4
-
-                Coin _ ->
                     5
 
+                Coin _ ->
+                    6
+
         Obstacle _ ->
-            6
+            7
 
         Trap _ ->
-            7
+            8
 
 
 shortcutHtml : List String -> Element msg -> Element msg

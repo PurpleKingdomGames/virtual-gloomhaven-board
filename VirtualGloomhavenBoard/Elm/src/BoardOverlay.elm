@@ -8,6 +8,7 @@ type BoardOverlayType
     | Door DoorSubType (List MapTileRef)
     | Hazard HazardSubType
     | Obstacle ObstacleSubType
+    | Rift
     | StartingLocation
     | Trap TrapSubType
     | Treasure TreasureSubType
@@ -252,6 +253,9 @@ getBoardOverlayName overlay =
                 WallSection ->
                     "obstacle-wall-section"
 
+        Rift ->
+            "rift"
+
         StartingLocation ->
             "starting-location"
 
@@ -410,6 +414,9 @@ getOverlayLabel overlay =
 
                 WallSection ->
                     "Wall"
+
+        Rift ->
+            "Rift"
 
         StartingLocation ->
             "Starting Location"

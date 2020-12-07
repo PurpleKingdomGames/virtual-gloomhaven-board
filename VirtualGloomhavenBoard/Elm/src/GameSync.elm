@@ -342,6 +342,9 @@ encodeOverlayType overlay =
                 , ( "subType", Encode.string (encodeObstacle o) )
                 ]
 
+        Rift ->
+            object [ ( "type", Encode.string "rift" ) ]
+
         StartingLocation ->
             object [ ( "type", Encode.string "starting-location" ) ]
 
