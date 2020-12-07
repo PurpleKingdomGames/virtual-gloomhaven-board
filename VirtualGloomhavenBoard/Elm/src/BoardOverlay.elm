@@ -448,8 +448,8 @@ getOverlayLabel overlay =
                     String.fromInt i
                         ++ (case i of
                                 1 ->
-                                    "Coin"
+                                    " Coin"
 
                                 _ ->
-                                    "Coins"
+                                    " Coins"
                            )

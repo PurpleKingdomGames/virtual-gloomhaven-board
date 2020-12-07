@@ -1387,6 +1387,20 @@ getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId 
                                         (overlayToHtml
                                             (BoardOverlayModel
                                                 gameMode
+                                                (getLabelForOverlay (BoardOverlay (Treasure (Coin 1)) Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
+                                                Nothing
+                                                (BoardOverlay (Treasure (Coin 1)) Default [ ( 0, 0 ) ])
+                                            )
+                                        )
+                                    )
+                            )
+                        |> Dom.appendChild
+                            (Dom.element "li"
+                                |> Dom.appendChild
+                                    (Tuple.second
+                                        (overlayToHtml
+                                            (BoardOverlayModel
+                                                gameMode
                                                 (getLabelForOverlay (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
                                                 Nothing
                                                 (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ])
@@ -2581,6 +2595,13 @@ overlayToHtml model =
 
                     Trap _ ->
                         makeDraggable (OverlayType model.overlay Nothing) model.coords
+
+                    Treasure (Coin _) ->
+                        if model.gameMode == AddPiece && model.coords == Nothing then
+                            makeDraggable (OverlayType model.overlay Nothing) model.coords
+
+                        else
+                            Dom.addAttribute (attribute "draggable" "false")
 
                     _ ->
                         Dom.addAttribute (attribute "draggable" "false")

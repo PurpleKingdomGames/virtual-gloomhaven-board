@@ -41,6 +41,29 @@ $hexHeight: 90px;
     }
 }
 
+.treasure
+{
+    &[data-index]:after {
+        content:attr(data-index);
+        display:block;
+        position:absolute;
+        top: 10px;
+        left: 0;
+        width:100%;
+    }
+
+    span {
+        position: absolute;
+        top: 24px;
+        left: 0;
+        font-size: 33px;
+        text-shadow: 0px 0px 4px #fff;
+        color: #353535;
+        display: block;
+        width: 100%;
+    }
+}
+
 .monster {
     span {
         position: absolute;
@@ -382,26 +405,6 @@ $tiles:
                                 transform: scale(1);
                                 left: 0;
                                 top: 0;
-                            }
-
-                            &[data-index]:after {
-                                content:attr(data-index);
-                                display:block;
-                                position:absolute;
-                                top: 10px;
-                                left: 0;
-                                width:100%;
-                            }
-
-                            span {
-                                position: absolute;
-                                top: 24px;
-                                left: 0;
-                                font-size: 33px;
-                                text-shadow: 0px 0px 4px #fff;
-                                color: #353535;
-                                display: block;
-                                width: 100%;
                             }
                         }
 
