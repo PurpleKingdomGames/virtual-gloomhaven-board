@@ -3,7 +3,7 @@ module Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), R
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
 import BoardMapTile exposing (MapTile, MapTileRef, refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), DoorSubType(..), TreasureSubType(..), getBoardOverlayName)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorMaterial(..), DoorSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Character exposing (CharacterClass, characterToString)
 import Dict exposing (Dict, get, insert)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
@@ -624,8 +624,13 @@ revealRoom room game =
                     |> filter
                         (\o ->
                             case o.ref of
-                                Door (Corridor _ _) refs ->
-                                    member room refs
+                                Door (Corridor m _) refs ->
+                                    case m of
+                                        Dark ->
+                                            False
+
+                                        _ ->
+                                            member room refs
 
                                 _ ->
                                     False
