@@ -25,7 +25,8 @@ type DoorSubType
 
 
 type CorridorMaterial
-    = Earth
+    = Dark
+    | Earth
     | ManmadeStone
     | NaturalStone
     | PressurePlate
@@ -128,6 +129,9 @@ getBoardOverlayName overlay =
 
                 Corridor c num ->
                     (case c of
+                        Dark ->
+                            "corridor-dark"
+
                         Earth ->
                             "corridor-earth"
 
@@ -298,6 +302,9 @@ getOverlayLabel overlay =
 
                 Corridor c _ ->
                     case c of
+                        Dark ->
+                            "Dark Corridor"
+
                         Earth ->
                             "Earth Corridor"
 

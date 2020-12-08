@@ -47,6 +47,9 @@ decodeCorridor =
                 let
                     material =
                         case String.toLower m of
+                            "dark" ->
+                                Just Dark
+
                             "earth" ->
                                 Just Earth
 

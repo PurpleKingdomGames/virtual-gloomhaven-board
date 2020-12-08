@@ -389,6 +389,9 @@ encodeDoor door =
 encodeMaterial : CorridorMaterial -> String
 encodeMaterial m =
     case m of
+        Dark ->
+            "dark"
+
         Earth ->
             "earth"
 

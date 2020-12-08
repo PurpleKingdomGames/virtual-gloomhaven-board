@@ -1633,7 +1633,7 @@ getScenarioDialog model =
                         |> Dom.addAttribute (attribute "id" "scenarioIdInput")
                         |> Dom.addAttribute (attribute "type" "number")
                         |> Dom.addAttribute (attribute "min" "1")
-                        |> Dom.addAttribute (attribute "max" "95")
+                        |> Dom.addAttribute (attribute "max" "115")
                         |> Dom.addAttribute (attribute "value" scenarioInput)
                         |> Dom.addInputHandler EnterScenarioNumber
                      ]
@@ -2820,7 +2820,7 @@ isValidScenario : String -> Bool
 isValidScenario scenarioId =
     case String.toInt scenarioId of
         Just i ->
-            i > 0 && i < 96
+            i > 0 && i < 120
 
         Nothing ->
             False
