@@ -2,7 +2,7 @@ port module GameSync exposing (Msg(..), connectToServer, decodeGameState, decode
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
 import Game exposing (AIType(..), GameState, Piece, PieceType(..), SummonsType(..))
@@ -12,6 +12,7 @@ import Json.Encode as Encode exposing (int, list, object, string)
 import List exposing (map)
 import Monster exposing (MonsterLevel(..), monsterTypeToString)
 import SharedSync exposing (decodeBoardOverlay, decodeMapRefList, decodeMonster)
+import String exposing (String)
 
 
 port connect : () -> Cmd msg
@@ -360,6 +361,12 @@ encodeOverlayType overlay =
                     :: encodeTreasure t
                 )
 
+        Wall w ->
+            object
+                [ ( "type", Encode.string "wall" )
+                , ( "subType", Encode.string (encodeWall w) )
+                ]
+
 
 encodeDoor : DoorSubType -> String
 encodeDoor door =
@@ -547,6 +554,13 @@ encodeTreasure treasure =
             ]
 
 
+encodeWall : WallSubType -> String
+encodeWall wallType =
+    case wallType of
+        ObsidianGlass ->
+            "obsidian-glass"
+
+
 encodeTreasureChest : ChestType -> String
 encodeTreasureChest chest =
     case chest of
@@ -555,6 +569,9 @@ encodeTreasureChest chest =
 
         Goal ->
             "goal"
+
+        Locked ->
+            "locked"
 
 
 encodePieces : List Piece -> List (List ( String, Encode.Value ))

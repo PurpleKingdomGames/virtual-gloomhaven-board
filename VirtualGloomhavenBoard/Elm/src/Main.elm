@@ -2525,6 +2525,9 @@ overlayToHtml model =
 
                 Trap _ ->
                     "trap"
+
+                Wall _ ->
+                    "wall"
             )
         |> Dom.addClass
             (case model.overlay.direction of
@@ -2561,6 +2564,9 @@ overlayToHtml model =
 
                                     Goal ->
                                         "Goal"
+
+                                    Locked ->
+                                        "???"
 
                             _ ->
                                 ""
@@ -2778,6 +2784,9 @@ getSortOrderForOverlay overlay =
 
         Trap _ ->
             8
+
+        Wall _ ->
+            9
 
 
 shortcutHtml : List String -> Element msg -> Element msg

@@ -1,7 +1,7 @@
 module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel)
 
 import BoardMapTile exposing (MapTileRef(..), stringToRef)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
 import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, map4, maybe, string, succeed)
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
@@ -144,6 +144,9 @@ decodeBoardOverlayType =
 
                 "treasure" ->
                     decodeTreasure
+
+                "wall" ->
+                    decodeWall
 
                 _ ->
                     fail ("Unknown overlay type: " ++ typeName)
@@ -329,6 +332,9 @@ decodeTreasureChest =
                     "goal" ->
                         succeed (Treasure (Chest Goal))
 
+                    "locked" ->
+                        succeed (Treasure (Chest Locked))
+
                     _ ->
                         case String.toInt s of
                             Just i ->
@@ -343,6 +349,20 @@ decodeTreasureCoin : Decoder BoardOverlayType
 decodeTreasureCoin =
     field "amount" Decode.int
         |> andThen (\i -> succeed (Treasure (Coin i)))
+
+
+decodeWall : Decoder BoardOverlayType
+decodeWall =
+    field "subType" Decode.string
+        |> andThen
+            (\s ->
+                case String.toLower s of
+                    "obsidian-glass" ->
+                        succeed (Wall ObsidianGlass)
+
+                    _ ->
+                        fail (s ++ " is not a wall sub-type")
+            )
 
 
 decodeBoardOverlayDirection : String -> Decoder BoardOverlayDirectionType

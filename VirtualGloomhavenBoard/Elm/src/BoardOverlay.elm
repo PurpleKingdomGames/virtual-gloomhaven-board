@@ -1,4 +1,4 @@
-module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
+module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getOverlayLabel)
 
 import BoardMapTile exposing (MapTileRef)
 
@@ -12,6 +12,7 @@ type BoardOverlayType
     | StartingLocation
     | Trap TrapSubType
     | Treasure TreasureSubType
+    | Wall WallSubType
 
 
 type DoorSubType
@@ -91,6 +92,11 @@ type TreasureSubType
 type ChestType
     = NormalChest Int
     | Goal
+    | Locked
+
+
+type WallSubType
+    = ObsidianGlass
 
 
 type BoardOverlayDirectionType
@@ -282,6 +288,11 @@ getBoardOverlayName overlay =
                 Coin _ ->
                     "treasure-coin"
 
+        Wall w ->
+            case w of
+                ObsidianGlass ->
+                    "wall-obsidian-glass"
+
 
 getOverlayLabel : BoardOverlayType -> String
 getOverlayLabel overlay =
@@ -447,6 +458,9 @@ getOverlayLabel overlay =
                                 Goal ->
                                     "Goal"
 
+                                Locked ->
+                                    "(locked)"
+
                                 NormalChest i ->
                                     String.fromInt i
                            )
@@ -460,3 +474,8 @@ getOverlayLabel overlay =
                                 _ ->
                                     " Coins"
                            )
+
+        Wall w ->
+            case w of
+                ObsidianGlass ->
+                    "Obsidian Glass Wall"
