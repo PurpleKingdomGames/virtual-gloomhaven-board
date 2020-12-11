@@ -15,6 +15,7 @@ normalDict =
         , ( "inox-guard", InoxGuard )
         , ( "inox-archer", InoxArcher )
         , ( "inox-shaman", InoxShaman )
+        , ( "valrath-tracker", ValrathTracker )
         , ( "vermling-scout", VermlingScout )
         , ( "vermling-shaman", VermlingShaman )
         , ( "living-bones", LivingBones )
@@ -84,6 +85,7 @@ type NormalMonsterType
     | InoxGuard
     | InoxArcher
     | InoxShaman
+    | ValrathTracker
     | VermlingScout
     | VermlingShaman
     | LivingBones
@@ -201,6 +203,9 @@ getMonsterBucketSize monster =
 
                 InoxShaman ->
                     4
+
+                ValrathTracker ->
+                    6
 
                 VermlingScout ->
                     10
