@@ -50,6 +50,8 @@ type MapTileRef
     | I2b
     | J1a
     | J1b
+    | J1ba
+    | J1bb
     | J2a
     | J2b
     | K1a
@@ -128,6 +130,8 @@ boardRefDict =
         , ( "i2b", I2b )
         , ( "j1a", J1a )
         , ( "j1b", J1b )
+        , ( "j1ba", J1ba )
+        , ( "j1bb", J1bb )
         , ( "j2a", J2a )
         , ( "j2b", J2b )
         , ( "k1a", K1a )
@@ -239,6 +243,26 @@ getGridByRef ref =
             , Array.fromList [ True, True, True, True, True, True, True, False ]
             , Array.fromList [ True, True, True, True, True, True, False, False ]
             , Array.fromList [ True, True, True, True, True, False, False, False ]
+            ]
+
+        configJ1ba =
+            [ Array.fromList [ False, False, False, False, False, False, False, False ]
+            , Array.fromList [ False, False, False, False, True, True, False, False ]
+            , Array.fromList [ False, False, False, False, True, True, True, False ]
+            , Array.fromList [ False, False, False, False, True, True, True, False ]
+            , Array.fromList [ False, False, False, False, False, True, True, True ]
+            , Array.fromList [ False, False, False, False, False, True, False, False ]
+            , Array.fromList [ False, False, False, False, False, False, False, False ]
+            ]
+
+        configJ1bb =
+            [ Array.fromList [ True, True, True, True, True, False, False, False ]
+            , Array.fromList [ True, True, True, True, False, False, False, False ]
+            , Array.fromList [ True, True, True, True, False, False, False, False ]
+            , Array.fromList [ False, False, False, False, False, False, False, False ]
+            , Array.fromList [ False, False, False, False, False, False, False, False ]
+            , Array.fromList [ False, False, False, False, False, False, False, False ]
+            , Array.fromList [ False, False, False, False, False, False, False, False ]
             ]
 
         configK =
@@ -413,6 +437,12 @@ getGridByRef ref =
 
             J1b ->
                 List.reverse configJ
+
+            J1ba ->
+                configJ1ba
+
+            J1bb ->
+                configJ1bb
 
             J2a ->
                 configJ

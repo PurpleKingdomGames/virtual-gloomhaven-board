@@ -2072,6 +2072,12 @@ getMapTileHtml visibleRooms roomData =
                                 J1b ->
                                     "jb"
 
+                                J1ba ->
+                                    "jb"
+
+                                J1bb ->
+                                    "jb"
+
                                 J2b ->
                                     "jb"
 
