@@ -357,8 +357,20 @@ decodeWall =
         |> andThen
             (\s ->
                 case String.toLower s of
+                    "huge-rock" ->
+                        succeed (Wall HugeRock)
+
+                    "iron" ->
+                        succeed (Wall Iron)
+
+                    "large-rock" ->
+                        succeed (Wall LargeRock)
+
                     "obsidian-glass" ->
                         succeed (Wall ObsidianGlass)
+
+                    "rock" ->
+                        succeed (Wall Rock)
 
                     _ ->
                         fail (s ++ " is not a wall sub-type")

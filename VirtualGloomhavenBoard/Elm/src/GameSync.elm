@@ -557,8 +557,20 @@ encodeTreasure treasure =
 encodeWall : WallSubType -> String
 encodeWall wallType =
     case wallType of
+        HugeRock ->
+            "huge-rock"
+
+        Iron ->
+            "iron"
+
+        LargeRock ->
+            "large-rock"
+
         ObsidianGlass ->
             "obsidian-glass"
+
+        Rock ->
+            "rock"
 
 
 encodeTreasureChest : ChestType -> String

@@ -96,7 +96,11 @@ type ChestType
 
 
 type WallSubType
-    = ObsidianGlass
+    = HugeRock
+    | Iron
+    | LargeRock
+    | ObsidianGlass
+    | Rock
 
 
 type BoardOverlayDirectionType
@@ -290,8 +294,20 @@ getBoardOverlayName overlay =
 
         Wall w ->
             case w of
+                HugeRock ->
+                    "wall-huge-rock"
+
+                Iron ->
+                    "wall-iron"
+
+                LargeRock ->
+                    "wall-large-rock"
+
                 ObsidianGlass ->
                     "wall-obsidian-glass"
+
+                Rock ->
+                    "wall-rock"
 
 
 getOverlayLabel : BoardOverlayType -> String
@@ -477,5 +493,17 @@ getOverlayLabel overlay =
 
         Wall w ->
             case w of
+                HugeRock ->
+                    "Huge Rock Wall"
+
+                Iron ->
+                    "Iron Wall"
+
+                LargeRock ->
+                    "Large Rock Wall"
+
                 ObsidianGlass ->
                     "Obsidian Glass Wall"
+
+                Rock ->
+                    "Rock Wall"
