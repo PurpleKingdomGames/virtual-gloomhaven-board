@@ -16,6 +16,7 @@ normalDict =
         , ( "inox-archer", InoxArcher )
         , ( "inox-shaman", InoxShaman )
         , ( "valrath-tracker", ValrathTracker )
+        , ( "valrath-savage", ValrathSavage )
         , ( "vermling-scout", VermlingScout )
         , ( "vermling-shaman", VermlingShaman )
         , ( "living-bones", LivingBones )
@@ -50,6 +51,8 @@ bossDict : Dict String BossType
 bossDict =
     fromList
         [ ( "bandit-commander", BanditCommander )
+        , ( "human-commander", HumanCommander )
+        , ( "valrath-commander", ValrathCommander )
         , ( "merciless-overseer", MercilessOverseer )
         , ( "inox-bodyguard", InoxBodyguard )
         , ( "captain-of-the-guard", CaptainOfTheGuard )
@@ -86,6 +89,7 @@ type NormalMonsterType
     | InoxArcher
     | InoxShaman
     | ValrathTracker
+    | ValrathSavage
     | VermlingScout
     | VermlingShaman
     | LivingBones
@@ -117,6 +121,8 @@ type NormalMonsterType
 
 type BossType
     = BanditCommander
+    | HumanCommander
+    | ValrathCommander
     | MercilessOverseer
     | InoxBodyguard
     | CaptainOfTheGuard
@@ -205,6 +211,9 @@ getMonsterBucketSize monster =
                     4
 
                 ValrathTracker ->
+                    6
+
+                ValrathSavage ->
                     6
 
                 VermlingScout ->
