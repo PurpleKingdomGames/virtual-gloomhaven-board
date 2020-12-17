@@ -392,6 +392,7 @@
     },
     "angle": 0,
     "additionalMonsters": [
+        "aesther-ashblade",
         "aesther-scout",
         "bandit-guard",
         "bandit-archer",
@@ -402,6 +403,8 @@
         "inox-shaman",
         "vermling-scout",
         "vermling-shaman",
+        "valrath-tracker",
+        "valrath-savage",
         "living-bones",
         "living-corpse",
         "living-spirit",
