@@ -7,7 +7,8 @@ import List exposing (head)
 normalDict : Dict String NormalMonsterType
 normalDict =
     fromList
-        [ ( "aesther-scout", AestherScout )
+        [ ( "aesther-ashblade", AestherAshblade )
+        , ( "aesther-scout", AestherScout )
         , ( "bandit-guard", BanditGuard )
         , ( "bandit-archer", BanditArcher )
         , ( "city-guard", CityGuard )
@@ -80,7 +81,8 @@ type MonsterLevel
 
 
 type NormalMonsterType
-    = AestherScout
+    = AestherAshblade
+    | AestherScout
     | BanditGuard
     | BanditArcher
     | CityGuard
@@ -186,6 +188,9 @@ getMonsterBucketSize monster =
 
         NormalType t ->
             case t of
+                AestherAshblade ->
+                    6
+
                 AestherScout ->
                     6
 
