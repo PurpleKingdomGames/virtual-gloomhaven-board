@@ -506,6 +506,9 @@ encodeObstacle obstacle =
         Fountain ->
             "fountain"
 
+        Mirror ->
+            "mirror"
+
         Nest ->
             "nest"
 

@@ -71,6 +71,7 @@ type ObstacleSubType
     | Crystal
     | DarkPit
     | Fountain
+    | Mirror
     | Nest
     | Pillar
     | RockColumn
@@ -233,6 +234,9 @@ getBoardOverlayName overlay =
 
                 Fountain ->
                     "obstacle-fountain"
+
+                Mirror ->
+                    "obstacle-mirror"
 
                 Nest ->
                     "obstacle-nest"
@@ -415,6 +419,9 @@ getOverlayLabel overlay =
 
                 Fountain ->
                     "Fountain"
+
+                Mirror ->
+                    "Mirror"
 
                 Nest ->
                     "Nest"

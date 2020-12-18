@@ -267,6 +267,9 @@ decodeObstacle =
                     "fountain" ->
                         succeed (Obstacle Fountain)
 
+                    "mirror" ->
+                        succeed (Obstacle Mirror)
+
                     "nest" ->
                         succeed (Obstacle Nest)
 

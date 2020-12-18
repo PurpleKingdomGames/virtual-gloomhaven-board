@@ -1,0 +1,805 @@
+{
+    "id": 112,
+    "title": "The Bottome of It",
+    "mapTileData": {
+        "ref": "k1a",
+        "doors": [
+            {
+                "subType": "corridor",
+                "material": "pressure-plate",
+                "size": 1,
+                "direction": "default",
+                "room1X": 0,
+                "room1Y": 4,
+                "room2X": 0,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "k1a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "diagonal-left",
+                "room1X": 7,
+                "room1Y": 2,
+                "room2X": 2,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "d2a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 4
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "diagonal-right",
+                "room1X": 7,
+                "room1Y": 3,
+                "room2X": 1,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "d2a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 4
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 8,
+                "room1Y": 4,
+                "room2X": 0,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "d2a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 4
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 5,
+                "room1Y": 6,
+                "room2X": -1,
+                "room2Y": 1,
+                "mapTileData": {
+                    "ref": "d1a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 1
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 6,
+                "room1Y": 6,
+                "room2X": 0,
+                "room2Y": 0,
+                "mapTileData": {
+                    "ref": "d1a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 1
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 7,
+                "room1Y": 6,
+                "room2X": 0,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "d1a",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 1
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 7,
+                "room1Y": 5,
+                "room2X": 7,
+                "room2Y": 5,
+                "mapTileData": {
+                    "ref": "k2b",
+                    "doors": [
+                        {
+                            "subType": "corridor",
+                            "material": "pressure-plate",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 0,
+                            "room1Y": 4,
+                            "room2X": 0,
+                            "room2Y": 4,
+                            "mapTileData": {
+                                "ref": "k2b",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 3
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "manmade-stone",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 6,
+                            "room1Y": 6,
+                            "room2X": 0,
+                            "room2Y": 0,
+                            "mapTileData": {
+                                "ref": "d2a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 4
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "manmade-stone",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 5,
+                            "room1Y": 6,
+                            "room2X": -1,
+                            "room2Y": 1,
+                            "mapTileData": {
+                                "ref": "d2a",
+                                "doors": [
+                                    {
+                                        "subType": "corridor",
+                                        "material": "pressure-plate",
+                                        "size": 1,
+                                        "direction": "default",
+                                        "room1X": 1,
+                                        "room1Y": 4,
+                                        "room2X": 1,
+                                        "room2Y": 4,
+                                        "mapTileData": {
+                                            "ref": "d2a",
+                                            "doors": [],
+                                            "overlays": [],
+                                            "monsters": [],
+                                            "turns": 4
+                                        }
+                                    },
+                                    {
+                                        "subType": "corridor",
+                                        "material": "pressure-plate",
+                                        "size": 1,
+                                        "direction": "default",
+                                        "room1X": 4,
+                                        "room1Y": 2,
+                                        "room2X": 4,
+                                        "room2Y": 2,
+                                        "mapTileData": {
+                                            "ref": "d2a",
+                                            "doors": [],
+                                            "overlays": [],
+                                            "monsters": [],
+                                            "turns": 4
+                                        }
+                                    }
+                                ],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "pillar"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                1,
+                                                3
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "pillar"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                3,
+                                                2
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "mirror"
+                                        },
+                                        "direction": "diagonal-left",
+                                        "cells": [
+                                            [
+                                                2,
+                                                0
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "altar"
+                                        },
+                                        "direction": "diagonal-left",
+                                        "cells": [
+                                            [
+                                                3,
+                                                4
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "spike"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                0,
+                                                3
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "spike"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                3,
+                                                1
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "stone-golem",
+                                        "initialX": 2,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "living-bones",
+                                        "initialX": 0,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "ancient-artillery",
+                                        "initialX": 2,
+                                        "initialY": 3,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    }
+                                ],
+                                "turns": 4
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "manmade-stone",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 7,
+                            "room1Y": 3,
+                            "room2X": 1,
+                            "room2Y": -1,
+                            "mapTileData": {
+                                "ref": "d1a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 1
+                            }
+                        },
+                        {
+                            "subType": "corridor",
+                            "material": "manmade-stone",
+                            "size": 1,
+                            "direction": "default",
+                            "room1X": 7,
+                            "room1Y": 2,
+                            "room2X": 2,
+                            "room2Y": -1,
+                            "mapTileData": {
+                                "ref": "d1a",
+                                "doors": [
+                                    {
+                                        "subType": "corridor",
+                                        "material": "pressure-plate",
+                                        "size": 1,
+                                        "direction": "default",
+                                        "room1X": 4,
+                                        "room1Y": 2,
+                                        "room2X": 4,
+                                        "room2Y": 2,
+                                        "mapTileData": {
+                                            "ref": "d1a",
+                                            "doors": [],
+                                            "overlays": [],
+                                            "monsters": [],
+                                            "turns": 1
+                                        }
+                                    },
+                                    {
+                                        "subType": "corridor",
+                                        "material": "pressure-plate",
+                                        "size": 1,
+                                        "direction": "default",
+                                        "room1X": 1,
+                                        "room1Y": 4,
+                                        "room2X": 1,
+                                        "room2Y": 4,
+                                        "mapTileData": {
+                                            "ref": "d1a",
+                                            "doors": [],
+                                            "overlays": [],
+                                            "monsters": [],
+                                            "turns": 1
+                                        }
+                                    }
+                                ],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "pillar"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                1,
+                                                3
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "pillar"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                3,
+                                                2
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "mirror"
+                                        },
+                                        "direction": "diagonal-left",
+                                        "cells": [
+                                            [
+                                                2,
+                                                0
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "altar"
+                                        },
+                                        "direction": "diagonal-left-reverse",
+                                        "cells": [
+                                            [
+                                                3,
+                                                4
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "spike"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                0,
+                                                3
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "trap",
+                                            "subType": "spike"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                3,
+                                                1
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "stone-golem",
+                                        "initialX": 2,
+                                        "initialY": 2,
+                                        "twoPlayer": "none",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "living-bones",
+                                        "initialX": 0,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "ancient-artillery",
+                                        "initialX": 2,
+                                        "initialY": 3,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    }
+                                ],
+                                "turns": 1
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "starting-location"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    7,
+                                    4
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "starting-location"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    6,
+                                    5
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "fountain"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    7,
+                                    5
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "altar"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [
+                                    1,
+                                    5
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "mirror"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [
+                                    5,
+                                    0
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "mirror"
+                            },
+                            "direction": "diagonal-right",
+                            "cells": [
+                                [
+                                    5,
+                                    4
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "bear"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [
+                                    0,
+                                    3
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "trap",
+                                "subType": "bear"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [
+                                    1,
+                                    4
+                                ]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "stone-golem",
+                            "initialX": 2,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "living-bones",
+                            "initialX": 1,
+                            "initialY": 2,
+                            "twoPlayer": "elite",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "living-bones",
+                            "initialX": 1,
+                            "initialY": 3,
+                            "twoPlayer": "none",
+                            "threePlayer": "elite",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "living-bones",
+                            "initialX": 4,
+                            "initialY": 3,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "ancient-artillery",
+                            "initialX": 5,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "ancient-artillery",
+                            "initialX": 2,
+                            "initialY": 3,
+                            "twoPlayer": "elite",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        }
+                    ],
+                    "turns": 3
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        7,
+                        4
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        6,
+                        5
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "trap",
+                    "subType": "bear"
+                },
+                "direction": "diagonal-left",
+                "cells": [
+                    [
+                        0,
+                        3
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "trap",
+                    "subType": "bear"
+                },
+                "direction": "diagonal-left",
+                "cells": [
+                    [
+                        1,
+                        4
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "altar"
+                },
+                "direction": "diagonal-left-reverse",
+                "cells": [
+                    [
+                        1,
+                        5
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "mirror"
+                },
+                "direction": "diagonal-right",
+                "cells": [
+                    [
+                        3,
+                        0
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "mirror"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        5,
+                        4
+                    ]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "stone-golem",
+                "initialX": 2,
+                "initialY": 0,
+                "twoPlayer": "elite",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "living-bones",
+                "initialX": 1,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            },
+            {
+                "monster": "living-bones",
+                "initialX": 1,
+                "initialY": 3,
+                "twoPlayer": "none",
+                "threePlayer": "elite",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "living-bones",
+                "initialX": 4,
+                "initialY": 3,
+                "twoPlayer": "none",
+                "threePlayer": "none",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "ancient-artillery",
+                "initialX": 5,
+                "initialY": 2,
+                "twoPlayer": "none",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "ancient-artillery",
+                "initialX": 2,
+                "initialY": 3,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
