@@ -1,0 +1,720 @@
+{
+    "id": 115,
+    "title": "Future Uncertain",
+    "mapTileData": {
+        "ref": "d2b",
+        "doors": [
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 5,
+                "room1Y": 3,
+                "room2X": 1,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "j2b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 5
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 5,
+                "room1Y": 2,
+                "room2X": 1,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "j2b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 5
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 4,
+                "room1Y": 3,
+                "room2X": 2,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "j2b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 5
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 5,
+                "room1Y": 4,
+                "room2X": 2,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "j2b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 5
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 4,
+                "room1Y": 4,
+                "room2X": 3,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "j2b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 5
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 4,
+                "room1Y": 5,
+                "room2X": 3,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "j2b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 5
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 3,
+                "room1Y": 5,
+                "room2X": 4,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "j2b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 5
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 2,
+                "room1Y": 5,
+                "room2X": 4,
+                "room2Y": 5,
+                "mapTileData": {
+                    "ref": "j2b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 5
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 1,
+                "room1Y": 5,
+                "room2X": 5,
+                "room2Y": 6,
+                "mapTileData": {
+                    "ref": "j2b",
+                    "doors": [],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    3,
+                                    3
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    4,
+                                    4
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    6,
+                                    6
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    6,
+                                    5
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    5,
+                                    1
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "altar"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [
+                                    0,
+                                    1
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "wall",
+                                "subType": "obsidian-glass"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [
+                                    1,
+                                    2
+                                ],
+                                [
+                                    0,
+                                    3
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "wall",
+                                "subType": "obsidian-glass"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    1,
+                                    0
+                                ],
+                                [
+                                    1,
+                                    1
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "treasure",
+                                "subType": "chest",
+                                "id": "96"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    4,
+                                    1
+                                ]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "valrath-savage",
+                            "initialX": 2,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "valrath-savage",
+                            "initialX": 5,
+                            "initialY": 4,
+                            "twoPlayer": "none",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "valrath-tracker",
+                            "initialX": 2,
+                            "initialY": 0,
+                            "twoPlayer": "none",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "valrath-tracker",
+                            "initialX": 4,
+                            "initialY": 0,
+                            "twoPlayer": "none",
+                            "threePlayer": "elite",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "valrath-tracker",
+                            "initialX": 6,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "valrath-tracker",
+                            "initialX": 7,
+                            "initialY": 5,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 5
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 2,
+                "room1Y": -1,
+                "room2X": 5,
+                "room2Y": 6,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 2
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 1,
+                "room1Y": -1,
+                "room2X": 4,
+                "room2Y": 5,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 2
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 0,
+                "room1Y": -1,
+                "room2X": 4,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 2
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": -1,
+                "room1Y": -1,
+                "room2X": 3,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 2
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 0,
+                "room1Y": 0,
+                "room2X": 3,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 2
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": -1,
+                "room1Y": 0,
+                "room2X": 2,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 2
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": -1,
+                "room1Y": 1,
+                "room2X": 2,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 2
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": -2,
+                "room1Y": 1,
+                "room2X": 1,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 2
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": -1,
+                "room1Y": 2,
+                "room2X": 1,
+                "room2Y": 4,
+                "mapTileData": {
+                    "ref": "j1b",
+                    "doors": [],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    4,
+                                    0
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    3,
+                                    3
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    4,
+                                    4
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    6,
+                                    3
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "hazard",
+                                "subType": "hot-coals"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    7,
+                                    4
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "altar"
+                            },
+                            "direction": "diagonal-left-reverse",
+                            "cells": [
+                                [
+                                    0,
+                                    1
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "wall",
+                                "subType": "obsidian-glass"
+                            },
+                            "direction": "diagonal-left",
+                            "cells": [
+                                [
+                                    0,
+                                    3
+                                ],
+                                [
+                                    1,
+                                    2
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "wall",
+                                "subType": "obsidian-glass"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    1,
+                                    1
+                                ],
+                                [
+                                    1,
+                                    0
+                                ]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "aesther-ashblade",
+                            "initialX": 5,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "elite"
+                        },
+                        {
+                            "monster": "aesther-scout",
+                            "initialX": 2,
+                            "initialY": 2,
+                            "twoPlayer": "none",
+                            "threePlayer": "elite",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "aesther-scout",
+                            "initialX": 6,
+                            "initialY": 5,
+                            "twoPlayer": "normal",
+                            "threePlayer": "none",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 2
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        3,
+                        0
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        4,
+                        2
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        0,
+                        2
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        1,
+                        4
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "hazard",
+                    "subType": "hot-coals"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        4,
+                        4
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "hazard",
+                    "subType": "hot-coals"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        0,
+                        0
+                    ]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "manifestation-of-corruption",
+                "initialX": 2,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            }
+        ],
+        "turns": 3
+    },
+    "angle": 0,
+    "additionalMonsters": [
+        "black-imp"
+    ]
+}

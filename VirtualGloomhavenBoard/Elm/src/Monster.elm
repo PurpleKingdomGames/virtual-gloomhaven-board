@@ -66,6 +66,7 @@ bossDict =
         , ( "dark-rider", DarkRider )
         , ( "winged-horror", WingedHorror )
         , ( "the-gloom", TheGloom )
+        , ( "manifestation-of-corruption", ManifestationOfCorruption )
         ]
 
 
@@ -137,6 +138,7 @@ type BossType
     | DarkRider
     | WingedHorror
     | TheGloom
+    | ManifestationOfCorruption
 
 
 type alias Monster =
