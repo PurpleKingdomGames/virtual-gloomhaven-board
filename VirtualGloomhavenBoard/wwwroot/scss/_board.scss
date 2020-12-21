@@ -376,7 +376,19 @@ $tiles:
                         left:0;
                     }
 
+                    .monster, .player {
+                        &:not(:only-child) {
+                            transform: scale(0.85);
+                        }
+                    }
+
                     .overlay {
+                        &.start-location {
+                            & + .monster, & + .player {
+                                transform: scale(1);
+                            }
+                        }
+
                         &.diagonal-right {
                             transform: rotate(120deg);
                         }
