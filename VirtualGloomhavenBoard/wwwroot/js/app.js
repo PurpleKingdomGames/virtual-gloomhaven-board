@@ -189,7 +189,7 @@
             if (document.referrer.includes("gloomhaven-storyline.com")) {
                 o.campaignTracker = {
                     name: "Gloomhaven Storyline",
-                    url: "https://gloomhaven-storyline.com/#/story/{scenarioId}"
+                    url: "https://gloomhaven-storyline.com/tracker/#/story/{scenarioId}"
                 }
             }
         }
