@@ -185,6 +185,15 @@
                 o.initRoomCodeSeed = seed;
         }
 
+        if (document.referrer !== "") {
+            if (document.referrer.includes("gloomhaven-storyline.com")) {
+                o.campaignTracker = {
+                    name: "Gloomhaven Storyline",
+                    url: "https://gloomhaven-storyline.com/#/story/{scenarioId}"
+                }
+            }
+        }
+
         return o;
     }
 

@@ -1,11 +1,11 @@
-port module AppStorage exposing (AppModeType(..), AppOverrides, Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, empty, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
+port module AppStorage exposing (AppModeType(..), AppOverrides, CampaignTrackerUrl(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, empty, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 
 import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass, stringToCharacter)
 import Game exposing (GameState, Piece)
 import GameSync exposing (decodeGameState, decodePiece, encodeGameState, encodeOverlay, encodePiece)
 import Html exposing (s)
-import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map5, map6, maybe, string, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map5, map6, map7, maybe, string, succeed)
 import Json.Encode as Encode exposing (object, string)
 import List exposing (filterMap)
 import SharedSync exposing (decodeBoardOverlay)
@@ -26,6 +26,7 @@ type alias Config =
     , roomCode : Maybe String
     , showRoomCode : Bool
     , boardOnly : Bool
+    , campaignTracker : Maybe CampaignTrackerUrl
     }
 
 
@@ -36,7 +37,12 @@ type alias AppOverrides =
     , lockScenario : Bool
     , lockPlayers : Bool
     , lockRoomCode : Bool
+    , campaignTracker : Maybe CampaignTrackerUrl
     }
+
+
+type CampaignTrackerUrl
+    = CampaignTrackerUrl String String
 
 
 type GameModeType
@@ -70,7 +76,7 @@ type MoveablePieceType
 
 emptyConfig : Config
 emptyConfig =
-    Config Game MovePiece Nothing True False
+    Config Game MovePiece Nothing True False Nothing
 
 
 empty : ( GameState, Config )
@@ -80,7 +86,7 @@ empty =
 
 emptyOverrides : AppOverrides
 emptyOverrides =
-    AppOverrides Nothing Nothing Nothing False False False
+    AppOverrides Nothing Nothing Nothing False False False Nothing
 
 
 saveToStorage : GameState -> Config -> Cmd msg
@@ -131,6 +137,14 @@ encodeConfig config =
           )
         , ( "showRoomCode", Encode.bool config.showRoomCode )
         , ( "boardOnly", Encode.bool config.boardOnly )
+        , ( "campaignTracker"
+          , case config.campaignTracker of
+                Just t ->
+                    Encode.object (encodeCampaignTrackerUrl t)
+
+                Nothing ->
+                    Encode.null
+          )
         ]
 
 
@@ -184,7 +198,7 @@ storedDataDecoder =
 
 appOverridesDecoder : Decoder AppOverrides
 appOverridesDecoder =
-    map6 AppOverrides
+    map7 AppOverrides
         (field "initScenario" (maybe Decode.int))
         (field "initPlayers"
             (maybe (Decode.list Decode.string)
@@ -199,16 +213,18 @@ appOverridesDecoder =
         (field "lockScenario" Decode.bool)
         (field "lockPlayers" Decode.bool)
         (field "lockRoomCode" Decode.bool)
+        (field "campaignTracker" (maybe decodeCampaignTrackerUrl))
 
 
 decodeConfig : Decoder Config
 decodeConfig =
-    map5 Config
+    map6 Config
         (field "appMode" (Decode.string |> Decode.andThen decodeAppMode))
         (field "gameMode" (Decode.string |> Decode.andThen decodeGameMode))
         (field "roomCode" (Decode.nullable Decode.string))
         (field "showRoomCode" Decode.bool)
         (maybe (field "boardOnly" Decode.bool) |> andThen (\b -> succeed (Maybe.withDefault False b)))
+        (maybe (field "campaignTracker" decodeCampaignTrackerUrl))
 
 
 decodeAppMode : String -> Decoder AppModeType
@@ -310,6 +326,16 @@ decodeCoords =
             )
 
 
+decodeCampaignTrackerUrl : Decoder CampaignTrackerUrl
+decodeCampaignTrackerUrl =
+    field "name" Decode.string
+        |> andThen
+            (\name ->
+                field "url" Decode.string
+                    |> andThen (\url -> Decode.succeed (CampaignTrackerUrl name url))
+            )
+
+
 encodeMoveablePiece : MoveablePiece -> Encode.Value
 encodeMoveablePiece piece =
     Encode.object
@@ -378,3 +404,10 @@ encodeCoords ( x, y ) =
     [ ( "x", Encode.int x )
     , ( "y", Encode.int y )
     ]
+
+
+encodeCampaignTrackerUrl : CampaignTrackerUrl -> List ( String, Encode.Value )
+encodeCampaignTrackerUrl tracker =
+    case tracker of
+        CampaignTrackerUrl name url ->
+            [ ( "name", Encode.string name ), ( "url", Encode.string url ) ]

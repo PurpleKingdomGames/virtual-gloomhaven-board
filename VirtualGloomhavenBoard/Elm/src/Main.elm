@@ -1,6 +1,6 @@
 port module Main exposing (main)
 
-import AppStorage exposing (AppModeType(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
+import AppStorage exposing (AppModeType(..), CampaignTrackerUrl(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
 import Bitwise
 import BoardMapTile exposing (MapTileRef(..), refToString)
@@ -230,6 +230,13 @@ init ( oldState, maybeOverrides, seed ) =
 
                                         Nothing ->
                                             c.roomCode
+                                , campaignTracker =
+                                    case overrides.campaignTracker of
+                                        Just t ->
+                                            Just t
+
+                                        Nothing ->
+                                            c.campaignTracker
                               }
                             )
 
@@ -1056,7 +1063,7 @@ view model =
         , id "content"
         , Touch.onCancel (\_ -> TouchCanceled)
         ]
-        ([ lazy7
+        ([ lazy8
             getHeaderHtml
             model.game.scenario.id
             model.game.scenario.title
@@ -1064,6 +1071,7 @@ view model =
             model.config.showRoomCode
             model.lockScenario
             model.lockPlayers
+            model.config.campaignTracker
             model.menuOpen
          , div [ class "main" ]
             [ div
@@ -1204,8 +1212,8 @@ subscriptions _ =
         ]
 
 
-getHeaderHtml : Int -> String -> Maybe String -> Bool -> Bool -> Bool -> Bool -> Html.Html Msg
-getHeaderHtml scenarioId scenarioTitle roomCode showRoomCode lockScenario lockPlayers menuOpen =
+getHeaderHtml : Int -> String -> Maybe String -> Bool -> Bool -> Bool -> Maybe CampaignTrackerUrl -> Bool -> Html.Html Msg
+getHeaderHtml scenarioId scenarioTitle roomCode showRoomCode lockScenario lockPlayers campaignTracker menuOpen =
     div
         [ class "header" ]
         [ div
@@ -1231,7 +1239,17 @@ getHeaderHtml scenarioId scenarioTitle roomCode showRoomCode lockScenario lockPl
                     "false"
                 )
             ]
-            [ lazy3 getMenuHtml lockScenario lockPlayers menuOpen ]
+            [ let
+                ( campaignTrackerName, campaignTrackerUrl ) =
+                    case campaignTracker of
+                        Just (CampaignTrackerUrl name url) ->
+                            ( Just name, Just url )
+
+                        Nothing ->
+                            ( Nothing, Nothing )
+              in
+              lazy6 getMenuHtml lockScenario lockPlayers scenarioId campaignTrackerName campaignTrackerUrl menuOpen
+            ]
         , header [ attribute "aria-label" "Scenario" ]
             (if scenarioId /= 0 then
                 [ span [ class "number" ] [ text (String.fromInt scenarioId) ]
@@ -1481,8 +1499,8 @@ getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId 
         |> Dom.render
 
 
-getMenuHtml : Bool -> Bool -> Bool -> Html.Html Msg
-getMenuHtml lockScenario lockPlayers menuOpen =
+getMenuHtml : Bool -> Bool -> Int -> Maybe String -> Maybe String -> Bool -> Html.Html Msg
+getMenuHtml lockScenario lockPlayers scenarioId campaignTrackerName campaignTrackerUrl menuOpen =
     Dom.element "nav"
         |> Dom.addAttribute
             (attribute
@@ -1544,7 +1562,24 @@ getMenuHtml lockScenario lockPlayers menuOpen =
                                 |> Dom.addClass "section-end"
                                 |> Dom.appendText "Settings"
                                 |> shortcutHtml [ "⇧", "s" ]
-                           , Dom.element "li"
+                           ]
+                        ++ (case ( campaignTrackerName, campaignTrackerUrl ) of
+                                ( Just name, Just url ) ->
+                                    [ Dom.element "li"
+                                        |> Dom.addAttribute (attribute "role" "menuitem")
+                                        |> Dom.addAttribute (tabindex 0)
+                                        |> Dom.appendChild
+                                            (Dom.element "a"
+                                                |> Dom.addAttribute (href (String.replace "{scenarioId}" (String.fromInt scenarioId) url))
+                                                |> Dom.addAttribute (target "_new")
+                                                |> Dom.appendText name
+                                            )
+                                    ]
+
+                                _ ->
+                                    []
+                           )
+                        ++ [ Dom.element "li"
                                 |> Dom.addAttribute (attribute "role" "menuitem")
                                 |> Dom.addAttribute (tabindex 0)
                                 |> Dom.appendChild
