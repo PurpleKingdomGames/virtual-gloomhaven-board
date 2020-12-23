@@ -49,8 +49,43 @@
                                         "mapTileData": {
                                             "ref": "a1b",
                                             "doors": [],
-                                            "overlays": [],
+                                            "overlays": [
+                                                {
+                                                    "ref": {
+                                                        "type": "obstacle",
+                                                        "subType": "cabinet"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [1, 1]
+                                                    ]
+                                                }
+                                            ],
                                             "monsters": [
+                                                {
+                                                    "monster": "city-guard",
+                                                    "initialX": 2,
+                                                    "initialY": 1,
+                                                    "twoPlayer": "normal",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "city-guard",
+                                                    "initialX": 2,
+                                                    "initialY": 2,
+                                                    "twoPlayer": "normal",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "vermling-shaman",
+                                                    "initialX": 0,
+                                                    "initialY": 1,
+                                                    "twoPlayer": "elite",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                }
                                             ],
                                             "turns": 3
                                         }
