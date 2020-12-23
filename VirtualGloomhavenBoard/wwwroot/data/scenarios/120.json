@@ -1,0 +1,147 @@
+{
+    "id": 120,
+    "title": "Stone Defense",
+    "mapTileData": {
+        "ref": "n1a",
+        "doors": [
+            {
+                "subType": "corridor",
+                "material": "natural-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 5,
+                "room1Y": 7,
+                "room2X": 1,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "b4b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [5, 6] ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [6, 6] ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [5, 7] ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "rock-column"
+                },
+                "direction": "default",
+                "cells": [
+                    [4, 1]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "rock-column"
+                },
+                "direction": "default",
+                "cells": [
+                    [0, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "rock-column"
+                },
+                "direction": "default",
+                "cells": [
+                    [6, 4]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "crystal"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 11]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "boulder-2"
+                },
+                "direction": "diagonal-right",
+                "cells": [
+                    [4, 4], [3, 5]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "boulder-2"
+                },
+                "direction": "diagonal-left",
+                "cells": [
+                    [0, 2], [0, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "rubble"
+                },
+                "direction": "default",
+                "cells": [
+                    [3, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "rubble"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 3]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "rubble"
+                },
+                "direction": "default",
+                "cells": [
+                    [2, 6]
+                ]
+            }
+        ],
+        "monsters": [],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": [
+        "sun-demon",
+        "ooze",
+        "cave-bear"
+    ]
+}
