@@ -1,0 +1,232 @@
+{
+    "id": 121,
+    "title": "An Unfortunate Intrusion",
+    "mapTileData": {
+        "ref": "n1b",
+        "doors": [
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 0,
+                "room1Y": -1,
+                "room2X": 6,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "g1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 3
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 3,
+                "room1Y": -1,
+                "room2X": 3,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "g1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 3
+                }
+            },
+            {
+                "subType": "corridor",
+                "material": "manmade-stone",
+                "size": 1,
+                "direction": "default",
+                "room1X": 6,
+                "room1Y": -1,
+                "room2X": 0,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "g1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [
+                        {
+                            "monster": "city-guard",
+                            "initialX": 3,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "city-guard",
+                            "initialX": 4,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "vermling-scout",
+                            "initialX": 0,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "vermling-scout",
+                            "initialX": 0,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "vermling-scout",
+                            "initialX": 1,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "vermling-scout",
+                            "initialX": 6,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "vermling-scout",
+                            "initialX": 7,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "vermling-scout",
+                            "initialX": 6,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "vermling-shaman",
+                            "initialX": 0,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "vermling-shaman",
+                            "initialX": 7,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 3
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [5, 6] ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [4, 6] ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [3, 6] ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [2, 6] ]
+            },
+            {
+                "ref": {
+                    "type": "trap",
+                    "subType": "spike"
+                },
+                "direction": "default",
+                "cells": [ [2, 0] ]
+            },
+            {
+                "ref": {
+                    "type": "trap",
+                    "subType": "spike"
+                },
+                "direction": "default",
+                "cells": [ [5, 0] ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "wall-section"
+                },
+                "direction": "default",
+                "cells": [
+                    [5, 2], [6, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "wall-section"
+                },
+                "direction": "default",
+                "cells": [
+                    [1, 2], [2, 2]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "city-guard",
+                "initialX": 1,
+                "initialY": 3,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "city-guard",
+                "initialX": 5,
+                "initialY": 3,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            }
+        ],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": [
+        "sun-demon",
+        "ooze",
+        "cave-bear"
+    ]
+}
