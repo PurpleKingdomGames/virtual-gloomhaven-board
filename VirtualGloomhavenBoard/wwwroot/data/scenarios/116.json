@@ -182,15 +182,6 @@
             },
             {
                 "ref": {
-                    "type": "starting-location"
-                },
-                "direction": "default",
-                "cells": [
-                    [0, 0]
-                ]
-            },
-            {
-                "ref": {
                     "type": "obstacle",
                     "subType": "cabinet"
                 },
