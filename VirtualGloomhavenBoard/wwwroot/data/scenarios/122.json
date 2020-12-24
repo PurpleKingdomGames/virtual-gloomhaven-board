@@ -1,0 +1,68 @@
+{
+    "id": 122,
+    "title": "Corrupted Laboratory",
+    "mapTileData": {
+        "ref": "g2b",
+        "doors": [
+            {
+                "subType": "wooden",
+                "direction": "vertical",
+                "room1X": 7,
+                "room1Y": 1,
+                "room2X": -1,
+                "room2Y": 1,
+                "mapTileData": {
+                    "ref": "i1b",
+                    "doors": [
+                        {
+                            "subType": "stone",
+                            "direction": "default",
+                            "room1X": 12,
+                            "room1Y": 4,
+                            "room2X": 11,
+                            "room2Y": -1,
+                            "mapTileData": {
+                                "ref": "a2a",
+                                "doors": [],
+                                "overlays": [],
+                                "monsters": [],
+                                "turns": 0
+                            }
+                        }
+                    ],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            },
+            {
+                "subType": "wooden",
+                "direction": "default",
+                "room1X": 3,
+                "room1Y": 3,
+                "room2X": 3,
+                "room2Y": 0,
+                "mapTileData": {
+                    "ref": "a1b",
+                    "doors": [],
+                    "overlays": [],
+                    "monsters": [],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [3,1] ]
+            }
+        ],
+        "monsters": [],
+        "turns": 0
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
