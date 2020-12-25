@@ -2870,7 +2870,7 @@ isValidScenario : String -> Bool
 isValidScenario scenarioId =
     case String.toInt scenarioId of
         Just i ->
-            i > 0 && i < 120
+            i > 0 && i < 130
 
         Nothing ->
             False
