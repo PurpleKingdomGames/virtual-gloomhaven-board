@@ -232,11 +232,43 @@
                                             "monsters": [
                                                 {
                                                     "monster": "city-guard",
-                                                    "initialX": 1,
-                                                    "initialY": 1,
+                                                    "initialX": 0,
+                                                    "initialY": 0,
                                                     "twoPlayer": "normal",
                                                     "threePlayer": "normal",
                                                     "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "city-guard",
+                                                    "initialX": 1,
+                                                    "initialY": 4,
+                                                    "twoPlayer": "normal",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "city-guard",
+                                                    "initialX": 6,
+                                                    "initialY": 0,
+                                                    "twoPlayer": "normal",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "city-guard",
+                                                    "initialX": 6,
+                                                    "initialY": 6,
+                                                    "twoPlayer": "normal",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "city-guard",
+                                                    "initialX": 3,
+                                                    "initialY": 1,
+                                                    "twoPlayer": "elite",
+                                                    "threePlayer": "elite",
+                                                    "fourPlayer": "elite"
                                                 }
                                             ],
                                             "turns": 0
@@ -350,7 +382,5 @@
         "turns": 0
     },
     "angle": 0,
-    "additionalMonsters": [
-        "city-guard"
-    ]
+    "additionalMonsters": []
 }
