@@ -1,0 +1,288 @@
+{
+    "id": 128,
+    "title": "Harvesting the Night",
+    "mapTileData": {
+        "ref": "g2a",
+        "doors": [
+            {
+                "subType": "dark-fog",
+                "direction": "vertical",
+                "room1X": 7,
+                "room1Y": 1,
+                "room2X": -1,
+                "room2Y": 3,
+                "mapTileData": {
+                    "ref": "l2a",
+                    "doors": [
+                        {
+                            "subType": "dark-fog",
+                            "direction": "vertical",
+                            "room1X": 4,
+                            "room1Y": 3,
+                            "room2X": -1,
+                            "room2Y": 1,
+                            "mapTileData": {
+                                "ref": "b4b",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "rock-column"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [2, 2]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "night-demon",
+                                        "initialX": 2,
+                                        "initialY": 1,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    }],
+                                "turns": 3
+                            }
+                        },
+                        {
+                            "subType": "dark-fog",
+                            "direction": "vertical",
+                            "room1X": 3,
+                            "room1Y": -1,
+                            "room2X": 2,
+                            "room2Y": 0,
+                            "mapTileData": {
+                                "ref": "a2b",
+                                "doors": [],
+                                "overlays": [
+
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "nest"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 2]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "night-demon",
+                                        "initialX": 0,
+                                        "initialY": 2,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "night-demon",
+                                        "initialX": 1,
+                                        "initialY": 1,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "night-demon",
+                                        "initialX": 2,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 0
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "dark-pit"
+                            },
+                            "direction": "diagonal-right",
+                            "cells": [
+                                [2, 5], [3, 4]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "rock-column"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 2]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "night-demon",
+                            "initialX": 2,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "night-demon",
+                            "initialX": 2,
+                            "initialY": 4,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "deep-terror",
+                            "initialX": 4,
+                            "initialY": 6,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "deep-terror",
+                            "initialX": 4,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 3
+                }
+            },
+            {
+                "subType": "dark-fog",
+                "direction": "vertical",
+                "room1X": 3,
+                "room1Y": -1,
+                "room2X": 2,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "d2b",
+                    "doors": [],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "rock-column"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [0, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "nest"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [3, 3]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "night-demon",
+                            "initialX": 0,
+                            "initialY": 3,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "night-demon",
+                            "initialX": 2,
+                            "initialY": 1,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "deep-terror",
+                            "initialX": 1,
+                            "initialY": 4,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [0,0] ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [0,1] ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [0,2] ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "dark-pit"
+                },
+                "direction": "diagonal-left",
+                "cells": [
+                    [3, 1], [3, 0]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "night-demon",
+                "initialX": 4,
+                "initialY": 1,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "deep-terror",
+                "initialX": 7,
+                "initialY": 0,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "deep-terror",
+                "initialX": 7,
+                "initialY": 2,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            }
+        ],
+        "turns": 3
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
