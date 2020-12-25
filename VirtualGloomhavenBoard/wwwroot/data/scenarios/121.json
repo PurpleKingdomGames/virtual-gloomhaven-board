@@ -224,9 +224,5 @@
         "turns": 0
     },
     "angle": 0,
-    "additionalMonsters": [
-        "sun-demon",
-        "ooze",
-        "cave-bear"
-    ]
+    "additionalMonsters": []
 }
