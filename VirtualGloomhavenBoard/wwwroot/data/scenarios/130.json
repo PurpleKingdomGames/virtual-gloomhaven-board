@@ -1,0 +1,236 @@
+{
+    "id": 130,
+    "title": "Corrupted Hunt",
+    "mapTileData": {
+        "ref": "d1b",
+        "doors": [
+            {
+                "subType": "light-fog",
+                "direction": "vertical",
+                "room1X": 1,
+                "room1Y": 5,
+                "room2X": 3,
+                "room2Y": 1,
+                "mapTileData": {
+                    "ref": "c2a",
+                    "doors": [],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "difficult-terrain",
+                                "subType": "log"
+                            },
+                            "direction": "diagonal-right",
+                            "cells": [
+                                [2, 2], [2, 3]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "earth-demon",
+                            "initialX": 1,
+                            "initialY": 2,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        }
+                    ],
+                    "turns": 1
+                }
+            },
+            {
+                "subType": "light-fog",
+                "direction": "vertical",
+                "room1X": 4,
+                "room1Y": 1,
+                "room2X": 5,
+                "room2Y": -1,
+                "mapTileData": {
+                    "ref": "g1a",
+                    "doors": [
+                        {
+                            "subType": "light-fog",
+                            "direction": "vertical",
+                            "room1X": 7,
+                            "room1Y": 1,
+                            "room2X": -1,
+                            "room2Y": 1,
+                            "mapTileData": {
+                                "ref": "a4a",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "nest"
+                                        },
+                                        "direction": "diagonal-right",
+                                        "cells": [
+                                            [2, 2]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "giant-viper",
+                                        "initialX": 1,
+                                        "initialY": 1,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "giant-viper",
+                                        "initialX": 2,
+                                        "initialY": 1,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    },
+                                    {
+                                        "monster": "giant-viper",
+                                        "initialX": 1,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "giant-viper",
+                                        "initialX": 3,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 0
+                            }
+                        },
+                        {
+                            "subType": "light-fog",
+                            "direction": "vertical",
+                            "room1X": -1,
+                            "room1Y": 1,
+                            "room2X": -1,
+                            "room2Y": 1,
+                            "mapTileData": {
+                                "ref": "f1b",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "nest"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [1, 8]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "tree-3"
+                                        },
+                                        "direction": "diagonal-left",
+                                        "cells": [
+                                            [2, 4], [1, 3], [1, 4]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "spitting-drake",
+                                        "initialX": 1,
+                                        "initialY": 7,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    }
+                                ],
+                                "turns": 3
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "stump"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [2, 1]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "stump"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [5, 0]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "flame-demon",
+                            "initialX": 0,
+                            "initialY": 1,
+                            "twoPlayer": "elite",
+                            "threePlayer": "elite",
+                            "fourPlayer": "elite"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [ [0,2] ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "tree-3"
+                },
+                "direction": "diagonal-right",
+                "cells": [
+                    [1, 3], [2, 3], [2, 2]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "log"
+                },
+                "direction": "diagonal-left",
+                "cells": [
+                    [1, 1], [2, 0]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "hound",
+                "initialX": 4,
+                "initialY": 2,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 2
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
