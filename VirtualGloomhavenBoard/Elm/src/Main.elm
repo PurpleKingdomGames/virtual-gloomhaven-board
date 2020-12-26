@@ -2870,6 +2870,7 @@ isValidScenario : String -> Bool
 isValidScenario scenarioId =
     case String.toInt scenarioId of
         Just i ->
+            -- TODO: change end of range to 116 once Solo scenarios are moved to their final location
             i > 0 && i < 133
 
         Nothing ->
