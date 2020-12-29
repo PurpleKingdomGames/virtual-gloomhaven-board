@@ -5,7 +5,7 @@ import BoardMapTile exposing (MapTileRef(..), refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
-import Game exposing (AIType(..), GameState, Piece, PieceType(..), SummonsType(..))
+import Game exposing (AIType(..), Expansion(..), GameState, GameStateScenario(..), Piece, PieceType(..), SummonsType(..))
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, int, list, map3, map8, string, succeed)
 import Json.Encode as Encode exposing (int, list, object, string)
@@ -156,7 +156,7 @@ subscriptions =
 decodeGameState : Decoder GameState
 decodeGameState =
     map8 GameState
-        (field "scenario" Decode.int)
+        (field "scenario" (Decode.oneOf [ decodeScenarioInt, decodeGameStateScenario ]))
         (field "players" (Decode.list decodeCharacter))
         (field "updateCount" Decode.int)
         (field "visibleRooms" (Decode.list Decode.string) |> andThen decodeMapRefList)
@@ -169,7 +169,7 @@ decodeGameState =
 encodeGameState : GameState -> Encode.Value
 encodeGameState gameState =
     object
-        [ ( "scenario", Encode.int gameState.scenario )
+        [ ( "scenario", Encode.object (encodeGameStateScenario gameState.scenario) )
         , ( "players", Encode.list Encode.object (encodeCharacters gameState.players) )
         , ( "updateCount", Encode.int gameState.updateCount )
         , ( "visibleRooms", Encode.list Encode.string (encodeMapTileRefList gameState.visibleRooms) )
@@ -178,6 +178,40 @@ encodeGameState gameState =
         , ( "availableMonsters", Encode.list Encode.object (encodeAvailableMonsters gameState.availableMonsters) )
         , ( "roomCode", Encode.string gameState.roomCode )
         ]
+
+
+decodeScenarioInt : Decoder GameStateScenario
+decodeScenarioInt =
+    Decode.int |> andThen (\i -> succeed (InbuiltScenario Gloomhaven i))
+
+
+decodeGameStateScenario : Decoder GameStateScenario
+decodeGameStateScenario =
+    field "expansion" Decode.string
+        |> andThen
+            (\s ->
+                let
+                    strExp =
+                        String.toLower s
+
+                    e =
+                        if strExp == "gloomhaven" then
+                            Just Gloomhaven
+
+                        else if strExp == "solo" then
+                            Just Solo
+
+                        else
+                            Nothing
+                in
+                case e of
+                    Just exp ->
+                        field "id" Decode.int
+                            |> andThen (\i -> succeed (InbuiltScenario exp i))
+
+                    Nothing ->
+                        fail ("Could not find expansion " ++ strExp)
+            )
 
 
 decodePiece : Decoder Piece
@@ -254,6 +288,24 @@ decodeAvailableMonsters =
                             succeed ( m, b )
                         )
             )
+
+
+encodeGameStateScenario : GameStateScenario -> List ( String, Encode.Value )
+encodeGameStateScenario scenario =
+    case scenario of
+        InbuiltScenario e i ->
+            [ ( "expansion"
+              , Encode.string
+                    (case e of
+                        Gloomhaven ->
+                            "gloomhaven"
+
+                        Solo ->
+                            "solo"
+                    )
+              )
+            , ( "id", Encode.int i )
+            ]
 
 
 encodeMapTileRefList : List MapTileRef -> List String

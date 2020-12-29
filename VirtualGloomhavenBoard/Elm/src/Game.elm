@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+module Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
@@ -21,7 +21,7 @@ empty =
 
 emptyState : GameState
 emptyState =
-    GameState 1 [] 0 [] [] [] Dict.empty ""
+    GameState (InbuiltScenario Gloomhaven 1) [] 0 [] [] [] Dict.empty ""
 
 
 type AIType
@@ -63,7 +63,7 @@ type alias Game =
 
 
 type alias GameState =
-    { scenario : Int
+    { scenario : GameStateScenario
     , players : List CharacterClass
     , updateCount : Int
     , visibleRooms : List MapTileRef
@@ -72,6 +72,15 @@ type alias GameState =
     , availableMonsters : Dict String (Array Int)
     , roomCode : String
     }
+
+
+type GameStateScenario
+    = InbuiltScenario Expansion Int
+
+
+type Expansion
+    = Gloomhaven
+    | Solo
 
 
 type alias RoomData =
@@ -117,8 +126,8 @@ getPieceName piece =
             ""
 
 
-generateGameMap : Scenario -> String -> List CharacterClass -> Seed -> Game
-generateGameMap scenario roomCode players seed =
+generateGameMap : GameStateScenario -> Scenario -> String -> List CharacterClass -> Seed -> Game
+generateGameMap gameStateScenario scenario roomCode players seed =
     let
         ( mapTiles, bounds ) =
             mapTileDataToList scenario.mapTilesData Nothing
@@ -130,7 +139,7 @@ generateGameMap scenario roomCode players seed =
                 |> Dict.fromList
 
         initGameState =
-            GameState scenario.id
+            GameState gameStateScenario
                 players
                 0
                 []

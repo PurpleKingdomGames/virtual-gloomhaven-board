@@ -12,7 +12,7 @@ import Character exposing (CharacterClass(..), characterToString)
 import Dict exposing (Dict)
 import Dom exposing (Element)
 import DragPorts
-import Game exposing (AIType(..), Cell, Game, GameState, Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+import Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
 import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, src, style, tabindex, target, title, value)
@@ -124,7 +124,7 @@ type alias TransientClientSettings =
 
 type LoadingState
     = Loaded
-    | Loading Int
+    | Loading GameStateScenario
     | Failed
 
 
@@ -135,7 +135,7 @@ type ConnectionStatus
 
 
 type Msg
-    = LoadedScenario Seed (Maybe Game.GameState) Bool (Result Error Scenario)
+    = LoadedScenario Seed GameStateScenario (Maybe Game.GameState) Bool (Result Error Scenario)
     | ReloadScenario
     | MoveStarted MoveablePiece (Maybe ( DragDrop.EffectAllowed, Decode.Value ))
     | MoveTargetChanged ( Int, Int ) (Maybe ( DragDrop.DropEffect, Decode.Value ))
@@ -152,7 +152,7 @@ type Msg
     | ChangeGameMode GameModeType
     | ChangeAppMode AppModeType
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
-    | ChangeScenario Int Bool
+    | ChangeScenario GameStateScenario Bool
     | ToggleCharacter CharacterClass Bool
     | ToggleBoardOnly Bool
     | ToggleFullscreen Bool
@@ -280,6 +280,14 @@ init ( oldState, maybeOverrides, seed ) =
 
         initGame =
             Game.empty
+
+        initScenario =
+            case overrides.initScenario of
+                Just i ->
+                    InbuiltScenario Gloomhaven i
+
+                Nothing ->
+                    initGameState.scenario
     in
     ( Model
         { initGame | state = initGameState }
@@ -305,15 +313,10 @@ init ( oldState, maybeOverrides, seed ) =
     , Cmd.batch
         [ connectToServer
         , loadScenarioById
-            (case overrides.initScenario of
-                Just i ->
-                    i
-
-                Nothing ->
-                    initGameState.scenario
-            )
+            initScenario
             (LoadedScenario
                 (Random.initialSeed seed)
+                initScenario
                 (if forceScenarioRefresh then
                     Nothing
 
@@ -333,12 +336,12 @@ update msg model =
             Maybe.withDefault "" model.config.roomCode
     in
     case msg of
-        LoadedScenario seed initGameState addToUndo result ->
+        LoadedScenario seed gameStateScenario initGameState addToUndo result ->
             case result of
                 Ok scenario ->
                     let
                         game =
-                            generateGameMap scenario roomCode model.game.state.players seed
+                            generateGameMap gameStateScenario scenario roomCode model.game.state.players seed
                                 |> (let
                                         players =
                                             case initGameState of
@@ -354,7 +357,7 @@ update msg model =
                         gameState =
                             case initGameState of
                                 Just gs ->
-                                    if gs.scenario == scenario.id then
+                                    if gs.scenario == gameStateScenario then
                                         gs
 
                                     else
@@ -607,7 +610,7 @@ update msg model =
                     model.config
             in
             if forceReload || newScenario /= model.game.state.scenario then
-                ( { model | config = { config | appMode = AppStorage.Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed Nothing True) )
+                ( { model | config = { config | appMode = AppStorage.Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed newScenario Nothing True) )
 
             else
                 ( { model | config = { config | appMode = AppStorage.Game } }, Cmd.none )
@@ -858,7 +861,7 @@ update msg model =
 
             else
                 ( { model | currentLoadState = Loading gameState.scenario }
-                , loadScenarioById gameState.scenario (LoadedScenario game.seed (Just gameState) True)
+                , loadScenarioById gameState.scenario (LoadedScenario game.seed gameState.scenario (Just gameState) True)
                 )
 
         PushToUndoStack state ->
@@ -883,7 +886,7 @@ update msg model =
 
                     else
                         ( { newModel | currentLoadState = Loading state.scenario }
-                        , loadScenarioById state.scenario (LoadedScenario model.game.seed (Just newState) False)
+                        , loadScenarioById state.scenario (LoadedScenario model.game.seed state.scenario (Just newState) False)
                         )
 
                 _ ->

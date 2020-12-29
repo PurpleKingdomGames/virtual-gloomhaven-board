@@ -2,6 +2,7 @@ module ScenarioSync exposing (decodeScenario, loadScenarioById)
 
 import BoardMapTile exposing (stringToRef)
 import BoardOverlay exposing (BoardOverlayDirectionType, DoorSubType)
+import Game exposing (Expansion(..), GameStateScenario(..))
 import Http exposing (Error, expectJson, get)
 import Json.Decode exposing (Decoder, andThen, fail, field, float, int, lazy, list, map5, map6, map7, string, succeed)
 import List exposing (all, filterMap, map)
@@ -31,10 +32,26 @@ decodeScenario =
         (field "additionalMonsters" (list string) |> andThen decodeMonsterList)
 
 
-loadScenarioById : Int -> (Result Error Scenario -> msg) -> Cmd msg
-loadScenarioById id msg =
+loadScenarioById : GameStateScenario -> (Result Error Scenario -> msg) -> Cmd msg
+loadScenarioById scenario msg =
+    let
+        path =
+            "/data/scenarios/"
+                ++ (case scenario of
+                        InbuiltScenario Solo _ ->
+                            "solo/"
+
+                        _ ->
+                            ""
+                   )
+
+        id =
+            case scenario of
+                InbuiltScenario _ i ->
+                    i
+    in
     Http.get
-        { url = "/data/scenarios/" ++ String.fromInt id ++ ".json"
+        { url = path ++ String.fromInt id ++ ".json"
         , expect = expectJson msg decodeScenario
         }
 
