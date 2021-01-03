@@ -3120,7 +3120,21 @@ getCurrentScenarioInput model =
                                     InbuiltScenario e i1
 
                 Nothing ->
-                    model.game.state.scenario
+                    case model.game.state.scenario of
+                        InbuiltScenario _ i ->
+                            InbuiltScenario e i
 
         Nothing ->
-            model.game.state.scenario
+            case model.game.state.scenario of
+                InbuiltScenario e _ ->
+                    case model.currentScenarioInput of
+                        Just str ->
+                            case String.toInt str of
+                                Just i ->
+                                    InbuiltScenario e i
+
+                                Nothing ->
+                                    model.game.state.scenario
+
+                        Nothing ->
+                            model.game.state.scenario
