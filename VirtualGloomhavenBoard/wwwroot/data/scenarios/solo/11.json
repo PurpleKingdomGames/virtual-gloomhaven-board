@@ -1,5 +1,5 @@
 {
-    "id": 128,
+    "id": 11,
     "title": "Harvesting the Night",
     "mapTileData": {
         "ref": "g2a",
@@ -32,7 +32,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [2, 2]
+                                            [
+                                                2,
+                                                2
+                                            ]
                                         ]
                                     }
                                 ],
@@ -44,7 +47,8 @@
                                         "twoPlayer": "elite",
                                         "threePlayer": "elite",
                                         "fourPlayer": "elite"
-                                    }],
+                                    }
+                                ],
                                 "turns": 3
                             }
                         },
@@ -59,7 +63,6 @@
                                 "ref": "a2b",
                                 "doors": [],
                                 "overlays": [
-
                                     {
                                         "ref": {
                                             "type": "obstacle",
@@ -67,7 +70,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [1, 2]
+                                            [
+                                                1,
+                                                2
+                                            ]
                                         ]
                                     }
                                 ],
@@ -109,7 +115,14 @@
                             },
                             "direction": "diagonal-right",
                             "cells": [
-                                [2, 5], [3, 4]
+                                [
+                                    2,
+                                    5
+                                ],
+                                [
+                                    3,
+                                    4
+                                ]
                             ]
                         },
                         {
@@ -119,7 +132,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [3, 2]
+                                [
+                                    3,
+                                    2
+                                ]
                             ]
                         }
                     ],
@@ -178,7 +194,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [0, 1]
+                                [
+                                    0,
+                                    1
+                                ]
                             ]
                         },
                         {
@@ -188,7 +207,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [3, 3]
+                                [
+                                    3,
+                                    3
+                                ]
                             ]
                         }
                     ],
@@ -228,21 +250,36 @@
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [0,0] ]
+                "cells": [
+                    [
+                        0,
+                        0
+                    ]
+                ]
             },
             {
                 "ref": {
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [0,1] ]
+                "cells": [
+                    [
+                        0,
+                        1
+                    ]
+                ]
             },
             {
                 "ref": {
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [0,2] ]
+                "cells": [
+                    [
+                        0,
+                        2
+                    ]
+                ]
             },
             {
                 "ref": {
@@ -251,7 +288,14 @@
                 },
                 "direction": "diagonal-left",
                 "cells": [
-                    [3, 1], [3, 0]
+                    [
+                        3,
+                        1
+                    ],
+                    [
+                        3,
+                        0
+                    ]
                 ]
             }
         ],

@@ -1,5 +1,5 @@
 {
-    "id": 125,
+    "id": 6,
     "title": "Rodent Liberation",
     "mapTileData": {
         "ref": "e1a",
@@ -32,7 +32,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [0, 1]
+                                            [
+                                                0,
+                                                1
+                                            ]
                                         ]
                                     },
                                     {
@@ -42,7 +45,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [3, 0]
+                                            [
+                                                3,
+                                                0
+                                            ]
                                         ]
                                     }
                                 ],
@@ -84,7 +90,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [3, 2]
+                                [
+                                    3,
+                                    2
+                                ]
                             ]
                         },
                         {
@@ -94,7 +103,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [4, 2]
+                                [
+                                    4,
+                                    2
+                                ]
                             ]
                         },
                         {
@@ -104,7 +116,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [4, 5]
+                                [
+                                    4,
+                                    5
+                                ]
                             ]
                         },
                         {
@@ -114,7 +129,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [3, 5]
+                                [
+                                    3,
+                                    5
+                                ]
                             ]
                         },
                         {
@@ -124,7 +142,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [2, 5]
+                                [
+                                    2,
+                                    5
+                                ]
                             ]
                         },
                         {
@@ -134,7 +155,10 @@
                             },
                             "direction": "vertical",
                             "cells": [
-                                [2, 0]
+                                [
+                                    2,
+                                    0
+                                ]
                             ]
                         },
                         {
@@ -144,7 +168,10 @@
                             },
                             "direction": "vertical",
                             "cells": [
-                                [5, 0]
+                                [
+                                    5,
+                                    0
+                                ]
                             ]
                         },
                         {
@@ -154,7 +181,10 @@
                             },
                             "direction": "vertical",
                             "cells": [
-                                [3, 3]
+                                [
+                                    3,
+                                    3
+                                ]
                             ]
                         }
                     ],
@@ -169,21 +199,36 @@
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [1,2] ]
+                "cells": [
+                    [
+                        1,
+                        2
+                    ]
+                ]
             },
             {
                 "ref": {
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [0,1] ]
+                "cells": [
+                    [
+                        0,
+                        1
+                    ]
+                ]
             },
             {
                 "ref": {
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [0,3] ]
+                "cells": [
+                    [
+                        0,
+                        3
+                    ]
+                ]
             }
         ],
         "monsters": [

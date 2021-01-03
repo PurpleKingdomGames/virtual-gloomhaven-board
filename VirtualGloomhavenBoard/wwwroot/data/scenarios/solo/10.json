@@ -1,5 +1,5 @@
 {
-    "id": 126,
+    "id": 10,
     "title": "Plane of Wild Beasts",
     "mapTileData": {
         "ref": "l1b",
@@ -186,8 +186,7 @@
                 "mapTileData": {
                     "ref": "l3a",
                     "doors": [],
-                    "overlays": [
-                    ],
+                    "overlays": [],
                     "monsters": [],
                     "turns": 0
                 }
@@ -200,7 +199,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [-1, 6]
+                    [
+                        -1,
+                        6
+                    ]
                 ]
             },
             {
@@ -209,7 +211,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [-2, 6]
+                    [
+                        -2,
+                        6
+                    ]
                 ]
             },
             {
@@ -218,7 +223,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [0, 6]
+                    [
+                        0,
+                        6
+                    ]
                 ]
             },
             {
@@ -227,7 +235,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [1, 6]
+                    [
+                        1,
+                        6
+                    ]
                 ]
             },
             {
@@ -237,7 +248,14 @@
                 },
                 "direction": "diagonal-left",
                 "cells": [
-                    [2, 0], [2, 1]
+                    [
+                        2,
+                        0
+                    ],
+                    [
+                        2,
+                        1
+                    ]
                 ]
             },
             {
@@ -247,7 +265,14 @@
                 },
                 "direction": "diagonal-right",
                 "cells": [
-                    [-3, 4], [-4, 5]
+                    [
+                        -3,
+                        4
+                    ],
+                    [
+                        -4,
+                        5
+                    ]
                 ]
             },
             {
@@ -257,7 +282,18 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [2, 4], [3, 4], [2, 3]
+                    [
+                        2,
+                        4
+                    ],
+                    [
+                        3,
+                        4
+                    ],
+                    [
+                        2,
+                        3
+                    ]
                 ]
             },
             {
@@ -266,16 +302,19 @@
                     "subType": "tree-3"
                 },
                 "direction": "diagonal-left",
-                "cells": [ [-3, 1], [-2, 2], [-2, 1] ]
-            },
-            {
-                "ref": {
-                    "type": "obstacle",
-                    "subType": "bush"
-                },
-                "direction": "default",
                 "cells": [
-                    [-4, 2]
+                    [
+                        -3,
+                        1
+                    ],
+                    [
+                        -2,
+                        2
+                    ],
+                    [
+                        -2,
+                        1
+                    ]
                 ]
             },
             {
@@ -285,7 +324,23 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [-2, 5]
+                    [
+                        -4,
+                        2
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "bush"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        -2,
+                        5
+                    ]
                 ]
             }
         ],

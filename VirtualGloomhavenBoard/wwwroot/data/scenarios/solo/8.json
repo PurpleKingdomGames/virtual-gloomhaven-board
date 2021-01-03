@@ -1,5 +1,5 @@
 {
-    "id": 131,
+    "id": 8,
     "title": "Unnatural Insults",
     "mapTileData": {
         "ref": "g1a",
@@ -50,7 +50,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [2, 2]
+                                            [
+                                                2,
+                                                2
+                                            ]
                                         ]
                                     }
                                 ],
@@ -93,7 +96,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [2, 3]
+                                            [
+                                                2,
+                                                3
+                                            ]
                                         ]
                                     },
                                     {
@@ -103,7 +109,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [3, 0]
+                                            [
+                                                3,
+                                                0
+                                            ]
                                         ]
                                     },
                                     {
@@ -113,7 +122,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [0, 1]
+                                            [
+                                                0,
+                                                1
+                                            ]
                                         ]
                                     }
                                 ],
@@ -155,7 +167,14 @@
                             },
                             "direction": "diagonal-left",
                             "cells": [
-                                [3, 3], [4, 4]
+                                [
+                                    3,
+                                    3
+                                ],
+                                [
+                                    4,
+                                    4
+                                ]
                             ]
                         },
                         {
@@ -165,7 +184,18 @@
                             },
                             "direction": "diagonal-left",
                             "cells": [
-                                [1, 4], [1, 5], [2, 4]
+                                [
+                                    1,
+                                    4
+                                ],
+                                [
+                                    1,
+                                    5
+                                ],
+                                [
+                                    2,
+                                    4
+                                ]
                             ]
                         },
                         {
@@ -175,7 +205,18 @@
                             },
                             "direction": "diagonal-right",
                             "cells": [
-                                [3, 0], [2, 1], [3, 1]
+                                [
+                                    3,
+                                    0
+                                ],
+                                [
+                                    2,
+                                    1
+                                ],
+                                [
+                                    3,
+                                    1
+                                ]
                             ]
                         },
                         {
@@ -185,7 +226,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [2, 2]
+                                [
+                                    2,
+                                    2
+                                ]
                             ]
                         },
                         {
@@ -195,7 +239,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [3, 5]
+                                [
+                                    3,
+                                    5
+                                ]
                             ]
                         }
                     ],
@@ -235,21 +282,36 @@
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [7,0] ]
+                "cells": [
+                    [
+                        7,
+                        0
+                    ]
+                ]
             },
             {
                 "ref": {
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [6,1] ]
+                "cells": [
+                    [
+                        6,
+                        1
+                    ]
+                ]
             },
             {
                 "ref": {
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [7,2] ]
+                "cells": [
+                    [
+                        7,
+                        2
+                    ]
+                ]
             },
             {
                 "ref": {
@@ -258,7 +320,14 @@
                 },
                 "direction": "diagonal-right",
                 "cells": [
-                    [3, 2], [3, 1]
+                    [
+                        3,
+                        2
+                    ],
+                    [
+                        3,
+                        1
+                    ]
                 ]
             },
             {
@@ -268,7 +337,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [2, 0]
+                    [
+                        2,
+                        0
+                    ]
                 ]
             },
             {
@@ -278,7 +350,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [6, 2]
+                    [
+                        6,
+                        2
+                    ]
                 ]
             },
             {
@@ -288,7 +363,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [4, 1]
+                    [
+                        4,
+                        1
+                    ]
                 ]
             }
         ],

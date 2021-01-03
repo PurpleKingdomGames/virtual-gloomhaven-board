@@ -1,5 +1,5 @@
 {
-    "id": 127,
+    "id": 4,
     "title": "Armory Heist",
     "mapTileData": {
         "ref": "e1a",
@@ -26,7 +26,7 @@
                                 "doors": [
                                     {
                                         "subType": "stone",
-                                        "direction": "default",
+                                        "direction": "vertical",
                                         "room1X": -1,
                                         "room1Y": 1,
                                         "room2X": -1,
@@ -42,7 +42,10 @@
                                                     },
                                                     "direction": "vertical",
                                                     "cells": [
-                                                        [1, 1]
+                                                        [
+                                                            1,
+                                                            1
+                                                        ]
                                                     ]
                                                 },
                                                 {
@@ -53,7 +56,10 @@
                                                     },
                                                     "direction": "default",
                                                     "cells": [
-                                                        [2, 3]
+                                                        [
+                                                            2,
+                                                            3
+                                                        ]
                                                     ]
                                                 }
                                             ],
@@ -79,8 +85,7 @@
                                         }
                                     }
                                 ],
-                                "overlays": [
-                                ],
+                                "overlays": [],
                                 "monsters": [
                                     {
                                         "monster": "stone-golem",
@@ -111,7 +116,10 @@
                             },
                             "direction": "vertical",
                             "cells": [
-                                [3, 3]
+                                [
+                                    3,
+                                    3
+                                ]
                             ]
                         },
                         {
@@ -121,7 +129,10 @@
                             },
                             "direction": "vertical",
                             "cells": [
-                                [3, 5]
+                                [
+                                    3,
+                                    5
+                                ]
                             ]
                         },
                         {
@@ -131,7 +142,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [5, 1]
+                                [
+                                    5,
+                                    1
+                                ]
                             ]
                         },
                         {
@@ -141,7 +155,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [3, 1]
+                                [
+                                    3,
+                                    1
+                                ]
                             ]
                         },
                         {
@@ -151,7 +168,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [1, 1]
+                                [
+                                    1,
+                                    1
+                                ]
                             ]
                         }
                     ],
@@ -191,21 +211,36 @@
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [1,2] ]
+                "cells": [
+                    [
+                        1,
+                        2
+                    ]
+                ]
             },
             {
                 "ref": {
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [0,1] ]
+                "cells": [
+                    [
+                        0,
+                        1
+                    ]
+                ]
             },
             {
                 "ref": {
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [0,3] ]
+                "cells": [
+                    [
+                        0,
+                        3
+                    ]
+                ]
             }
         ],
         "monsters": [

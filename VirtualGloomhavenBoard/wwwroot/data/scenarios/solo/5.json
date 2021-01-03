@@ -1,5 +1,5 @@
 {
-    "id": 120,
+    "id": 5,
     "title": "Stone Defense",
     "mapTileData": {
         "ref": "n1a",
@@ -28,30 +28,35 @@
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [5, 6] ]
+                "cells": [
+                    [
+                        5,
+                        6
+                    ]
+                ]
             },
             {
                 "ref": {
                     "type": "starting-location"
-                },
-                "direction": "default",
-                "cells": [ [6, 6] ]
-            },
-            {
-                "ref": {
-                    "type": "starting-location"
-                },
-                "direction": "default",
-                "cells": [ [5, 7] ]
-            },
-            {
-                "ref": {
-                    "type": "obstacle",
-                    "subType": "rock-column"
                 },
                 "direction": "default",
                 "cells": [
-                    [4, 1]
+                    [
+                        6,
+                        6
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        5,
+                        7
+                    ]
                 ]
             },
             {
@@ -61,7 +66,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [0, 5]
+                    [
+                        4,
+                        1
+                    ]
                 ]
             },
             {
@@ -71,7 +79,23 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [6, 4]
+                    [
+                        0,
+                        5
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "obstacle",
+                    "subType": "rock-column"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        6,
+                        4
+                    ]
                 ]
             },
             {
@@ -81,7 +105,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [5, 11]
+                    [
+                        5,
+                        11
+                    ]
                 ]
             },
             {
@@ -91,7 +118,14 @@
                 },
                 "direction": "diagonal-right",
                 "cells": [
-                    [4, 4], [3, 5]
+                    [
+                        4,
+                        4
+                    ],
+                    [
+                        3,
+                        5
+                    ]
                 ]
             },
             {
@@ -101,7 +135,14 @@
                 },
                 "direction": "diagonal-left",
                 "cells": [
-                    [0, 2], [0, 3]
+                    [
+                        0,
+                        2
+                    ],
+                    [
+                        0,
+                        3
+                    ]
                 ]
             },
             {
@@ -111,7 +152,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [3, 2]
+                    [
+                        3,
+                        2
+                    ]
                 ]
             },
             {
@@ -121,7 +165,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [5, 3]
+                    [
+                        5,
+                        3
+                    ]
                 ]
             },
             {
@@ -131,7 +178,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [2, 6]
+                    [
+                        2,
+                        6
+                    ]
                 ]
             }
         ],

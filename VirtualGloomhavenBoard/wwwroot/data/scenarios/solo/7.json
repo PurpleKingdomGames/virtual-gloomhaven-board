@@ -1,5 +1,5 @@
 {
-    "id": 117,
+    "id": 7,
     "title": "Caravan escort",
     "mapTileData": {
         "ref": "l1b",
@@ -186,8 +186,7 @@
                 "mapTileData": {
                     "ref": "l3a",
                     "doors": [],
-                    "overlays": [
-                    ],
+                    "overlays": [],
                     "monsters": [],
                     "turns": 0
                 }
@@ -200,7 +199,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [-1, 3]
+                    [
+                        -1,
+                        3
+                    ]
                 ]
             },
             {
@@ -210,7 +212,14 @@
                 },
                 "direction": "diagonal-right",
                 "cells": [
-                    [2, 3], [2, 4]
+                    [
+                        2,
+                        3
+                    ],
+                    [
+                        2,
+                        4
+                    ]
                 ]
             },
             {
@@ -220,7 +229,14 @@
                 },
                 "direction": "diagonal-right",
                 "cells": [
-                    [-2, 5], [-2, 6]
+                    [
+                        -2,
+                        5
+                    ],
+                    [
+                        -2,
+                        6
+                    ]
                 ]
             },
             {
@@ -230,7 +246,14 @@
                 },
                 "direction": "diagonal-left-reverse",
                 "cells": [
-                    [-4, 2], [-5, 1]
+                    [
+                        -4,
+                        2
+                    ],
+                    [
+                        -5,
+                        1
+                    ]
                 ]
             },
             {
@@ -240,7 +263,14 @@
                 },
                 "direction": "horizontal",
                 "cells": [
-                    [-3, 1], [-4, 1]
+                    [
+                        -3,
+                        1
+                    ],
+                    [
+                        -4,
+                        1
+                    ]
                 ]
             },
             {
@@ -250,7 +280,14 @@
                 },
                 "direction": "horizontal",
                 "cells": [
-                    [2, 1], [1, 1]
+                    [
+                        2,
+                        1
+                    ],
+                    [
+                        1,
+                        1
+                    ]
                 ]
             },
             {
@@ -260,7 +297,14 @@
                 },
                 "direction": "horizontal",
                 "cells": [
-                    [2, 5], [1, 5]
+                    [
+                        2,
+                        5
+                    ],
+                    [
+                        1,
+                        5
+                    ]
                 ]
             },
             {
@@ -270,7 +314,14 @@
                 },
                 "direction": "horizontal",
                 "cells": [
-                    [-3, 5], [-4, 5]
+                    [
+                        -3,
+                        5
+                    ],
+                    [
+                        -4,
+                        5
+                    ]
                 ]
             }
         ],

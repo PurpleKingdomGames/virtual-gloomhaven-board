@@ -1,5 +1,5 @@
 {
-    "id": 129,
+    "id": 17,
     "title": "The Caged Bear",
     "mapTileData": {
         "ref": "d2b",
@@ -14,6 +14,64 @@
                 "mapTileData": {
                     "ref": "g2a",
                     "doors": [
+                        {
+                            "subType": "dark-fog",
+                            "direction": "vertical",
+                            "room1X": 0,
+                            "room1Y": 3,
+                            "room2X": 2,
+                            "room2Y": 4,
+                            "mapTileData": {
+                                "ref": "b4b",
+                                "doors": [],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "starting-location"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                0,
+                                                0
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "boulder-1"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                1,
+                                                2
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "forest-imp",
+                                        "initialX": 0,
+                                        "initialY": 3,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    },
+                                    {
+                                        "monster": "forest-imp",
+                                        "initialX": 2,
+                                        "initialY": 2,
+                                        "twoPlayer": "normal",
+                                        "threePlayer": "normal",
+                                        "fourPlayer": "normal"
+                                    }
+                                ],
+                                "turns": 3
+                            }
+                        },
                         {
                             "subType": "dark-fog",
                             "direction": "vertical",
@@ -72,7 +130,10 @@
                                                     },
                                                     "direction": "default",
                                                     "cells": [
-                                                        [2, 1]
+                                                        [
+                                                            2,
+                                                            1
+                                                        ]
                                                     ]
                                                 }
                                             ],
@@ -106,7 +167,18 @@
                                         },
                                         "direction": "diagonal-right",
                                         "cells": [
-                                            [3, 1], [4, 0], [3, 0]
+                                            [
+                                                3,
+                                                1
+                                            ],
+                                            [
+                                                4,
+                                                0
+                                            ],
+                                            [
+                                                3,
+                                                0
+                                            ]
                                         ]
                                     },
                                     {
@@ -116,7 +188,14 @@
                                         },
                                         "direction": "diagonal-left",
                                         "cells": [
-                                            [3, 3], [3, 2]
+                                            [
+                                                3,
+                                                3
+                                            ],
+                                            [
+                                                3,
+                                                2
+                                            ]
                                         ]
                                     },
                                     {
@@ -126,7 +205,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [4, 3]
+                                            [
+                                                4,
+                                                3
+                                            ]
                                         ]
                                     },
                                     {
@@ -136,7 +218,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [6, 5]
+                                            [
+                                                6,
+                                                5
+                                            ]
                                         ]
                                     },
                                     {
@@ -146,7 +231,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [1, 2]
+                                            [
+                                                1,
+                                                2
+                                            ]
                                         ]
                                     },
                                     {
@@ -156,7 +244,18 @@
                                         },
                                         "direction": "diagonal-left",
                                         "cells": [
-                                            [3, 5], [3, 4], [2, 5]
+                                            [
+                                                3,
+                                                5
+                                            ],
+                                            [
+                                                3,
+                                                4
+                                            ],
+                                            [
+                                                2,
+                                                5
+                                            ]
                                         ]
                                     },
                                     {
@@ -166,7 +265,14 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [3, 6], [2, 6]
+                                            [
+                                                3,
+                                                6
+                                            ],
+                                            [
+                                                2,
+                                                6
+                                            ]
                                         ]
                                     }
                                 ],
@@ -208,7 +314,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [2, 2]
+                                [
+                                    2,
+                                    2
+                                ]
                             ]
                         },
                         {
@@ -218,7 +327,14 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [3, 2], [4, 2]
+                                [
+                                    3,
+                                    2
+                                ],
+                                [
+                                    4,
+                                    2
+                                ]
                             ]
                         },
                         {
@@ -228,7 +344,14 @@
                             },
                             "direction": "diagonal-right",
                             "cells": [
-                                [4, 0], [3, 1]
+                                [
+                                    4,
+                                    0
+                                ],
+                                [
+                                    3,
+                                    1
+                                ]
                             ]
                         }
                     ],
@@ -252,56 +375,6 @@
                     ],
                     "turns": 0
                 }
-            },
-            {
-                "subType": "dark-fog",
-                "direction": "vertical",
-                "room1X": -5,
-                "room1Y": -1,
-                "room2X": 2,
-                "room2Y": 4,
-                "mapTileData": {
-                    "ref": "b4b",
-                    "doors": [],
-                    "overlays": [
-                        {
-                            "ref": {
-                                "type": "starting-location"
-                            },
-                            "direction": "default",
-                            "cells": [ [0,1] ]
-                        },
-                        {
-                            "ref": {
-                                "type": "obstacle",
-                                "subType": "boulder-1"
-                            },
-                            "direction": "default",
-                            "cells": [
-                                [1, 2]
-                            ]
-                        }
-                    ],
-                    "monsters": [
-                        {
-                            "monster": "forest-imp",
-                            "initialX": 0,
-                            "initialY": 3,
-                            "twoPlayer": "normal",
-                            "threePlayer": "normal",
-                            "fourPlayer": "normal"
-                        },
-                        {
-                            "monster": "forest-imp",
-                            "initialX": 2,
-                            "initialY": 2,
-                            "twoPlayer": "normal",
-                            "threePlayer": "normal",
-                            "fourPlayer": "normal"
-                        }
-                    ],
-                    "turns": 3
-                }
             }
         ],
         "overlays": [
@@ -310,7 +383,12 @@
                     "type": "starting-location"
                 },
                 "direction": "default",
-                "cells": [ [0,3] ]
+                "cells": [
+                    [
+                        0,
+                        3
+                    ]
+                ]
             },
             {
                 "ref": {
@@ -319,7 +397,18 @@
                 },
                 "direction": "diagonal-right",
                 "cells": [
-                    [0, 1], [0, 2], [1, 2]
+                    [
+                        0,
+                        1
+                    ],
+                    [
+                        0,
+                        2
+                    ],
+                    [
+                        1,
+                        2
+                    ]
                 ]
             }
         ],
