@@ -15,13 +15,13 @@ import DragPorts
 import Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
-import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, src, style, tabindex, target, title, value)
-import Html.Events exposing (on, onClick)
+import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, selected, src, style, tabindex, target, title, value)
+import Html.Events exposing (on, onClick, targetValue)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Lazy exposing (lazy, lazy2, lazy3, lazy6, lazy7, lazy8)
 import Http exposing (Error)
-import Json.Decode as Decode
+import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import List exposing (all, any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
 import List.Extra exposing (uniqueBy)
@@ -30,7 +30,7 @@ import Process
 import Random exposing (Seed)
 import Scenario exposing (DoorData(..), Scenario)
 import ScenarioSync exposing (loadScenarioById)
-import String exposing (join, split)
+import String exposing (join, split, toInt)
 import Task
 
 
@@ -47,6 +47,7 @@ type alias Model =
     { game : Game
     , config : Config
     , currentLoadState : LoadingState
+    , currentScenarioType : Maybe GameStateScenario
     , currentScenarioInput : Maybe String
     , currentClientSettings : Maybe TransientClientSettings
     , currentPlayerList : Maybe (List CharacterClass)
@@ -159,6 +160,7 @@ type Msg
     | ToggleMenu
     | ToggleSideMenu
     | ChangePlayerList
+    | EnterScenarioType GameStateScenario
     | EnterScenarioNumber String
     | ChangeRoomCodeInputStart String
     | ChangeRoomCodeInputEnd String
@@ -293,6 +295,7 @@ init ( oldState, maybeOverrides, seed ) =
         { initGame | state = initGameState }
         initConfig
         (Loading initGameState.scenario)
+        Nothing
         Nothing
         Nothing
         Nothing
@@ -599,6 +602,7 @@ update msg model =
                         | config = { config | appMode = mode }
                         , currentClientSettings = Nothing
                         , currentPlayerList = Nothing
+                        , currentScenarioType = Nothing
                         , currentScenarioInput = Nothing
                     }
             in
@@ -610,10 +614,13 @@ update msg model =
                     model.config
             in
             if forceReload || newScenario /= model.game.state.scenario then
-                ( { model | config = { config | appMode = AppStorage.Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed newScenario Nothing True) )
+                ( { model | config = { config | appMode = AppStorage.Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioType = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed newScenario Nothing True) )
 
             else
                 ( { model | config = { config | appMode = AppStorage.Game } }, Cmd.none )
+
+        EnterScenarioType gameStateType ->
+            ( { model | currentScenarioType = Just gameStateType, currentScenarioInput = Just "1" }, Cmd.none )
 
         EnterScenarioNumber strId ->
             ( { model | currentScenarioInput = Just strId }, Cmd.none )
@@ -948,16 +955,11 @@ update msg model =
                 case model.config.appMode of
                     ScenarioDialog ->
                         let
-                            scenarioId =
-                                Maybe.withDefault (String.fromInt model.game.state.scenario) model.currentScenarioInput
+                            scenario =
+                                getCurrentScenarioInput model
                         in
-                        if isValidScenario scenarioId then
-                            case String.toInt scenarioId of
-                                Just i ->
-                                    update (ChangeScenario i False) model
-
-                                Nothing ->
-                                    ( model, Cmd.none )
+                        if isValidScenario scenario then
+                            update (ChangeScenario scenario False) model
 
                         else
                             ( model, Cmd.none )
@@ -1006,11 +1008,22 @@ update msg model =
                         ( model, Cmd.none )
 
                 ScenarioDialog ->
-                    if isValidScenario data then
-                        ( { model | currentScenarioInput = Just data }, Cmd.none )
+                    case String.toInt data of
+                        Just i ->
+                            let
+                                scenario =
+                                    case getCurrentScenarioInput model of
+                                        InbuiltScenario e _ ->
+                                            InbuiltScenario e i
+                            in
+                            if isValidScenario scenario then
+                                ( { model | currentScenarioInput = Just data }, Cmd.none )
 
-                    else
-                        ( model, Cmd.none )
+                            else
+                                ( model, Cmd.none )
+
+                        Nothing ->
+                            ( model, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -1648,18 +1661,67 @@ getScenarioDialog : Model -> Element Msg
 getScenarioDialog model =
     let
         scenarioInput =
-            Maybe.withDefault (String.fromInt model.game.state.scenario) model.currentScenarioInput
+            getCurrentScenarioInput model
 
         validScenario =
             isValidScenario scenarioInput
 
-        intScenarioInput =
-            Maybe.withDefault 0 (String.toInt scenarioInput)
+        ( ( min, max ), expansion, currentId ) =
+            case scenarioInput of
+                InbuiltScenario e i ->
+                    ( getValidScenarioRange e, Just e, i )
+
+        decodeScenarioType =
+            targetValue
+                |> Decode.andThen
+                    (\s ->
+                        case String.split "|" s of
+                            [ t, e ] ->
+                                case t of
+                                    "inbuilt" ->
+                                        case e of
+                                            "gloomhaven" ->
+                                                Decode.succeed (InbuiltScenario Gloomhaven 1)
+
+                                            "solo" ->
+                                                Decode.succeed (InbuiltScenario Solo 1)
+
+                                            _ ->
+                                                Decode.fail "Incorrect expansion"
+
+                                    _ ->
+                                        Decode.fail "Incorrect type"
+
+                            _ ->
+                                Decode.fail "String in wrong format"
+                    )
+                |> Decode.map (\t -> EnterScenarioType t)
     in
     Dom.element "div"
         |> Dom.addClass "scenario-form"
         |> Dom.appendChildList
             [ Dom.element "div"
+                |> Dom.addClass "select-wrapper"
+                |> Dom.appendChildList
+                    [ Dom.element "label"
+                        |> Dom.addAttribute (attribute "for" "scenarioTypeInput")
+                        |> Dom.appendText "Type"
+                    , Dom.element "select"
+                        |> Dom.addActionStopPropagation ( "click", NoOp )
+                        |> Dom.addAttribute (on "change" decodeScenarioType)
+                        |> Dom.addAttribute (attribute "id" "scenarioTypeInput")
+                        |> Dom.appendChildList
+                            [ Dom.element "option"
+                                |> Dom.addAttribute (attribute "value" "inbuilt|gloomhaven")
+                                |> Dom.addAttribute (selected (expansion == Just Gloomhaven))
+                                |> Dom.appendText "Gloomhaven + FC"
+                            , Dom.element "option"
+                                |> Dom.addAttribute (attribute "value" "inbuilt|solo")
+                                |> Dom.addAttribute (selected (expansion == Just Solo))
+                                |> Dom.appendText "Solo"
+                            ]
+                    ]
+            , Dom.element "div"
                 |> Dom.addClass "input-wrapper"
                 |> Dom.addClassConditional "error" (validScenario == False)
                 |> Dom.appendChildList
@@ -1670,9 +1732,9 @@ getScenarioDialog model =
                         |> Dom.addActionStopPropagation ( "click", NoOp )
                         |> Dom.addAttribute (attribute "id" "scenarioIdInput")
                         |> Dom.addAttribute (attribute "type" "number")
-                        |> Dom.addAttribute (attribute "min" "1")
-                        |> Dom.addAttribute (attribute "max" "115")
-                        |> Dom.addAttribute (attribute "value" scenarioInput)
+                        |> Dom.addAttribute (attribute "min" (String.fromInt min))
+                        |> Dom.addAttribute (attribute "max" (String.fromInt max))
+                        |> Dom.addAttribute (attribute "value" (String.fromInt currentId))
                         |> Dom.addInputHandler EnterScenarioNumber
                      ]
                         ++ (if validScenario then
@@ -1690,7 +1752,7 @@ getScenarioDialog model =
                 |> Dom.appendChildList
                     [ Dom.element "button"
                         |> Dom.appendText "OK"
-                        |> Dom.addActionConditional ( "click", ChangeScenario intScenarioInput False ) validScenario
+                        |> Dom.addActionConditional ( "click", ChangeScenario scenarioInput False ) validScenario
                     , Dom.element "button"
                         |> Dom.appendText "Cancel"
                         |> Dom.addAction ( "click", ChangeAppMode AppStorage.Game )
@@ -2869,15 +2931,25 @@ tooltipHtml identifier tooltip element =
         |> Dom.addAction ( "pointerout", ResetTooltip )
 
 
-isValidScenario : String -> Bool
-isValidScenario scenarioId =
-    case String.toInt scenarioId of
-        Just i ->
-            -- TODO: change end of range to 116 once Solo scenarios are moved to their final location
-            i > 0 && i < 133
+isValidScenario : GameStateScenario -> Bool
+isValidScenario scenario =
+    case scenario of
+        InbuiltScenario e i ->
+            let
+                ( min, max ) =
+                    getValidScenarioRange e
+            in
+            i >= min && i <= max
 
-        Nothing ->
-            False
+
+getValidScenarioRange : Expansion -> ( Int, Int )
+getValidScenarioRange expansion =
+    case expansion of
+        Gloomhaven ->
+            ( 1, 115 )
+
+        Solo ->
+            ( 1, 18 )
 
 
 isValidRoomCode : String -> Bool
@@ -3030,3 +3102,25 @@ getDeadPlayers state =
     in
     state.players
         |> List.filter (\p -> List.member p playerPieces == False)
+
+
+getCurrentScenarioInput : Model -> GameStateScenario
+getCurrentScenarioInput model =
+    case model.currentScenarioType of
+        Just (InbuiltScenario e _) ->
+            case model.currentScenarioInput of
+                Just str ->
+                    case String.toInt str of
+                        Just i ->
+                            InbuiltScenario e i
+
+                        Nothing ->
+                            case model.game.state.scenario of
+                                InbuiltScenario _ i1 ->
+                                    InbuiltScenario e i1
+
+                Nothing ->
+                    model.game.state.scenario
+
+        Nothing ->
+            model.game.state.scenario
