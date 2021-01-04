@@ -8,7 +8,7 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Browser
 import Browser.Dom as BrowserDom exposing (Error)
 import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
-import Character exposing (CharacterClass(..), characterToString)
+import Character exposing (CharacterClass(..), characterToString, getSoloScenarios)
 import Dict exposing (Dict)
 import Dom exposing (Element)
 import DragPorts
@@ -2949,7 +2949,10 @@ getValidScenarioRange expansion =
             ( 1, 115 )
 
         Solo ->
-            ( 1, 18 )
+            getSoloScenarios
+                |> Dict.values
+                |> List.map (\v -> Tuple.first v)
+                |> List.foldl (\val minMax -> ( min val (Tuple.first minMax), max val (Tuple.second minMax) )) ( 10000, 0 )
 
 
 isValidRoomCode : String -> Bool
