@@ -934,7 +934,7 @@
                             "fourPlayer": "elite"
                         },
                         {
-                            "monster": "spitting-drake",
+                            "monster": "rending-drake",
                             "initialX": 3,
                             "initialY": 3,
                             "twoPlayer": "none",
@@ -942,7 +942,7 @@
                             "fourPlayer": "normal"
                         },
                         {
-                            "monster": "spitting-drake",
+                            "monster": "rending-drake",
                             "initialX": 4,
                             "initialY": 6,
                             "twoPlayer": "normal",
@@ -1144,7 +1144,7 @@
         ],
         "monsters": [
             {
-                "monster": "spitting-drake",
+                "monster": "rending-drake",
                 "initialX": 0,
                 "initialY": 1,
                 "twoPlayer": "none",
