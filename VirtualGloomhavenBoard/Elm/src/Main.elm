@@ -1079,16 +1079,7 @@ view model =
         , id "content"
         , Touch.onCancel (\_ -> TouchCanceled)
         ]
-        ([ lazy8
-            getHeaderHtml
-            model.game.scenario.id
-            model.game.scenario.title
-            model.config.roomCode
-            model.config.showRoomCode
-            model.lockScenario
-            model.lockPlayers
-            model.config.campaignTracker
-            model.menuOpen
+        ([ getHeaderHtml model
          , div [ class "main" ]
             [ div
                 [ class
@@ -1228,71 +1219,112 @@ subscriptions _ =
         ]
 
 
-getHeaderHtml : Int -> String -> Maybe String -> Bool -> Bool -> Bool -> Maybe CampaignTrackerUrl -> Bool -> Html.Html Msg
-getHeaderHtml scenarioId scenarioTitle roomCode showRoomCode lockScenario lockPlayers campaignTracker menuOpen =
+getHeaderHtml : Model -> Html.Html Msg
+getHeaderHtml model =
+    let
+        isSoloScenario =
+            case model.game.state.scenario of
+                InbuiltScenario Solo _ ->
+                    True
+
+                _ ->
+                    False
+    in
     div
         [ class "header" ]
-        [ div
-            [ class
-                ("menu"
-                    ++ (if menuOpen then
-                            " show"
+        [ getMenuToggleHtml model
+        , lazy3 getScenarioTitleHtml model.game.scenario.id model.game.scenario.title isSoloScenario
+        , lazy2 getRoomCodeHtml model.config.roomCode model.config.showRoomCode
+        ]
 
-                        else
-                            ""
-                       )
-                )
-            , onClick ToggleMenu
-            , tabindex 0
-            , attribute "aria-label" "Toggle Menu"
-            , attribute "aria-keyshortcuts" "m"
-            , attribute "role" "button"
-            , attribute "aria-pressed"
-                (if menuOpen then
-                    " true"
 
-                 else
-                    "false"
-                )
-            ]
-            [ let
-                ( campaignTrackerName, campaignTrackerUrl ) =
-                    case campaignTracker of
-                        Just (CampaignTrackerUrl name url) ->
-                            ( Just name, Just url )
-
-                        Nothing ->
-                            ( Nothing, Nothing )
-              in
-              lazy6 getMenuHtml lockScenario lockPlayers scenarioId campaignTrackerName campaignTrackerUrl menuOpen
-            ]
-        , header [ attribute "aria-label" "Scenario" ]
-            (if scenarioId /= 0 then
-                [ span [ class "number" ] [ text (String.fromInt scenarioId) ]
-                , span [ class "title" ] [ text scenarioTitle ]
-                ]
-
-             else
-                []
-            )
-        , div
-            [ class
-                "roomCode"
-            ]
-            (case roomCode of
-                Nothing ->
-                    []
-
-                Just c ->
-                    if showRoomCode then
-                        [ span [] [ text "Room Code" ]
-                        , span [] [ text c ]
-                        ]
+getMenuToggleHtml : Model -> Html.Html Msg
+getMenuToggleHtml model =
+    div
+        [ class
+            ("menu"
+                ++ (if model.menuOpen then
+                        " show"
 
                     else
-                        []
+                        ""
+                   )
+            )
+        , onClick ToggleMenu
+        , tabindex 0
+        , attribute "aria-label" "Toggle Menu"
+        , attribute "aria-keyshortcuts" "m"
+        , attribute "role" "button"
+        , attribute "aria-pressed"
+            (if model.menuOpen then
+                " true"
+
+             else
+                "false"
             )
         ]
+        [ let
+            ( campaignTrackerName, campaignTrackerUrl ) =
+                case model.config.campaignTracker of
+                    Just (CampaignTrackerUrl name url) ->
+                        ( Just name, Just url )
+
+                    Nothing ->
+                        ( Nothing, Nothing )
+          in
+          lazy6 getMenuHtml model.lockScenario model.lockPlayers model.game.scenario.id campaignTrackerName campaignTrackerUrl model.menuOpen
+        ]
+
+
+getScenarioTitleHtml : Int -> String -> Bool -> Html.Html Msg
+getScenarioTitleHtml id titleTxt isSolo =
+    header [ attribute "aria-label" "Scenario" ]
+        (if id /= 0 then
+            [ if isSolo then
+                let
+                    icon =
+                        getSoloScenarios
+                            |> Dict.filter (\_ ( i, _ ) -> i == id)
+                            |> Dict.keys
+                            |> List.map (\c -> getCharacterClassIconHtml c |> Dom.render)
+                            |> List.head
+                in
+                case icon of
+                    Just i ->
+                        i
+
+                    Nothing ->
+                        span [ class "number" ] []
+
+              else
+                span [ class "number" ] [ text (String.fromInt id) ]
+            , span [ class "title" ] [ text titleTxt ]
+            ]
+
+         else
+            []
+        )
+
+
+getRoomCodeHtml : Maybe String -> Bool -> Html.Html Msg
+getRoomCodeHtml roomCode showRoomCode =
+    div
+        [ class
+            "roomCode"
+        ]
+        (case roomCode of
+            Nothing ->
+                []
+
+            Just c ->
+                if showRoomCode then
+                    [ span [] [ text "Room Code" ]
+                    , span [] [ text c ]
+                    ]
+
+                else
+                    []
+        )
 
 
 getConnectionStatusHtml : ConnectionStatus -> Html.Html Msg
@@ -1666,10 +1698,10 @@ getScenarioDialog model =
         validScenario =
             isValidScenario scenarioInput
 
-        ( ( min, max ), expansion, currentId ) =
+        expansion =
             case scenarioInput of
-                InbuiltScenario e i ->
-                    ( getValidScenarioRange e, Just e, i )
+                InbuiltScenario e _ ->
+                    Just e
 
         decodeScenarioType =
             targetValue
@@ -1721,32 +1753,7 @@ getScenarioDialog model =
                                 |> Dom.appendText "Solo"
                             ]
                     ]
-            , Dom.element "div"
-                |> Dom.addClass "input-wrapper"
-                |> Dom.addClassConditional "error" (validScenario == False)
-                |> Dom.appendChildList
-                    ([ Dom.element "label"
-                        |> Dom.addAttribute (attribute "for" "scenarioIdInput")
-                        |> Dom.appendText "Scenario"
-                     , Dom.element "input"
-                        |> Dom.addActionStopPropagation ( "click", NoOp )
-                        |> Dom.addAttribute (attribute "id" "scenarioIdInput")
-                        |> Dom.addAttribute (attribute "type" "number")
-                        |> Dom.addAttribute (attribute "min" (String.fromInt min))
-                        |> Dom.addAttribute (attribute "max" (String.fromInt max))
-                        |> Dom.addAttribute (attribute "value" (String.fromInt currentId))
-                        |> Dom.addInputHandler EnterScenarioNumber
-                     ]
-                        ++ (if validScenario then
-                                []
-
-                            else
-                                [ Dom.element "div"
-                                    |> Dom.addClass "error-label"
-                                    |> Dom.appendText "Invalid scenario number"
-                                ]
-                           )
-                    )
+            , getScenarioSelectHtml scenarioInput validScenario
             , Dom.element "div"
                 |> Dom.addClass "button-wrapper"
                 |> Dom.appendChildList
@@ -3141,3 +3148,111 @@ getCurrentScenarioInput model =
 
                         Nothing ->
                             model.game.state.scenario
+
+
+getScenarioSelectHtml : GameStateScenario -> Bool -> Element Msg
+getScenarioSelectHtml scenario validScenario =
+    let
+        wrapperClass =
+            case scenario of
+                InbuiltScenario Solo _ ->
+                    "select-wrapper"
+
+                _ ->
+                    "input-wrapper"
+
+        scenarioSelectInput =
+            case scenario of
+                InbuiltScenario e i ->
+                    let
+                        ( min, max ) =
+                            getValidScenarioRange e
+                    in
+                    case e of
+                        Gloomhaven ->
+                            Dom.element "input"
+                                |> Dom.addActionStopPropagation ( "click", NoOp )
+                                |> Dom.addAttribute (attribute "id" "scenarioIdInput")
+                                |> Dom.addAttribute (attribute "type" "number")
+                                |> Dom.addAttribute (attribute "min" (String.fromInt min))
+                                |> Dom.addAttribute (attribute "max" (String.fromInt max))
+                                |> Dom.addAttribute (attribute "value" (String.fromInt i))
+                                |> Dom.addInputHandler EnterScenarioNumber
+
+                        Solo ->
+                            Dom.element "select"
+                                |> Dom.addActionStopPropagation ( "click", NoOp )
+                                |> Dom.addChangeHandler EnterScenarioNumber
+                                |> Dom.addAttribute (attribute "id" "scenarioTypeInput")
+                                |> Dom.appendChildList
+                                    (getSoloScenarios
+                                        |> Dict.map
+                                            (\k ( id, txt ) ->
+                                                ( id
+                                                , Dom.element "option"
+                                                    |> Dom.addAttribute (attribute "value" (String.fromInt id))
+                                                    |> Dom.addAttribute (selected (i == id))
+                                                    |> Dom.appendChild (getCharacterClassIconHtml k)
+                                                    |> Dom.appendChild
+                                                        (Dom.element "span"
+                                                            |> Dom.appendText (" - " ++ txt)
+                                                        )
+                                                )
+                                            )
+                                        |> Dict.values
+                                        |> List.sortBy (\( k, _ ) -> k)
+                                        |> List.map (\( _, v ) -> v)
+                                    )
+    in
+    Dom.element "div"
+        |> Dom.addClass wrapperClass
+        |> Dom.addClassConditional "error" (validScenario == False)
+        |> Dom.appendChildList
+            ([ Dom.element "label"
+                |> Dom.addAttribute (attribute "for" "scenarioIdInput")
+                |> Dom.appendText "Scenario"
+             , scenarioSelectInput
+             ]
+                ++ (if validScenario then
+                        []
+
+                    else
+                        [ Dom.element "div"
+                            |> Dom.addClass "error-label"
+                            |> Dom.appendText "Invalid scenario number"
+                        ]
+                   )
+            )
+
+
+getCharacterClassIconHtml : String -> Element Msg
+getCharacterClassIconHtml characterClassStr =
+    Dom.element "i"
+        |> Dom.addClass "icon"
+        |> Dom.addClass characterClassStr
+        |> Dom.appendText
+            (characterClassStr
+                |> String.toList
+                |> List.foldl
+                    (\c lst ->
+                        let
+                            newC =
+                                if c == '-' then
+                                    ' '
+
+                                else
+                                    case List.Extra.last lst of
+                                        Just ' ' ->
+                                            Char.toLocaleUpper c
+
+                                        Nothing ->
+                                            Char.toLocaleUpper c
+
+                                        _ ->
+                                            c
+                        in
+                        List.append lst [ newC ]
+                    )
+                    []
+                |> String.fromList
+            )
