@@ -1,0 +1,417 @@
+{
+    "id": 18,
+    "title": "Forecast of the Inevitable",
+    "mapTileData": {
+        "ref": "m1b",
+        "doors": [
+            {
+                "subType": "light-fog",
+                "direction": "default",
+                "room1X": -1,
+                "room1Y": 3,
+                "room2X": -1,
+                "room2Y": 1,
+                "mapTileData": {
+                    "ref": "g1a",
+                    "doors": [
+                        {
+                            "subType": "light-fog",
+                            "direction": "default",
+                            "room1X": 7,
+                            "room1Y": 1,
+                            "room2X": -1,
+                            "room2Y": 3,
+                            "mapTileData": {
+                                "ref": "l3a",
+                                "doors": [
+                                    {
+                                        "subType": "light-fog",
+                                        "direction": "default",
+                                        "room1X": 2,
+                                        "room1Y": -1,
+                                        "room2X": 3,
+                                        "room2Y": 7,
+                                        "mapTileData": {
+                                            "ref": "h2b",
+                                            "doors": [],
+                                            "overlays": [
+                                                {
+                                                    "ref": {
+                                                        "type": "obstacle",
+                                                        "subType": "bush"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [
+                                                            3,
+                                                            0
+                                                        ]
+                                                    ]
+                                                },
+                                                {
+                                                    "ref": {
+                                                        "type": "obstacle",
+                                                        "subType": "bush"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [
+                                                            4,
+                                                            3
+                                                        ]
+                                                    ]
+                                                },
+                                                {
+                                                    "ref": {
+                                                        "type": "hazard",
+                                                        "subType": "thorns"
+                                                    },
+                                                    "direction": "default",
+                                                    "cells": [
+                                                        [
+                                                            2,
+                                                            5
+                                                        ]
+                                                    ]
+                                                }
+                                            ],
+                                            "monsters": [
+                                                {
+                                                    "monster": "valrath-savage",
+                                                    "initialX": 2,
+                                                    "initialY": 0,
+                                                    "twoPlayer": "normal",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                },
+                                                {
+                                                    "monster": "valrath-savage",
+                                                    "initialX": 5,
+                                                    "initialY": 0,
+                                                    "twoPlayer": "normal",
+                                                    "threePlayer": "normal",
+                                                    "fourPlayer": "normal"
+                                                }
+                                            ],
+                                            "turns": 0
+                                        }
+                                    }
+                                ],
+                                "overlays": [
+                                    {
+                                        "ref": {
+                                            "type": "difficult-terrain",
+                                            "subType": "water"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                0,
+                                                0
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "difficult-terrain",
+                                            "subType": "water"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                1,
+                                                0
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "difficult-terrain",
+                                            "subType": "water"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                0,
+                                                1
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "difficult-terrain",
+                                            "subType": "water"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                0,
+                                                2
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "difficult-terrain",
+                                            "subType": "water"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                2,
+                                                4
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "difficult-terrain",
+                                            "subType": "water"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                2,
+                                                5
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "bush"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                4,
+                                                0
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "obstacle",
+                                            "subType": "tree-3"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                1,
+                                                2
+                                            ],
+                                            [
+                                                2,
+                                                2
+                                            ],
+                                            [
+                                                1,
+                                                1
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "ref": {
+                                            "type": "hazard",
+                                            "subType": "thorns"
+                                        },
+                                        "direction": "default",
+                                        "cells": [
+                                            [
+                                                0,
+                                                5
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "monsters": [
+                                    {
+                                        "monster": "valrath-savage",
+                                        "initialX": 3,
+                                        "initialY": 3,
+                                        "twoPlayer": "elite",
+                                        "threePlayer": "elite",
+                                        "fourPlayer": "elite"
+                                    }
+                                ],
+                                "turns": 0
+                            }
+                        }
+                    ],
+                    "overlays": [
+                        {
+                            "ref": {
+                                "type": "difficult-terrain",
+                                "subType": "water"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    2,
+                                    0
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "difficult-terrain",
+                                "subType": "water"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    3,
+                                    0
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "difficult-terrain",
+                                "subType": "water"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    4,
+                                    2
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "difficult-terrain",
+                                "subType": "water"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    5,
+                                    2
+                                ]
+                            ]
+                        },
+                        {
+                            "ref": {
+                                "type": "obstacle",
+                                "subType": "bush"
+                            },
+                            "direction": "default",
+                            "cells": [
+                                [
+                                    0,
+                                    2
+                                ]
+                            ]
+                        }
+                    ],
+                    "monsters": [
+                        {
+                            "monster": "valrath-savage",
+                            "initialX": 7,
+                            "initialY": 0,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        },
+                        {
+                            "monster": "valrath-savage",
+                            "initialX": 7,
+                            "initialY": 2,
+                            "twoPlayer": "normal",
+                            "threePlayer": "normal",
+                            "fourPlayer": "normal"
+                        }
+                    ],
+                    "turns": 0
+                }
+            }
+        ],
+        "overlays": [
+            {
+                "ref": {
+                    "type": "starting-location"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        0,
+                        3
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "difficult-terrain",
+                    "subType": "log"
+                },
+                "direction": "diagonal-right-reverse",
+                "cells": [
+                    [
+                        3,
+                        1
+                    ],
+                    [
+                        3,
+                        2
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "hazard",
+                    "subType": "thorns"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        3,
+                        4
+                    ]
+                ]
+            },
+            {
+                "ref": {
+                    "type": "hazard",
+                    "subType": "thorns"
+                },
+                "direction": "default",
+                "cells": [
+                    [
+                        3,
+                        5
+                    ]
+                ]
+            }
+        ],
+        "monsters": [
+            {
+                "monster": "valrath-savage",
+                "initialX": 4,
+                "initialY": 0,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "valrath-savage",
+                "initialX": 4,
+                "initialY": 6,
+                "twoPlayer": "normal",
+                "threePlayer": "normal",
+                "fourPlayer": "normal"
+            },
+            {
+                "monster": "earth-demon",
+                "initialX": 4,
+                "initialY": 3,
+                "twoPlayer": "elite",
+                "threePlayer": "elite",
+                "fourPlayer": "elite"
+            }
+        ],
+        "turns": 3
+    },
+    "angle": 0,
+    "additionalMonsters": []
+}
