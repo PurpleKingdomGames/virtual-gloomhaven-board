@@ -8,6 +8,20 @@
     }
 
     html {
+        i {
+            &.icon {
+                height: 5.4rem;
+
+                &:before {
+                    transform: scale(0.75);
+                    top: 1rem;
+                }
+
+                &.brute:before {
+                    top: 0.9rem;
+                }
+            }
+        }
         .content {
             .header {
                 header {
