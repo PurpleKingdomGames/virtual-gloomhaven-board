@@ -5,4 +5,8 @@ build/
 obj/
 bin/
 **/wwwroot/js/main*
+**/wwwroot/js/creator*
 **/wwwroot/css/
+
+# Only until the creator is ready
+creator.html
