@@ -1,8 +1,9 @@
-module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel)
+module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeCoords, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel, encodeCoords)
 
 import BoardMapTile exposing (MapTileRef(..), stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
 import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, map4, maybe, string, succeed)
+import Json.Encode as Encode
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
 
@@ -441,3 +442,20 @@ decodeMonsterLevel l =
 
         _ ->
             fail (l ++ " is not a valid monster level")
+
+
+encodeCoords : ( Int, Int ) -> List ( String, Encode.Value )
+encodeCoords ( x, y ) =
+    [ ( "x", Encode.int x )
+    , ( "y", Encode.int y )
+    ]
+
+
+decodeCoords : Decoder ( Int, Int )
+decodeCoords =
+    field "x" Decode.int
+        |> andThen
+            (\x ->
+                field "y" Decode.int
+                    |> andThen (\y -> Decode.succeed ( x, y ))
+            )

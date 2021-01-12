@@ -1,1 +1,21 @@
 
+@use 'form';
+@use 'modal';
+@use 'tooltip';
+@use 'board';
+@use 'icons';
+@use 'screens';
+
+.action-list {
+    .map-tiles {
+        list-style: none;
+
+        li {
+            display: inline-block;
+
+            img {
+                width: 128px;
+            }
+        }
+    }
+}

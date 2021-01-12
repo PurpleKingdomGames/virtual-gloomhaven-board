@@ -1,17 +1,17 @@
-port module GameSync exposing (Msg(..), connectToServer, decodeGameState, decodePiece, encodeGameState, encodeOverlay, encodePiece, exitFullscreen, pushGameState, subscriptions, toggleFullscreen, update)
+port module GameSync exposing (Msg(..), connectToServer, decodeGameState, decodePiece, decodeRoom, encodeGameState, encodeOverlay, encodePiece, encodeRoom, exitFullscreen, pushGameState, subscriptions, toggleFullscreen, update)
 
 import Array exposing (Array)
-import BoardMapTile exposing (MapTileRef(..), refToString)
+import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
-import Game exposing (AIType(..), Expansion(..), GameState, GameStateScenario(..), Piece, PieceType(..), SummonsType(..))
+import Game exposing (AIType(..), Expansion(..), GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..))
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, int, list, map3, map8, string, succeed)
 import Json.Encode as Encode exposing (int, list, object, string)
 import List exposing (map)
 import Monster exposing (MonsterLevel(..), monsterTypeToString)
-import SharedSync exposing (decodeBoardOverlay, decodeMapRefList, decodeMonster)
+import SharedSync exposing (decodeBoardOverlay, decodeCoords, decodeMapRefList, decodeMonster, encodeCoords)
 import String exposing (String)
 
 
@@ -244,6 +244,24 @@ decodePieceType =
     in
     field "type" Decode.string
         |> andThen decodeType
+
+
+decodeRoom : Decoder RoomData
+decodeRoom =
+    map3 RoomData
+        (field "ref" Decode.string
+            |> andThen
+                (\s ->
+                    case stringToRef s of
+                        Just r ->
+                            succeed r
+
+                        Nothing ->
+                            fail ("Cannot decode room ref " ++ s)
+                )
+        )
+        (field "origin" decodeCoords)
+        (field "turns" Decode.int)
 
 
 decodeSummons : Decoder AIType
@@ -651,6 +669,14 @@ encodePiece p =
     [ ( "ref", Encode.object (encodePieceType p.ref) )
     , ( "x", Encode.int p.x )
     , ( "y", Encode.int p.y )
+    ]
+
+
+encodeRoom : RoomData -> List ( String, Encode.Value )
+encodeRoom r =
+    [ ( "ref", Encode.string (Maybe.withDefault "" (refToString r.ref)) )
+    , ( "origin", Encode.object (encodeCoords r.origin) )
+    , ( "turns", Encode.int r.turns )
     ]
 
 

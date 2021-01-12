@@ -3,6 +3,7 @@ port module Main exposing (main)
 import AppStorage exposing (AppModeType(..), CampaignTrackerUrl(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
 import Bitwise
+import BoardHtml exposing (getMapTileHtml)
 import BoardMapTile exposing (MapTileRef(..), refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Browser
@@ -438,6 +439,10 @@ update msg model =
                                                 Just coords
                                     in
                                     Just (MoveablePiece newPiece m.coords newTarget)
+
+                                RoomType _ ->
+                                    -- We don't support moving rooms in the main game
+                                    Nothing
 
                         Nothing ->
                             model.currentDraggable
@@ -1137,6 +1142,9 @@ view model =
                                         OverlayType o _ ->
                                             getLabelForOverlay o Nothing
 
+                                        RoomType _ ->
+                                            ""
+
                                 Just _ ->
                                     ""
 
@@ -1152,7 +1160,7 @@ view model =
                 ]
             , div [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
-                , lazy2 getAllMapTileHtml model.game.state.visibleRooms model.game.roomData
+                , lazy2 getMapTileHtml model.game.state.visibleRooms model.game.roomData
                 , div [ class "board" ]
                     (let
                         encodedDraggable =
@@ -2079,129 +2087,6 @@ getNavHtml gameMode =
         |> Dom.render
 
 
-getAllMapTileHtml : List MapTileRef -> List RoomData -> Html.Html msg
-getAllMapTileHtml visibleRooms roomData =
-    div
-        [ class "mapTiles" ]
-        (map (getMapTileHtml visibleRooms) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) roomData))
-
-
-getMapTileHtml : List MapTileRef -> RoomData -> Html.Html msg
-getMapTileHtml visibleRooms roomData =
-    let
-        ( x, y ) =
-            roomData.origin
-
-        ref =
-            Maybe.withDefault "" (refToString roomData.ref)
-
-        xPx =
-            (x * 76)
-                + (if Bitwise.and y 1 == 1 then
-                    38
-
-                   else
-                    0
-                  )
-
-        yPx =
-            y * 67
-    in
-    div
-        []
-        [ div
-            [ class "mapTile"
-            , class ("rotate-" ++ String.fromInt roomData.turns)
-            , class
-                (if any (\r -> r == roomData.ref) visibleRooms then
-                    "visible"
-
-                 else
-                    "hidden"
-                )
-            , style "top" (String.fromInt yPx ++ "px")
-            , style "left" (String.fromInt xPx ++ "px")
-            ]
-            (case roomData.ref of
-                Empty ->
-                    []
-
-                _ ->
-                    [ img
-                        [ src ("/img/map-tiles/" ++ ref ++ ".png")
-                        , class ("ref-" ++ ref)
-                        , alt ("Map tile " ++ ref)
-                        , attribute "aria-hidden"
-                            (if any (\r -> r == roomData.ref) visibleRooms then
-                                "false"
-
-                             else
-                                "true"
-                            )
-                        ]
-                        []
-                    ]
-            )
-        , div
-            [ class "mapTile outline"
-            , class ("rotate-" ++ String.fromInt roomData.turns)
-            , class
-                (if any (\r -> r == roomData.ref) visibleRooms then
-                    "hidden"
-
-                 else
-                    "visible"
-                )
-            , style "top" (String.fromInt yPx ++ "px")
-            , style "left" (String.fromInt xPx ++ "px")
-            , attribute "aria-hidden"
-                (if any (\r -> r == roomData.ref) visibleRooms then
-                    "true"
-
-                 else
-                    "false"
-                )
-            ]
-            (case roomData.ref of
-                Empty ->
-                    []
-
-                r ->
-                    let
-                        overlayPrefix =
-                            case r of
-                                J1a ->
-                                    "ja"
-
-                                J2a ->
-                                    "ja"
-
-                                J1b ->
-                                    "jb"
-
-                                J1ba ->
-                                    "jb"
-
-                                J1bb ->
-                                    "jb"
-
-                                J2b ->
-                                    "jb"
-
-                                _ ->
-                                    String.left 1 ref
-                    in
-                    [ img
-                        [ src ("/img/map-tiles/" ++ overlayPrefix ++ "-outline.png")
-                        , class ("ref-" ++ ref)
-                        , alt ("The outline of map tile " ++ ref)
-                        ]
-                        []
-                    ]
-            )
-        ]
-
-
 getBoardHtml : Model -> Game -> String -> Int -> Array Cell -> Html.Html Msg
 getBoardHtml model game encodedDraggable y row =
     div [ class "row" ]
@@ -2235,6 +2120,9 @@ getBoardHtml model game encodedDraggable y row =
                                                             False
                                             in
                                             isInCoords || isInTarget
+
+                                        RoomType _ ->
+                                            False
 
                                 Nothing ->
                                     False
@@ -2420,6 +2308,9 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
 
                                             else
                                                 []
+
+                                        RoomType _ ->
+                                            []
 
                                 Nothing ->
                                     []

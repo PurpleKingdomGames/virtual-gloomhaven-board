@@ -1,4 +1,4 @@
-module BoardMapTile exposing (MapTile, MapTileRef(..), getGridByRef, getMapTileListByRef, refToString, stringToRef)
+module BoardMapTile exposing (MapTile, MapTileRef(..), getAllRefs, getGridByRef, getMapTileListByRef, refToString, stringToRef)
 
 import Array exposing (Array)
 import Dict exposing (Dict, filter, fromList, get, toList)
@@ -509,6 +509,12 @@ refToString ref =
 stringToRef : String -> Maybe MapTileRef
 stringToRef ref =
     get (String.toLower ref) boardRefDict
+
+
+getAllRefs : List MapTileRef
+getAllRefs =
+    Dict.values boardRefDict
+        |> List.filter (\r -> r /= Empty)
 
 
 indexedArrayYToMapTile : MapTileRef -> Int -> Array Bool -> List MapTile

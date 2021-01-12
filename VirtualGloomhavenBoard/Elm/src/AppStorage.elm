@@ -2,13 +2,13 @@ port module AppStorage exposing (AppModeType(..), AppOverrides, CampaignTrackerU
 
 import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass, stringToCharacter)
-import Game exposing (GameState, Piece)
-import GameSync exposing (decodeGameState, decodePiece, encodeGameState, encodeOverlay, encodePiece)
+import Game exposing (GameState, Piece, RoomData)
+import GameSync exposing (decodeGameState, decodePiece, decodeRoom, encodeGameState, encodeOverlay, encodePiece, encodeRoom)
 import Html exposing (s)
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map5, map6, map7, maybe, string, succeed)
 import Json.Encode as Encode exposing (object, string)
 import List exposing (filterMap)
-import SharedSync exposing (decodeBoardOverlay)
+import SharedSync exposing (decodeBoardOverlay, decodeCoords, encodeCoords)
 
 
 port saveData : Encode.Value -> Cmd msg
@@ -72,6 +72,7 @@ type alias MoveablePiece =
 type MoveablePieceType
     = OverlayType BoardOverlay (Maybe ( Int, Int ))
     | PieceType Piece
+    | RoomType RoomData
 
 
 emptyConfig : Config
@@ -311,18 +312,15 @@ decodeMoveablePieceType =
                                     Decode.succeed (PieceType p)
                                 )
 
+                    "room" ->
+                        field "data" decodeRoom
+                            |> andThen
+                                (\r ->
+                                    Decode.succeed (RoomType r)
+                                )
+
                     _ ->
                         fail ("Cannot decode " ++ s ++ " as moveable piece")
-            )
-
-
-decodeCoords : Decoder ( Int, Int )
-decodeCoords =
-    field "x" Decode.int
-        |> andThen
-            (\x ->
-                field "y" Decode.int
-                    |> andThen (\y -> Decode.succeed ( x, y ))
             )
 
 
@@ -369,6 +367,9 @@ encodeMoveablePieceType pieceType =
 
                 PieceType _ ->
                     "piece"
+
+                RoomType _ ->
+                    "room"
             )
       )
     , ( "data"
@@ -379,6 +380,9 @@ encodeMoveablePieceType pieceType =
 
                 PieceType p ->
                     encodePiece p
+
+                RoomType r ->
+                    encodeRoom r
             )
       )
     ]
@@ -396,14 +400,10 @@ encodeMoveablePieceType pieceType =
 
                 PieceType _ ->
                     []
+
+                RoomType _ ->
+                    []
            )
-
-
-encodeCoords : ( Int, Int ) -> List ( String, Encode.Value )
-encodeCoords ( x, y ) =
-    [ ( "x", Encode.int x )
-    , ( "y", Encode.int y )
-    ]
 
 
 encodeCampaignTrackerUrl : CampaignTrackerUrl -> List ( String, Encode.Value )
