@@ -1,4 +1,4 @@
-module Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+module Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, moveOverlayWithoutState, movePiece, movePieceWithoutState, removePieceFromBoard, revealRooms)
 
 import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
 import Bitwise exposing (and)
@@ -446,16 +446,16 @@ mapOverlayCoord originalX originalY newX newY turns overlay =
 movePiece : Piece -> Maybe ( Int, Int ) -> ( Int, Int ) -> Game -> ( Game, Piece )
 movePiece piece fromCoords ( toX, toY ) game =
     let
-        newPiece =
-            { piece | x = toX, y = toY }
-
         gamestate =
             game.state
+
+        ( newPieces, newPiece ) =
+            movePieceWithoutState piece fromCoords ( toX, toY ) game.state.pieces
 
         newGamestate =
             case fromCoords of
                 Just ( fromX, fromY ) ->
-                    { gamestate | pieces = filter (removePiece { piece | x = fromX, y = fromY }) gamestate.pieces }
+                    { gamestate | pieces = newPieces |> filter (\p -> p /= newPiece) }
 
                 Nothing ->
                     gamestate
@@ -469,12 +469,64 @@ movePiece piece fromCoords ( toX, toY ) game =
         ( game, piece )
 
 
+movePieceWithoutState : Piece -> Maybe ( Int, Int ) -> ( Int, Int ) -> List Piece -> ( List Piece, Piece )
+movePieceWithoutState piece fromCoords ( toX, toY ) pieces =
+    let
+        newPiece =
+            { piece | x = toX, y = toY }
+
+        newPieces =
+            case fromCoords of
+                Just ( fromX, fromY ) ->
+                    filter (removePiece { piece | x = fromX, y = fromY }) pieces
+
+                Nothing ->
+                    pieces
+    in
+    if List.any (\p -> p.x == toX && p.y == toY) newPieces then
+        ( pieces, piece )
+
+    else
+        ( newPiece :: newPieces, newPiece )
+
+
 moveOverlay : BoardOverlay -> Maybe ( Int, Int ) -> Maybe ( Int, Int ) -> ( Int, Int ) -> Game -> ( Game, BoardOverlay, Maybe ( Int, Int ) )
 moveOverlay overlay fromCoords prevCoords ( toX, toY ) game =
     let
         gamestate =
             game.state
 
+        ( newOverlays, newOverlay, newCoords ) =
+            moveOverlayWithoutState overlay fromCoords prevCoords ( toX, toY ) game.state.overlays
+
+        newGamestate =
+            case fromCoords of
+                Just justFrom ->
+                    { gamestate
+                        | overlays =
+                            newOverlays
+                                |> filter (\o -> o /= newOverlay)
+                    }
+
+                Nothing ->
+                    gamestate
+
+        newGame =
+            { game | state = newGamestate }
+    in
+    if all (\c -> canMoveTo c newGame True) newOverlay.cells then
+        ( { game | state = { newGamestate | overlays = newOverlay :: newGamestate.overlays } }
+        , newOverlay
+        , Just ( toX, toY )
+        )
+
+    else
+        ( game, overlay, prevCoords )
+
+
+moveOverlayWithoutState : BoardOverlay -> Maybe ( Int, Int ) -> Maybe ( Int, Int ) -> ( Int, Int ) -> List BoardOverlay -> ( List BoardOverlay, BoardOverlay, Maybe ( Int, Int ) )
+moveOverlayWithoutState overlay fromCoords prevCoords ( toX, toY ) overlays =
+    let
         ( fromX, fromY, fromZ ) =
             case fromCoords of
                 Just ( oX, oY ) ->
@@ -521,30 +573,20 @@ moveOverlay overlay fromCoords prevCoords ( toX, toY ) game =
         newOverlay =
             { overlay | cells = map moveCells overlay.cells }
 
-        newGamestate =
+        newOverlays =
             case fromCoords of
                 Just justFrom ->
-                    { gamestate
-                        | overlays =
-                            filter
-                                (\o -> o.ref /= overlay.ref || List.all (\c -> c /= justFrom) o.cells)
-                                gamestate.overlays
-                    }
+                    filter
+                        (\o -> o.ref /= overlay.ref || List.all (\c -> c /= justFrom) o.cells)
+                        overlays
 
                 Nothing ->
-                    gamestate
-
-        newGame =
-            { game | state = newGamestate }
+                    overlays
     in
-    if all (\c -> canMoveTo c newGame True) newOverlay.cells then
-        ( { game | state = { newGamestate | overlays = newOverlay :: newGamestate.overlays } }
-        , newOverlay
-        , Just ( toX, toY )
-        )
-
-    else
-        ( game, overlay, prevCoords )
+    ( newOverlays
+    , newOverlay
+    , Just ( toX, toY )
+    )
 
 
 revealRooms : Game -> List MapTileRef -> Game
