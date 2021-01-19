@@ -1,7 +1,7 @@
 port module Creator exposing (main)
 
 import AppStorage exposing (MoveablePiece, MoveablePieceType(..))
-import BoardHtml exposing (getAllMapTileHtml)
+import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, makeDraggable)
 import BoardMapTile exposing (getAllRefs, refToString)
 import BoardOverlay exposing (BoardOverlay)
 import Browser
@@ -13,7 +13,7 @@ import Html exposing (Html, div, img, li, ul)
 import Html.Attributes exposing (alt, attribute, class, coords, id, src)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy, lazy2)
 import Json.Decode as Decode exposing (Decoder)
 import List
 import Monster exposing (MonsterLevel(..))
@@ -44,6 +44,16 @@ type Msg
     | TouchCanceled
     | TouchEnd ( Float, Float )
     | NoOp
+
+
+dragEvents : DragEvents Msg
+dragEvents =
+    DragEvents MoveStarted MoveCanceled TouchStart TouchMove TouchEnd NoOp
+
+
+dropEvents : DropEvents Msg
+dropEvents =
+    DropEvents MoveTargetChanged MoveCompleted
 
 
 main : Program () Model Msg
@@ -120,7 +130,7 @@ update msg model =
                                     Just (MoveablePiece newPiece m.coords newTarget)
 
                                 RoomType r ->
-                                    Just (MoveablePiece (RoomType r) m.coords m.target)
+                                    Just (MoveablePiece (RoomType r) m.coords (Just coords))
 
                         Nothing ->
                             model.currentDraggable
@@ -220,20 +230,20 @@ view model =
                 [ class
                     "action-list"
                 ]
-                [ lazy getMapTileListHtml model.roomData
+                [ lazy2 getMapTileListHtml model.roomData model.currentDraggable
                 ]
             , div
                 [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
                 , div
                     [ class "mapTiles" ]
-                    [ lazy getAllMapTileHtml model.roomData ]
+                    [ lazy2 getAllMapTileHtml model.roomData model.currentDraggable ]
                 , div [ class "board" ]
-                    (List.repeat 100 (List.repeat 100 0)
+                    (List.repeat 10 (List.repeat 10 0)
                         |> List.indexedMap
                             (\y val ->
                                 div [ class "row" ]
-                                    (List.indexedMap (\x _ -> getCellHtml x y) val)
+                                    (List.indexedMap (\x _ -> getCellHtml model x y) val)
                             )
                     )
                 ]
@@ -246,28 +256,15 @@ subscriptions _ =
     Sub.batch []
 
 
-getCellHtml : Int -> Int -> Html msg
-getCellHtml x y =
-    let
-        cellElement : Dom.Element msg
-        cellElement =
-            Dom.element "div"
-                |> Dom.addClass "hexagon"
-                |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
-                |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
-    in
-    Dom.element "div"
-        |> Dom.addClass "cell-wrapper"
-        |> Dom.appendChild
-            (Dom.element "div"
-                |> Dom.addClass "cell"
-                |> Dom.appendChild cellElement
-            )
+getCellHtml : Model -> Int -> Int -> Html Msg
+getCellHtml model x y =
+    BoardHtml.getCellHtml
+        (CellModel model.overlays [] ( x, y ) model.currentDraggable dragEvents dropEvents True False)
         |> Dom.render
 
 
-getMapTileListHtml : List RoomData -> Html msg
-getMapTileListHtml mapTiles =
+getMapTileListHtml : List RoomData -> Maybe MoveablePiece -> Html Msg
+getMapTileListHtml mapTiles currentDraggable =
     let
         currentRefs =
             List.map (\r -> r.ref) mapTiles
@@ -283,13 +280,17 @@ getMapTileListHtml mapTiles =
                         ref =
                             Maybe.withDefault "" (refToString r)
                     in
-                    li [ class ("ref-" ++ ref) ]
-                        [ img
-                            [ src ("/img/map-tiles/" ++ ref ++ ".png")
-                            , alt ("Map tile " ++ ref)
-                            ]
-                            []
-                        ]
+                    Dom.element "li"
+                        |> Dom.addClass ("ref-" ++ ref)
+                        |> Dom.appendChild
+                            (Dom.element "img"
+                                |> Dom.addAttributeList
+                                    [ src ("/img/map-tiles/" ++ ref ++ ".png")
+                                    , alt ("Map tile " ++ ref)
+                                    ]
+                                |> makeDraggable (RoomType (RoomData r ( 0, 0 ) 0)) Nothing dragEvents
+                            )
+                        |> Dom.render
                 )
         )
 

@@ -33,6 +33,7 @@ import Scenario exposing (DoorData(..), Scenario)
 import ScenarioSync exposing (loadScenarioById)
 import String exposing (join, split, toInt)
 import Task
+import Version
 
 
 port onPaste : (String -> msg) -> Sub msg
@@ -181,11 +182,6 @@ type Msg
     | ExitFullscreen ()
     | Reconnect
     | NoOp
-
-
-version : String
-version =
-    "1.9.0"
 
 
 undoLimit : Int
@@ -1176,7 +1172,7 @@ view model =
                 ]
             , lazy getConnectionStatusHtml model.connectionStatus
             ]
-         , lazy getFooterHtml version
+         , lazy getFooterHtml Version.get
          ]
             ++ (case config.appMode of
                     AppStorage.Game ->
@@ -2878,58 +2874,6 @@ keyDecoder =
     Decode.field "key" Decode.string |> Decode.andThen (\s -> Decode.succeed (String.toLower s))
 
 
-makeDraggable : MoveablePieceType -> Maybe ( Int, Int ) -> Element Msg -> Element Msg
-makeDraggable piece coords element =
-    let
-        config =
-            DragDrop.DraggedSourceConfig
-                (DragDrop.EffectAllowed True False False)
-                (\e v -> MoveStarted (MoveablePiece piece coords Nothing) (Just ( e, v )))
-                (always MoveCanceled)
-                Nothing
-    in
-    element
-        |> Dom.addAttributeList (DragDrop.onSourceDrag config)
-        |> Dom.addAttribute (Touch.onStart (\_ -> TouchStart (MoveablePiece piece coords Nothing)))
-        |> Dom.addAttribute
-            (Touch.onMove
-                (\e ->
-                    case head e.touches of
-                        Just touch ->
-                            TouchMove touch.clientPos
-
-                        Nothing ->
-                            NoOp
-                )
-            )
-        |> Dom.addAttribute
-            (Touch.onEnd
-                (\e ->
-                    case head e.changedTouches of
-                        Just touch ->
-                            TouchEnd touch.clientPos
-
-                        Nothing ->
-                            NoOp
-                )
-            )
-
-
-makeDroppable : ( Int, Int ) -> Element Msg -> Element Msg
-makeDroppable coords element =
-    let
-        config =
-            DragDrop.DropTargetConfig
-                DragDrop.MoveOnDrop
-                (\e v -> MoveTargetChanged coords (Just ( e, v )))
-                (always MoveCompleted)
-                Nothing
-                Nothing
-    in
-    element
-        |> Dom.addAttributeList (DragDrop.onDropTarget config)
-
-
 getLabelForOverlay : BoardOverlay -> Maybe ( Int, Int ) -> String
 getLabelForOverlay overlay coords =
     case coords of
@@ -3147,3 +3091,55 @@ getCharacterClassIconHtml characterClassStr =
                     []
                 |> String.fromList
             )
+
+
+makeDraggable : MoveablePieceType -> Maybe ( Int, Int ) -> Element Msg -> Element Msg
+makeDraggable piece coords element =
+    let
+        config =
+            DragDrop.DraggedSourceConfig
+                (DragDrop.EffectAllowed True False False)
+                (\e v -> MoveStarted (MoveablePiece piece coords Nothing) (Just ( e, v )))
+                (always MoveCanceled)
+                Nothing
+    in
+    element
+        |> Dom.addAttributeList (DragDrop.onSourceDrag config)
+        |> Dom.addAttribute (Touch.onStart (\_ -> TouchStart (MoveablePiece piece coords Nothing)))
+        |> Dom.addAttribute
+            (Touch.onMove
+                (\e ->
+                    case head e.touches of
+                        Just touch ->
+                            TouchMove touch.clientPos
+
+                        Nothing ->
+                            NoOp
+                )
+            )
+        |> Dom.addAttribute
+            (Touch.onEnd
+                (\e ->
+                    case head e.changedTouches of
+                        Just touch ->
+                            TouchEnd touch.clientPos
+
+                        Nothing ->
+                            NoOp
+                )
+            )
+
+
+makeDroppable : ( Int, Int ) -> Element Msg -> Element Msg
+makeDroppable coords element =
+    let
+        config =
+            DragDrop.DropTargetConfig
+                DragDrop.MoveOnDrop
+                (\e v -> MoveTargetChanged coords (Just ( e, v )))
+                (always MoveCompleted)
+                Nothing
+                Nothing
+    in
+    element
+        |> Dom.addAttributeList (DragDrop.onDropTarget config)
