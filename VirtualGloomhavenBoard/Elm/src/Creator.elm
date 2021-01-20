@@ -2,7 +2,7 @@ port module Creator exposing (main)
 
 import AppStorage exposing (MoveablePiece, MoveablePieceType(..))
 import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, makeDraggable)
-import BoardMapTile exposing (getAllRefs, refToString)
+import BoardMapTile exposing (MapTileRef(..), getAllRefs, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay)
 import Browser
 import Char exposing (toLocaleUpper)
@@ -13,7 +13,7 @@ import Html exposing (Html, div, img, li, ul)
 import Html.Attributes exposing (alt, attribute, class, coords, id, src)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
-import Html.Lazy exposing (lazy, lazy2)
+import Html.Lazy exposing (lazy, lazy2, lazy4)
 import Json.Decode as Decode exposing (Decoder)
 import List
 import Monster exposing (MonsterLevel(..))
@@ -190,7 +190,7 @@ update msg model =
                                                 )
 
                                         roomData =
-                                            room :: List.filter (\d -> d.ref /= r.ref) model.roomData
+                                            { room | origin = target } :: List.filter (\d -> d.ref /= r.ref) model.roomData
                                     in
                                     ( model.overlays, model.monsters, roomData )
 
@@ -230,14 +230,52 @@ view model =
                 [ class
                     "action-list"
                 ]
-                [ lazy2 getMapTileListHtml model.roomData model.currentDraggable
+                [ let
+                    c =
+                        case model.currentDraggable of
+                            Just m ->
+                                case m.ref of
+                                    RoomType r ->
+                                        Maybe.withDefault "" (refToString r.ref)
+
+                                    _ ->
+                                        ""
+
+                            Nothing ->
+                                ""
+                  in
+                  lazy2 getMapTileListHtml model.roomData c
                 ]
             , div
                 [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
                 , div
                     [ class "mapTiles" ]
-                    [ lazy2 getAllMapTileHtml model.roomData model.currentDraggable ]
+                    [ let
+                        ( c, x, y ) =
+                            case model.currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        RoomType r ->
+                                            let
+                                                ref =
+                                                    Maybe.withDefault "" (refToString r.ref)
+                                            in
+                                            case m.target of
+                                                Just ( x1, y1 ) ->
+                                                    ( ref, x1, y1 )
+
+                                                Nothing ->
+                                                    ( "", 0, 0 )
+
+                                        _ ->
+                                            ( "", 0, 0 )
+
+                                Nothing ->
+                                    ( "", 0, 0 )
+                      in
+                      lazy4 getAllMapTileHtml model.roomData c x y
+                    ]
                 , div [ class "board" ]
                     (List.repeat 10 (List.repeat 10 0)
                         |> List.indexedMap
@@ -263,7 +301,7 @@ getCellHtml model x y =
         |> Dom.render
 
 
-getMapTileListHtml : List RoomData -> Maybe MoveablePiece -> Html Msg
+getMapTileListHtml : List RoomData -> String -> Html Msg
 getMapTileListHtml mapTiles currentDraggable =
     let
         currentRefs =
@@ -274,25 +312,28 @@ getMapTileListHtml mapTiles currentDraggable =
         ]
         (getAllRefs
             |> List.filter (\r -> List.member r currentRefs == False)
-            |> List.map
-                (\r ->
-                    let
-                        ref =
-                            Maybe.withDefault "" (refToString r)
-                    in
-                    Dom.element "li"
-                        |> Dom.addClass ("ref-" ++ ref)
-                        |> Dom.appendChild
-                            (Dom.element "img"
-                                |> Dom.addAttributeList
-                                    [ src ("/img/map-tiles/" ++ ref ++ ".png")
-                                    , alt ("Map tile " ++ ref)
-                                    ]
-                                |> makeDraggable (RoomType (RoomData r ( 0, 0 ) 0)) Nothing dragEvents
-                            )
-                        |> Dom.render
-                )
+            |> List.map (\r -> lazy2 lazyMapTileListHtml (Maybe.withDefault "" (refToString r)) currentDraggable)
         )
+
+
+lazyMapTileListHtml : String -> String -> Html Msg
+lazyMapTileListHtml ref currentDraggable =
+    let
+        r =
+            Maybe.withDefault Empty (stringToRef ref)
+    in
+    Dom.element "li"
+        |> Dom.addClass ("ref-" ++ ref)
+        |> Dom.addClassConditional "dragging" (ref == currentDraggable)
+        |> Dom.appendChild
+            (Dom.element "img"
+                |> Dom.addAttributeList
+                    [ src ("/img/map-tiles/" ++ ref ++ ".png")
+                    , alt ("Map tile " ++ ref)
+                    ]
+                |> makeDraggable (RoomType (RoomData r ( 0, 0 ) 0)) Nothing dragEvents
+            )
+        |> Dom.render
 
 
 mapPieceToScenarioMonster : Piece -> List ScenarioMonster -> Maybe ( Int, Int ) -> ( Int, Int ) -> Piece -> Maybe ScenarioMonster

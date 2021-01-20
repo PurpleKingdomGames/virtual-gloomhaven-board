@@ -20,7 +20,7 @@ import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxle
 import Html.Events exposing (on, onClick, targetValue)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy6, lazy7, lazy8)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy5, lazy6, lazy7, lazy8)
 import Http exposing (Error)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
@@ -1156,7 +1156,7 @@ view model =
                 ]
             , div [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
-                , lazy2 getMapTileHtml model.game.state.visibleRooms model.game.roomData
+                , lazy5 getMapTileHtml model.game.state.visibleRooms model.game.roomData "" 0 0
                 , div [ class "board" ]
                     (let
                         encodedDraggable =

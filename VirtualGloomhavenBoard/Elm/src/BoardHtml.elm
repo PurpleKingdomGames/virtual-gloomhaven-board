@@ -3,7 +3,7 @@ module BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml,
 import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece)
 import Array exposing (fromList, toIndexedList)
 import Bitwise
-import BoardMapTile exposing (MapTileRef(..), refToString)
+import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Character exposing (characterToString)
 import Dom exposing (Element)
@@ -13,6 +13,7 @@ import Html exposing (div, img)
 import Html.Attributes exposing (alt, attribute, class, src, style)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
+import Html.Lazy exposing (lazy5)
 import Json.Decode as Decode exposing (Decoder)
 import List exposing (any, map)
 import List.Extra exposing (uniqueBy)
@@ -63,27 +64,53 @@ type alias DropEvents msg =
     }
 
 
-getMapTileHtml : List MapTileRef -> List RoomData -> Maybe MoveablePiece -> Html.Html msg
-getMapTileHtml visibleRooms roomData currentDraggable =
+getMapTileHtml : List MapTileRef -> List RoomData -> String -> Int -> Int -> Html.Html msg
+getMapTileHtml visibleRooms roomData currentDraggable draggableX draggableY =
     div
         [ class "mapTiles" ]
-        (map (getSingleMapTileHtml visibleRooms) (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) roomData))
+        (map
+            (\r ->
+                let
+                    isVisible =
+                        List.member r.ref visibleRooms
+
+                    ref =
+                        Maybe.withDefault "" (refToString r.ref)
+
+                    ( x, y ) =
+                        if ref == currentDraggable then
+                            ( draggableX, draggableY )
+
+                        else
+                            r.origin
+                in
+                lazy5 getSingleMapTileHtml isVisible ref r.turns x y
+            )
+            (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) roomData)
+        )
 
 
-getAllMapTileHtml : List RoomData -> Maybe MoveablePiece -> Html.Html msg
-getAllMapTileHtml roomData currentDraggable =
-    getMapTileHtml (map (\d -> d.ref) roomData) roomData currentDraggable
-
-
-getSingleMapTileHtml : List MapTileRef -> RoomData -> Html.Html msg
-getSingleMapTileHtml visibleRooms roomData =
+getAllMapTileHtml : List RoomData -> String -> Int -> Int -> Html.Html msg
+getAllMapTileHtml roomData currentDraggable draggableX draggableY =
     let
-        ( x, y ) =
-            roomData.origin
+        allRooms =
+            if List.member currentDraggable (List.map (\r -> Maybe.withDefault "" (refToString r.ref)) roomData) then
+                roomData
 
-        ref =
-            Maybe.withDefault "" (refToString roomData.ref)
+            else
+                case stringToRef currentDraggable of
+                    Just r ->
+                        RoomData r ( draggableX, draggableY ) 0 :: roomData
 
+                    Nothing ->
+                        roomData
+    in
+    getMapTileHtml (map (\d -> d.ref) allRooms) allRooms currentDraggable draggableX draggableY
+
+
+getSingleMapTileHtml : Bool -> String -> Int -> Int -> Int -> Html.Html msg
+getSingleMapTileHtml isVisible ref turns x y =
+    let
         xPx =
             (x * 76)
                 + (if Bitwise.and y 1 == 1 then
@@ -100,9 +127,9 @@ getSingleMapTileHtml visibleRooms roomData =
         []
         [ div
             [ class "mapTile"
-            , class ("rotate-" ++ String.fromInt roomData.turns)
+            , class ("rotate-" ++ String.fromInt turns)
             , class
-                (if any (\r -> r == roomData.ref) visibleRooms then
+                (if isVisible then
                     "visible"
 
                  else
@@ -111,31 +138,25 @@ getSingleMapTileHtml visibleRooms roomData =
             , style "top" (String.fromInt yPx ++ "px")
             , style "left" (String.fromInt xPx ++ "px")
             ]
-            (case roomData.ref of
-                Empty ->
-                    []
+            [ img
+                [ src ("/img/map-tiles/" ++ ref ++ ".png")
+                , class ("ref-" ++ ref)
+                , alt ("Map tile " ++ ref)
+                , attribute "aria-hidden"
+                    (if isVisible then
+                        "false"
 
-                _ ->
-                    [ img
-                        [ src ("/img/map-tiles/" ++ ref ++ ".png")
-                        , class ("ref-" ++ ref)
-                        , alt ("Map tile " ++ ref)
-                        , attribute "aria-hidden"
-                            (if any (\r -> r == roomData.ref) visibleRooms then
-                                "false"
-
-                             else
-                                "true"
-                            )
-                        ]
-                        []
-                    ]
-            )
+                     else
+                        "true"
+                    )
+                ]
+                []
+            ]
         , div
             [ class "mapTile outline"
-            , class ("rotate-" ++ String.fromInt roomData.turns)
+            , class ("rotate-" ++ String.fromInt turns)
             , class
-                (if any (\r -> r == roomData.ref) visibleRooms then
+                (if isVisible then
                     "hidden"
 
                  else
@@ -144,18 +165,21 @@ getSingleMapTileHtml visibleRooms roomData =
             , style "top" (String.fromInt yPx ++ "px")
             , style "left" (String.fromInt xPx ++ "px")
             , attribute "aria-hidden"
-                (if any (\r -> r == roomData.ref) visibleRooms then
+                (if isVisible then
                     "true"
 
                  else
                     "false"
                 )
             ]
-            (case roomData.ref of
-                Empty ->
+            (case stringToRef ref of
+                Nothing ->
                     []
 
-                r ->
+                Just Empty ->
+                    []
+
+                Just r ->
                     let
                         overlayPrefix =
                             case r of
