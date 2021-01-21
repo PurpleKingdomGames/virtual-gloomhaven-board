@@ -1,6 +1,6 @@
 port module Creator exposing (main)
 
-import AppStorage exposing (MoveablePiece, MoveablePieceType(..))
+import AppStorage exposing (MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece)
 import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, makeDraggable)
 import BoardMapTile exposing (MapTileRef(..), getAllRefs, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay)
@@ -13,8 +13,10 @@ import Html exposing (Html, div, img, li, ul)
 import Html.Attributes exposing (alt, attribute, class, coords, id, src)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
-import Html.Lazy exposing (lazy, lazy2, lazy4)
+import Html.Keyed as Keyed
+import Html.Lazy exposing (lazy, lazy2, lazy4, lazy6)
 import Json.Decode as Decode exposing (Decoder)
+import Json.Encode as Encode
 import List
 import Monster exposing (MonsterLevel(..))
 import Scenario exposing (ScenarioMonster)
@@ -54,6 +56,11 @@ dragEvents =
 dropEvents : DropEvents Msg
 dropEvents =
     DropEvents MoveTargetChanged MoveCompleted
+
+
+gridSize : Int
+gridSize =
+    50
 
 
 main : Program () Model Msg
@@ -226,7 +233,8 @@ view model =
         , Touch.onCancel (\_ -> TouchCanceled)
         ]
         [ div [ class "main" ]
-            [ div
+            [ Keyed.node
+                "div"
                 [ class
                     "action-list"
                 ]
@@ -244,7 +252,7 @@ view model =
                             Nothing ->
                                 ""
                   in
-                  lazy2 getMapTileListHtml model.roomData c
+                  ( "map-tile-list", lazy2 getMapTileListHtml model.roomData c )
                 ]
             , div
                 [ class "board-wrapper" ]
@@ -277,16 +285,79 @@ view model =
                       lazy4 getAllMapTileHtml model.roomData c x y
                     ]
                 , div [ class "board" ]
-                    (List.repeat 10 (List.repeat 10 0)
+                    (let
+                        encodedDraggable =
+                            case model.currentDraggable of
+                                Just c ->
+                                    Encode.encode 0 (encodeMoveablePiece c)
+
+                                Nothing ->
+                                    ""
+                     in
+                     List.repeat gridSize (List.repeat gridSize 0)
                         |> List.indexedMap
-                            (\y val ->
-                                div [ class "row" ]
-                                    (List.indexedMap (\x _ -> getCellHtml model x y) val)
-                            )
+                            (getBoardRowHtml model encodedDraggable)
                     )
                 ]
             ]
         ]
+
+
+getBoardRowHtml : Model -> String -> Int -> List Int -> Html Msg
+getBoardRowHtml model encodedDraggable y row =
+    Keyed.node
+        "div"
+        [ class "row" ]
+        (List.indexedMap
+            (\x _ ->
+                let
+                    id =
+                        "cell-" ++ String.fromInt x ++ "-" ++ String.fromInt y
+
+                    useDraggable =
+                        case model.currentDraggable of
+                            Just m ->
+                                case m.ref of
+                                    PieceType p ->
+                                        (p.x == x && p.y == y) || (m.coords == Just ( x, y ))
+
+                                    OverlayType o _ ->
+                                        let
+                                            isInCoords =
+                                                case m.coords of
+                                                    Just ( ox, oy ) ->
+                                                        List.any (\c -> c == ( ox, oy )) o.cells
+
+                                                    Nothing ->
+                                                        False
+
+                                            isInTarget =
+                                                case m.target of
+                                                    Just ( ox, oy ) ->
+                                                        List.any (\c -> c == ( ox, oy )) o.cells
+
+                                                    Nothing ->
+                                                        False
+                                        in
+                                        isInCoords || isInTarget
+
+                                    RoomType r ->
+                                        r.origin == ( x, y ) || (m.coords == Just ( x, y ))
+
+                            Nothing ->
+                                False
+
+                    currentDraggable =
+                        if useDraggable then
+                            encodedDraggable
+
+                        else
+                            ""
+                in
+                ( id, lazy6 getCellHtml model.roomData model.overlays model.monsters currentDraggable x y )
+            )
+            row
+        )
 
 
 subscriptions : Model -> Sub Msg
@@ -294,10 +365,19 @@ subscriptions _ =
     Sub.batch []
 
 
-getCellHtml : Model -> Int -> Int -> Html Msg
-getCellHtml model x y =
+getCellHtml : List RoomData -> List BoardOverlay -> List ScenarioMonster -> String -> Int -> Int -> Html Msg
+getCellHtml rooms overlays monsters encodedDraggable x y =
+    let
+        currentDraggable =
+            case Decode.decodeString decodeMoveablePiece encodedDraggable of
+                Ok d ->
+                    Just d
+
+                _ ->
+                    Nothing
+    in
     BoardHtml.getCellHtml
-        (CellModel model.overlays [] ( x, y ) model.currentDraggable dragEvents dropEvents True False)
+        (CellModel overlays [] ( x, y ) currentDraggable dragEvents dropEvents True False)
         |> Dom.render
 
 
@@ -311,7 +391,10 @@ getMapTileListHtml mapTiles currentDraggable =
         [ class "map-tiles"
         ]
         (getAllRefs
-            |> List.filter (\r -> List.member r currentRefs == False)
+            |> List.filter
+                (\r ->
+                    r /= J1ba && r /= J1bb && List.member r currentRefs == False
+                )
             |> List.map (\r -> lazy2 lazyMapTileListHtml (Maybe.withDefault "" (refToString r)) currentDraggable)
         )
 

@@ -13,6 +13,7 @@ import Html exposing (div, img)
 import Html.Attributes exposing (alt, attribute, class, src, style)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
+import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy5)
 import Json.Decode as Decode exposing (Decoder)
 import List exposing (any, map)
@@ -66,7 +67,7 @@ type alias DropEvents msg =
 
 getMapTileHtml : List MapTileRef -> List RoomData -> String -> Int -> Int -> Html.Html msg
 getMapTileHtml visibleRooms roomData currentDraggable draggableX draggableY =
-    div
+    Keyed.node "div"
         [ class "mapTiles" ]
         (map
             (\r ->
@@ -84,7 +85,7 @@ getMapTileHtml visibleRooms roomData currentDraggable draggableX draggableY =
                         else
                             r.origin
                 in
-                lazy5 getSingleMapTileHtml isVisible ref r.turns x y
+                ( ref, lazy5 getSingleMapTileHtml isVisible ref r.turns x y )
             )
             (uniqueBy (\d -> Maybe.withDefault "" (refToString d.ref)) roomData)
         )
