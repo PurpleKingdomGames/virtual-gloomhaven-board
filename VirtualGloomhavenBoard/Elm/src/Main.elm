@@ -2625,7 +2625,7 @@ getOverlayImageName overlay coords =
             "/img/overlays/"
 
         overlayName =
-            getBoardOverlayName overlay.ref
+            Maybe.withDefault "" (getBoardOverlayName overlay.ref)
 
         extension =
             ".png"

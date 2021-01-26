@@ -1,4 +1,4 @@
-module BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getMapTileHtml, makeDraggable, makeDroppable)
+module BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable)
 
 import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece)
 import Array exposing (fromList, toIndexedList)
@@ -725,7 +725,7 @@ getOverlayImageName overlay coords =
             "/img/overlays/"
 
         overlayName =
-            getBoardOverlayName overlay.ref
+            Maybe.withDefault "" (getBoardOverlayName overlay.ref)
 
         extension =
             ".png"

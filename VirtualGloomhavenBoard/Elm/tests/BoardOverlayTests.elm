@@ -23,6 +23,8 @@ testData =
     , Door (Corridor NaturalStone One) [ J1b, L1b ]
     , Door (Corridor NaturalStone Two) [ J1b, L1b ]
     , Door (Corridor PressurePlate One) [ J1b, D1b ]
+    , Door (Corridor Wood One) [ D1b ]
+    , Door (Corridor Wood Two) [ J1b, D1b ]
     , DifficultTerrain Log
     , DifficultTerrain Rubble
     , DifficultTerrain Stairs

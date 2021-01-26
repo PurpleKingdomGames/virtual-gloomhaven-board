@@ -1,7 +1,7 @@
-module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getOverlayLabel)
+module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..), getAllOverlayTypes, getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 
 import BoardMapTile exposing (MapTileRef)
-import Dict
+import Dict exposing (Dict)
 
 
 type BoardOverlayType
@@ -136,12 +136,12 @@ overlayDictionary =
         , ( "corridor-manmade-stone-1", Door (Corridor ManmadeStone One) [] )
         , ( "corridor-natural-stone-1", Door (Corridor NaturalStone One) [] )
         , ( "corridor-pressure-plate-1", Door (Corridor PressurePlate One) [] )
-        , ( "corridor-corridor-wood-1", Door (Corridor Wood One) [] )
+        , ( "corridor-wood-1", Door (Corridor Wood One) [] )
         , ( "corridor-dark-2", Door (Corridor Dark Two) [] )
         , ( "corridor-earth-2", Door (Corridor Earth Two) [] )
         , ( "corridor-manmade-stone-2", Door (Corridor ManmadeStone Two) [] )
         , ( "corridor-natural-stone-2", Door (Corridor NaturalStone Two) [] )
-        , ( "corridor-corridor-wood-2", Door (Corridor Wood Two) [] )
+        , ( "corridor-wood-2", Door (Corridor Wood Two) [] )
         , ( "difficult-terrain-log", DifficultTerrain Log )
         , ( "difficult-terrain-rubble", DifficultTerrain Rubble )
         , ( "difficult-terrain-stairs", DifficultTerrain Stairs )
@@ -211,6 +211,21 @@ getBoardOverlayName overlay =
         |> Dict.filter (\_ v -> v == compare)
         |> Dict.keys
         |> List.head
+
+
+getBoardOverlayType : String -> Maybe BoardOverlayType
+getBoardOverlayType overlayName =
+    Dict.get overlayName overlayDictionary
+
+
+getAllOverlayTypes : List BoardOverlayType
+getAllOverlayTypes =
+    Dict.values overlayDictionary
+
+
+getOverlayTypesWithLabel : Dict String BoardOverlayType
+getOverlayTypesWithLabel =
+    overlayDictionary
 
 
 getOverlayLabel : BoardOverlayType -> String

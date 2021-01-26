@@ -1,11 +1,12 @@
 port module Creator exposing (main)
 
 import AppStorage exposing (MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece)
-import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, makeDraggable)
+import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getOverlayImageName, makeDraggable)
 import BoardMapTile exposing (MapTileRef(..), getAllRefs, refToString, stringToRef)
-import BoardOverlay exposing (BoardOverlay)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getAllOverlayTypes, getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
 import Char exposing (toLocaleUpper)
+import Dict
 import Dom
 import DragPorts
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, assignIdentifier, moveOverlay, moveOverlayWithoutState, movePiece, movePieceWithoutState)
@@ -18,6 +19,7 @@ import Html.Lazy exposing (lazy, lazy2, lazy4, lazy6)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import List
+import Maybe
 import Monster exposing (MonsterLevel(..))
 import Scenario exposing (ScenarioMonster)
 
@@ -238,22 +240,47 @@ view model =
                 [ class
                     "action-list"
                 ]
-                [ let
-                    c =
+                (let
+                    roomDragabble =
                         case model.currentDraggable of
                             Just m ->
                                 case m.ref of
                                     RoomType r ->
-                                        Maybe.withDefault "" (refToString r.ref)
+                                        case m.coords of
+                                            Just _ ->
+                                                ""
+
+                                            Nothing ->
+                                                Maybe.withDefault "" (refToString r.ref)
 
                                     _ ->
                                         ""
 
                             Nothing ->
                                 ""
-                  in
-                  ( "map-tile-list", lazy2 getMapTileListHtml model.roomData c )
-                ]
+
+                    overlayDragabble =
+                        case model.currentDraggable of
+                            Just m ->
+                                case m.ref of
+                                    OverlayType o _ ->
+                                        case m.coords of
+                                            Just _ ->
+                                                ""
+
+                                            Nothing ->
+                                                Maybe.withDefault "" (getBoardOverlayName o.ref)
+
+                                    _ ->
+                                        ""
+
+                            Nothing ->
+                                ""
+                 in
+                 [ ( "map-tile-list", lazy2 getMapTileListHtml model.roomData roomDragabble )
+                 , ( "board-overlay-list", lazy getOverlayListHtml overlayDragabble )
+                 ]
+                )
             , div
                 [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
@@ -387,7 +414,8 @@ getMapTileListHtml mapTiles currentDraggable =
         currentRefs =
             List.map (\r -> r.ref) mapTiles
     in
-    ul
+    Keyed.node
+        "ul"
         [ class "map-tiles"
         ]
         (getAllRefs
@@ -395,7 +423,47 @@ getMapTileListHtml mapTiles currentDraggable =
                 (\r ->
                     r /= J1ba && r /= J1bb && List.member r currentRefs == False
                 )
-            |> List.map (\r -> lazy2 lazyMapTileListHtml (Maybe.withDefault "" (refToString r)) currentDraggable)
+            |> List.map
+                (\r ->
+                    let
+                        ref =
+                            Maybe.withDefault "" (refToString r)
+                    in
+                    ( "new-tile-" ++ ref, lazy2 lazyMapTileListHtml ref currentDraggable )
+                )
+        )
+
+
+getOverlayListHtml : String -> Html Msg
+getOverlayListHtml currentDraggable =
+    Keyed.node "ul"
+        [ class "board-overlays"
+        ]
+        (getOverlayTypesWithLabel
+            |> Dict.filter
+                (\_ v ->
+                    case v of
+                        Door (Corridor _ Two) _ ->
+                            False
+
+                        Door AltarDoor _ ->
+                            False
+
+                        Treasure (Coin _) ->
+                            False
+
+                        _ ->
+                            True
+                )
+            |> Dict.keys
+            |> List.map
+                (\k ->
+                    let
+                        isDragging =
+                            currentDraggable == k
+                    in
+                    ( "new-overlay-" ++ k, lazy2 lazyBoardOverlayListHtml k isDragging )
+                )
         )
 
 
@@ -417,6 +485,86 @@ lazyMapTileListHtml ref currentDraggable =
                 |> makeDraggable (RoomType (RoomData r ( 0, 0 ) 0)) Nothing dragEvents
             )
         |> Dom.render
+
+
+lazyBoardOverlayListHtml : String -> Bool -> Html Msg
+lazyBoardOverlayListHtml overlayStr isDragging =
+    Debug.log
+        "overlay"
+        (case getBoardOverlayType overlayStr of
+            Just overlay ->
+                let
+                    cells =
+                        case overlay of
+                            DifficultTerrain Log ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Obstacle Bookcase ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Obstacle Boulder2 ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Obstacle Boulder3 ->
+                                [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
+
+                            Obstacle DarkPit ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Obstacle Sarcophagus ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Obstacle Shelf ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Obstacle Table ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Obstacle Tree3 ->
+                                [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
+
+                            Obstacle WallSection ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Wall HugeRock ->
+                                [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
+
+                            Wall Iron ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Wall LargeRock ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            Wall ObsidianGlass ->
+                                [ ( 0, 0 ), ( 1, 0 ) ]
+
+                            _ ->
+                                [ ( 0, 0 ) ]
+
+                    boardOverlayModel =
+                        { ref = overlay
+                        , direction = Default
+                        , cells = cells
+                        }
+                in
+                Dom.element "li"
+                    |> Dom.addClassConditional "dragging" isDragging
+                    |> Dom.appendChildList
+                        (List.map
+                            (\c ->
+                                Dom.element "img"
+                                    |> Dom.addAttribute (alt (getOverlayLabel overlay))
+                                    |> Dom.addAttribute (attribute "src" (getOverlayImageName boardOverlayModel (Just c)))
+                                    |> Dom.addAttribute (attribute "draggable" "false")
+                            )
+                            cells
+                        )
+                    |> makeDraggable (OverlayType boardOverlayModel Nothing) Nothing dragEvents
+                    |> Dom.render
+
+            Nothing ->
+                li [] []
+        )
 
 
 mapPieceToScenarioMonster : Piece -> List ScenarioMonster -> Maybe ( Int, Int ) -> ( Int, Int ) -> Piece -> Maybe ScenarioMonster
