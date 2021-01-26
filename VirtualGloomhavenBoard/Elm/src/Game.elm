@@ -965,7 +965,7 @@ ensureUniqueOverlays game =
             state.overlays
                 |> uniqueBy
                     (\o ->
-                        cellsToString o.cells ++ getBoardOverlayName o.ref
+                        cellsToString o.cells ++ Maybe.withDefault "" (getBoardOverlayName o.ref)
                     )
 
         pieces =

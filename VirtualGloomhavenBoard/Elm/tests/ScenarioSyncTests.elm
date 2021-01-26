@@ -4,7 +4,7 @@ import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass(..))
 import Expect exposing (equal)
-import Game exposing (AIType(..), NumPlayers(..), PieceType(..))
+import Game exposing (AIType(..), PieceType(..))
 import Json.Decode exposing (decodeString)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..))
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
@@ -381,8 +381,8 @@ decodedScenario =
                             []
                             [ BoardOverlay (Treasure (Chest (NormalChest 67))) Default [ ( 0, 2 ) ]
                             ]
-                            [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 0 1 Monster.None Normal Elite
-                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 1 2 Elite Elite Elite
+                            [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 0 1 Monster.None Normal Elite
+                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 1 2 Elite Elite Elite
                             ]
                             5
                         )
@@ -393,8 +393,8 @@ decodedScenario =
                         (MapTileData A2a
                             []
                             []
-                            [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 3 1 Monster.None Normal Elite
-                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 3 2 Elite Elite Elite
+                            [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 3 1 Monster.None Normal Elite
+                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 3 2 Elite Elite Elite
                             ]
                             1
                         )
@@ -405,9 +405,9 @@ decodedScenario =
                         (MapTileData A1a
                             []
                             []
-                            [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 1 1 Monster.None Normal Elite
-                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 1 2 Normal Normal Normal
-                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 2 2 Normal Normal Normal
+                            [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 1 1 Monster.None Normal Elite
+                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 1 2 Normal Normal Normal
+                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 2 2 Normal Normal Normal
                             ]
                             3
                         )
@@ -418,9 +418,9 @@ decodedScenario =
                         (MapTileData A3b
                             []
                             []
-                            [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 2 1 Monster.None Normal Elite
-                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 2 2 Normal Normal Normal
-                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None) 3 2 Normal Normal Normal
+                            [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 2 1 Monster.None Normal Elite
+                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 2 2 Normal Normal Normal
+                            , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 3 2 Normal Normal Normal
                             ]
                             3
                         )
@@ -429,9 +429,9 @@ decodedScenario =
                     , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft [ ( 1, 5 ), ( 1, 4 ) ]
                     , BoardOverlay (Obstacle Sarcophagus) DiagonalRight [ ( 3, 5 ), ( 4, 4 ) ]
                     ]
-                    [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 1 1 Elite Elite Elite
-                    , ScenarioMonster (Monster (BossType BanditCommander) 0 Monster.None) 2 1 Normal Normal Normal
-                    , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 3 1 Monster.None Normal Elite
+                    [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None False) 1 1 Elite Elite Elite
+                    , ScenarioMonster (Monster (BossType BanditCommander) 0 Monster.None False) 2 1 Normal Normal Normal
+                    , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None False) 3 1 Monster.None Normal Elite
                     ]
                     3
                 )
@@ -444,10 +444,10 @@ decodedScenario =
             , BoardOverlay StartingLocation Default [ ( 1, 2 ) ]
             , BoardOverlay StartingLocation Default [ ( 2, 2 ) ]
             ]
-            [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 0 0 Normal Normal Normal
-            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 1 0 Monster.None Monster.None Normal
-            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 2 0 Monster.None Normal Normal
-            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None) 3 0 Normal Normal Normal
+            [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None False) 0 0 Normal Normal Normal
+            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None False) 1 0 Monster.None Monster.None Normal
+            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None False) 2 0 Monster.None Normal Normal
+            , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None False) 3 0 Normal Normal Normal
             ]
             3
         )

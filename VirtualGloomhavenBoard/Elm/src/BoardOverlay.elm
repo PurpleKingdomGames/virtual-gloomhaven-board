@@ -1,6 +1,7 @@
 module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getOverlayLabel)
 
 import BoardMapTile exposing (MapTileRef)
+import Dict
 
 
 type BoardOverlayType
@@ -121,197 +122,95 @@ type alias BoardOverlay =
     }
 
 
-getBoardOverlayName : BoardOverlayType -> String
+overlayDictionary : Dict.Dict String BoardOverlayType
+overlayDictionary =
+    Dict.fromList
+        [ ( "door-altar", Door AltarDoor [] )
+        , ( "door-stone", Door Stone [] )
+        , ( "door-wooden", Door Wooden [] )
+        , ( "door-dark-fog", Door DarkFog [] )
+        , ( "door-light-fog", Door LightFog [] )
+        , ( "door-breakable-wall", Door BreakableWall [] )
+        , ( "corridor-dark-1", Door (Corridor Dark One) [] )
+        , ( "corridor-earth-1", Door (Corridor Earth One) [] )
+        , ( "corridor-manmade-stone-1", Door (Corridor ManmadeStone One) [] )
+        , ( "corridor-natural-stone-1", Door (Corridor NaturalStone One) [] )
+        , ( "corridor-pressure-plate-1", Door (Corridor PressurePlate One) [] )
+        , ( "corridor-corridor-wood-1", Door (Corridor Wood One) [] )
+        , ( "corridor-dark-2", Door (Corridor Dark Two) [] )
+        , ( "corridor-earth-2", Door (Corridor Earth Two) [] )
+        , ( "corridor-manmade-stone-2", Door (Corridor ManmadeStone Two) [] )
+        , ( "corridor-natural-stone-2", Door (Corridor NaturalStone Two) [] )
+        , ( "corridor-corridor-wood-2", Door (Corridor Wood Two) [] )
+        , ( "difficult-terrain-log", DifficultTerrain Log )
+        , ( "difficult-terrain-rubble", DifficultTerrain Rubble )
+        , ( "difficult-terrain-stairs", DifficultTerrain Stairs )
+        , ( "difficult-terrain-stairs-vert", DifficultTerrain VerticalStairs )
+        , ( "difficult-terrain-water", DifficultTerrain Water )
+        , ( "hazard-hot-coals", Hazard HotCoals )
+        , ( "hazard-thorns", Hazard Thorns )
+        , ( "obstacle-altar", Obstacle Altar )
+        , ( "obstacle-barrel", Obstacle Barrel )
+        , ( "obstacle-bookcase", Obstacle Bookcase )
+        , ( "obstacle-boulder-1", Obstacle Boulder1 )
+        , ( "obstacle-boulder-2", Obstacle Boulder2 )
+        , ( "obstacle-boulder-3", Obstacle Boulder3 )
+        , ( "obstacle-bush", Obstacle Bush )
+        , ( "obstacle-cabinet", Obstacle Cabinet )
+        , ( "obstacle-crate", Obstacle Crate )
+        , ( "obstacle-crystal", Obstacle Crystal )
+        , ( "obstacle-dark-pit", Obstacle DarkPit )
+        , ( "obstacle-fountain", Obstacle Fountain )
+        , ( "obstacle-mirror", Obstacle Mirror )
+        , ( "obstacle-nest", Obstacle Nest )
+        , ( "obstacle-pillar", Obstacle Pillar )
+        , ( "obstacle-rock-column", Obstacle RockColumn )
+        , ( "obstacle-sarcophagus", Obstacle Sarcophagus )
+        , ( "obstacle-shelf", Obstacle Shelf )
+        , ( "obstacle-stalagmites", Obstacle Stalagmites )
+        , ( "obstacle-stump", Obstacle Stump )
+        , ( "obstacle-table", Obstacle Table )
+        , ( "obstacle-totem", Obstacle Totem )
+        , ( "obstacle-tree-3", Obstacle Tree3 )
+        , ( "obstacle-wall-section", Obstacle WallSection )
+        , ( "rift", Rift )
+        , ( "starting-location", StartingLocation )
+        , ( "trap-bear", Trap BearTrap )
+        , ( "trap-spike", Trap Spike )
+        , ( "trap-poison", Trap Poison )
+        , ( "treasure-chest", Treasure (Chest Locked) )
+        , ( "treasure-coin", Treasure (Coin 0) )
+        , ( "wall-huge-rock", Wall HugeRock )
+        , ( "wall-iron", Wall Iron )
+        , ( "wall-large-rock", Wall LargeRock )
+        , ( "wall-obsidian-glass", Wall ObsidianGlass )
+        , ( "wall-rock", Wall Rock )
+        ]
+
+
+getBoardOverlayName : BoardOverlayType -> Maybe String
 getBoardOverlayName overlay =
-    case overlay of
-        Door d _ ->
-            case d of
-                AltarDoor ->
-                    "door-altar"
+    let
+        compare =
+            case overlay of
+                Door d _ ->
+                    Door d []
 
-                Stone ->
-                    "door-stone"
+                Treasure t ->
+                    case t of
+                        Chest _ ->
+                            Treasure (Chest Locked)
 
-                Wooden ->
-                    "door-wooden"
+                        Coin _ ->
+                            Treasure (Coin 0)
 
-                BreakableWall ->
-                    "door-breakable-wall"
-
-                Corridor c num ->
-                    (case c of
-                        Dark ->
-                            "corridor-dark"
-
-                        Earth ->
-                            "corridor-earth"
-
-                        ManmadeStone ->
-                            "corridor-manmade-stone"
-
-                        NaturalStone ->
-                            "corridor-natural-stone"
-
-                        PressurePlate ->
-                            "corridor-pressure-plate"
-
-                        Wood ->
-                            "corridor-wood"
-                    )
-                        ++ (case num of
-                                One ->
-                                    "-1"
-
-                                Two ->
-                                    "-2"
-                           )
-
-                DarkFog ->
-                    "door-dark-fog"
-
-                LightFog ->
-                    "door-light-fog"
-
-        DifficultTerrain d ->
-            case d of
-                Log ->
-                    "difficult-terrain-log"
-
-                Rubble ->
-                    "difficult-terrain-rubble"
-
-                Stairs ->
-                    "difficult-terrain-stairs"
-
-                VerticalStairs ->
-                    "difficult-terrain-stairs-vert"
-
-                Water ->
-                    "difficult-terrain-water"
-
-        Hazard h ->
-            case h of
-                HotCoals ->
-                    "hazard-hot-coals"
-
-                Thorns ->
-                    "hazard-thorns"
-
-        Obstacle o ->
-            case o of
-                Altar ->
-                    "obstacle-altar"
-
-                Barrel ->
-                    "obstacle-barrel"
-
-                Bookcase ->
-                    "obstacle-bookcase"
-
-                Boulder1 ->
-                    "obstacle-boulder-1"
-
-                Boulder2 ->
-                    "obstacle-boulder-2"
-
-                Boulder3 ->
-                    "obstacle-boulder-3"
-
-                Bush ->
-                    "obstacle-bush"
-
-                Cabinet ->
-                    "obstacle-cabinet"
-
-                Crate ->
-                    "obstacle-crate"
-
-                Crystal ->
-                    "obstacle-crystal"
-
-                DarkPit ->
-                    "obstacle-dark-pit"
-
-                Fountain ->
-                    "obstacle-fountain"
-
-                Mirror ->
-                    "obstacle-mirror"
-
-                Nest ->
-                    "obstacle-nest"
-
-                Pillar ->
-                    "obstacle-pillar"
-
-                RockColumn ->
-                    "obstacle-rock-column"
-
-                Sarcophagus ->
-                    "obstacle-sarcophagus"
-
-                Shelf ->
-                    "obstacle-shelf"
-
-                Stalagmites ->
-                    "obstacle-stalagmites"
-
-                Stump ->
-                    "obstacle-stump"
-
-                Table ->
-                    "obstacle-table"
-
-                Totem ->
-                    "obstacle-totem"
-
-                Tree3 ->
-                    "obstacle-tree-3"
-
-                WallSection ->
-                    "obstacle-wall-section"
-
-        Rift ->
-            "rift"
-
-        StartingLocation ->
-            "starting-location"
-
-        Trap t ->
-            case t of
-                BearTrap ->
-                    "trap-bear"
-
-                Spike ->
-                    "trap-spike"
-
-                Poison ->
-                    "trap-poison"
-
-        Treasure t ->
-            case t of
-                Chest _ ->
-                    "treasure-chest"
-
-                Coin _ ->
-                    "treasure-coin"
-
-        Wall w ->
-            case w of
-                HugeRock ->
-                    "wall-huge-rock"
-
-                Iron ->
-                    "wall-iron"
-
-                LargeRock ->
-                    "wall-large-rock"
-
-                ObsidianGlass ->
-                    "wall-obsidian-glass"
-
-                Rock ->
-                    "wall-rock"
+                _ ->
+                    overlay
+    in
+    overlayDictionary
+        |> Dict.filter (\_ v -> v == compare)
+        |> Dict.keys
+        |> List.head
 
 
 getOverlayLabel : BoardOverlayType -> String

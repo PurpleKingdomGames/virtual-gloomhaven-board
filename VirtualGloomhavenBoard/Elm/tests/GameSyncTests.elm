@@ -6,7 +6,7 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Character exposing (CharacterClass(..))
 import Dict
 import Expect exposing (equal)
-import Game exposing (AIType(..), GameState, NumPlayers(..), Piece, PieceType(..))
+import Game exposing (AIType(..), Expansion(..), GameState, GameStateScenario(..), Piece, PieceType(..), SummonsType(..))
 import GameSync exposing (decodeGameState, encodeGameState)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
@@ -17,8 +17,22 @@ import Test exposing (Test, describe, test)
 encodedJson : String
 encodedJson =
     """{
-    "scenario": 2,
-    "numPlayers": 3,
+    "scenario": {
+        "expansion": "gloomhaven",
+        "id": 1
+    },
+    "players": [
+        {
+            "class": "brute"
+        },
+        {
+            "class": "cragheart"
+        },
+        {
+            "class": "tinkerer"
+        }
+    ],
+    "updateCount": 2,
     "visibleRooms": [
         "a1b",
         "a2a"
@@ -154,7 +168,8 @@ encodedJson =
                 "type": "monster",
                 "class": "cultist",
                 "id": 3,
-                "level": "normal"
+                "level": "normal",
+                "wasSummoned": false
             },
             "x": 3,
             "y": 5
@@ -164,7 +179,8 @@ encodedJson =
                 "type": "monster",
                 "class": "inox-shaman",
                 "id": 1,
-                "level": "elite"
+                "level": "elite",
+                "wasSummoned": false
             },
             "x": 4,
             "y": 5
@@ -174,7 +190,8 @@ encodedJson =
                 "type": "monster",
                 "class": "jekserah",
                 "id": 1,
-                "level": "normal"
+                "level": "normal",
+                "wasSummoned": false
             },
             "x": 4,
             "y": 6
@@ -195,15 +212,17 @@ encodedJson =
                 1
             ]
         }
-    ]
+    ],
+    "roomCode": ""
 }"""
 
 
 decodedState : GameState
 decodedState =
     GameState
+        (InbuiltScenario Gloomhaven 1)
+        [ Brute, Cragheart, Tinkerer ]
         2
-        ThreePlayer
         [ A1b, A2a ]
         [ BoardOverlay StartingLocation Default [ ( 0, 1 ) ]
         , BoardOverlay (Treasure (Chest Goal)) DiagonalRight [ ( 1, 2 ) ]
@@ -215,12 +234,13 @@ decodedState =
         , BoardOverlay (Obstacle Sarcophagus) Horizontal [ ( 6, 5 ), ( 7, 5 ) ]
         ]
         [ Piece (Player Cragheart) 1 2
-        , Piece (AI (Enemy (Monster (NormalType Cultist) 3 Monster.Normal))) 3 5
-        , Piece (AI (Enemy (Monster (NormalType InoxShaman) 1 Monster.Elite))) 4 5
-        , Piece (AI (Enemy (Monster (BossType Jekserah) 1 Monster.Normal))) 4 6
-        , Piece (AI (Summons 1)) 2 2
+        , Piece (AI (Enemy (Monster (NormalType Cultist) 3 Monster.Normal False))) 3 5
+        , Piece (AI (Enemy (Monster (NormalType InoxShaman) 1 Monster.Elite False))) 4 5
+        , Piece (AI (Enemy (Monster (BossType Jekserah) 1 Monster.Normal False))) 4 6
+        , Piece (AI (Summons (NormalSummons 1))) 2 2
         ]
         (Dict.fromList [ ( "cultist", Array.fromList [ 1 ] ) ])
+        ""
 
 
 suite : Test

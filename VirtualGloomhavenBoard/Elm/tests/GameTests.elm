@@ -3,8 +3,9 @@ module GameTests exposing (suite)
 import Array exposing (fromList, toList)
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), TrapSubType(..))
+import Character exposing (CharacterClass(..))
 import Expect exposing (equalLists)
-import Game exposing (Cell, NumPlayers(..), PieceType(..), generateGameMap)
+import Game exposing (Cell, Expansion(..), GameStateScenario(..), PieceType(..), generateGameMap)
 import Random exposing (Seed)
 import Scenario exposing (MapTileData, Scenario)
 import Test exposing (Test, describe, test)
@@ -52,7 +53,7 @@ suite =
                                 ]
                             ]
                     in
-                    toList (Game.generateGameMap scenario ThreePlayer seed).staticBoard
+                    toList (Game.generateGameMap (InbuiltScenario Gloomhaven 1) scenario "" [ Brute, Cragheart, Tinkerer ] seed).staticBoard
                         |> Expect.equalLists expectedBoard
             , test "should output a rotated single board" <|
                 \_ ->
@@ -111,7 +112,7 @@ suite =
                                 ]
                             ]
                     in
-                    toList (Game.generateGameMap scenario ThreePlayer seed).staticBoard
+                    toList (Game.generateGameMap (InbuiltScenario Gloomhaven 1) scenario "" [ Brute, Cragheart, Tinkerer ] seed).staticBoard
                         |> Expect.equalLists expectedBoard
             ]
         ]
