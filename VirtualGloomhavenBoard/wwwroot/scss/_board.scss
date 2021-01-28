@@ -43,15 +43,6 @@ $hexHeight: 90px;
 
 .treasure
 {
-    &[data-index]:after {
-        content:attr(data-index);
-        display:block;
-        position:absolute;
-        top: 10px;
-        left: 0;
-        width:100%;
-    }
-
     span {
         position: absolute;
         top: 24px;
@@ -383,6 +374,16 @@ $tiles:
                     }
 
                     .overlay {
+                        &:after {
+                            content: '';
+                            width: 100%;
+                            height: 100%;
+                            display: block;
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                        }
+
                         &.start-location {
                             & + .monster, & + .player {
                                 transform: scale(1);
@@ -414,6 +415,15 @@ $tiles:
                             transform: scale(0.5);
                             left: 20px;
                             top: 20px;
+
+                            &[data-index]:after {
+                                content:attr(data-index);
+                                display:block;
+                                position:absolute;
+                                top: 10px;
+                                left: 0;
+                                width:100%;
+                            }
 
                             &:first-child {
                                 transform: scale(1);

@@ -3,7 +3,7 @@ var DragPorts = (function () {
     // { effectAllowed: string, event: DragEvent }
     function processDragStart(data) {
         if (data.event.dataTransfer !== null) {
-            data.event.dataTransfer.setData("text/plain", null); // needed
+            data.event.dataTransfer.setData("text/html", null); // needed
             data.event.dataTransfer.effectAllowed = data.effectAllowed;
 
             let emptyImage = document.createElement('img');
