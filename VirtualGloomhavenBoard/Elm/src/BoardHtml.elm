@@ -528,7 +528,7 @@ overlayToHtml model =
                 DiagonalLeftReverse ->
                     "diagonal-left-reverse"
             )
-        |> Dom.addAttribute
+        |> Dom.addAttributeConditional
             (attribute "data-index"
                 (case model.overlay.ref of
                     Treasure t ->
@@ -550,6 +550,13 @@ overlayToHtml model =
                     _ ->
                         ""
                 )
+            )
+            (case model.overlay.ref of
+                Treasure _ ->
+                    True
+
+                _ ->
+                    False
             )
         |> Dom.appendChild
             (Dom.element "img"

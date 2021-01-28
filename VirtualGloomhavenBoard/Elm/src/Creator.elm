@@ -62,7 +62,7 @@ dropEvents =
 
 gridSize : Int
 gridSize =
-    50
+    40
 
 
 main : Program () Model Msg
@@ -165,10 +165,10 @@ update msg model =
                             case ( m.ref, m.target ) of
                                 ( OverlayType o prevCoords, Just coords ) ->
                                     let
-                                        ( g, _, _ ) =
+                                        ( g, newOverlay, _ ) =
                                             moveOverlayWithoutState o m.coords prevCoords coords model.overlays
                                     in
-                                    ( g, model.monsters, model.roomData )
+                                    ( newOverlay :: g, model.monsters, model.roomData )
 
                                 ( PieceType p, Just target ) ->
                                     case p.ref of
@@ -311,7 +311,9 @@ view model =
                       in
                       lazy4 getAllMapTileHtml model.roomData c x y
                     ]
-                , div [ class "board" ]
+                , Keyed.node
+                    "div"
+                    [ class "board" ]
                     (let
                         encodedDraggable =
                             case model.currentDraggable of
@@ -330,16 +332,17 @@ view model =
         ]
 
 
-getBoardRowHtml : Model -> String -> Int -> List Int -> Html Msg
+getBoardRowHtml : Model -> String -> Int -> List Int -> ( String, Html Msg )
 getBoardRowHtml model encodedDraggable y row =
-    Keyed.node
+    ( "board-row-" ++ String.fromInt y
+    , Keyed.node
         "div"
         [ class "row" ]
         (List.indexedMap
             (\x _ ->
                 let
                     id =
-                        "cell-" ++ String.fromInt x ++ "-" ++ String.fromInt y
+                        "board-cell-" ++ String.fromInt x ++ "-" ++ String.fromInt y
 
                     useDraggable =
                         case model.currentDraggable of
@@ -349,24 +352,12 @@ getBoardRowHtml model encodedDraggable y row =
                                         (p.x == x && p.y == y) || (m.coords == Just ( x, y ))
 
                                     OverlayType o _ ->
-                                        let
-                                            isInCoords =
-                                                case m.coords of
-                                                    Just ( ox, oy ) ->
-                                                        List.any (\c -> c == ( ox, oy )) o.cells
+                                        case m.target of
+                                            Just _ ->
+                                                List.any (\c -> c == ( x, y )) o.cells
 
-                                                    Nothing ->
-                                                        False
-
-                                            isInTarget =
-                                                case m.target of
-                                                    Just ( ox, oy ) ->
-                                                        List.any (\c -> c == ( ox, oy )) o.cells
-
-                                                    Nothing ->
-                                                        False
-                                        in
-                                        isInCoords || isInTarget
+                                            Nothing ->
+                                                False
 
                                     RoomType r ->
                                         r.origin == ( x, y ) || (m.coords == Just ( x, y ))
@@ -385,6 +376,7 @@ getBoardRowHtml model encodedDraggable y row =
             )
             row
         )
+    )
 
 
 subscriptions : Model -> Sub Msg
@@ -394,18 +386,21 @@ subscriptions _ =
 
 getCellHtml : List RoomData -> List BoardOverlay -> List ScenarioMonster -> String -> Int -> Int -> Html Msg
 getCellHtml rooms overlays monsters encodedDraggable x y =
-    let
-        currentDraggable =
-            case Decode.decodeString decodeMoveablePiece encodedDraggable of
-                Ok d ->
-                    Just d
+    Debug.log
+        "cell"
+        (let
+            currentDraggable =
+                case Decode.decodeString decodeMoveablePiece encodedDraggable of
+                    Ok d ->
+                        Just d
 
-                _ ->
-                    Nothing
-    in
-    BoardHtml.getCellHtml
-        (CellModel overlays [] ( x, y ) currentDraggable dragEvents dropEvents True False)
-        |> Dom.render
+                    _ ->
+                        Nothing
+         in
+         BoardHtml.getCellHtml
+            (CellModel overlays [] ( x, y ) currentDraggable dragEvents dropEvents True False)
+            |> Dom.render
+        )
 
 
 getMapTileListHtml : List RoomData -> String -> Html Msg
@@ -489,82 +484,79 @@ lazyMapTileListHtml ref currentDraggable =
 
 lazyBoardOverlayListHtml : String -> Bool -> Html Msg
 lazyBoardOverlayListHtml overlayStr isDragging =
-    Debug.log
-        "overlay"
-        (case getBoardOverlayType overlayStr of
-            Just overlay ->
-                let
-                    cells =
-                        case overlay of
-                            DifficultTerrain Log ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+    case getBoardOverlayType overlayStr of
+        Just overlay ->
+            let
+                cells =
+                    case overlay of
+                        DifficultTerrain Log ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Obstacle Bookcase ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Obstacle Bookcase ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Obstacle Boulder2 ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Obstacle Boulder2 ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Obstacle Boulder3 ->
-                                [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
+                        Obstacle Boulder3 ->
+                            [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
 
-                            Obstacle DarkPit ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Obstacle DarkPit ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Obstacle Sarcophagus ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Obstacle Sarcophagus ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Obstacle Shelf ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Obstacle Shelf ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Obstacle Table ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Obstacle Table ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Obstacle Tree3 ->
-                                [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
+                        Obstacle Tree3 ->
+                            [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
 
-                            Obstacle WallSection ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Obstacle WallSection ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Wall HugeRock ->
-                                [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
+                        Wall HugeRock ->
+                            [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
 
-                            Wall Iron ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Wall Iron ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Wall LargeRock ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Wall LargeRock ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            Wall ObsidianGlass ->
-                                [ ( 0, 0 ), ( 1, 0 ) ]
+                        Wall ObsidianGlass ->
+                            [ ( 0, 0 ), ( 1, 0 ) ]
 
-                            _ ->
-                                [ ( 0, 0 ) ]
+                        _ ->
+                            [ ( 0, 0 ) ]
 
-                    boardOverlayModel =
-                        { ref = overlay
-                        , direction = Default
-                        , cells = cells
-                        }
-                in
-                Dom.element "li"
-                    |> Dom.addClassConditional "dragging" isDragging
-                    |> Dom.appendChildList
-                        (List.map
-                            (\c ->
-                                Dom.element "img"
-                                    |> Dom.addAttribute (alt (getOverlayLabel overlay))
-                                    |> Dom.addAttribute (attribute "src" (getOverlayImageName boardOverlayModel (Just c)))
-                                    |> Dom.addAttribute (attribute "draggable" "false")
-                            )
-                            cells
+                boardOverlayModel =
+                    { ref = overlay
+                    , direction = Default
+                    , cells = cells
+                    }
+            in
+            Dom.element "li"
+                |> Dom.addClassConditional "dragging" isDragging
+                |> Dom.appendChildList
+                    (List.map
+                        (\c ->
+                            Dom.element "img"
+                                |> Dom.addAttribute (alt (getOverlayLabel overlay))
+                                |> Dom.addAttribute (attribute "src" (getOverlayImageName boardOverlayModel (Just c)))
+                                |> Dom.addAttribute (attribute "draggable" "false")
                         )
-                    |> makeDraggable (OverlayType boardOverlayModel Nothing) Nothing dragEvents
-                    |> Dom.render
+                        cells
+                    )
+                |> makeDraggable (OverlayType boardOverlayModel Nothing) Nothing dragEvents
+                |> Dom.render
 
-            Nothing ->
-                li [] []
-        )
+        Nothing ->
+            li [] []
 
 
 mapPieceToScenarioMonster : Piece -> List ScenarioMonster -> Maybe ( Int, Int ) -> ( Int, Int ) -> Piece -> Maybe ScenarioMonster

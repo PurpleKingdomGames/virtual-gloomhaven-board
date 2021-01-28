@@ -20,6 +20,7 @@ import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxle
 import Html.Events exposing (on, onClick, targetValue)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
+import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy, lazy2, lazy3, lazy5, lazy6, lazy7, lazy8)
 import Http exposing (Error)
 import Json.Decode as Decode exposing (Decoder)
@@ -1166,8 +1167,54 @@ view model =
 
                                 Nothing ->
                                     ""
+
+                        draggableCoords =
+                            case model.currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        OverlayType o _ ->
+                                            let
+                                                coordList =
+                                                    case m.coords of
+                                                        Just initCoords ->
+                                                            model.game.state.overlays
+                                                                |> map (\o1 -> o1.cells)
+                                                                |> filter (\c1 -> any (\c -> c == initCoords) c1)
+                                                                |> List.foldl (++) []
+
+                                                        Nothing ->
+                                                            []
+
+                                                targetCoords =
+                                                    case m.target of
+                                                        Just target ->
+                                                            o.cells
+
+                                                        Nothing ->
+                                                            []
+                                            in
+                                            coordList ++ targetCoords
+
+                                        _ ->
+                                            (case m.coords of
+                                                Just initCoords ->
+                                                    [ initCoords ]
+
+                                                Nothing ->
+                                                    []
+                                            )
+                                                ++ (case m.target of
+                                                        Just targetCoords ->
+                                                            [ targetCoords ]
+
+                                                        Nothing ->
+                                                            []
+                                                   )
+
+                                Nothing ->
+                                    []
                      in
-                     toList (Array.indexedMap (getBoardHtml model model.game encodedDraggable) model.game.staticBoard)
+                     toList (Array.indexedMap (getBoardHtml model model.game encodedDraggable draggableCoords) model.game.staticBoard)
                     )
                 ]
             , lazy getConnectionStatusHtml model.connectionStatus
@@ -2083,56 +2130,32 @@ getNavHtml gameMode =
         |> Dom.render
 
 
-getBoardHtml : Model -> Game -> String -> Int -> Array Cell -> Html.Html Msg
-getBoardHtml model game encodedDraggable y row =
-    div [ class "row" ]
+getBoardHtml : Model -> Game -> String -> List ( Int, Int ) -> Int -> Array Cell -> Html.Html Msg
+getBoardHtml model game encodedDraggable cellsForDraggable y row =
+    Keyed.node
+        "div"
+        [ class "row" ]
         (toList
             (Array.indexedMap
                 (\x cell ->
                     let
-                        useDaggable =
-                            case model.currentDraggable of
-                                Just m ->
-                                    case m.ref of
-                                        PieceType p ->
-                                            (p.x == x && p.y == y) || (m.coords == Just ( x, y ))
+                        coords =
+                            ( x, y )
 
-                                        OverlayType o _ ->
-                                            let
-                                                isInCoords =
-                                                    case m.coords of
-                                                        Just ( ox, oy ) ->
-                                                            any (\c -> c == ( ox, oy )) o.cells
-
-                                                        Nothing ->
-                                                            False
-
-                                                isInTarget =
-                                                    case m.target of
-                                                        Just ( ox, oy ) ->
-                                                            any (\c -> c == ( ox, oy )) o.cells
-
-                                                        Nothing ->
-                                                            False
-                                            in
-                                            isInCoords || isInTarget
-
-                                        RoomType _ ->
-                                            False
-
-                                Nothing ->
-                                    False
+                        useDraggable =
+                            any (\c -> c == coords) cellsForDraggable
 
                         cellVisible =
                             any (\r -> any (\a -> a == r) game.state.visibleRooms) cell.rooms
                     in
-                    lazy8 getCellHtml
+                    ( "board-cell-" ++ String.fromInt x ++ "-" ++ String.fromInt y
+                    , lazy8 getCellHtml
                         model.config.gameMode
                         model.game.state.overlays
                         model.game.state.pieces
                         x
                         y
-                        (if useDaggable then
+                        (if useDraggable then
                             encodedDraggable
 
                          else
@@ -2140,6 +2163,7 @@ getBoardHtml model game encodedDraggable y row =
                         )
                         cell.passable
                         (cellVisible == False)
+                    )
                 )
                 row
             )
@@ -2552,7 +2576,7 @@ overlayToHtml model =
                 DiagonalLeftReverse ->
                     "diagonal-left-reverse"
             )
-        |> Dom.addAttribute
+        |> Dom.addAttributeConditional
             (attribute "data-index"
                 (case model.overlay.ref of
                     Treasure t ->
@@ -2575,11 +2599,17 @@ overlayToHtml model =
                         ""
                 )
             )
+            (case model.overlay.ref of
+                Treasure _ ->
+                    True
+
+                _ ->
+                    False
+            )
         |> Dom.appendChild
             (Dom.element "img"
                 |> Dom.addAttribute (alt (getOverlayLabel model.overlay.ref))
                 |> Dom.addAttribute (attribute "src" (getOverlayImageName model.overlay model.coords))
-                |> Dom.addAttribute (attribute "draggable" "false")
             )
         |> (case model.overlay.ref of
                 Treasure (Coin i) ->
@@ -2593,14 +2623,8 @@ overlayToHtml model =
            )
         |> (if (model.gameMode == MoveOverlay && model.coords /= Nothing) || (model.gameMode == AddPiece && model.coords == Nothing) then
                 case model.overlay.ref of
-                    Obstacle _ ->
-                        makeDraggable (OverlayType model.overlay Nothing) model.coords
-
-                    Rift ->
-                        makeDraggable (OverlayType model.overlay Nothing) model.coords
-
-                    Trap _ ->
-                        makeDraggable (OverlayType model.overlay Nothing) model.coords
+                    Door _ _ ->
+                        Dom.addAttribute (attribute "draggable" "false")
 
                     Treasure (Coin _) ->
                         if model.gameMode == AddPiece && model.coords == Nothing then
@@ -2610,7 +2634,7 @@ overlayToHtml model =
                             Dom.addAttribute (attribute "draggable" "false")
 
                     _ ->
-                        Dom.addAttribute (attribute "draggable" "false")
+                        makeDraggable (OverlayType model.overlay Nothing) model.coords
 
             else
                 Dom.addAttribute (attribute "draggable" "false")
