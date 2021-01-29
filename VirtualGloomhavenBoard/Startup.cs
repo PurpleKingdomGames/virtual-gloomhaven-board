@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.Http;
+using System;
+using Microsoft.Net.Http.Headers;
 
 namespace VirtualGloomhavenBoard
 {
@@ -35,15 +38,44 @@ namespace VirtualGloomhavenBoard
                 app.UseHttpsRedirection();
             }
 
-            FileExtensionContentTypeProvider contentTypeProvider = new FileExtensionContentTypeProvider();
+            FileExtensionContentTypeProvider contentTypeProvider = new();
             contentTypeProvider.Mappings[".scss"] = "text/x-scss";
 
-            FileServerOptions fileOptions = new FileServerOptions();
-            fileOptions.StaticFileOptions.ContentTypeProvider = contentTypeProvider;
+            StaticFileOptions fileOptions = new();
+            fileOptions.ContentTypeProvider = contentTypeProvider;
+            fileOptions.OnPrepareResponse = _ =>
+            {
+                string path = _.Context.Request.Path;
+                if (path.EndsWith(".css") || path.EndsWith(".js"))
+                {
+
+                    _.Context.Response.GetTypedHeaders().CacheControl =
+                        new CacheControlHeaderValue()
+                        {
+                            Public = true,
+                            NoCache = true
+                        }
+                    ;
+                }
+                else
+                {
+                    _.Context.Response.GetTypedHeaders().CacheControl =
+                        new CacheControlHeaderValue()
+                        {
+                            Public = true,
+                            MaxAge = TimeSpan.FromDays(10)
+                        }
+                    ;
+                }
+
+                _.Context.Response.Headers[HeaderNames.Vary] =
+                    new string[] { "Accept-Encoding" };
+
+            };
 
             app.UseResponseCompression();
-            app.UseResponseCaching();
-            app.UseFileServer(fileOptions);
+            app.UseDefaultFiles();
+            app.UseStaticFiles(fileOptions);
 
             app.UseRouting();
             app.UseEndpoints(endpoints =>

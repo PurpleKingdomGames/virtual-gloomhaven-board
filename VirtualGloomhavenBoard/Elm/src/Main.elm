@@ -1158,7 +1158,7 @@ view model =
             , div [ class "board-wrapper" ]
                 [ div [ class "map-bg" ] []
                 , lazy5 getMapTileHtml model.game.state.visibleRooms model.game.roomData "" 0 0
-                , div [ class "board" ]
+                , Html.main_ [ class "board" ]
                     (let
                         encodedDraggable =
                             case model.currentDraggable of
@@ -1308,7 +1308,7 @@ getMenuToggleHtml model =
         , attribute "role" "button"
         , attribute "aria-pressed"
             (if model.menuOpen then
-                " true"
+                "true"
 
              else
                 "false"
@@ -2011,7 +2011,7 @@ getNavHtml gameMode =
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
                                         (if gameMode == MovePiece then
-                                            " true"
+                                            "true"
 
                                          else
                                             "false"
@@ -2028,7 +2028,7 @@ getNavHtml gameMode =
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
                                         (if gameMode == KillPiece then
-                                            " true"
+                                            "true"
 
                                          else
                                             "false"
@@ -2045,7 +2045,7 @@ getNavHtml gameMode =
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
                                         (if gameMode == LootCell then
-                                            " true"
+                                            "true"
 
                                          else
                                             "false"
@@ -2062,7 +2062,7 @@ getNavHtml gameMode =
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
                                         (if gameMode == MoveOverlay then
-                                            " true"
+                                            "true"
 
                                          else
                                             "false"
@@ -2079,7 +2079,7 @@ getNavHtml gameMode =
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
                                         (if gameMode == DestroyOverlay then
-                                            " true"
+                                            "true"
 
                                          else
                                             "false"
@@ -2096,7 +2096,7 @@ getNavHtml gameMode =
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
                                         (if gameMode == RevealRoom then
-                                            " true"
+                                            "true"
 
                                          else
                                             "false"
@@ -2113,7 +2113,7 @@ getNavHtml gameMode =
                                 |> Dom.addAttribute
                                     (attribute "aria-pressed"
                                         (if gameMode == AddPiece then
-                                            " true"
+                                            "true"
 
                                          else
                                             "false"
@@ -2396,6 +2396,7 @@ pieceToHtml model =
                 |> Dom.appendChild
                     (Dom.element "img"
                         |> Dom.addAttribute (alt l)
+                        |> Dom.addAttribute (attribute "loading" "lazy")
                         |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ p ++ ".png"))
                     )
     in
@@ -2427,6 +2428,7 @@ pieceToHtml model =
                             Dom.appendChildList
                                 [ Dom.element "img"
                                     |> Dom.addAttribute (alt label)
+                                    |> Dom.addAttribute (attribute "loading" "lazy")
                                     |> Dom.addAttribute (attribute "src" "/img/characters/summons.png")
                                     |> Dom.addAttribute (attribute "draggable" "false")
                                 , Dom.element "span" |> Dom.appendText (String.fromInt i)
@@ -2479,6 +2481,7 @@ enemyToHtml monster altText element =
         |> Dom.addClass "hex-mask"
         |> Dom.appendChildList
             [ Dom.element "img"
+                |> Dom.addAttribute (attribute "loading" "lazy")
                 |> Dom.addAttribute
                     (attribute "src"
                         ("/img/monsters/"
@@ -2609,6 +2612,7 @@ overlayToHtml model =
         |> Dom.appendChild
             (Dom.element "img"
                 |> Dom.addAttribute (alt (getOverlayLabel model.overlay.ref))
+                |> Dom.addAttribute (attribute "loading" "lazy")
                 |> Dom.addAttribute (attribute "src" (getOverlayImageName model.overlay model.coords))
             )
         |> (case model.overlay.ref of
