@@ -1527,6 +1527,20 @@ getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId 
                             )
                         |> Dom.appendChild
                             (Dom.element "li"
+                                |> Dom.appendChild
+                                    (Tuple.second
+                                        (overlayToHtml
+                                            (BoardOverlayModel
+                                                gameMode
+                                                (getLabelForOverlay (BoardOverlay (DifficultTerrain Water) Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
+                                                Nothing
+                                                (BoardOverlay (DifficultTerrain Water) Default [ ( 0, 0 ) ])
+                                            )
+                                        )
+                                    )
+                            )
+                        |> Dom.appendChild
+                            (Dom.element "li"
                                 |> Dom.setChildListWithKeys
                                     [ overlayToHtml
                                         (BoardOverlayModel
