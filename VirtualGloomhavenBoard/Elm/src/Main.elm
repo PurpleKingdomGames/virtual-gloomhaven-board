@@ -402,48 +402,6 @@ update msg model =
 
         MoveTargetChanged coords maybeDragOver ->
             let
-                newDraggable =
-                    case model.currentDraggable of
-                        Just m ->
-                            case m.ref of
-                                OverlayType o prevCoords ->
-                                    let
-                                        ( _, newOverlay, newCoords ) =
-                                            moveOverlay o m.coords prevCoords coords model.game
-
-                                        moveablePieceType =
-                                            OverlayType newOverlay newCoords
-
-                                        newTarget =
-                                            if moveablePieceType == m.ref then
-                                                m.target
-
-                                            else
-                                                Just coords
-                                    in
-                                    Just (MoveablePiece moveablePieceType m.coords newTarget)
-
-                                PieceType p ->
-                                    let
-                                        newPiece =
-                                            PieceType (Tuple.second (movePiece p m.coords coords model.game))
-
-                                        newTarget =
-                                            if newPiece == m.ref then
-                                                m.target
-
-                                            else
-                                                Just coords
-                                    in
-                                    Just (MoveablePiece newPiece m.coords newTarget)
-
-                                RoomType _ ->
-                                    -- We don't support moving rooms in the main game
-                                    Nothing
-
-                        Nothing ->
-                            model.currentDraggable
-
                 cmd =
                     case maybeDragOver of
                         Just ( e, v ) ->
@@ -452,7 +410,54 @@ update msg model =
                         Nothing ->
                             Cmd.none
             in
-            ( { model | currentDraggable = newDraggable }, cmd )
+            case model.currentDraggable of
+                Just m ->
+                    if m.target == Just coords then
+                        ( model, cmd )
+
+                    else
+                        let
+                            newDraggable =
+                                case m.ref of
+                                    OverlayType o prevCoords ->
+                                        let
+                                            ( _, newOverlay, newCoords ) =
+                                                moveOverlay o m.coords prevCoords coords model.game
+
+                                            moveablePieceType =
+                                                OverlayType newOverlay newCoords
+
+                                            newTarget =
+                                                if moveablePieceType == m.ref then
+                                                    m.target
+
+                                                else
+                                                    Just coords
+                                        in
+                                        Just (MoveablePiece moveablePieceType m.coords newTarget)
+
+                                    PieceType p ->
+                                        let
+                                            newPiece =
+                                                PieceType (Tuple.second (movePiece p m.coords coords model.game))
+
+                                            newTarget =
+                                                if newPiece == m.ref then
+                                                    m.target
+
+                                                else
+                                                    Just coords
+                                        in
+                                        Just (MoveablePiece newPiece m.coords newTarget)
+
+                                    RoomType _ ->
+                                        -- We don't support moving rooms in the main game
+                                        Nothing
+                        in
+                        ( { model | currentDraggable = newDraggable }, cmd )
+
+                Nothing ->
+                    ( model, cmd )
 
         MoveCanceled ->
             ( { model | currentDraggable = Nothing }, Cmd.none )
