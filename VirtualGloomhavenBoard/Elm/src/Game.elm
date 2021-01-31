@@ -825,10 +825,6 @@ removePiece : Piece -> Piece -> Bool
 removePiece pieceToRemove comparePiece =
     pieceToRemove.ref
         /= comparePiece.ref
-        || pieceToRemove.x
-        /= comparePiece.x
-        || pieceToRemove.y
-        /= comparePiece.y
 
 
 canMoveTo : ( Int, Int ) -> Game -> Bool -> Bool
