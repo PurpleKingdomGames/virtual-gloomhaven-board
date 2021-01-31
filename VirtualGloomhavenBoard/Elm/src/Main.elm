@@ -1130,8 +1130,19 @@ view model =
 
                             Nothing ->
                                 1
+
+                    nextOverlayId =
+                        case
+                            List.map (\o -> o.id) model.game.state.overlays
+                                |> List.maximum
+                        of
+                            Just i ->
+                                i + 1
+
+                            Nothing ->
+                                1
                   in
-                  lazy7 getNewPieceHtml
+                  lazy8 getNewPieceHtml
                     model.config.gameMode
                     (case model.currentDraggable of
                         Just m ->
@@ -1156,6 +1167,7 @@ view model =
                     hasDiviner
                     bearSummoned
                     nextId
+                    nextOverlayId
                     model.game.state.availableMonsters
                     model.deadPlayerList
                 , div [ class "side-toggle", onClick ToggleSideMenu ] []
@@ -1448,8 +1460,8 @@ getFooterHtml v =
         ]
 
 
-getNewPieceHtml : GameModeType -> String -> Bool -> Bool -> Int -> Dict String (Array Int) -> List CharacterClass -> Html.Html Msg
-getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId availableMonsters deadPlayers =
+getNewPieceHtml : GameModeType -> String -> Bool -> Bool -> Int -> Int -> Dict String (Array Int) -> List CharacterClass -> Html.Html Msg
+getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId nextOverlayId availableMonsters deadPlayers =
     Dom.element "div"
         |> Dom.addClassConditional "show" (gameMode == AddPiece)
         |> Dom.addClass "new-piece-wrapper"
@@ -1480,9 +1492,9 @@ getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId 
                                         (overlayToHtml
                                             (BoardOverlayModel
                                                 gameMode
-                                                (getLabelForOverlay (BoardOverlay Rift Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
+                                                (getLabelForOverlay (BoardOverlay Rift nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
                                                 Nothing
-                                                (BoardOverlay Rift Default [ ( 0, 0 ) ])
+                                                (BoardOverlay Rift nextOverlayId Default [ ( 0, 0 ) ])
                                             )
                                         )
                                     )
@@ -1509,9 +1521,9 @@ getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId 
                                         (overlayToHtml
                                             (BoardOverlayModel
                                                 gameMode
-                                                (getLabelForOverlay (BoardOverlay (Treasure (Coin 1)) Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
+                                                (getLabelForOverlay (BoardOverlay (Treasure (Coin 1)) nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
                                                 Nothing
-                                                (BoardOverlay (Treasure (Coin 1)) Default [ ( 0, 0 ) ])
+                                                (BoardOverlay (Treasure (Coin 1)) nextOverlayId Default [ ( 0, 0 ) ])
                                             )
                                         )
                                     )
@@ -1523,9 +1535,9 @@ getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId 
                                         (overlayToHtml
                                             (BoardOverlayModel
                                                 gameMode
-                                                (getLabelForOverlay (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
+                                                (getLabelForOverlay (BoardOverlay (Trap BearTrap) nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
                                                 Nothing
-                                                (BoardOverlay (Trap BearTrap) Default [ ( 0, 0 ) ])
+                                                (BoardOverlay (Trap BearTrap) nextOverlayId Default [ ( 0, 0 ) ])
                                             )
                                         )
                                     )
@@ -1537,9 +1549,9 @@ getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId 
                                         (overlayToHtml
                                             (BoardOverlayModel
                                                 gameMode
-                                                (getLabelForOverlay (BoardOverlay (DifficultTerrain Water) Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
+                                                (getLabelForOverlay (BoardOverlay (DifficultTerrain Water) nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
                                                 Nothing
-                                                (BoardOverlay (DifficultTerrain Water) Default [ ( 0, 0 ) ])
+                                                (BoardOverlay (DifficultTerrain Water) nextOverlayId Default [ ( 0, 0 ) ])
                                             )
                                         )
                                     )
@@ -1550,9 +1562,9 @@ getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId 
                                     [ overlayToHtml
                                         (BoardOverlayModel
                                             gameMode
-                                            (getLabelForOverlay (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
+                                            (getLabelForOverlay (BoardOverlay (Obstacle Boulder1) nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
                                             Nothing
-                                            (BoardOverlay (Obstacle Boulder1) Default [ ( 0, 0 ) ])
+                                            (BoardOverlay (Obstacle Boulder1) nextOverlayId Default [ ( 0, 0 ) ])
                                         )
                                     ]
                             )
@@ -2210,24 +2222,7 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                                 Just m ->
                                     case m.ref of
                                         OverlayType ot _ ->
-                                            let
-                                                isInCoords =
-                                                    case m.coords of
-                                                        Just ( ox, oy ) ->
-                                                            any (\c -> c == ( ox, oy )) o.cells
-
-                                                        Nothing ->
-                                                            False
-
-                                                isInTarget =
-                                                    case m.target of
-                                                        Just ( ox, oy ) ->
-                                                            any (\c -> c == ( ox, oy )) o.cells
-
-                                                        Nothing ->
-                                                            False
-                                            in
-                                            ot.ref == o.ref && (isInCoords || isInTarget)
+                                            ot.ref == o.ref && ot.id == o.id
 
                                         _ ->
                                             False
@@ -2925,7 +2920,7 @@ getLabelForOverlay : BoardOverlay -> Maybe ( Int, Int ) -> String
 getLabelForOverlay overlay coords =
     case coords of
         Just ( x, y ) ->
-            getOverlayLabel overlay.ref ++ " at " ++ String.fromInt x ++ ", " ++ String.fromInt y
+            getOverlayLabel overlay.ref ++ " " ++ String.fromInt overlay.id
 
         Nothing ->
             "Add new " ++ getOverlayLabel overlay.ref

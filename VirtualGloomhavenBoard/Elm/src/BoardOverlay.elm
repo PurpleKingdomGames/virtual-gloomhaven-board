@@ -117,6 +117,7 @@ type BoardOverlayDirectionType
 
 type alias BoardOverlay =
     { ref : BoardOverlayType
+    , id : Int
     , direction : BoardOverlayDirectionType
     , cells : List ( Int, Int )
     }

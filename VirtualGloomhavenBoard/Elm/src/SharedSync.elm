@@ -2,10 +2,12 @@ module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, dec
 
 import BoardMapTile exposing (MapTileRef(..), stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
+import Html.Attributes exposing (id)
 import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, map4, maybe, string, succeed)
 import Json.Encode as Encode
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
+import Random exposing (Seed)
 
 
 decodeDoor : Decoder DoorSubType
@@ -110,8 +112,19 @@ decodeMapRefList refs =
 
 decodeBoardOverlay : Decoder BoardOverlay
 decodeBoardOverlay =
-    map3 BoardOverlay
+    map4 BoardOverlay
         (field "ref" decodeBoardOverlayType)
+        (maybe (field "id" Decode.int)
+            |> andThen
+                (\id ->
+                    case id of
+                        Just i ->
+                            succeed i
+
+                        Nothing ->
+                            succeed 0
+                )
+        )
         (field "direction" Decode.string |> andThen decodeBoardOverlayDirection)
         (field "cells" (Decode.list (map2 Tuple.pair (index 0 Decode.int) (index 1 Decode.int))))
 

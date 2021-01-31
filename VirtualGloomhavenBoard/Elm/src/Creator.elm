@@ -536,6 +536,7 @@ lazyBoardOverlayListHtml overlayStr isDragging =
 
                 boardOverlayModel =
                     { ref = overlay
+                    , id = 0
                     , direction = Default
                     , cells = cells
                     }

@@ -577,7 +577,7 @@ moveOverlayWithoutState overlay fromCoords prevCoords ( toX, toY ) overlays =
             case fromCoords of
                 Just justFrom ->
                     filter
-                        (\o -> o.ref /= overlay.ref || List.all (\c -> c /= justFrom) o.cells)
+                        (\o -> o.id /= overlay.id)
                         overlays
 
                 Nothing ->
@@ -761,7 +761,19 @@ removePieceFromBoard piece game =
                             gameState.overlays
 
                     else
-                        BoardOverlay (Treasure (Coin 1)) Default [ ( piece.x, piece.y ) ]
+                        let
+                            maxId =
+                                case
+                                    List.map (\o -> o.id) gameState.overlays
+                                        |> List.maximum
+                                of
+                                    Just i ->
+                                        i
+
+                                    Nothing ->
+                                        0
+                        in
+                        BoardOverlay (Treasure (Coin 1)) (maxId + 1) Default [ ( piece.x, piece.y ) ]
                             :: gameState.overlays
 
                 _ ->

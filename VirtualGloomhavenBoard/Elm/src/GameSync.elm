@@ -127,16 +127,63 @@ decodeAndUpdateGameState gameState val =
             case gameState of
                 Just g ->
                     if s.updateCount > g.updateCount && s.roomCode == g.roomCode then
-                        Just s
+                        Just (ensureOverlayIds s)
 
                     else
                         Nothing
 
                 Nothing ->
-                    Just s
+                    Just (ensureOverlayIds s)
 
-        Err _ ->
+        Err e ->
             Nothing
+
+
+ensureOverlayIds : GameState -> GameState
+ensureOverlayIds state =
+    if List.any (\o -> o.id == 0) state.overlays then
+        { state | overlays = addOverlayIds state.overlays }
+
+    else
+        state
+
+
+addOverlayIds : List BoardOverlay -> List BoardOverlay
+addOverlayIds overlays =
+    let
+        maxId =
+            case
+                List.map (\o -> o.id) overlays
+                    |> List.maximum
+            of
+                Just i ->
+                    i
+
+                Nothing ->
+                    0
+
+        ( _, newOverlays ) =
+            addOverlayId overlays maxId []
+    in
+    newOverlays
+
+
+addOverlayId : List BoardOverlay -> Int -> List BoardOverlay -> ( Int, List BoardOverlay )
+addOverlayId overlays maxId completeOverlays =
+    case overlays of
+        overlay :: rest ->
+            if overlay.id == 0 then
+                let
+                    newId =
+                        maxId + 1
+                in
+                addOverlayId rest newId ({ overlay | id = newId } :: completeOverlays)
+
+            else
+                addOverlayId rest maxId (overlay :: completeOverlays)
+
+        _ ->
+            ( maxId, completeOverlays )
 
 
 subscriptions : Sub Msg
@@ -341,6 +388,7 @@ encodeOverlays overlays =
 encodeOverlay : BoardOverlay -> List ( String, Encode.Value )
 encodeOverlay o =
     [ ( "ref", encodeOverlayType o.ref )
+    , ( "id", Encode.int o.id )
     , ( "direction", Encode.string (encodeOverlayDirection o.direction) )
     , ( "cells", Encode.list (Encode.list Encode.int) (encodeOverlayCells o.cells) )
     ]

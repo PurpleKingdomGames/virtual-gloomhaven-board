@@ -55,12 +55,23 @@ empty =
 mapTileDataToOverlayList : MapTileData -> Dict String ( List BoardOverlay, List ScenarioMonster )
 mapTileDataToOverlayList data =
     let
+        maxId =
+            case
+                List.map (\o -> o.id) data.overlays
+                    |> List.maximum
+            of
+                Just i ->
+                    i + 1
+
+                Nothing ->
+                    1
+
         initData =
             case refToString data.ref of
                 Just ref ->
                     ( data.overlays
-                        ++ List.map
-                            (\d ->
+                        ++ List.indexedMap
+                            (\i d ->
                                 case d of
                                     DoorLink subType dir ( x, y ) _ l ->
                                         case subType of
@@ -80,10 +91,10 @@ mapTileDataToOverlayList data =
                                                     coords2 =
                                                         rotate ( x + 1, y ) ( x, y ) turns
                                                 in
-                                                BoardOverlay (Door subType [ data.ref, l.ref ]) dir [ ( x, y ), coords2 ]
+                                                BoardOverlay (Door subType [ data.ref, l.ref ]) (maxId + i) dir [ ( x, y ), coords2 ]
 
                                             _ ->
-                                                BoardOverlay (Door subType [ data.ref, l.ref ]) dir [ ( x, y ) ]
+                                                BoardOverlay (Door subType [ data.ref, l.ref ]) (maxId + i) dir [ ( x, y ) ]
                             )
                             data.doors
                     , data.monsters
