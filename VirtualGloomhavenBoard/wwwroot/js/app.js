@@ -114,7 +114,49 @@
             parseInt(elem.dataset.cellY),
             args[2]
         ])
-    })
+    });
+
+    var scrollCheck = null;
+    app.ports.scrollToFirtVisibleCell.subscribe(() => {
+        if (scrollCheck === null)
+            scrollCheck = setInterval(() => {
+                var board = document.getElementById("board");
+                if (board === null || board === undefined)
+                    return;
+
+                var cells = board.getElementsByClassName('cell-wrapper');
+                if (cells === null || cells === undefined)
+                    return;
+
+                var firstCell = null;
+                var cellX = 0;
+                var cellY = 0;
+                for (var i = cells.length - 1; i >= 0; i--) {
+                    if (cells[i].classList.contains('passable')) {
+                        var hex = cells[i].getElementsByClassName('hexagon')[0];
+                        var hexX = parseInt(hex.dataset.cellX);
+                        var hexY = parseInt(hex.dataset.cellY);
+
+                        if (firstCell == null || hexY < cellY || (hexY === cellY && hexX < cellX)) {
+                            firstCell = hex;
+                            cellX = hexX;
+                            cellY = hexY;
+                        }
+                    }
+                }
+
+                if (firstCell !== null) {
+                    var bounds = hex.getBoundingClientRect();
+                    var targetX = bounds.left - 225;
+                    var targetY = bounds.top - 100;
+
+                    board.scrollBy(targetX, targetY);
+
+                    clearInterval(scrollCheck);
+                    scrollCheck = null;
+                }
+            }, 100);
+    });
 
     document.addEventListener('paste', (event) => {
         app.ports.onPaste.send((event.clipboardData || window.clipboardData).getData('text'));

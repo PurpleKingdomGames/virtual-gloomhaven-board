@@ -46,6 +46,9 @@ port getCellFromPoint : ( Float, Float, Bool ) -> Cmd msg
 port onCellFromPoint : (( Int, Int, Bool ) -> msg) -> Sub msg
 
 
+port scrollToFirtVisibleCell : () -> Cmd msg
+
+
 type alias Model =
     { game : Game
     , config : Config
@@ -382,7 +385,12 @@ update msg model =
                                 , currentLoadState = Loaded
                             }
                     in
-                    ( newModel, pushGameState model newModel.game.state addToUndo )
+                    ( newModel
+                    , Cmd.batch
+                        [ pushGameState model newModel.game.state addToUndo
+                        , scrollToFirtVisibleCell ()
+                        ]
+                    )
 
                 Err _ ->
                     ( { model | currentLoadState = Failed }, Cmd.none )
@@ -1186,7 +1194,7 @@ view model =
                     model.deadPlayerList
                 , div [ class "side-toggle", onClick ToggleSideMenu ] []
                 ]
-            , div [ class "board-wrapper" ]
+            , div [ class "board-wrapper", id "board" ]
                 [ div [ class "map-bg" ] []
                 , lazy5 getMapTileHtml model.game.state.visibleRooms model.game.roomData "" 0 0
                 , Html.main_ [ class "board" ]
