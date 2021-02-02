@@ -123,6 +123,7 @@ type alias TransientClientSettings =
     , showRoomCode : Bool
     , boardOnly : Bool
     , fullscreen : Bool
+    , envelopeX : Bool
     }
 
 
@@ -160,6 +161,7 @@ type Msg
     | ToggleCharacter CharacterClass Bool
     | ToggleBoardOnly Bool
     | ToggleFullscreen Bool
+    | ToggleEnvelopeX Bool
     | ToggleMenu
     | ToggleSideMenu
     | ChangePlayerList
@@ -691,6 +693,7 @@ update msg model =
                                         { config
                                             | showRoomCode = settings.showRoomCode
                                             , boardOnly = settings.boardOnly
+                                            , envelopeX = settings.envelopeX
                                             , appMode = AppStorage.Game
                                         }
                                     , currentClientSettings = Nothing
@@ -738,6 +741,17 @@ update msg model =
             in
             ( { model
                 | currentClientSettings = Just { transSettings | fullscreen = fullscreen }
+              }
+            , Cmd.none
+            )
+
+        ToggleEnvelopeX envelopeX ->
+            let
+                transSettings =
+                    getSplitRoomCodeSettings model
+            in
+            ( { model
+                | currentClientSettings = Just { transSettings | envelopeX = envelopeX }
               }
             , Cmd.none
             )
@@ -1962,6 +1976,23 @@ getClientSettingsDialog model =
                                     )
                             )
                    , Dom.element "div"
+                        |> Dom.addClass "input-wrapper"
+                        |> Dom.appendChild
+                            (Dom.element "label"
+                                |> Dom.addClass "checkbox"
+                                |> Dom.addClassConditional "checked" settings.envelopeX
+                                |> Dom.addAttribute (attribute "for" "toggleEnvelopeX")
+                                |> Dom.appendText "Envelope X"
+                                |> Dom.appendChild
+                                    (Dom.element "input"
+                                        |> Dom.addAttribute (attribute "id" "toggleEnvelopeX")
+                                        |> Dom.addAttribute (attribute "type" "checkbox")
+                                        |> Dom.addAttribute (attribute "value" "1")
+                                        |> Dom.addAttribute (checked settings.boardOnly)
+                                        |> Dom.addActionStopPropagation ( "click", ToggleEnvelopeX (settings.envelopeX == False) )
+                                    )
+                            )
+                   , Dom.element "div"
                         |> Dom.addClass "button-wrapper"
                         |> Dom.appendChildList
                             [ Dom.element "button"
@@ -1983,6 +2014,11 @@ getPlayerChoiceDialog model =
 
         checkboxes =
             Dict.toList Character.characterDictionary
+                |> List.filter
+                    (\( _, v ) ->
+                        (model.config.envelopeX == True)
+                            || (v /= Bladeswarm)
+                    )
                 |> List.map
                     (\( k, v ) ->
                         getCharacterChoiceInput k v (List.member v playerList)
@@ -2770,6 +2806,7 @@ getSplitRoomCodeSettings model =
                 model.config.showRoomCode
                 model.config.boardOnly
                 model.fullscreen
+                model.config.envelopeX
 
 
 pushGameState : Model -> GameState -> Bool -> Cmd Msg

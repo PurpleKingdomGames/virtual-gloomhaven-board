@@ -66,7 +66,7 @@
                     height: 90px;
                     background-image: url('/img/characters/icons.png');
                     background-size: 512px;
-                    filter: grayscale(100%);
+                    filter: contrast(0%) brightness(70%);
                     transition: filter 0.25s, transform 0.15s;
                     position: relative;
                     cursor: pointer;
@@ -143,8 +143,12 @@
                         background-position: 0 -179px;
                     }
 
+                    &.envelope-x {
+                        background-position: -270px -270px;
+                    }
+
                     &.selected {
-                        filter: grayscale(0%) drop-shadow(1px 1px 1px black);
+                        filter: contrast(100%) brightness(100%) drop-shadow(1px 1px black);
                     }
 
                     &:hover {

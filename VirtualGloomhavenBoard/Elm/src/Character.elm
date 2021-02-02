@@ -27,6 +27,7 @@ characterDictionary =
         , ( "music-note", Soothsinger )
         , ( "concentric-circles", Summoner )
         , ( "sun", Sunkeeper )
+        , ( "envelope-x", Bladeswarm )
         ]
 
 
@@ -59,6 +60,7 @@ soloScenarioDict =
 type CharacterClass
     = BeastTyrant
     | Berserker
+    | Bladeswarm
     | Brute
     | Cragheart
     | Diviner

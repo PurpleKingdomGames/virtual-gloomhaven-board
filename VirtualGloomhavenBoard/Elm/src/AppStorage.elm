@@ -25,6 +25,7 @@ type alias Config =
     , gameMode : GameModeType
     , roomCode : Maybe String
     , showRoomCode : Bool
+    , envelopeX : Bool
     , boardOnly : Bool
     , campaignTracker : Maybe CampaignTrackerUrl
     }
@@ -77,7 +78,7 @@ type MoveablePieceType
 
 emptyConfig : Config
 emptyConfig =
-    Config Game MovePiece Nothing True False Nothing
+    Config Game MovePiece Nothing True False False Nothing
 
 
 empty : ( GameState, Config )
@@ -137,6 +138,7 @@ encodeConfig config =
                     Encode.null
           )
         , ( "showRoomCode", Encode.bool config.showRoomCode )
+        , ( "envelopeX", Encode.bool config.envelopeX )
         , ( "boardOnly", Encode.bool config.boardOnly )
         , ( "campaignTracker"
           , case config.campaignTracker of
@@ -219,11 +221,12 @@ appOverridesDecoder =
 
 decodeConfig : Decoder Config
 decodeConfig =
-    map6 Config
+    map7 Config
         (field "appMode" (Decode.string |> Decode.andThen decodeAppMode))
         (field "gameMode" (Decode.string |> Decode.andThen decodeGameMode))
         (field "roomCode" (Decode.nullable Decode.string))
         (field "showRoomCode" Decode.bool)
+        (maybe (field "envelopeX" Decode.bool) |> andThen (\b -> succeed (Maybe.withDefault False b)))
         (maybe (field "boardOnly" Decode.bool) |> andThen (\b -> succeed (Maybe.withDefault False b)))
         (maybe (field "campaignTracker" decodeCampaignTrackerUrl))
 
