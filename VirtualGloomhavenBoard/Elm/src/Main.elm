@@ -14,7 +14,7 @@ import Dict exposing (Dict)
 import Dom exposing (Element)
 import DragPorts
 import Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
-import GameSync exposing (Msg(..), connectToServer, update)
+import GameSync exposing (Msg(..), connectToServer, ensureOverlayIds, update)
 import Html exposing (a, div, footer, header, iframe, img, span, text)
 import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, selected, src, style, tabindex, target, title, value)
 import Html.Events exposing (on, onClick, targetValue)
@@ -361,7 +361,7 @@ update msg model =
                                    )
 
                         gameState =
-                            case initGameState of
+                            (case initGameState of
                                 Just gs ->
                                     if gs.scenario == gameStateScenario then
                                         gs
@@ -371,6 +371,8 @@ update msg model =
 
                                 Nothing ->
                                     game.state
+                            )
+                                |> ensureOverlayIds
 
                         newModel =
                             { model
@@ -411,22 +413,21 @@ update msg model =
             ( { model | currentDraggable = Just piece }, cmd )
 
         MoveTargetChanged coords maybeDragOver ->
-            let
-                cmd =
-                    case maybeDragOver of
-                        Just ( e, v ) ->
-                            DragPorts.dragover (DragDrop.overPortData e v)
-
-                        Nothing ->
-                            Cmd.none
-            in
             case model.currentDraggable of
                 Just m ->
                     if m.target == Just coords then
-                        ( model, cmd )
+                        ( model, Cmd.none )
 
                     else
                         let
+                            cmd =
+                                case maybeDragOver of
+                                    Just ( e, v ) ->
+                                        DragPorts.dragover (DragDrop.overPortData e v)
+
+                                    Nothing ->
+                                        Cmd.none
+
                             newDraggable =
                                 case m.ref of
                                     OverlayType o prevCoords ->
@@ -467,7 +468,7 @@ update msg model =
                         ( { model | currentDraggable = newDraggable }, cmd )
 
                 Nothing ->
-                    ( model, cmd )
+                    ( model, Cmd.none )
 
         MoveCanceled ->
             ( { model | currentDraggable = Nothing }, Cmd.none )
@@ -2454,7 +2455,6 @@ pieceToHtml model =
                 |> Dom.appendChild
                     (Dom.element "img"
                         |> Dom.addAttribute (alt l)
-                        |> Dom.addAttribute (attribute "loading" "lazy")
                         |> Dom.addAttribute (attribute "src" ("/img/characters/portraits/" ++ p ++ ".png"))
                     )
     in
@@ -2486,7 +2486,6 @@ pieceToHtml model =
                             Dom.appendChildList
                                 [ Dom.element "img"
                                     |> Dom.addAttribute (alt label)
-                                    |> Dom.addAttribute (attribute "loading" "lazy")
                                     |> Dom.addAttribute (attribute "src" "/img/characters/summons.png")
                                     |> Dom.addAttribute (attribute "draggable" "false")
                                 , Dom.element "span" |> Dom.appendText (String.fromInt i)
@@ -2539,7 +2538,6 @@ enemyToHtml monster altText element =
         |> Dom.addClass "hex-mask"
         |> Dom.appendChildList
             [ Dom.element "img"
-                |> Dom.addAttribute (attribute "loading" "lazy")
                 |> Dom.addAttribute
                     (attribute "src"
                         ("/img/monsters/"
@@ -2670,7 +2668,6 @@ overlayToHtml model =
         |> Dom.appendChild
             (Dom.element "img"
                 |> Dom.addAttribute (alt (getOverlayLabel model.overlay.ref))
-                |> Dom.addAttribute (attribute "loading" "lazy")
                 |> Dom.addAttribute (attribute "src" (getOverlayImageName model.overlay model.coords))
             )
         |> (case model.overlay.ref of

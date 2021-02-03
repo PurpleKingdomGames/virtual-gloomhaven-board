@@ -46,9 +46,10 @@
                 ;
     });
 
-    app.ports.saveData.subscribe((data) =>
+    app.ports.saveData.subscribe((data) => {
+        lastGameState = data.gameState;
         window.localStorage.setItem("state", JSON.stringify(data))
-    );
+    });
 
     app.ports.connect.subscribe(async () => {
         if (conn.state === signalR.HubConnectionState.Disconnected) {

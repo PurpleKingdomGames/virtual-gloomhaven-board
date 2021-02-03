@@ -1,4 +1,4 @@
-port module GameSync exposing (Msg(..), connectToServer, decodeGameState, decodePiece, decodeRoom, encodeGameState, encodeOverlay, encodePiece, encodeRoom, exitFullscreen, pushGameState, subscriptions, toggleFullscreen, update)
+port module GameSync exposing (Msg(..), connectToServer, decodeGameState, decodePiece, decodeRoom, encodeGameState, encodeOverlay, encodePiece, encodeRoom, ensureOverlayIds, exitFullscreen, pushGameState, subscriptions, toggleFullscreen, update)
 
 import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
