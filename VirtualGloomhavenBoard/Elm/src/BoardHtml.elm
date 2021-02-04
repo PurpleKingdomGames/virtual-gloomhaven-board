@@ -1,6 +1,6 @@
 module BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable)
 
-import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece)
+import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..))
 import Array exposing (fromList, toIndexedList)
 import Bitwise
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
@@ -8,17 +8,16 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Character exposing (characterToString)
 import Dom exposing (Element)
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, SummonsType(..), getPieceName, getPieceType)
-import GameSync exposing (Msg)
 import Html exposing (div, img)
 import Html.Attributes exposing (alt, attribute, class, src, style)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy5)
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode
 import List exposing (any, map)
 import List.Extra exposing (uniqueBy)
-import Monster exposing (BossType, Monster, MonsterLevel(..), MonsterType(..), monsterTypeToString)
+import Monster exposing (Monster, MonsterLevel(..), MonsterType(..), monsterTypeToString)
 
 
 type alias CellModel msg =

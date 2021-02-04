@@ -1,6 +1,6 @@
 module Hexagon exposing (cubeToOddRow, oddRowToCube, rotate)
 
-import Bitwise exposing (and)
+import Bitwise
 
 
 rotate : ( Int, Int ) -> ( Int, Int ) -> Int -> ( Int, Int )

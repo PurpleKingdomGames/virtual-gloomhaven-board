@@ -6,10 +6,9 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
 import Dict exposing (Dict)
 import Game exposing (AIType(..), Expansion(..), GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..))
-import Html.Events exposing (onClick)
-import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, int, list, map3, map8, string, succeed)
-import Json.Encode as Encode exposing (int, list, object, string)
-import List exposing (map)
+import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map3, map8, succeed)
+import Json.Encode as Encode exposing (object)
+import List
 import Monster exposing (MonsterLevel(..), monsterTypeToString)
 import SharedSync exposing (decodeBoardOverlay, decodeCoords, decodeMapRefList, decodeMonster, encodeCoords)
 import String exposing (String)
@@ -135,7 +134,7 @@ decodeAndUpdateGameState gameState val =
                 Nothing ->
                     Just (ensureOverlayIds s)
 
-        Err e ->
+        Err _ ->
             Nothing
 
 

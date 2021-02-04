@@ -2,9 +2,8 @@ port module Main exposing (main)
 
 import AppStorage exposing (AppModeType(..), CampaignTrackerUrl(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
-import Bitwise
 import BoardHtml exposing (getMapTileHtml)
-import BoardMapTile exposing (MapTileRef(..), refToString)
+import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Browser
 import Browser.Dom as BrowserDom exposing (Error)
@@ -13,26 +12,26 @@ import Character exposing (CharacterClass(..), characterToString, getSoloScenari
 import Dict exposing (Dict)
 import Dom exposing (Element)
 import DragPorts
-import Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
+import Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, ensureOverlayIds, update)
-import Html exposing (a, div, footer, header, iframe, img, span, text)
+import Html exposing (a, div, footer, header, iframe, span, text)
 import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, selected, src, style, tabindex, target, title, value)
 import Html.Events exposing (on, onClick, targetValue)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy5, lazy6, lazy7, lazy8)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy5, lazy6, lazy8)
 import Http exposing (Error)
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode
 import Json.Encode as Encode
 import List exposing (all, any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
-import List.Extra exposing (uniqueBy)
+import List.Extra
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), monsterTypeToString, stringToMonsterType)
 import Process
 import Random exposing (Seed)
 import Scenario exposing (DoorData(..), Scenario)
 import ScenarioSync exposing (loadScenarioById)
-import String exposing (join, split, toInt)
+import String exposing (join, split)
 import Task
 import Version
 
@@ -71,37 +70,6 @@ type alias Model =
     , keysDown : List String
     , roomCodePassesServerCheck : Bool
     , tooltipTarget : Maybe ( BrowserDom.Element, String )
-    }
-
-
-type alias NewPieceMenuModel =
-    { gameMode : GameModeType
-    , currentDraggable : Maybe MoveablePiece
-    , bearSummoned : Bool
-    , nextSummonsId : Int
-    , availableMonsters : List String
-    , deadPlayers : List CharacterClass
-    }
-
-
-type alias RowModel =
-    { gameMode : GameModeType
-    , overlays : List BoardOverlayModel
-    , piece : Maybe PieceModel
-    , currentDraggable : Maybe MoveablePiece
-    , visibleRooms : List MapTileRef
-    }
-
-
-type alias CellModel =
-    { gameMode : GameModeType
-    , overlays : List BoardOverlayModel
-    , piece : Maybe PieceModel
-    , currentDraggable : Maybe MoveablePiece
-    , passable : Bool
-    , hidden : Bool
-    , x : Int
-    , y : Int
     }
 
 
@@ -535,7 +503,7 @@ update msg model =
         CellFromPoint ( x, y, endTouch ) ->
             if endTouch then
                 case model.currentDraggable of
-                    Just d ->
+                    Just _ ->
                         update
                             MoveCompleted
                             model
@@ -1227,7 +1195,7 @@ view model =
 
                                                 targetCoords =
                                                     case m.target of
-                                                        Just target ->
+                                                        Just _ ->
                                                             o.cells
 
                                                         Nothing ->
@@ -1668,80 +1636,89 @@ getMenuHtml lockScenario lockPlayers scenarioId campaignTrackerName campaignTrac
         |> Dom.appendChild
             (Dom.element "ul"
                 |> Dom.addAttribute (attribute "role" "menu")
-                |> Dom.appendChildList
-                    ([ Dom.element "li"
+                |> Dom.appendChild
+                    (Dom.element "li"
                         |> Dom.addAttribute (attribute "role" "menuitem")
                         |> Dom.addAttribute (tabindex 0)
                         |> Dom.addAction ( "click", Undo )
                         |> Dom.addClass "section-end"
                         |> Dom.appendText "Undo"
                         |> shortcutHtml [ "ctrl", "z" ]
-                     ]
-                        ++ (if lockScenario then
-                                []
+                    )
+                |> Dom.appendChildConditional
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
+                        |> Dom.appendText "Change Scenario"
+                        |> shortcutHtml [ "⇧", "c" ]
+                    )
+                    (lockScenario == False)
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.addAction ( "click", ReloadScenario )
+                        |> Dom.appendText "Reload Scenario"
+                        |> shortcutHtml [ "⇧", "r" ]
+                    )
+                |> Dom.appendChildConditional
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.addAction ( "click", ChangeAppMode PlayerChoiceDialog )
+                        |> Dom.appendText "Change Players"
+                        |> shortcutHtml [ "⇧", "p" ]
+                    )
+                    (lockPlayers == False)
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.addAction ( "click", ChangeAppMode ConfigDialog )
+                        |> Dom.addClass "section-end"
+                        |> Dom.appendText "Settings"
+                        |> shortcutHtml [ "⇧", "s" ]
+                    )
+                |> Dom.appendChildConditional
+                    (
+                        let
+                            (name, url) =
+                                (case ( campaignTrackerName, campaignTrackerUrl ) of
+                                    ( Just n, Just u ) ->
+                                        (n, u)
 
-                            else
-                                [ Dom.element "li"
-                                    |> Dom.addAttribute (attribute "role" "menuitem")
-                                    |> Dom.addAttribute (tabindex 0)
-                                    |> Dom.addAction ( "click", ChangeAppMode ScenarioDialog )
-                                    |> Dom.appendText "Change Scenario"
-                                    |> shortcutHtml [ "⇧", "c" ]
-                                ]
-                           )
-                        ++ [ Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "menuitem")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.addAction ( "click", ReloadScenario )
-                                |> Dom.appendText "Reload Scenario"
-                                |> shortcutHtml [ "⇧", "r" ]
-                           ]
-                        ++ (if lockPlayers then
-                                []
+                                    _ ->
+                                        ("", "")
+                                )
+                        in
+                        Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.appendChild
+                            (Dom.element "a"
+                                |> Dom.addAttribute (href (String.replace "{scenarioId}" (String.fromInt scenarioId) url))
+                                |> Dom.addAttribute (target "_new")
+                                |> Dom.appendText name
+                            )
+                    )
+                    (case ( campaignTrackerName, campaignTrackerUrl ) of
+                        ( Just _, Just _ ) ->
+                            True
 
-                            else
-                                [ Dom.element "li"
-                                    |> Dom.addAttribute (attribute "role" "menuitem")
-                                    |> Dom.addAttribute (tabindex 0)
-                                    |> Dom.addAction ( "click", ChangeAppMode PlayerChoiceDialog )
-                                    |> Dom.appendText "Change Players"
-                                    |> shortcutHtml [ "⇧", "p" ]
-                                ]
-                           )
-                        ++ [ Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "menuitem")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.addAction ( "click", ChangeAppMode ConfigDialog )
-                                |> Dom.addClass "section-end"
-                                |> Dom.appendText "Settings"
-                                |> shortcutHtml [ "⇧", "s" ]
-                           ]
-                        ++ (case ( campaignTrackerName, campaignTrackerUrl ) of
-                                ( Just name, Just url ) ->
-                                    [ Dom.element "li"
-                                        |> Dom.addAttribute (attribute "role" "menuitem")
-                                        |> Dom.addAttribute (tabindex 0)
-                                        |> Dom.appendChild
-                                            (Dom.element "a"
-                                                |> Dom.addAttribute (href (String.replace "{scenarioId}" (String.fromInt scenarioId) url))
-                                                |> Dom.addAttribute (target "_new")
-                                                |> Dom.appendText name
-                                            )
-                                    ]
-
-                                _ ->
-                                    []
-                           )
-                        ++ [ Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "menuitem")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.appendChild
-                                    (Dom.element "a"
-                                        |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
-                                        |> Dom.addAttribute (target "_new")
-                                        |> Dom.appendText "Donate"
-                                    )
-                           ]
+                        _ ->
+                            False
+                    )
+            )
+        |> Dom.appendChild
+            (Dom.element "li"
+                |> Dom.addAttribute (attribute "role" "menuitem")
+                |> Dom.addAttribute (tabindex 0)
+                |> Dom.appendChild
+                    (Dom.element "a"
+                        |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
+                        |> Dom.addAttribute (target "_new")
+                        |> Dom.appendText "Donate"
                     )
             )
         |> Dom.render
@@ -2961,7 +2938,7 @@ keyDecoder =
 getLabelForOverlay : BoardOverlay -> Maybe ( Int, Int ) -> String
 getLabelForOverlay overlay coords =
     case coords of
-        Just ( x, y ) ->
+        Just _ ->
             getOverlayLabel overlay.ref ++ " " ++ String.fromInt overlay.id
 
         Nothing ->

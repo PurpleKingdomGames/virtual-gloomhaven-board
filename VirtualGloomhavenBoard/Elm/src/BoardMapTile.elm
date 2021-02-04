@@ -1,7 +1,7 @@
 module BoardMapTile exposing (MapTile, MapTileRef(..), getAllRefs, getGridByRef, getMapTileListByRef, refToString, stringToRef)
 
 import Array exposing (Array)
-import Dict exposing (Dict, filter, fromList, get, toList)
+import Dict exposing (Dict, filter, get, toList)
 import List exposing (head)
 
 

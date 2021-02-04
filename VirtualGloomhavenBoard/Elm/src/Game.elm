@@ -1,11 +1,11 @@
 module Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..), assignIdentifier, assignPlayers, empty, emptyState, generateGameMap, getPieceName, getPieceType, moveOverlay, moveOverlayWithoutState, movePiece, movePieceWithoutState, removePieceFromBoard, revealRooms)
 
-import Array exposing (Array, fromList, get, indexedMap, initialize, length, push, set, slice, toList)
-import Bitwise exposing (and)
+import Array exposing (Array, fromList, indexedMap, initialize, length, push, set, slice, toList)
+import Bitwise
 import BoardMapTile exposing (MapTile, MapTileRef, refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorMaterial(..), DoorSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Character exposing (CharacterClass, characterToString)
-import Dict exposing (Dict, get, insert)
+import Dict exposing (Dict, insert)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
 import List exposing (all, any, filter, filterMap, foldl, head, map, member)
 import List.Extra exposing (uniqueBy)
@@ -454,7 +454,7 @@ movePiece piece fromCoords ( toX, toY ) game =
 
         newGamestate =
             case fromCoords of
-                Just ( fromX, fromY ) ->
+                Just ( _, _ ) ->
                     { gamestate | pieces = newPieces |> filter (\p -> p /= newPiece) }
 
                 Nothing ->
@@ -496,12 +496,12 @@ moveOverlay overlay fromCoords prevCoords ( toX, toY ) game =
         gamestate =
             game.state
 
-        ( newOverlays, newOverlay, newCoords ) =
+        ( newOverlays, newOverlay, _ ) =
             moveOverlayWithoutState overlay fromCoords prevCoords ( toX, toY ) game.state.overlays
 
         newGamestate =
             case fromCoords of
-                Just justFrom ->
+                Just _ ->
                     { gamestate
                         | overlays =
                             newOverlays
@@ -575,7 +575,7 @@ moveOverlayWithoutState overlay fromCoords prevCoords ( toX, toY ) overlays =
 
         newOverlays =
             case fromCoords of
-                Just justFrom ->
+                Just _ ->
                     filter
                         (\o -> o.id /= overlay.id)
                         overlays
