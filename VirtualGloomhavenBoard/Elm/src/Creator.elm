@@ -386,21 +386,18 @@ subscriptions _ =
 
 getCellHtml : List RoomData -> List BoardOverlay -> List ScenarioMonster -> String -> Int -> Int -> Html Msg
 getCellHtml rooms overlays monsters encodedDraggable x y =
-    Debug.log
-        "cell"
-        (let
-            currentDraggable =
-                case Decode.decodeString decodeMoveablePiece encodedDraggable of
-                    Ok d ->
-                        Just d
+    let
+        currentDraggable =
+            case Decode.decodeString decodeMoveablePiece encodedDraggable of
+                Ok d ->
+                    Just d
 
-                    _ ->
-                        Nothing
-         in
-         BoardHtml.getCellHtml
-            (CellModel overlays [] ( x, y ) currentDraggable dragEvents dropEvents True False)
-            |> Dom.render
-        )
+                _ ->
+                    Nothing
+    in
+    BoardHtml.getCellHtml
+        (CellModel overlays [] ( x, y ) currentDraggable dragEvents dropEvents True False)
+        |> Dom.render
 
 
 getMapTileListHtml : List RoomData -> String -> Html Msg
