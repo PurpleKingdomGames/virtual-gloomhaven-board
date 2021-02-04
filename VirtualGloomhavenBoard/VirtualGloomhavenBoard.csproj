@@ -54,6 +54,12 @@
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
+        <Content Include="wwwroot\js\dragPorts.js">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
+
         <Content Include="wwwroot\js\signalr.min.js">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
