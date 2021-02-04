@@ -1681,18 +1681,16 @@ getMenuHtml lockScenario lockPlayers scenarioId campaignTrackerName campaignTrac
                         |> shortcutHtml [ "⇧", "s" ]
                     )
                 |> Dom.appendChildConditional
-                    (
-                        let
-                            (name, url) =
-                                (case ( campaignTrackerName, campaignTrackerUrl ) of
-                                    ( Just n, Just u ) ->
-                                        (n, u)
+                    (let
+                        ( name, url ) =
+                            case ( campaignTrackerName, campaignTrackerUrl ) of
+                                ( Just n, Just u ) ->
+                                    ( n, u )
 
-                                    _ ->
-                                        ("", "")
-                                )
-                        in
-                        Dom.element "li"
+                                _ ->
+                                    ( "", "" )
+                     in
+                     Dom.element "li"
                         |> Dom.addAttribute (attribute "role" "menuitem")
                         |> Dom.addAttribute (tabindex 0)
                         |> Dom.appendChild
@@ -1709,16 +1707,16 @@ getMenuHtml lockScenario lockPlayers scenarioId campaignTrackerName campaignTrac
                         _ ->
                             False
                     )
-            )
-        |> Dom.appendChild
-            (Dom.element "li"
-                |> Dom.addAttribute (attribute "role" "menuitem")
-                |> Dom.addAttribute (tabindex 0)
                 |> Dom.appendChild
-                    (Dom.element "a"
-                        |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
-                        |> Dom.addAttribute (target "_new")
-                        |> Dom.appendText "Donate"
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.appendChild
+                            (Dom.element "a"
+                                |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
+                                |> Dom.addAttribute (target "_new")
+                                |> Dom.appendText "Donate"
+                            )
                     )
             )
         |> Dom.render
