@@ -1,7 +1,7 @@
 port module Creator exposing (main)
 
 import AppStorage exposing (MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece)
-import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getOverlayImageName, makeDraggable)
+import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable)
 import BoardMapTile exposing (MapTileRef(..), getAllRefs, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getAllOverlayTypes, getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
@@ -10,8 +10,8 @@ import Dict
 import Dom
 import DragPorts
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, assignIdentifier, moveOverlay, moveOverlayWithoutState, movePiece, movePieceWithoutState)
-import Html exposing (Html, div, img, li, ul)
-import Html.Attributes exposing (alt, attribute, class, coords, id, src)
+import Html exposing (Html, div, header, img, input, li, span, ul)
+import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, tabindex, target, type_)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
@@ -22,6 +22,7 @@ import List
 import Maybe
 import Monster exposing (MonsterLevel(..))
 import Scenario exposing (ScenarioMonster)
+import Version
 
 
 port getCellFromPoint : ( Float, Float, Bool ) -> Cmd msg
@@ -31,10 +32,12 @@ port onCellFromPoint : (( Int, Int, Bool ) -> msg) -> Sub msg
 
 
 type alias Model =
-    { roomData : List RoomData
+    { scenarioTitle : String
+    , roomData : List RoomData
     , overlays : List BoardOverlay
     , monsters : List ScenarioMonster
     , currentDraggable : Maybe MoveablePiece
+    , menuOpen : Bool
     }
 
 
@@ -77,7 +80,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model [] [] [] Nothing
+    ( Model "" [] [] [] Nothing False
     , Cmd.none
     )
 
@@ -230,11 +233,12 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     div
-        [ class "content"
+        [ class "content scenario-creator"
         , id "content"
         , Touch.onCancel (\_ -> TouchCanceled)
         ]
-        [ div [ class "main" ]
+        [ getHeaderHtml model
+        , div [ class "main" ]
             [ Keyed.node
                 "div"
                 [ class
@@ -329,7 +333,87 @@ view model =
                     )
                 ]
             ]
+        , lazy getFooterHtml Version.get
         ]
+
+
+getHeaderHtml : Model -> Html.Html Msg
+getHeaderHtml model =
+    div
+        [ class "header" ]
+        [ getMenuToggleHtml model
+        , lazy getScenarioTitleHtml model.scenarioTitle
+        ]
+
+
+getMenuToggleHtml : Model -> Html.Html Msg
+getMenuToggleHtml model =
+    div
+        [ class
+            ("menu"
+                ++ (if model.menuOpen then
+                        " show"
+
+                    else
+                        ""
+                   )
+            )
+
+        -- , onClick ToggleMenu
+        , tabindex 0
+        , attribute "aria-label" "Toggle Menu"
+        , attribute "aria-keyshortcuts" "m"
+        , attribute "role" "button"
+        , attribute "aria-pressed"
+            (if model.menuOpen then
+                "true"
+
+             else
+                "false"
+            )
+        ]
+        [ lazy getMenuHtml model.menuOpen
+        ]
+
+
+getScenarioTitleHtml : String -> Html.Html Msg
+getScenarioTitleHtml scenarioTitle =
+    header [ attribute "aria-label" "Scenario Title" ]
+        [ span [ class "title" ]
+            [ input [ type_ "text" ] []
+            ]
+        ]
+
+
+getMenuHtml : Bool -> Html.Html Msg
+getMenuHtml menuOpen =
+    Dom.element "nav"
+        |> Dom.addAttribute
+            (attribute
+                "aria-hidden"
+                (if menuOpen then
+                    "false"
+
+                 else
+                    "true"
+                )
+            )
+        |> Dom.appendChild
+            (Dom.element "ul"
+                |> Dom.addAttribute (attribute "role" "menu")
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.appendChild
+                            (Dom.element "a"
+                                |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")
+                                |> Dom.addAttribute (target "_new")
+                                |> Dom.appendText "Donate"
+                            )
+                    )
+            )
+        |> Dom.render
 
 
 getBoardRowHtml : Model -> String -> Int -> List Int -> ( String, Html Msg )

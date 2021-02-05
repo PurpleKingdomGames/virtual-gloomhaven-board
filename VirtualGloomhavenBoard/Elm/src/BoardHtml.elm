@@ -1,4 +1,4 @@
-module BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable)
+module BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable)
 
 import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..))
 import Array exposing (fromList, toIndexedList)
@@ -8,8 +8,8 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Character exposing (characterToString)
 import Dom exposing (Element)
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, SummonsType(..), getPieceName, getPieceType)
-import Html exposing (div, img)
-import Html.Attributes exposing (alt, attribute, class, src, style)
+import Html exposing (a, div, footer, iframe, img, span, text)
+import Html.Attributes exposing (alt, attribute, class, href, src, style, target, title)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
@@ -866,3 +866,43 @@ makeDroppable coords dropEvents element =
     in
     element
         |> Dom.addAttributeList (DragDrop.onDropTarget config)
+
+
+getFooterHtml : String -> Html.Html msg
+getFooterHtml v =
+    footer []
+        [ div [ class "credits" ]
+            [ span [ class "gloomCopy" ]
+                [ text "Gloomhaven and all related properties and images are owned by "
+                , a [ href "http://www.cephalofair.com/" ] [ text "Cephalofair Games" ]
+                ]
+            , span [ class "any2CardCopy" ]
+                [ text "Additional card scans courtesy of "
+                , a [ href "https://github.com/any2cards/gloomhaven" ] [ text "Any2Cards" ]
+                ]
+            ]
+        , div [ class "pkg" ]
+            [ div
+                [ class "copy-wrapper" ]
+                [ span [ class "pkgCopy" ]
+                    [ text "Developed by "
+                    , a [ href "https://purplekingdomgames.com/" ] [ text "Purple Kingdom Games" ]
+                    ]
+                , div
+                    [ class "sponsor" ]
+                    [ iframe
+                        [ class "sponsor-button"
+                        , src "https://github.com/sponsors/PurpleKingdomGames/button"
+                        , title "Sponsor PurpleKingdomGames"
+                        , attribute "aria-hidden" "true"
+                        ]
+                        []
+                    ]
+                ]
+            , div
+                [ class "version" ]
+                [ a [ target "_new", href "https://github.com/PurpleKingdomGames/virtual-gloomhaven-board/issues/new/choose" ] [ text "Report a bug" ]
+                , span [] [ text ("Version " ++ v) ]
+                ]
+            ]
+        ]
