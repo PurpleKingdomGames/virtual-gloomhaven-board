@@ -12,6 +12,7 @@ import DragPorts
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, assignIdentifier, moveOverlay, moveOverlayWithoutState, movePiece, movePieceWithoutState)
 import Html exposing (Html, div, header, img, input, li, section, span, text, ul)
 import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, tabindex, target, type_)
+import Html.Events exposing (onClick)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
@@ -38,10 +39,19 @@ type alias Model =
     , monsters : List ScenarioMonster
     , currentDraggable : Maybe MoveablePiece
     , menuOpen : Bool
+    , sideMenu : SideMenu
     , cachedDoors : List String
     , cachedObstacles : List String
     , cachedMisc : List String
     }
+
+
+type SideMenu
+    = MapTileMenu
+    | DoorMenu
+    | ObstacleMenu
+    | MiscMenu
+    | ScenarioMenu
 
 
 type Msg
@@ -53,6 +63,7 @@ type Msg
     | TouchMove ( Float, Float )
     | TouchCanceled
     | TouchEnd ( Float, Float )
+    | ChangeSideMenu SideMenu
     | NoOp
 
 
@@ -116,7 +127,7 @@ init _ =
                     )
                     ( [], [], [] )
     in
-    ( Model "" [] [] [] Nothing False doors obstacles misc
+    ( Model "" [] [] [] Nothing False MapTileMenu doors obstacles misc
     , Cmd.none
     )
 
@@ -262,6 +273,9 @@ update msg model =
         TouchEnd ( x, y ) ->
             ( model, getCellFromPoint ( x, y, True ) )
 
+        ChangeSideMenu menu ->
+            ( { model | sideMenu = menu }, Cmd.none )
+
         NoOp ->
             ( model, Cmd.none )
 
@@ -275,7 +289,8 @@ view model =
         ]
         [ getHeaderHtml model
         , div [ class "main" ]
-            [ Keyed.node
+            [ div [ class "page-shadow" ] []
+            , Keyed.node
                 "div"
                 [ class
                     "action-list"
@@ -317,10 +332,10 @@ view model =
                             Nothing ->
                                 ""
                  in
-                 [ ( "map-tile-list", lazy2 getMapTileListHtml model.roomData roomDragabble )
-                 , ( "board-door-list", lazy3 getOverlayListHtml model.cachedDoors "Doors" overlayDragabble )
-                 , ( "board-obstacle-list", lazy3 getOverlayListHtml model.cachedObstacles "Obstacles" overlayDragabble )
-                 , ( "board-misc-list", lazy3 getOverlayListHtml model.cachedMisc "Misc." overlayDragabble )
+                 [ ( "map-tile-list", lazy3 getMapTileListHtml model.roomData roomDragabble model.sideMenu )
+                 , ( "board-door-list", lazy4 getOverlayListHtml model.cachedDoors "Doors" overlayDragabble (model.sideMenu == DoorMenu) )
+                 , ( "board-obstacle-list", lazy4 getOverlayListHtml model.cachedObstacles "Obstacles" overlayDragabble (model.sideMenu == ObstacleMenu) )
+                 , ( "board-misc-list", lazy4 getOverlayListHtml model.cachedMisc "Misc." overlayDragabble (model.sideMenu == MiscMenu) )
                  ]
                 )
             , div
@@ -522,13 +537,20 @@ getCellHtml rooms overlays monsters encodedDraggable x y =
         |> Dom.render
 
 
-getMapTileListHtml : List RoomData -> String -> Html Msg
-getMapTileListHtml mapTiles currentDraggable =
+getMapTileListHtml : List RoomData -> String -> SideMenu -> Html Msg
+getMapTileListHtml mapTiles currentDraggable sideMenu =
     let
         currentRefs =
             List.map (\r -> r.ref) mapTiles
+
+        htmlClass =
+            if sideMenu == MapTileMenu then
+                "active"
+
+            else
+                ""
     in
-    section []
+    section [ class htmlClass, onClick (ChangeSideMenu MapTileMenu) ]
         [ header [] [ text "Tiles" ]
         , Keyed.node
             "ul"
@@ -551,9 +573,28 @@ getMapTileListHtml mapTiles currentDraggable =
         ]
 
 
-getOverlayListHtml : List String -> String -> String -> Html Msg
-getOverlayListHtml overlays label currentDraggable =
-    section []
+getOverlayListHtml : List String -> String -> String -> Bool -> Html Msg
+getOverlayListHtml overlays label currentDraggable active =
+    let
+        htmlClass =
+            if active then
+                "active"
+
+            else
+                ""
+
+        menuType =
+            case String.toLower label of
+                "doors" ->
+                    DoorMenu
+
+                "obstacles" ->
+                    ObstacleMenu
+
+                _ ->
+                    MiscMenu
+    in
+    section [ class htmlClass, onClick (ChangeSideMenu menuType) ]
         [ header [] [ text label ]
         , Keyed.node "ul"
             [ class "board-overlays"
@@ -596,49 +637,55 @@ lazyBoardOverlayListHtml overlayStr isDragging =
     case getBoardOverlayType overlayStr of
         Just overlay ->
             let
+                twoCells =
+                    [ ( 0, 0 ), ( 1, 0 ) ]
+
+                threeCells =
+                    [ ( 0, 0 ), ( 1, 0 ), ( 0, -1 ) ]
+
                 cells =
                     case overlay of
                         DifficultTerrain Log ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Obstacle Bookcase ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Obstacle Boulder2 ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Obstacle Boulder3 ->
-                            [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
+                            threeCells
 
                         Obstacle DarkPit ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Obstacle Sarcophagus ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Obstacle Shelf ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Obstacle Table ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Obstacle Tree3 ->
-                            [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
+                            threeCells
 
                         Obstacle WallSection ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Wall HugeRock ->
-                            [ ( 0, 0 ), ( 1, -1 ), ( 1, 1 ) ]
+                            threeCells
 
                         Wall Iron ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Wall LargeRock ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         Wall ObsidianGlass ->
-                            [ ( 0, 0 ), ( 1, 0 ) ]
+                            twoCells
 
                         _ ->
                             [ ( 0, 0 ) ]
@@ -651,6 +698,7 @@ lazyBoardOverlayListHtml overlayStr isDragging =
                     }
             in
             Dom.element "li"
+                |> Dom.addClass ("size-" ++ String.fromInt (List.length cells))
                 |> Dom.addClassConditional "dragging" isDragging
                 |> Dom.appendChildList
                     (List.map

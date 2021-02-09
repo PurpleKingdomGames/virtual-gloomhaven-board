@@ -4,6 +4,17 @@ html
 {
     .content.scenario-creator {
         .main {
+            .page-shadow {
+                height: 100%;
+                width: 1rem;
+                -webkit-box-shadow: 5px 0px 15px 9px rgba(0,0,0,0.65);
+                -moz-box-shadow: 5px 0px 15px 9px rgba(0,0,0,0.65);
+                box-shadow: 18px 0px 35px 9px rgb(0, 0, 0);
+                position: absolute;
+                left: 7.1rem;
+                z-index: 1;
+            }
+
             .action-list {
                 flex-direction: column;
                 flex-wrap: nowrap;
@@ -42,6 +53,10 @@ html
                             left: 0;
                             z-index: -1;
                         }
+
+                        &:hover {
+                            cursor: pointer;
+                        }
                     }
 
                     ul {
@@ -54,12 +69,35 @@ html
                         -moz-box-shadow: inset 0px -5px 5px 0px rgba(0,0,0,0.75);
                         box-shadow: inset 0px -5px 5px 0px rgba(0,0,0,0.75);
                         width: 8.2rem;
+                        text-align: center;
 
                         li {
                             padding: 0.2rem 1.2rem;
 
                             img {
-                                max-width: 90px;
+                                max-width: 45px;
+                            }
+
+                            &.size-3 {
+                                img {
+                                    position: relative;
+
+                                    &:first-child, &:nth-child(2) {
+                                        top: 45px;
+                                    }
+
+                                    &:last-child {
+                                        top: -52px;
+                                    }
+                                }
+                            }
+                        }
+
+                        &.map-tiles {
+                            li {
+                                img {
+                                    max-width: 90px;
+                                }
                             }
                         }
                     }
