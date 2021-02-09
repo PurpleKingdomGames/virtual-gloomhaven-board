@@ -10,12 +10,12 @@ import Dict
 import Dom
 import DragPorts
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, assignIdentifier, moveOverlay, moveOverlayWithoutState, movePiece, movePieceWithoutState)
-import Html exposing (Html, div, header, img, input, li, span, ul)
+import Html exposing (Html, div, header, img, input, li, section, span, text, ul)
 import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, tabindex, target, type_)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy4, lazy6)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy6)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import List
@@ -38,6 +38,9 @@ type alias Model =
     , monsters : List ScenarioMonster
     , currentDraggable : Maybe MoveablePiece
     , menuOpen : Bool
+    , cachedDoors : List String
+    , cachedObstacles : List String
+    , cachedMisc : List String
     }
 
 
@@ -80,7 +83,40 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model "" [] [] [] Nothing False
+    let
+        ( doors, obstacles, misc ) =
+            getOverlayTypesWithLabel
+                |> Dict.filter
+                    (\_ v ->
+                        case v of
+                            Door (Corridor _ Two) _ ->
+                                False
+
+                            Door AltarDoor _ ->
+                                False
+
+                            Treasure (Coin _) ->
+                                False
+
+                            _ ->
+                                True
+                    )
+                |> Dict.toList
+                |> List.foldr
+                    (\( k, v ) ( d, o, m ) ->
+                        case v of
+                            Door _ _ ->
+                                ( k :: d, o, m )
+
+                            Obstacle _ ->
+                                ( d, k :: o, m )
+
+                            _ ->
+                                ( d, o, k :: m )
+                    )
+                    ( [], [], [] )
+    in
+    ( Model "" [] [] [] Nothing False doors obstacles misc
     , Cmd.none
     )
 
@@ -282,7 +318,9 @@ view model =
                                 ""
                  in
                  [ ( "map-tile-list", lazy2 getMapTileListHtml model.roomData roomDragabble )
-                 , ( "board-overlay-list", lazy getOverlayListHtml overlayDragabble )
+                 , ( "board-door-list", lazy3 getOverlayListHtml model.cachedDoors "Doors" overlayDragabble )
+                 , ( "board-obstacle-list", lazy3 getOverlayListHtml model.cachedObstacles "Obstacles" overlayDragabble )
+                 , ( "board-misc-list", lazy3 getOverlayListHtml model.cachedMisc "Misc." overlayDragabble )
                  ]
                 )
             , div
@@ -480,7 +518,7 @@ getCellHtml rooms overlays monsters encodedDraggable x y =
                     Nothing
     in
     BoardHtml.getCellHtml
-        (CellModel overlays [] ( x, y ) currentDraggable dragEvents dropEvents True False)
+        (CellModel overlays [] monsters ( x, y ) currentDraggable True False dragEvents dropEvents True False)
         |> Dom.render
 
 
@@ -490,57 +528,47 @@ getMapTileListHtml mapTiles currentDraggable =
         currentRefs =
             List.map (\r -> r.ref) mapTiles
     in
-    Keyed.node
-        "ul"
-        [ class "map-tiles"
+    section []
+        [ header [] [ text "Tiles" ]
+        , Keyed.node
+            "ul"
+            [ class "map-tiles"
+            ]
+            (getAllRefs
+                |> List.filter
+                    (\r ->
+                        r /= J1ba && r /= J1bb && List.member r currentRefs == False
+                    )
+                |> List.map
+                    (\r ->
+                        let
+                            ref =
+                                Maybe.withDefault "" (refToString r)
+                        in
+                        ( "new-tile-" ++ ref, lazy2 lazyMapTileListHtml ref currentDraggable )
+                    )
+            )
         ]
-        (getAllRefs
-            |> List.filter
-                (\r ->
-                    r /= J1ba && r /= J1bb && List.member r currentRefs == False
-                )
-            |> List.map
-                (\r ->
-                    let
-                        ref =
-                            Maybe.withDefault "" (refToString r)
-                    in
-                    ( "new-tile-" ++ ref, lazy2 lazyMapTileListHtml ref currentDraggable )
-                )
-        )
 
 
-getOverlayListHtml : String -> Html Msg
-getOverlayListHtml currentDraggable =
-    Keyed.node "ul"
-        [ class "board-overlays"
+getOverlayListHtml : List String -> String -> String -> Html Msg
+getOverlayListHtml overlays label currentDraggable =
+    section []
+        [ header [] [ text label ]
+        , Keyed.node "ul"
+            [ class "board-overlays"
+            ]
+            (overlays
+                |> List.map
+                    (\k ->
+                        let
+                            isDragging =
+                                currentDraggable == k
+                        in
+                        ( "new-overlay-" ++ k, lazy2 lazyBoardOverlayListHtml k isDragging )
+                    )
+            )
         ]
-        (getOverlayTypesWithLabel
-            |> Dict.filter
-                (\_ v ->
-                    case v of
-                        Door (Corridor _ Two) _ ->
-                            False
-
-                        Door AltarDoor _ ->
-                            False
-
-                        Treasure (Coin _) ->
-                            False
-
-                        _ ->
-                            True
-                )
-            |> Dict.keys
-            |> List.map
-                (\k ->
-                    let
-                        isDragging =
-                            currentDraggable == k
-                    in
-                    ( "new-overlay-" ++ k, lazy2 lazyBoardOverlayListHtml k isDragging )
-                )
-        )
 
 
 lazyMapTileListHtml : String -> String -> Html Msg

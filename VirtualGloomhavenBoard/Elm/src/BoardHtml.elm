@@ -18,13 +18,17 @@ import Json.Decode as Decode
 import List exposing (any, map)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType(..), monsterTypeToString)
+import Scenario exposing (ScenarioMonster)
 
 
 type alias CellModel msg =
     { overlays : List BoardOverlay
     , pieces : List Piece
+    , scenarioMonsters : List ScenarioMonster
     , coords : ( Int, Int )
     , currentDraggable : Maybe MoveablePiece
+    , dragOverlays : Bool
+    , dragPieces : Bool
     , dragEvents : DragEvents msg
     , dropEvents : DropEvents msg
     , passable : Bool
@@ -312,7 +316,7 @@ getCellHtml model =
                                     _ ->
                                         True
                             )
-                        |> List.map overlayToHtml
+                        |> List.map (overlayToHtml model.dragOverlays)
                      )
                         ++ -- Players / Monsters / Summons
                            (case piece of
@@ -320,7 +324,7 @@ getCellHtml model =
                                     []
 
                                 Just p ->
-                                    [ pieceToHtml p ]
+                                    [ pieceToHtml model.dragPieces p ]
                            )
                         ++ -- Coins
                            (overlaysForCell
@@ -338,7 +342,7 @@ getCellHtml model =
                                             _ ->
                                                 False
                                     )
-                                |> List.map overlayToHtml
+                                |> List.map (overlayToHtml model.dragOverlays)
                            )
                         ++ -- The current draggable piece
                            (case currentDraggable of
@@ -347,6 +351,7 @@ getCellHtml model =
                                         PieceType p ->
                                             if m.target == Just ( x, y ) then
                                                 [ pieceToHtml
+                                                    model.dragPieces
                                                     (PieceModel
                                                         False
                                                         (Just ( x, y ))
@@ -361,6 +366,7 @@ getCellHtml model =
                                         OverlayType o _ ->
                                             if any (\c -> c == ( x, y )) o.cells then
                                                 [ overlayToHtml
+                                                    model.dragOverlays
                                                     (BoardOverlayModel
                                                         False
                                                         (Just ( x, y ))
@@ -449,8 +455,8 @@ getSortOrderForOverlay overlay =
             9
 
 
-overlayToHtml : BoardOverlayModel msg -> ( String, Dom.Element msg )
-overlayToHtml model =
+overlayToHtml : Bool -> BoardOverlayModel msg -> ( String, Dom.Element msg )
+overlayToHtml dragOverlays model =
     let
         label =
             getLabelForOverlay model.overlay model.coords
@@ -573,31 +579,35 @@ overlayToHtml model =
                 _ ->
                     \e -> e
            )
-        |> (case model.overlay.ref of
-                Obstacle _ ->
-                    makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
-
-                Rift ->
-                    makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
-
-                Trap _ ->
-                    makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
-
-                Treasure (Coin _) ->
-                    if model.coords == Nothing then
+        |> (if dragOverlays then
+                case model.overlay.ref of
+                    Obstacle _ ->
                         makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
 
-                    else
+                    Rift ->
+                        makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
+
+                    Trap _ ->
+                        makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
+
+                    Treasure (Coin _) ->
+                        if model.coords == Nothing then
+                            makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
+
+                        else
+                            Dom.addAttribute (attribute "draggable" "false")
+
+                    _ ->
                         Dom.addAttribute (attribute "draggable" "false")
 
-                _ ->
-                    Dom.addAttribute (attribute "draggable" "false")
+            else
+                \e -> e
            )
     )
 
 
-pieceToHtml : PieceModel msg -> ( String, Dom.Element msg )
-pieceToHtml model =
+pieceToHtml : Bool -> PieceModel msg -> ( String, Dom.Element msg )
+pieceToHtml dragPiece model =
     let
         label =
             getLabelForPiece model.piece
@@ -652,7 +662,12 @@ pieceToHtml model =
                 Game.None ->
                     Dom.addClass "none"
            )
-        |> makeDraggable (PieceType model.piece) model.coords model.dragEvents
+        |> (if dragPiece then
+                makeDraggable (PieceType model.piece) model.coords model.dragEvents
+
+            else
+                \e -> e
+           )
     )
 
 
