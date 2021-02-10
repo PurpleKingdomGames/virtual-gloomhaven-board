@@ -1,4 +1,4 @@
-module Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), getMonsterBucketSize, monsterTypeToString, stringToMonsterType)
+module Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..), getAllBosses, getAllMonsters, getMonsterBucketSize, monsterTypeToString, stringToMonsterType)
 
 import Dict exposing (Dict, filter, fromList, get, toList)
 import List exposing (head)
@@ -147,6 +147,16 @@ type alias Monster =
     , level : MonsterLevel
     , wasSummoned : Bool
     }
+
+
+getAllMonsters : Dict String NormalMonsterType
+getAllMonsters =
+    normalDict
+
+
+getAllBosses : Dict String BossType
+getAllBosses =
+    bossDict
 
 
 stringToMonsterType : String -> Maybe MonsterType

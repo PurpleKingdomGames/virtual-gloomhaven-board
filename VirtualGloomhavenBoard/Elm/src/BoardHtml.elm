@@ -1,4 +1,4 @@
-module BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable)
+module BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable, scenarioMonsterToHtml)
 
 import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..))
 import Array exposing (fromList, toIndexedList)
@@ -829,6 +829,41 @@ enemyToHtml monster altText element =
                         String.fromInt monster.id
                     )
             ]
+
+
+scenarioMonsterToHtml : ScenarioMonster -> String -> Element msg -> Element msg
+scenarioMonsterToHtml monster label element =
+    enemyToHtml monster.monster label element
+        |> Dom.addClass "monster"
+        |> Dom.appendChild
+            (scenarioMonsterVisibilityToHtml monster.twoPlayer
+                |> Dom.addClass "two-player"
+            )
+        |> Dom.appendChild
+            (scenarioMonsterVisibilityToHtml monster.threePlayer
+                |> Dom.addClass "three-player"
+            )
+        |> Dom.appendChild
+            (scenarioMonsterVisibilityToHtml monster.fourPlayer
+                |> Dom.addClass "four-player"
+            )
+
+
+scenarioMonsterVisibilityToHtml : MonsterLevel -> Element msg
+scenarioMonsterVisibilityToHtml level =
+    Dom.element "div"
+        |> Dom.addClass "monster-visibility"
+        |> Dom.addClass
+            (case level of
+                Normal ->
+                    "normal"
+
+                Elite ->
+                    "elite"
+
+                Monster.None ->
+                    "none"
+            )
 
 
 makeDraggable : MoveablePieceType -> Maybe ( Int, Int ) -> DragEvents msg -> Element msg -> Element msg

@@ -1,7 +1,7 @@
 port module Creator exposing (main)
 
 import AppStorage exposing (MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece)
-import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable)
+import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable, scenarioMonsterToHtml)
 import BoardMapTile exposing (MapTileRef(..), getAllRefs, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getAllOverlayTypes, getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
@@ -21,7 +21,7 @@ import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import List
 import Maybe
-import Monster exposing (MonsterLevel(..))
+import Monster exposing (MonsterLevel(..), MonsterType(..), NormalMonsterType, getAllBosses, getAllMonsters, monsterTypeToString)
 import Scenario exposing (ScenarioMonster)
 import Version
 
@@ -51,7 +51,8 @@ type SideMenu
     | DoorMenu
     | ObstacleMenu
     | MiscMenu
-    | ScenarioMenu
+    | MonsterMenu
+    | BossMenu
 
 
 type Msg
@@ -337,11 +338,41 @@ view model =
 
                             Nothing ->
                                 ""
+
+                    monsterDraggable =
+                        case model.currentDraggable of
+                            Just m ->
+                                case m.ref of
+                                    PieceType p ->
+                                        case p.ref of
+                                            AI (Enemy monster) ->
+                                                case m.coords of
+                                                    Just _ ->
+                                                        ""
+
+                                                    Nothing ->
+                                                        Maybe.withDefault "" (monsterTypeToString monster.monster)
+
+                                            _ ->
+                                                ""
+
+                                    _ ->
+                                        ""
+
+                            Nothing ->
+                                ""
+
+                    monsterId =
+                        List.map (\m -> m.monster.id) model.monsters
+                            |> List.maximum
+                            |> Maybe.withDefault 1
                  in
                  [ ( "map-tile-list", lazy3 getMapTileListHtml model.roomData roomDragabble model.sideMenu )
                  , ( "board-door-list", lazy4 getOverlayListHtml model.cachedDoors "Doors" overlayDragabble (model.sideMenu == DoorMenu) )
                  , ( "board-obstacle-list", lazy4 getOverlayListHtml model.cachedObstacles "Obstacles" overlayDragabble (model.sideMenu == ObstacleMenu) )
                  , ( "board-misc-list", lazy4 getOverlayListHtml model.cachedMisc "Misc." overlayDragabble (model.sideMenu == MiscMenu) )
+                 , ( "board-monster-list", lazy3 getScenarioMonsterListHtml monsterId monsterDraggable (model.sideMenu == MonsterMenu) )
+                 , ( "board-boss-list", lazy3 getScenarioBossListHtml monsterId monsterDraggable (model.sideMenu == BossMenu) )
                  ]
                 )
             , div
@@ -613,6 +644,124 @@ getOverlayListHtml overlays label currentDraggable active =
                                 currentDraggable == k
                         in
                         ( "new-overlay-" ++ k, lazy2 lazyBoardOverlayListHtml k isDragging )
+                    )
+            )
+        ]
+
+
+getScenarioMonsterListHtml : Int -> String -> Bool -> Html Msg
+getScenarioMonsterListHtml maxId currentDraggable active =
+    let
+        htmlClass =
+            if active then
+                "active"
+
+            else
+                ""
+    in
+    section [ class htmlClass, onClick (ChangeSideMenu MonsterMenu) ]
+        [ header [] [ text "Monsters" ]
+        , Keyed.node "ul"
+            [ class "monsters"
+            ]
+            (getAllMonsters
+                |> Dict.toList
+                |> List.map
+                    (\( k, v ) ->
+                        let
+                            isDragging =
+                                currentDraggable == k
+
+                            monster =
+                                ScenarioMonster
+                                    { monster = NormalType v
+                                    , id = maxId
+                                    , level = Monster.None
+                                    , wasSummoned = False
+                                    }
+                                    0
+                                    0
+                                    Normal
+                                    Normal
+                                    Normal
+
+                            label =
+                                "Add new " ++ String.replace "-" " " k
+
+                            pieceModel =
+                                { ref = AI (Enemy monster.monster)
+                                , x = 0
+                                , y = 0
+                                }
+                        in
+                        ( "new-monster-" ++ k
+                        , li []
+                            [ Dom.element "div"
+                                |> Dom.addClassConditional "dragging" isDragging
+                                |> scenarioMonsterToHtml monster label
+                                |> makeDraggable (PieceType pieceModel) Nothing dragEvents
+                                |> Dom.render
+                            ]
+                        )
+                    )
+            )
+        ]
+
+
+getScenarioBossListHtml : Int -> String -> Bool -> Html Msg
+getScenarioBossListHtml maxId currentDraggable active =
+    let
+        htmlClass =
+            if active then
+                "active"
+
+            else
+                ""
+    in
+    section [ class htmlClass, onClick (ChangeSideMenu BossMenu) ]
+        [ header [] [ text "Bosses" ]
+        , Keyed.node "ul"
+            [ class "monsters"
+            ]
+            (getAllBosses
+                |> Dict.toList
+                |> List.map
+                    (\( k, v ) ->
+                        let
+                            isDragging =
+                                currentDraggable == k
+
+                            monster =
+                                ScenarioMonster
+                                    { monster = BossType v
+                                    , id = maxId
+                                    , level = Monster.None
+                                    , wasSummoned = False
+                                    }
+                                    0
+                                    0
+                                    Normal
+                                    Normal
+                                    Normal
+
+                            label =
+                                "Add new " ++ String.replace "-" " " k
+
+                            pieceModel =
+                                { ref = AI (Enemy monster.monster)
+                                , x = 0
+                                , y = 0
+                                }
+                        in
+                        ( "new-monster-" ++ k
+                        , li []
+                            [ Dom.element "div"
+                                |> Dom.addClassConditional "dragging" isDragging
+                                |> scenarioMonsterToHtml monster label
+                                |> makeDraggable (PieceType pieceModel) Nothing dragEvents
+                                |> Dom.render
+                            ]
+                        )
                     )
             )
         ]

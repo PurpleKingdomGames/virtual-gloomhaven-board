@@ -75,7 +75,7 @@ html
                             padding: 0.2rem 1.2rem;
 
                             img {
-                                max-width: 45px;
+                                max-width: 38px;
                             }
 
                             &.size-3 {
@@ -83,7 +83,7 @@ html
                                     position: relative;
 
                                     &:first-child, &:nth-child(2) {
-                                        top: 45px;
+                                        top: 31px;
                                     }
 
                                     &:last-child {
@@ -97,6 +97,31 @@ html
                             li {
                                 img {
                                     max-width: 90px;
+                                }
+                            }
+                        }
+
+                        &.monsters {
+                            li {
+                                div.monster {
+                                    position: relative;
+                                    max-width: 38px;
+                                    mask-size: 38px;
+                                    height: auto;
+                                    display: inline-block;
+
+                                    &:after {
+                                        display: none;
+                                    }
+
+                                    img {
+                                        max-width: 38px;
+                                        height: auto;
+                                    }
+
+                                    span {
+                                        display: none;
+                                    }
                                 }
                             }
                         }
