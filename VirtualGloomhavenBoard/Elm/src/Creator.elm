@@ -106,6 +106,12 @@ init _ =
                             Door AltarDoor _ ->
                                 False
 
+                            Door BreakableWall _ ->
+                                False
+
+                            Rift ->
+                                False
+
                             Treasure (Coin _) ->
                                 False
 
