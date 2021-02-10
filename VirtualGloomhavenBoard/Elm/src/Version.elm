@@ -3,4 +3,4 @@ module Version exposing (..)
 
 get : String
 get =
-    "1.10.0"
+    "1.10.1"

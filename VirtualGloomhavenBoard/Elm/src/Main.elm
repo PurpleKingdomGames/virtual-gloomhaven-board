@@ -2736,6 +2736,9 @@ addActionsForCell currentMode coords overlays element =
                                 ( DestroyOverlay, Obstacle _ ) ->
                                     Dom.addAction ( "click", RemoveOverlay overlay )
 
+                                ( DestroyOverlay, Rift ) ->
+                                    Dom.addAction ( "click", RemoveOverlay overlay )
+
                                 ( DestroyOverlay, Trap _ ) ->
                                     Dom.addAction ( "click", RemoveOverlay overlay )
 
