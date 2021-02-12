@@ -52,6 +52,14 @@ type alias PieceModel msg =
     }
 
 
+type alias ScenarioMonsterModel msg =
+    { isDragging : Bool
+    , coords : Maybe ( Int, Int )
+    , monster : ScenarioMonster
+    , dragEvents : DragEvents msg
+    }
+
+
 type alias DragEvents msg =
     { moveStart : MoveablePiece -> Maybe ( DragDrop.EffectAllowed, Decode.Value ) -> msg
     , moveCancel : msg
@@ -289,6 +297,33 @@ getCellHtml model =
                 )
                 (getPieceForCoord x y model.pieces)
 
+        monster =
+            Maybe.map
+                (\m ->
+                    ScenarioMonsterModel
+                        (case currentDraggable of
+                            Just c ->
+                                case c.ref of
+                                    PieceType p ->
+                                        case p.ref of
+                                            AI (Enemy e) ->
+                                                e == m.monster
+
+                                            _ ->
+                                                False
+
+                                    _ ->
+                                        False
+
+                            Nothing ->
+                                False
+                        )
+                        (Just ( x, y ))
+                        m
+                        model.dragEvents
+                )
+                (getScenarioMonsterForCoord x y model.scenarioMonsters)
+
         cellElement : Dom.Element msg
         cellElement =
             Dom.element "div"
@@ -325,6 +360,13 @@ getCellHtml model =
 
                                 Just p ->
                                     [ pieceToHtml model.dragPieces p ]
+                           )
+                        ++ (case monster of
+                                Nothing ->
+                                    []
+
+                                Just m ->
+                                    [ scenarioMonsterToHtml model.dragPieces m ]
                            )
                         ++ -- Coins
                            (overlaysForCell
@@ -406,6 +448,12 @@ getCellHtml model =
 getPieceForCoord : Int -> Int -> List Piece -> Maybe Piece
 getPieceForCoord x y pieces =
     List.filter (\p -> p.x == x && p.y == y) pieces
+        |> List.head
+
+
+getScenarioMonsterForCoord : Int -> Int -> List ScenarioMonster -> Maybe ScenarioMonster
+getScenarioMonsterForCoord x y monsters =
+    List.filter (\m -> m.initialX == x && m.initialY == y) monsters
         |> List.head
 
 
@@ -671,6 +719,59 @@ pieceToHtml dragPiece model =
     )
 
 
+scenarioMonsterToHtml : Bool -> ScenarioMonsterModel msg -> ( String, Dom.Element msg )
+scenarioMonsterToHtml dragPiece model =
+    let
+        monster =
+            model.monster
+
+        label =
+            Maybe.withDefault "" (monsterTypeToString monster.monster.monster)
+                |> String.replace "-" " "
+
+        pieceModel =
+            { ref = AI (Enemy monster.monster)
+            , x = monster.initialX
+            , y = monster.initialY
+            }
+    in
+    ( label
+    , Dom.element "div"
+        |> Dom.addAttribute
+            (attribute "aria-label"
+                (case model.coords of
+                    Just ( x, y ) ->
+                        label ++ " at " ++ String.fromInt x ++ ", " ++ String.fromInt y
+
+                    Nothing ->
+                        "Add New " ++ label
+                )
+            )
+        |> Dom.addClass "monster"
+        |> Dom.addClass (Maybe.withDefault "" (monsterTypeToString model.monster.monster.monster))
+        |> Dom.addClassConditional "being-dragged" model.isDragging
+        |> enemyToHtml monster.monster label
+        |> Dom.appendChild
+            (scenarioMonsterVisibilityToHtml monster.twoPlayer
+                |> Dom.addClass "two-player"
+            )
+        |> Dom.appendChild
+            (scenarioMonsterVisibilityToHtml monster.threePlayer
+                |> Dom.addClass "three-player"
+            )
+        |> Dom.appendChild
+            (scenarioMonsterVisibilityToHtml monster.fourPlayer
+                |> Dom.addClass "four-player"
+            )
+        |> (if dragPiece then
+                makeDraggable (PieceType pieceModel) model.coords model.dragEvents
+
+            else
+                \e -> e
+           )
+    )
+
+
 cellValueToString : Bool -> Bool -> String
 cellValueToString passable hidden =
     if hidden then
@@ -829,24 +930,6 @@ enemyToHtml monster altText element =
                         String.fromInt monster.id
                     )
             ]
-
-
-scenarioMonsterToHtml : ScenarioMonster -> String -> Element msg -> Element msg
-scenarioMonsterToHtml monster label element =
-    enemyToHtml monster.monster label element
-        |> Dom.addClass "monster"
-        |> Dom.appendChild
-            (scenarioMonsterVisibilityToHtml monster.twoPlayer
-                |> Dom.addClass "two-player"
-            )
-        |> Dom.appendChild
-            (scenarioMonsterVisibilityToHtml monster.threePlayer
-                |> Dom.addClass "three-player"
-            )
-        |> Dom.appendChild
-            (scenarioMonsterVisibilityToHtml monster.fourPlayer
-                |> Dom.addClass "four-player"
-            )
 
 
 scenarioMonsterVisibilityToHtml : MonsterLevel -> Element msg

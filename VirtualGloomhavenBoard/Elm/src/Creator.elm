@@ -16,7 +16,7 @@ import Html.Events exposing (onClick)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy6)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy6, lazy7)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import List
@@ -81,6 +81,11 @@ dropEvents =
 gridSize : Int
 gridSize =
     40
+
+
+emptyList : List Piece
+emptyList =
+    []
 
 
 main : Program () Model Msg
@@ -155,61 +160,65 @@ update msg model =
             ( { model | currentDraggable = Just piece }, cmd )
 
         MoveTargetChanged coords maybeDragOver ->
-            let
-                newDraggable =
-                    case model.currentDraggable of
-                        Just m ->
-                            case m.ref of
-                                OverlayType o prevCoords ->
-                                    let
-                                        ( _, newOverlay, newCoords ) =
-                                            moveOverlayWithoutState o m.coords prevCoords coords model.overlays
+            case model.currentDraggable of
+                Just m ->
+                    if m.target == Just coords then
+                        ( model, Cmd.none )
 
-                                        moveablePieceType =
-                                            OverlayType newOverlay newCoords
+                    else
+                        let
+                            cmd =
+                                case maybeDragOver of
+                                    Just ( e, v ) ->
+                                        DragPorts.dragover (DragDrop.overPortData e v)
 
-                                        newTarget =
-                                            if moveablePieceType == m.ref then
-                                                m.target
+                                    Nothing ->
+                                        Cmd.none
 
-                                            else
-                                                Just coords
-                                    in
-                                    Just (MoveablePiece moveablePieceType m.coords newTarget)
+                            newDraggable =
+                                case m.ref of
+                                    OverlayType o prevCoords ->
+                                        let
+                                            ( _, newOverlay, newCoords ) =
+                                                moveOverlayWithoutState o m.coords prevCoords coords model.overlays
 
-                                PieceType p ->
-                                    let
-                                        pieces =
-                                            model.monsters
-                                                |> List.map (\m1 -> Piece (AI (Enemy m1.monster)) m1.initialX m1.initialY)
+                                            moveablePieceType =
+                                                OverlayType newOverlay newCoords
 
-                                        newPiece =
-                                            PieceType (Tuple.second (movePieceWithoutState p m.coords coords pieces))
+                                            newTarget =
+                                                if moveablePieceType == m.ref then
+                                                    m.target
 
-                                        newTarget =
-                                            if newPiece == m.ref then
-                                                m.target
+                                                else
+                                                    Just coords
+                                        in
+                                        Just (MoveablePiece moveablePieceType m.coords newTarget)
 
-                                            else
-                                                Just coords
-                                    in
-                                    Just (MoveablePiece newPiece m.coords newTarget)
+                                    PieceType p ->
+                                        let
+                                            pieces =
+                                                model.monsters
+                                                    |> List.map (\m1 -> Piece (AI (Enemy m1.monster)) m1.initialX m1.initialY)
 
-                                RoomType r ->
-                                    Just (MoveablePiece (RoomType r) m.coords (Just coords))
+                                            newPiece =
+                                                PieceType (Tuple.second (movePieceWithoutState p m.coords coords pieces))
 
-                        Nothing ->
-                            model.currentDraggable
+                                            newTarget =
+                                                if newPiece == m.ref then
+                                                    m.target
 
-                cmd =
-                    case maybeDragOver of
-                        Just ( e, v ) ->
-                            DragPorts.dragover (DragDrop.overPortData e v)
+                                                else
+                                                    Just coords
+                                        in
+                                        Just (MoveablePiece newPiece m.coords newTarget)
 
-                        Nothing ->
-                            Cmd.none
-            in
-            ( { model | currentDraggable = newDraggable }, cmd )
+                                    RoomType r ->
+                                        Just (MoveablePiece (RoomType r) m.coords (Just coords))
+                        in
+                        ( { model | currentDraggable = newDraggable }, cmd )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         MoveCanceled ->
             ( { model | currentDraggable = Nothing }, Cmd.none )
@@ -229,7 +238,7 @@ update msg model =
 
                                 ( PieceType p, Just target ) ->
                                     case p.ref of
-                                        AI (Enemy monster) ->
+                                        AI (Enemy _) ->
                                             let
                                                 pieces =
                                                     model.monsters
@@ -363,9 +372,11 @@ view model =
                                 ""
 
                     monsterId =
-                        List.map (\m -> m.monster.id) model.monsters
-                            |> List.maximum
-                            |> Maybe.withDefault 1
+                        1
+                            + (List.map (\m -> m.monster.id) model.monsters
+                                |> List.maximum
+                                |> Maybe.withDefault 0
+                              )
                  in
                  [ ( "map-tile-list", lazy3 getMapTileListHtml model.roomData roomDragabble model.sideMenu )
                  , ( "board-door-list", lazy4 getOverlayListHtml model.cachedDoors "Doors" overlayDragabble (model.sideMenu == DoorMenu) )
@@ -546,7 +557,7 @@ getBoardRowHtml model encodedDraggable y row =
                         else
                             ""
                 in
-                ( id, lazy6 getCellHtml model.roomData model.overlays model.monsters currentDraggable x y )
+                ( id, lazy7 getCellHtml model.roomData model.overlays emptyList model.monsters currentDraggable x y )
             )
             row
         )
@@ -558,8 +569,8 @@ subscriptions _ =
     Sub.batch []
 
 
-getCellHtml : List RoomData -> List BoardOverlay -> List ScenarioMonster -> String -> Int -> Int -> Html Msg
-getCellHtml rooms overlays monsters encodedDraggable x y =
+getCellHtml : List RoomData -> List BoardOverlay -> List Piece -> List ScenarioMonster -> String -> Int -> Int -> Html Msg
+getCellHtml rooms overlays pieces monsters encodedDraggable x y =
     let
         currentDraggable =
             case Decode.decodeString decodeMoveablePiece encodedDraggable of
@@ -570,7 +581,7 @@ getCellHtml rooms overlays monsters encodedDraggable x y =
                     Nothing
     in
     BoardHtml.getCellHtml
-        (CellModel overlays [] monsters ( x, y ) currentDraggable True False dragEvents dropEvents True False)
+        (CellModel overlays pieces monsters ( x, y ) currentDraggable True False dragEvents dropEvents True False)
         |> Dom.render
 
 
@@ -669,39 +680,30 @@ getScenarioMonsterListHtml maxId currentDraggable active =
                 |> List.map
                     (\( k, v ) ->
                         let
-                            isDragging =
-                                currentDraggable == k
-
                             monster =
-                                ScenarioMonster
-                                    { monster = NormalType v
-                                    , id = maxId
-                                    , level = Monster.None
-                                    , wasSummoned = False
-                                    }
-                                    0
-                                    0
-                                    Normal
-                                    Normal
-                                    Normal
-
-                            label =
-                                "Add new " ++ String.replace "-" " " k
-
-                            pieceModel =
-                                { ref = AI (Enemy monster.monster)
-                                , x = 0
-                                , y = 0
+                                { isDragging = currentDraggable == k
+                                , coords = Nothing
+                                , monster =
+                                    ScenarioMonster
+                                        { monster = NormalType v
+                                        , id = maxId
+                                        , level = Monster.None
+                                        , wasSummoned = False
+                                        }
+                                        0
+                                        0
+                                        Normal
+                                        Normal
+                                        Normal
+                                , dragEvents = dragEvents
                                 }
+
+                            ( _, node ) =
+                                scenarioMonsterToHtml True monster
                         in
                         ( "new-monster-" ++ k
                         , li []
-                            [ Dom.element "div"
-                                |> Dom.addClassConditional "dragging" isDragging
-                                |> scenarioMonsterToHtml monster label
-                                |> makeDraggable (PieceType pieceModel) Nothing dragEvents
-                                |> Dom.render
-                            ]
+                            [ node |> Dom.render ]
                         )
                     )
             )
@@ -728,39 +730,30 @@ getScenarioBossListHtml maxId currentDraggable active =
                 |> List.map
                     (\( k, v ) ->
                         let
-                            isDragging =
-                                currentDraggable == k
-
                             monster =
-                                ScenarioMonster
-                                    { monster = BossType v
-                                    , id = maxId
-                                    , level = Monster.None
-                                    , wasSummoned = False
-                                    }
-                                    0
-                                    0
-                                    Normal
-                                    Normal
-                                    Normal
-
-                            label =
-                                "Add new " ++ String.replace "-" " " k
-
-                            pieceModel =
-                                { ref = AI (Enemy monster.monster)
-                                , x = 0
-                                , y = 0
+                                { isDragging = currentDraggable == k
+                                , coords = Nothing
+                                , monster =
+                                    ScenarioMonster
+                                        { monster = BossType v
+                                        , id = maxId
+                                        , level = Monster.None
+                                        , wasSummoned = False
+                                        }
+                                        0
+                                        0
+                                        Normal
+                                        Normal
+                                        Normal
+                                , dragEvents = dragEvents
                                 }
+
+                            ( _, node ) =
+                                scenarioMonsterToHtml True monster
                         in
                         ( "new-monster-" ++ k
                         , li []
-                            [ Dom.element "div"
-                                |> Dom.addClassConditional "dragging" isDragging
-                                |> scenarioMonsterToHtml monster label
-                                |> makeDraggable (PieceType pieceModel) Nothing dragEvents
-                                |> Dom.render
-                            ]
+                            [ node |> Dom.render ]
                         )
                     )
             )
