@@ -141,6 +141,64 @@ html
 
             .board-wrapper {
                 margin-left: 8.1rem;
+
+                .board {
+                    .monster {
+                        span {
+                            display: none;
+                        }
+
+                        .monster-visibility {
+                            position: absolute;
+                            width: 35px;
+                            height: 35px;
+
+                            &.two-player {
+                                top: 0px;
+                                left: -15px;
+                                transform: rotate(32deg);
+                            }
+
+                            &.three-player {
+                                top: 3px;
+                                transform: rotate(61deg);
+                                right: -17px;
+                            }
+
+                            &.four-player {
+                                bottom: -23px;
+                                left: 27px;
+                            }
+
+                            &.normal {
+                                background-color: #fff;
+                            }
+
+                            &.none {
+                                background-color: #000;
+                            }
+
+                            &.elite {
+                                background-color: #d9c200;
+                            }
+                        }
+
+
+                        &.boss {
+                            .monster-visibility {
+                                display: none;
+                            }
+                        }
+
+                        &:after {
+                            background-color: #bc1717;
+                        }
+
+                        &:not(.boss):after {
+                            @include mixins.mask(url('/img/hex-border-mask.png'), alpha, top right, 90px);
+                        }
+                    }
+                }
             }
         }
     }

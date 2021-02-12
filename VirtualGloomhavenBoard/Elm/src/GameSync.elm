@@ -779,7 +779,7 @@ encodeMonsterLevel level =
             "elite"
 
         Monster.None ->
-            ""
+            "none"
 
 
 encodeAvailableMonsters : Dict String (Array Int) -> List (List ( String, Encode.Value ))
