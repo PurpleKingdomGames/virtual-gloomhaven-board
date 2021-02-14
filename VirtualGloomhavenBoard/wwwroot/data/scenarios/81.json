@@ -71,7 +71,7 @@
                                 ],
                                 "monsters": [
                                     {
-                                        "monster": "living-spirit",
+                                        "monster": "night-demon",
                                         "initialX": 1,
                                         "initialY": 2,
                                         "twoPlayer": "normal",
@@ -369,7 +369,7 @@
         ],
         "monsters": [
             {
-                "monster": "living-spirit",
+                "monster": "night-demon",
                 "initialX": 4,
                 "initialY": 6,
                 "twoPlayer": "none",
@@ -377,7 +377,7 @@
                 "fourPlayer": "normal"
             },
             {
-                "monster": "living-spirit",
+                "monster": "night-demon",
                 "initialX": 3,
                 "initialY": 4,
                 "twoPlayer": "normal",
@@ -385,7 +385,7 @@
                 "fourPlayer": "normal"
             },
             {
-                "monster": "living-spirit",
+                "monster": "night-demon",
                 "initialX": 6,
                 "initialY": 2,
                 "twoPlayer": "normal",
@@ -393,7 +393,7 @@
                 "fourPlayer": "elite"
             },
             {
-                "monster": "living-spirit",
+                "monster": "night-demon",
                 "initialX": 6,
                 "initialY": 1,
                 "twoPlayer": "none",
