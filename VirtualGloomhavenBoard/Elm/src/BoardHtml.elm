@@ -29,6 +29,7 @@ type alias CellModel msg =
     , currentDraggable : Maybe MoveablePiece
     , dragOverlays : Bool
     , dragPieces : Bool
+    , dragDoors : Bool
     , dragEvents : DragEvents msg
     , dropEvents : DropEvents msg
     , passable : Bool
@@ -351,7 +352,7 @@ getCellHtml model =
                                     _ ->
                                         True
                             )
-                        |> List.map (overlayToHtml model.dragOverlays)
+                        |> List.map (overlayToHtml model.dragOverlays model.dragDoors)
                      )
                         ++ -- Players / Monsters / Summons
                            (case piece of
@@ -384,7 +385,7 @@ getCellHtml model =
                                             _ ->
                                                 False
                                     )
-                                |> List.map (overlayToHtml model.dragOverlays)
+                                |> List.map (overlayToHtml model.dragOverlays model.dragDoors)
                            )
                         ++ -- The current draggable piece
                            (case currentDraggable of
@@ -409,6 +410,7 @@ getCellHtml model =
                                             if any (\c -> c == ( x, y )) o.cells then
                                                 [ overlayToHtml
                                                     model.dragOverlays
+                                                    model.dragDoors
                                                     (BoardOverlayModel
                                                         False
                                                         (Just ( x, y ))
@@ -503,8 +505,8 @@ getSortOrderForOverlay overlay =
             9
 
 
-overlayToHtml : Bool -> BoardOverlayModel msg -> ( String, Dom.Element msg )
-overlayToHtml dragOverlays model =
+overlayToHtml : Bool -> Bool -> BoardOverlayModel msg -> ( String, Dom.Element msg )
+overlayToHtml dragOverlays dragDoors model =
     let
         label =
             getLabelForOverlay model.overlay model.coords
@@ -645,8 +647,30 @@ overlayToHtml dragOverlays model =
                         else
                             Dom.addAttribute (attribute "draggable" "false")
 
+                    Door _ _ ->
+                        if dragDoors then
+                            \e -> e
+
+                        else
+                            Dom.addAttribute (attribute "draggable" "false")
+
                     _ ->
                         Dom.addAttribute (attribute "draggable" "false")
+
+            else
+                \e -> e
+           )
+        |> (if dragDoors then
+                case model.overlay.ref of
+                    Door _ _ ->
+                        makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
+
+                    _ ->
+                        if dragOverlays then
+                            \e -> e
+
+                        else
+                            Dom.addAttribute (attribute "draggable" "false")
 
             else
                 \e -> e

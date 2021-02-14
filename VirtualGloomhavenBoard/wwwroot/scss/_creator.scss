@@ -21,6 +21,7 @@ html
                 align-items: center;
                 justify-content: flex-start;
                 padding-bottom: 1rem;
+                width: 10.5rem;
                 @include mixins.mask(url('/img/page-mask.png'), alpha, top right);
                 @include mixins.mask-repeat(repeat-y);
 
@@ -28,7 +29,7 @@ html
                     display: flex;
                     flex-direction: column;
                     min-height: 0;
-                    flex-basis: 3rem;
+                    flex-basis: 4rem;
                     width: 100%;
                     transition: flex-basis 0.25s;
 
@@ -68,14 +69,14 @@ html
                         -webkit-box-shadow: inset 0px -5px 5px 0px rgba(0,0,0,0.75);
                         -moz-box-shadow: inset 0px -5px 5px 0px rgba(0,0,0,0.75);
                         box-shadow: inset 0px -5px 5px 0px rgba(0,0,0,0.75);
-                        width: 8.2rem;
+                        width: 9.6rem;
                         text-align: center;
 
                         li {
                             padding: 0.2rem 1.2rem;
 
                             img {
-                                max-width: 38px;
+                                max-width: 45px;
                             }
 
                             &.size-3 {
@@ -87,7 +88,7 @@ html
                                     }
 
                                     &:last-child {
-                                        top: -52px;
+                                        top: -66px;
                                     }
                                 }
                             }
@@ -105,8 +106,8 @@ html
                             li {
                                 div.monster {
                                     position: relative;
-                                    max-width: 38px;
-                                    mask-size: 38px;
+                                    max-width: 45px;
+                                    mask-size: 45px;
                                     height: auto;
                                     display: inline-block;
 
@@ -115,7 +116,7 @@ html
                                     }
 
                                     img {
-                                        max-width: 38px;
+                                        max-width: 45px;
                                         height: auto;
                                     }
 
@@ -126,7 +127,6 @@ html
                             }
                         }
                     }
-
 
                     &.active {
                         flex-basis: 100%;
@@ -140,8 +140,6 @@ html
             }
 
             .board-wrapper {
-                margin-left: 8.1rem;
-
                 .board {
                     .monster {
                         span {
