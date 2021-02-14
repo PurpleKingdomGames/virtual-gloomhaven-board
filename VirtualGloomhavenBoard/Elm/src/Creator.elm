@@ -16,7 +16,7 @@ import Html.Events exposing (onClick)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy6, lazy7)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6, lazy7)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import List
@@ -377,11 +377,18 @@ view model =
                                 |> List.maximum
                                 |> Maybe.withDefault 0
                               )
+
+                    overlayId =
+                        1
+                            + (List.map (\o -> o.id) model.overlays
+                                |> List.maximum
+                                |> Maybe.withDefault 0
+                              )
                  in
                  [ ( "map-tile-list", lazy3 getMapTileListHtml model.roomData roomDragabble model.sideMenu )
-                 , ( "board-door-list", lazy4 getOverlayListHtml model.cachedDoors "Doors" overlayDragabble (model.sideMenu == DoorMenu) )
-                 , ( "board-obstacle-list", lazy4 getOverlayListHtml model.cachedObstacles "Obstacles" overlayDragabble (model.sideMenu == ObstacleMenu) )
-                 , ( "board-misc-list", lazy4 getOverlayListHtml model.cachedMisc "Misc." overlayDragabble (model.sideMenu == MiscMenu) )
+                 , ( "board-door-list", lazy5 getOverlayListHtml overlayId model.cachedDoors "Doors" overlayDragabble (model.sideMenu == DoorMenu) )
+                 , ( "board-obstacle-list", lazy5 getOverlayListHtml overlayId model.cachedObstacles "Obstacles" overlayDragabble (model.sideMenu == ObstacleMenu) )
+                 , ( "board-misc-list", lazy5 getOverlayListHtml overlayId model.cachedMisc "Misc." overlayDragabble (model.sideMenu == MiscMenu) )
                  , ( "board-monster-list", lazy3 getScenarioMonsterListHtml monsterId monsterDraggable (model.sideMenu == MonsterMenu) )
                  , ( "board-boss-list", lazy3 getScenarioBossListHtml monsterId monsterDraggable (model.sideMenu == BossMenu) )
                  ]
@@ -427,10 +434,56 @@ view model =
 
                                 Nothing ->
                                     ""
+
+                        draggableCoords =
+                            case model.currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        OverlayType o _ ->
+                                            let
+                                                coordList =
+                                                    case m.coords of
+                                                        Just initCoords ->
+                                                            model.overlays
+                                                                |> List.map (\o1 -> o1.cells)
+                                                                |> List.filter (\c1 -> List.any (\c -> c == initCoords) c1)
+                                                                |> List.foldl (++) []
+
+                                                        Nothing ->
+                                                            []
+
+                                                targetCoords =
+                                                    case m.target of
+                                                        Just _ ->
+                                                            o.cells
+
+                                                        Nothing ->
+                                                            []
+                                            in
+                                            coordList ++ targetCoords
+
+                                        _ ->
+                                            (case m.coords of
+                                                Just initCoords ->
+                                                    [ initCoords ]
+
+                                                Nothing ->
+                                                    []
+                                            )
+                                                ++ (case m.target of
+                                                        Just targetCoords ->
+                                                            [ targetCoords ]
+
+                                                        Nothing ->
+                                                            []
+                                                   )
+
+                                Nothing ->
+                                    []
                      in
                      List.repeat gridSize (List.repeat gridSize 0)
                         |> List.indexedMap
-                            (getBoardRowHtml model encodedDraggable)
+                            (getBoardRowHtml model encodedDraggable draggableCoords)
                     )
                 ]
             ]
@@ -517,8 +570,8 @@ getMenuHtml menuOpen =
         |> Dom.render
 
 
-getBoardRowHtml : Model -> String -> Int -> List Int -> ( String, Html Msg )
-getBoardRowHtml model encodedDraggable y row =
+getBoardRowHtml : Model -> String -> List ( Int, Int ) -> Int -> List Int -> ( String, Html Msg )
+getBoardRowHtml model encodedDraggable cellsForDraggable y row =
     ( "board-row-" ++ String.fromInt y
     , Keyed.node
         "div"
@@ -530,25 +583,7 @@ getBoardRowHtml model encodedDraggable y row =
                         "board-cell-" ++ String.fromInt x ++ "-" ++ String.fromInt y
 
                     useDraggable =
-                        case model.currentDraggable of
-                            Just m ->
-                                case m.ref of
-                                    PieceType p ->
-                                        (p.x == x && p.y == y) || (m.coords == Just ( x, y ))
-
-                                    OverlayType o _ ->
-                                        case m.target of
-                                            Just _ ->
-                                                List.any (\c -> c == ( x, y )) o.cells
-
-                                            Nothing ->
-                                                False
-
-                                    RoomType r ->
-                                        r.origin == ( x, y ) || (m.coords == Just ( x, y ))
-
-                            Nothing ->
-                                False
+                        List.any (\c -> c == ( x, y )) cellsForDraggable
 
                     currentDraggable =
                         if useDraggable then
@@ -581,7 +616,7 @@ getCellHtml rooms overlays pieces monsters encodedDraggable x y =
                     Nothing
     in
     BoardHtml.getCellHtml
-        (CellModel overlays pieces monsters ( x, y ) currentDraggable True False dragEvents dropEvents True False)
+        (CellModel overlays pieces monsters ( x, y ) currentDraggable True True True dragEvents dropEvents True False)
         |> Dom.render
 
 
@@ -621,8 +656,8 @@ getMapTileListHtml mapTiles currentDraggable sideMenu =
         ]
 
 
-getOverlayListHtml : List String -> String -> String -> Bool -> Html Msg
-getOverlayListHtml overlays label currentDraggable active =
+getOverlayListHtml : Int -> List String -> String -> String -> Bool -> Html Msg
+getOverlayListHtml id overlays label currentDraggable active =
     let
         htmlClass =
             if active then
@@ -654,7 +689,7 @@ getOverlayListHtml overlays label currentDraggable active =
                             isDragging =
                                 currentDraggable == k
                         in
-                        ( "new-overlay-" ++ k, lazy2 lazyBoardOverlayListHtml k isDragging )
+                        ( "new-overlay-" ++ k, lazy3 lazyBoardOverlayListHtml id k isDragging )
                     )
             )
         ]
@@ -780,8 +815,8 @@ lazyMapTileListHtml ref currentDraggable =
         |> Dom.render
 
 
-lazyBoardOverlayListHtml : String -> Bool -> Html Msg
-lazyBoardOverlayListHtml overlayStr isDragging =
+lazyBoardOverlayListHtml : Int -> String -> Bool -> Html Msg
+lazyBoardOverlayListHtml id overlayStr isDragging =
     case getBoardOverlayType overlayStr of
         Just overlay ->
             let
@@ -840,7 +875,7 @@ lazyBoardOverlayListHtml overlayStr isDragging =
 
                 boardOverlayModel =
                     { ref = overlay
-                    , id = 0
+                    , id = id
                     , direction = Default
                     , cells = cells
                     }
