@@ -10,7 +10,7 @@ import Dict
 import Dom
 import DragPorts
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, assignIdentifier, moveOverlay, moveOverlayWithoutState, movePiece, movePieceWithoutState)
-import Html exposing (Html, div, header, img, input, li, section, span, text, ul)
+import Html exposing (Html, div, header, img, input, li, nav, section, span, text, ul)
 import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, tabindex, target, type_)
 import Html.Events exposing (onClick)
 import Html.Events.Extra.Drag as DragDrop
@@ -40,6 +40,8 @@ type alias Model =
     , currentDraggable : Maybe MoveablePiece
     , menuOpen : Bool
     , sideMenu : SideMenu
+    , contextMenuState : ContextMenu
+    , contextMenuPosition : ( Int, Int )
     , cachedDoors : List String
     , cachedObstacles : List String
     , cachedMisc : List String
@@ -55,6 +57,14 @@ type SideMenu
     | BossMenu
 
 
+type ContextMenu
+    = Open
+    | Closed
+    | TwoPlayerSubMenu
+    | ThreePlayerSubMenu
+    | FourPlayerSubMenu
+
+
 type Msg
     = MoveStarted MoveablePiece (Maybe ( DragDrop.EffectAllowed, Decode.Value ))
     | MoveTargetChanged ( Int, Int ) (Maybe ( DragDrop.DropEffect, Decode.Value ))
@@ -65,6 +75,8 @@ type Msg
     | TouchCanceled
     | TouchEnd ( Float, Float )
     | ChangeSideMenu SideMenu
+    | OpenContextMenu ( Int, Int )
+    | CloseContextMenu
     | NoOp
 
 
@@ -139,7 +151,7 @@ init _ =
                     )
                     ( [], [], [] )
     in
-    ( Model "" [] [] [] Nothing False MapTileMenu doors obstacles misc
+    ( Model "" [] [] [] Nothing False MapTileMenu Closed ( 0, 0 ) doors obstacles misc
     , Cmd.none
     )
 
@@ -291,6 +303,12 @@ update msg model =
 
         ChangeSideMenu menu ->
             ( { model | sideMenu = menu }, Cmd.none )
+
+        OpenContextMenu ( x, y ) ->
+            ( { model | contextMenuState = Open }, Cmd.none )
+
+        CloseContextMenu ->
+            ( { model | contextMenuState = Closed }, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -488,6 +506,7 @@ view model =
                 ]
             ]
         , lazy getFooterHtml Version.get
+        , lazy5 getContextMenu model.contextMenuState model.contextMenuPosition model.roomData model.overlays model.monsters
         ]
 
 
@@ -592,7 +611,7 @@ getBoardRowHtml model encodedDraggable cellsForDraggable y row =
                         else
                             ""
                 in
-                ( id, lazy7 getCellHtml model.roomData model.overlays emptyList model.monsters currentDraggable x y )
+                ( id, lazy6 getCellHtml model.overlays emptyList model.monsters currentDraggable x y )
             )
             row
         )
@@ -604,8 +623,8 @@ subscriptions _ =
     Sub.batch []
 
 
-getCellHtml : List RoomData -> List BoardOverlay -> List Piece -> List ScenarioMonster -> String -> Int -> Int -> Html Msg
-getCellHtml rooms overlays pieces monsters encodedDraggable x y =
+getCellHtml : List BoardOverlay -> List Piece -> List ScenarioMonster -> String -> Int -> Int -> Html Msg
+getCellHtml overlays pieces monsters encodedDraggable x y =
     let
         currentDraggable =
             case Decode.decodeString decodeMoveablePiece encodedDraggable of
@@ -617,6 +636,7 @@ getCellHtml rooms overlays pieces monsters encodedDraggable x y =
     in
     BoardHtml.getCellHtml
         (CellModel overlays pieces monsters ( x, y ) currentDraggable True True True dragEvents dropEvents True False)
+        |> Dom.addActionStopAndPrevent ( "click", OpenContextMenu ( x, y ) )
         |> Dom.render
 
 
@@ -898,6 +918,70 @@ lazyBoardOverlayListHtml id overlayStr isDragging =
 
         Nothing ->
             li [] []
+
+
+getContextMenu : ContextMenu -> ( Int, Int ) -> List RoomData -> List BoardOverlay -> List ScenarioMonster -> Html msg
+getContextMenu state ( x, y ) rooms overlays monsters =
+    let
+        hasMonster =
+            List.any (\m -> m.initialX == x && m.initialY == y) monsters
+
+        menuList =
+            if state /= Closed then
+                if hasMonster then
+                    [ li []
+                        [ span [] [ text "2 Player State" ]
+                        , ul []
+                            [ li []
+                                [ text "None" ]
+                            , li
+                                []
+                                [ text "Normal" ]
+                            , li
+                                []
+                                [ text "Elite" ]
+                            ]
+                        ]
+                    , li []
+                        [ span [] [ text "3 Player State" ]
+                        , ul []
+                            [ li []
+                                [ text "None" ]
+                            , li
+                                []
+                                [ text "Normal" ]
+                            , li
+                                []
+                                [ text "Elite" ]
+                            ]
+                        ]
+                    , li []
+                        [ span [] [ text "4 Player State" ]
+                        , ul []
+                            [ li []
+                                [ text "None" ]
+                            , li
+                                []
+                                [ text "Normal" ]
+                            , li
+                                []
+                                [ text "Elite" ]
+                            ]
+                        ]
+                    ]
+
+                else
+                    []
+
+            else
+                []
+    in
+    div [ class "context-menu" ]
+        [ nav []
+            [ ul []
+                []
+            ]
+        ]
 
 
 mapPieceToScenarioMonster : Piece -> List ScenarioMonster -> Maybe ( Int, Int ) -> ( Int, Int ) -> Piece -> Maybe ScenarioMonster
