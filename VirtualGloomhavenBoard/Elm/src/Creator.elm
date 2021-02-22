@@ -78,7 +78,8 @@ type Msg
     | TouchEnd ( Float, Float )
     | ChangeSideMenu SideMenu
     | OpenContextMenu ( Int, Int )
-    | CloseContextMenu
+    | ChangeContextMenuState ContextMenu
+    | ChangeMonsterState Int Int MonsterLevel
     | NoOp
 
 
@@ -315,11 +316,42 @@ update msg model =
         ChangeSideMenu menu ->
             ( { model | sideMenu = menu }, Cmd.none )
 
-        OpenContextMenu ( x, y ) ->
-            ( { model | contextMenuState = Open }, Cmd.none )
+        OpenContextMenu pos ->
+            ( { model | contextMenuState = Open, contextMenuPosition = pos }, Cmd.none )
 
-        CloseContextMenu ->
-            ( { model | contextMenuState = Closed }, Cmd.none )
+        ChangeContextMenuState state ->
+            ( { model | contextMenuState = state }, Cmd.none )
+
+        ChangeMonsterState id playerSize level ->
+            let
+                monster =
+                    List.filter (\m1 -> m1.monster.id == id) model.monsters
+                        |> List.head
+            in
+            case monster of
+                Just m ->
+                    let
+                        newMonster =
+                            if playerSize == 2 then
+                                { m | twoPlayer = level }
+
+                            else if playerSize == 3 then
+                                { m | threePlayer = level }
+
+                            else if playerSize == 4 then
+                                { m | fourPlayer = level }
+
+                            else
+                                m
+
+                        newMonsterList =
+                            newMonster
+                                :: List.filter (\m1 -> m1.monster.id /= id) model.monsters
+                    in
+                    ( { model | monsters = newMonsterList, contextMenuState = Open }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -931,9 +963,17 @@ lazyBoardOverlayListHtml id overlayStr isDragging =
             li [] []
 
 
-getContextMenu : ContextMenu -> ( Int, Int ) -> List ( MapTileRef, List MapTile ) -> List BoardOverlay -> List ScenarioMonster -> Html msg
+getContextMenu : ContextMenu -> ( Int, Int ) -> List ( MapTileRef, List MapTile ) -> List BoardOverlay -> List ScenarioMonster -> Html Msg
 getContextMenu state ( x, y ) rooms overlays monsters =
     let
+        filteredOverlays =
+            List.filter (\o -> List.any (\c -> c == ( x, y )) o.cells) overlays
+
+        filteredRoom =
+            List.filter
+                (\( _, cells ) -> List.any (\c -> c.x == x && c.y == y) cells)
+                rooms
+
         monster =
             List.filter (\m -> m.initialX == x && m.initialY == y) monsters
                 |> List.head
@@ -944,9 +984,9 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                     Just m ->
                         case m.monster.monster of
                             NormalType _ ->
-                                [ getMonsterLevelHtml (state == TwoPlayerSubMenu) m.twoPlayer 2
-                                , getMonsterLevelHtml (state == ThreePlayerSubMenu) m.threePlayer 3
-                                , getMonsterLevelHtml (state == FourPlayerSubMenu) m.fourPlayer 4
+                                [ getMonsterLevelHtml TwoPlayerSubMenu (state == TwoPlayerSubMenu) m.twoPlayer 2 m.monster.id
+                                , getMonsterLevelHtml ThreePlayerSubMenu (state == ThreePlayerSubMenu) m.threePlayer 3 m.monster.id
+                                , getMonsterLevelHtml FourPlayerSubMenu (state == FourPlayerSubMenu) m.fourPlayer 4 m.monster.id
                                 ]
 
                             _ ->
@@ -967,7 +1007,7 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                     _ ->
                                         True
                             )
-                            overlays
+                            filteredOverlays
                             |> List.map
                                 (\o ->
                                     li [ class "rotate-overlay" ]
@@ -975,29 +1015,23 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                         ]
                                 )
                        )
-                    ++ (rooms
-                            |> List.filterMap
-                                (\( room, cells ) ->
-                                    if List.any (\c -> c.x == x && c.y == y) cells then
-                                        let
-                                            refStr =
-                                                Maybe.withDefault "" (refToString room)
+                    ++ (filteredRoom
+                            |> List.map
+                                (\( room, _ ) ->
+                                    let
+                                        refStr =
+                                            Maybe.withDefault "" (refToString room)
 
-                                            firstChar =
-                                                String.slice 0 1 refStr
-                                                    |> String.toUpper
+                                        firstChar =
+                                            String.slice 0 1 refStr
+                                                |> String.toUpper
 
-                                            restChars =
-                                                String.slice 1 (String.length refStr) refStr
-                                        in
-                                        Just
-                                            (li [ class "rotate-map-tile" ]
-                                                [ text ("Rotate " ++ firstChar ++ restChars)
-                                                ]
-                                            )
-
-                                    else
-                                        Nothing
+                                        restChars =
+                                            String.slice 1 (String.length refStr) refStr
+                                    in
+                                    li [ class "rotate-map-tile" ]
+                                        [ text ("Rotate " ++ firstChar ++ restChars)
+                                        ]
                                 )
                        )
                     ++ (case monster of
@@ -1027,7 +1061,33 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                 [ text ("Remove " ++ getOverlayLabel o.ref)
                                 ]
                         )
-                        overlays
+                        filteredOverlays
+                    ++ (filteredRoom
+                            |> List.map
+                                (\( room, _ ) ->
+                                    let
+                                        refStr =
+                                            Maybe.withDefault "" (refToString room)
+
+                                        firstChar =
+                                            String.slice 0 1 refStr
+                                                |> String.toUpper
+
+                                        restChars =
+                                            String.slice 1 (String.length refStr) refStr
+                                    in
+                                    li [ class "remove-map-tile" ]
+                                        [ text ("Remove " ++ firstChar ++ restChars)
+                                        ]
+                                )
+                       )
+                    ++ [ li
+                            [ class "cancel-menu"
+                            , onClick (ChangeContextMenuState Closed)
+                            ]
+                            [ text "Cancel"
+                            ]
+                       ]
 
             else
                 []
@@ -1075,8 +1135,8 @@ mapPieceToScenarioMonster newPiece monsterList origin ( targetX, targetY ) piece
             Nothing
 
 
-getMonsterLevelHtml : Bool -> MonsterLevel -> Int -> Html msg
-getMonsterLevelHtml active selectedLevel playerSize =
+getMonsterLevelHtml : ContextMenu -> Bool -> MonsterLevel -> Int -> Int -> Html Msg
+getMonsterLevelHtml stateChange active selectedLevel playerSize id =
     li
         [ class "edit-monster"
         , class
@@ -1086,6 +1146,7 @@ getMonsterLevelHtml active selectedLevel playerSize =
              else
                 ""
             )
+        , onClick (ChangeContextMenuState stateChange)
         ]
         [ span [] [ text (String.fromInt playerSize ++ " Player State") ]
         , ul []
@@ -1098,6 +1159,7 @@ getMonsterLevelHtml active selectedLevel playerSize =
                      else
                         ""
                     )
+                , onClick (ChangeMonsterState id playerSize Monster.None)
                 ]
                 [ text "None" ]
             , li
@@ -1109,6 +1171,7 @@ getMonsterLevelHtml active selectedLevel playerSize =
                      else
                         ""
                     )
+                , onClick (ChangeMonsterState id playerSize Monster.Normal)
                 ]
                 [ text "Normal" ]
             , li
@@ -1120,8 +1183,14 @@ getMonsterLevelHtml active selectedLevel playerSize =
                      else
                         ""
                     )
+                , onClick (ChangeMonsterState id playerSize Monster.Elite)
                 ]
                 [ text "Elite" ]
+            , li
+                [ class "monster-cancel"
+                , onClick (ChangeContextMenuState Open)
+                ]
+                [ text "Cancel" ]
             ]
         ]
 
