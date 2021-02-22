@@ -568,6 +568,9 @@ overlayToHtml dragOverlays dragDoors model =
                 Vertical ->
                     "vertical"
 
+                VerticalReverse ->
+                    "vertical-reverse"
+
                 Horizontal ->
                     "horizontal"
 
@@ -877,21 +880,25 @@ getOverlayImageName overlay coords =
             ".png"
 
         extendedOverlayName =
-            case ( overlay.ref, overlay.direction ) of
-                ( Door Stone _, Vertical ) ->
-                    "-vert"
+            if overlay.direction == Vertical || overlay.direction == VerticalReverse then
+                case overlay.ref of
+                    Door Stone _ ->
+                        "-vert"
 
-                ( Door BreakableWall _, Vertical ) ->
-                    "-vert"
+                    Door BreakableWall _ ->
+                        "-vert"
 
-                ( Door Wooden _, Vertical ) ->
-                    "-vert"
+                    Door Wooden _ ->
+                        "-vert"
 
-                ( Obstacle Altar, Vertical ) ->
-                    "-vert"
+                    Obstacle Altar ->
+                        "-vert"
 
-                _ ->
-                    ""
+                    _ ->
+                        ""
+
+            else
+                ""
 
         segmentPart =
             case coords of

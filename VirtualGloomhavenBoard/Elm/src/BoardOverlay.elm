@@ -109,6 +109,7 @@ type BoardOverlayDirectionType
     = Default
     | Horizontal
     | Vertical
+    | VerticalReverse
     | DiagonalLeft
     | DiagonalRight
     | DiagonalLeftReverse

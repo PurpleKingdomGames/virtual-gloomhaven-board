@@ -2595,6 +2595,9 @@ overlayToHtml model =
                 Vertical ->
                     "vertical"
 
+                VerticalReverse ->
+                    "vertical-reverse"
+
                 Horizontal ->
                     "horizontal"
 

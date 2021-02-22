@@ -417,6 +417,9 @@ encodeOverlayDirection dir =
         Vertical ->
             "vertical"
 
+        VerticalReverse ->
+            "vertical-reverse"
+
 
 encodeOverlayCells : List ( Int, Int ) -> List (List Int)
 encodeOverlayCells cells =

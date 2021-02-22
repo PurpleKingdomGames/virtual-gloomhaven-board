@@ -11,6 +11,7 @@ import Dict
 import Dom
 import DragPorts
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, assignIdentifier, moveOverlay, moveOverlayWithoutState, movePiece, movePieceWithoutState)
+import Hexagon exposing (rotate)
 import Html exposing (Html, div, header, img, input, li, nav, section, span, text, ul)
 import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, tabindex, target, type_)
 import Html.Events exposing (onClick)
@@ -80,6 +81,9 @@ type Msg
     | OpenContextMenu ( Int, Int )
     | ChangeContextMenuState ContextMenu
     | ChangeMonsterState Int Int MonsterLevel
+    | RemoveMonster Int
+    | RotateOverlay Int
+    | RemoveOverlay Int
     | NoOp
 
 
@@ -352,6 +356,73 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
+
+        RemoveMonster id ->
+            ( { model | monsters = List.filter (\m -> m.monster.id /= id) model.monsters }, Cmd.none )
+
+        RotateOverlay id ->
+            let
+                o1 =
+                    List.filter (\o -> o.id == id) model.overlays
+                        |> List.head
+            in
+            case o1 of
+                Just overlay ->
+                    let
+                        refPoint =
+                            Maybe.withDefault ( 0, 0 ) (List.head overlay.cells)
+
+                        cells =
+                            List.map (\c -> rotate c refPoint 1) overlay.cells
+
+                        direction =
+                            case overlay.direction of
+                                Default ->
+                                    DiagonalLeft
+
+                                DiagonalLeft ->
+                                    if List.length cells == 1 then
+                                        Vertical
+
+                                    else
+                                        DiagonalRight
+
+                                Vertical ->
+                                    DiagonalRight
+
+                                DiagonalRight ->
+                                    Horizontal
+
+                                Horizontal ->
+                                    DiagonalLeftReverse
+
+                                DiagonalLeftReverse ->
+                                    if List.length cells == 1 then
+                                        VerticalReverse
+
+                                    else
+                                        DiagonalRightReverse
+
+                                VerticalReverse ->
+                                    DiagonalRightReverse
+
+                                DiagonalRightReverse ->
+                                    Default
+
+                        newOverlay =
+                            { overlay | cells = cells, direction = direction }
+
+                        overlayList =
+                            newOverlay
+                                :: List.filter (\o2 -> o2.id /= id) model.overlays
+                    in
+                    ( { model | overlays = overlayList }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        RemoveOverlay id ->
+            ( { model | overlays = List.filter (\o -> o.id /= id) model.overlays }, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -1010,7 +1081,10 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                             filteredOverlays
                             |> List.map
                                 (\o ->
-                                    li [ class "rotate-overlay" ]
+                                    li
+                                        [ class "rotate-overlay"
+                                        , onClick (RotateOverlay o.id)
+                                        ]
                                         [ text ("Rotate " ++ getOverlayLabel o.ref)
                                         ]
                                 )
@@ -1047,7 +1121,10 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                                 )
                                             |> String.join " "
                                 in
-                                [ li [ class "remove-monster" ]
+                                [ li
+                                    [ class "remove-monster"
+                                    , onClick (RemoveMonster m.monster.id)
+                                    ]
                                     [ text ("Remove " ++ monsterName)
                                     ]
                                 ]
@@ -1057,7 +1134,10 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                        )
                     ++ List.map
                         (\o ->
-                            li [ class "remove-overlay" ]
+                            li
+                                [ class "remove-overlay"
+                                , onClick (RemoveOverlay o.id)
+                                ]
                                 [ text ("Remove " ++ getOverlayLabel o.ref)
                                 ]
                         )
