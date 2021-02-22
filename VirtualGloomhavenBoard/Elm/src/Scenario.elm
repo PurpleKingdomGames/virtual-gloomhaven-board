@@ -1,8 +1,8 @@
-module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, empty, mapTileDataToList, mapTileDataToOverlayList)
+module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, empty, mapTileDataToList, mapTileDataToOverlayList, normaliseAndRotateMapTile)
 
 import BoardMapTile exposing (MapTile, MapTileRef(..), getMapTileListByRef, refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DoorSubType(..))
-import Dict exposing (Dict, empty, singleton, union)
+import Dict exposing (Dict, singleton, union)
 import Hexagon exposing (cubeToOddRow, oddRowToCube, rotate)
 import Monster exposing (Monster, MonsterLevel, MonsterType)
 

@@ -1,8 +1,9 @@
 port module Creator exposing (main)
 
 import AppStorage exposing (MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece)
+import Array exposing (Array)
 import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable, scenarioMonsterToHtml)
-import BoardMapTile exposing (MapTileRef(..), getAllRefs, refToString, stringToRef)
+import BoardMapTile exposing (MapTile, MapTileRef(..), getAllRefs, getGridByRef, getMapTileListByRef, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getAllOverlayTypes, getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
 import Char exposing (toLocaleUpper)
@@ -22,7 +23,7 @@ import Json.Encode as Encode
 import List
 import Maybe
 import Monster exposing (MonsterLevel(..), MonsterType(..), NormalMonsterType, getAllBosses, getAllMonsters, monsterTypeToString)
-import Scenario exposing (ScenarioMonster)
+import Scenario exposing (ScenarioMonster, normaliseAndRotateMapTile)
 import Version
 
 
@@ -45,6 +46,7 @@ type alias Model =
     , cachedDoors : List String
     , cachedObstacles : List String
     , cachedMisc : List String
+    , cachedRoomCells : List ( MapTileRef, List MapTile )
     }
 
 
@@ -137,6 +139,15 @@ init _ =
                                 True
                     )
                 |> Dict.toList
+                |> List.sortBy
+                    (\( _, v ) ->
+                        case v of
+                            StartingLocation ->
+                                0
+
+                            _ ->
+                                1
+                    )
                 |> List.foldr
                     (\( k, v ) ( d, o, m ) ->
                         case v of
@@ -151,7 +162,7 @@ init _ =
                     )
                     ( [], [], [] )
     in
-    ( Model "" [] [] [] Nothing False MapTileMenu Closed ( 0, 0 ) doors obstacles misc
+    ( Model "" [] [] [] Nothing False MapTileMenu Closed ( 0, 0 ) doors obstacles misc []
     , Cmd.none
     )
 
@@ -287,7 +298,7 @@ update msg model =
                         Nothing ->
                             ( model.overlays, model.monsters, model.roomData )
             in
-            ( { model | currentDraggable = Nothing, overlays = overlays, monsters = monsters, roomData = rooms }, Cmd.none )
+            ( { model | currentDraggable = Nothing, overlays = overlays, monsters = monsters, roomData = rooms, cachedRoomCells = calculateRoomCells rooms }, Cmd.none )
 
         TouchStart piece ->
             update (MoveStarted piece Nothing) model
@@ -506,7 +517,7 @@ view model =
                 ]
             ]
         , lazy getFooterHtml Version.get
-        , lazy5 getContextMenu model.contextMenuState model.contextMenuPosition model.roomData model.overlays model.monsters
+        , lazy5 getContextMenu model.contextMenuState model.contextMenuPosition model.cachedRoomCells model.overlays model.monsters
         ]
 
 
@@ -920,66 +931,123 @@ lazyBoardOverlayListHtml id overlayStr isDragging =
             li [] []
 
 
-getContextMenu : ContextMenu -> ( Int, Int ) -> List RoomData -> List BoardOverlay -> List ScenarioMonster -> Html msg
+getContextMenu : ContextMenu -> ( Int, Int ) -> List ( MapTileRef, List MapTile ) -> List BoardOverlay -> List ScenarioMonster -> Html msg
 getContextMenu state ( x, y ) rooms overlays monsters =
     let
-        hasMonster =
-            List.any (\m -> m.initialX == x && m.initialY == y) monsters
+        monster =
+            List.filter (\m -> m.initialX == x && m.initialY == y) monsters
+                |> List.head
 
         menuList =
             if state /= Closed then
-                if hasMonster then
-                    [ li []
-                        [ span [] [ text "2 Player State" ]
-                        , ul []
-                            [ li []
-                                [ text "None" ]
-                            , li
-                                []
-                                [ text "Normal" ]
-                            , li
-                                []
-                                [ text "Elite" ]
-                            ]
-                        ]
-                    , li []
-                        [ span [] [ text "3 Player State" ]
-                        , ul []
-                            [ li []
-                                [ text "None" ]
-                            , li
-                                []
-                                [ text "Normal" ]
-                            , li
-                                []
-                                [ text "Elite" ]
-                            ]
-                        ]
-                    , li []
-                        [ span [] [ text "4 Player State" ]
-                        , ul []
-                            [ li []
-                                [ text "None" ]
-                            , li
-                                []
-                                [ text "Normal" ]
-                            , li
-                                []
-                                [ text "Elite" ]
-                            ]
-                        ]
-                    ]
+                (case monster of
+                    Just m ->
+                        case m.monster.monster of
+                            NormalType _ ->
+                                [ getMonsterLevelHtml (state == TwoPlayerSubMenu) m.twoPlayer 2
+                                , getMonsterLevelHtml (state == ThreePlayerSubMenu) m.threePlayer 3
+                                , getMonsterLevelHtml (state == FourPlayerSubMenu) m.fourPlayer 4
+                                ]
 
-                else
-                    []
+                            _ ->
+                                []
+
+                    Nothing ->
+                        []
+                )
+                    ++ (List.filter
+                            (\o ->
+                                case o.ref of
+                                    StartingLocation ->
+                                        False
+
+                                    Rift ->
+                                        False
+
+                                    _ ->
+                                        True
+                            )
+                            overlays
+                            |> List.map
+                                (\o ->
+                                    li [ class "rotate-overlay" ]
+                                        [ text ("Rotate " ++ getOverlayLabel o.ref)
+                                        ]
+                                )
+                       )
+                    ++ (rooms
+                            |> List.filterMap
+                                (\( room, cells ) ->
+                                    if List.any (\c -> c.x == x && c.y == y) cells then
+                                        let
+                                            refStr =
+                                                Maybe.withDefault "" (refToString room)
+
+                                            firstChar =
+                                                String.slice 0 1 refStr
+                                                    |> String.toUpper
+
+                                            restChars =
+                                                String.slice 1 (String.length refStr) refStr
+                                        in
+                                        Just
+                                            (li [ class "rotate-map-tile" ]
+                                                [ text ("Rotate " ++ firstChar ++ restChars)
+                                                ]
+                                            )
+
+                                    else
+                                        Nothing
+                                )
+                       )
+                    ++ (case monster of
+                            Just m ->
+                                let
+                                    monsterName =
+                                        Maybe.withDefault "" (monsterTypeToString m.monster.monster)
+                                            |> String.split "-"
+                                            |> List.map
+                                                (\s ->
+                                                    String.toUpper (String.slice 0 1 s)
+                                                        ++ String.slice 1 (String.length s) s
+                                                )
+                                            |> String.join " "
+                                in
+                                [ li [ class "remove-monster" ]
+                                    [ text ("Remove " ++ monsterName)
+                                    ]
+                                ]
+
+                            Nothing ->
+                                []
+                       )
+                    ++ List.map
+                        (\o ->
+                            li [ class "remove-overlay" ]
+                                [ text ("Remove " ++ getOverlayLabel o.ref)
+                                ]
+                        )
+                        overlays
 
             else
                 []
+
+        isOpen =
+            state /= Closed && List.length menuList > 0
     in
-    div [ class "context-menu" ]
+    div
+        [ class "context-menu"
+        , class
+            (if isOpen then
+                "open"
+
+             else
+                ""
+            )
+        ]
         [ nav []
             [ ul []
-                []
+                menuList
             ]
         ]
 
@@ -1005,3 +1073,76 @@ mapPieceToScenarioMonster newPiece monsterList origin ( targetX, targetY ) piece
 
         _ ->
             Nothing
+
+
+getMonsterLevelHtml : Bool -> MonsterLevel -> Int -> Html msg
+getMonsterLevelHtml active selectedLevel playerSize =
+    li
+        [ class "edit-monster"
+        , class
+            (if active then
+                "active"
+
+             else
+                ""
+            )
+        ]
+        [ span [] [ text (String.fromInt playerSize ++ " Player State") ]
+        , ul []
+            [ li
+                [ class "monster-none"
+                , class
+                    (if selectedLevel == Monster.None then
+                        "selected"
+
+                     else
+                        ""
+                    )
+                ]
+                [ text "None" ]
+            , li
+                [ class "monster-normal"
+                , class
+                    (if selectedLevel == Monster.Normal then
+                        "selected"
+
+                     else
+                        ""
+                    )
+                ]
+                [ text "Normal" ]
+            , li
+                [ class "monster-elite"
+                , class
+                    (if selectedLevel == Monster.Elite then
+                        "selected"
+
+                     else
+                        ""
+                    )
+                ]
+                [ text "Elite" ]
+            ]
+        ]
+
+
+calculateRoomCells : List RoomData -> List ( MapTileRef, List MapTile )
+calculateRoomCells rooms =
+    rooms
+        |> List.map
+            (\r ->
+                let
+                    cells =
+                        getMapTileListByRef r.ref
+
+                    refPoint =
+                        ( 0, 0 )
+                in
+                ( r.ref
+                , List.map
+                    (\c ->
+                        normaliseAndRotateMapTile r.turns refPoint ( c.x, c.y ) c
+                    )
+                    cells
+                )
+            )
