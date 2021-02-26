@@ -1,4 +1,4 @@
-module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, empty, mapTileDataToList, mapTileDataToOverlayList, normaliseAndRotateMapTile)
+module Scenario exposing (BoardBounds, DoorData(..), MapTileData, Scenario, ScenarioMonster, empty, mapTileDataToList, mapTileDataToOverlayList, normaliseAndRotateMapTile, normaliseAndRotatePoint)
 
 import BoardMapTile exposing (MapTile, MapTileRef(..), getMapTileListByRef, refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DoorSubType(..))

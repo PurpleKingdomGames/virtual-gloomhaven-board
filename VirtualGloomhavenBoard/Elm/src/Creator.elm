@@ -4,27 +4,27 @@ import AppStorage exposing (MoveablePiece, MoveablePieceType(..), decodeMoveable
 import Array exposing (Array)
 import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable, scenarioMonsterToHtml)
 import BoardMapTile exposing (MapTile, MapTileRef(..), getAllRefs, getGridByRef, getMapTileListByRef, refToString, stringToRef)
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getAllOverlayTypes, getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
-import Char exposing (toLocaleUpper)
-import Dict
+import Dict exposing (Dict)
 import Dom
 import DragPorts
-import Game exposing (AIType(..), Piece, PieceType(..), RoomData, assignIdentifier, moveOverlay, moveOverlayWithoutState, movePiece, movePieceWithoutState)
+import Game exposing (AIType(..), Piece, PieceType(..), RoomData, moveOverlayWithoutState, movePieceWithoutState)
 import Hexagon exposing (rotate)
-import Html exposing (Html, div, header, img, input, li, nav, section, span, text, ul)
-import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, tabindex, target, type_)
+import Html exposing (Html, div, header, input, li, nav, section, span, text, ul)
+import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, tabindex, target, type_, value)
 import Html.Events exposing (onClick)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6, lazy7)
-import Json.Decode as Decode exposing (Decoder)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6)
+import Json.Decode as Decode
 import Json.Encode as Encode
 import List
 import Maybe
-import Monster exposing (MonsterLevel(..), MonsterType(..), NormalMonsterType, getAllBosses, getAllMonsters, monsterTypeToString)
-import Scenario exposing (ScenarioMonster, normaliseAndRotateMapTile)
+import Monster exposing (MonsterLevel(..), MonsterType(..), getAllBosses, getAllMonsters, monsterTypeToString)
+import Random exposing (maxInt)
+import Scenario exposing (ScenarioMonster, normaliseAndRotateMapTile, normaliseAndRotatePoint)
 import Version
 
 
@@ -36,7 +36,7 @@ port onCellFromPoint : (( Int, Int, Bool ) -> msg) -> Sub msg
 
 type alias Model =
     { scenarioTitle : String
-    , roomData : List RoomData
+    , roomData : List ExtendedRoomData
     , overlays : List BoardOverlay
     , monsters : List ScenarioMonster
     , currentDraggable : Maybe MoveablePiece
@@ -47,7 +47,13 @@ type alias Model =
     , cachedDoors : List String
     , cachedObstacles : List String
     , cachedMisc : List String
-    , cachedRoomCells : List ( MapTileRef, List MapTile )
+    , cachedRoomCells : List ( MapTileRef, Dict ( Int, Int ) Bool )
+    }
+
+
+type alias ExtendedRoomData =
+    { data : RoomData
+    , rotationPoint : ( Int, Int )
     }
 
 
@@ -84,6 +90,8 @@ type Msg
     | RemoveMonster Int
     | RotateOverlay Int
     | RemoveOverlay Int
+    | RotateRoom MapTileRef
+    | RemoveRoom MapTileRef
     | NoOp
 
 
@@ -253,7 +261,7 @@ update msg model =
 
         MoveCompleted ->
             let
-                ( overlays, monsters, rooms ) =
+                moveData =
                     case model.currentDraggable of
                         Just m ->
                             case ( m.ref, m.target ) of
@@ -262,7 +270,11 @@ update msg model =
                                         ( g, newOverlay, _ ) =
                                             moveOverlayWithoutState o m.coords prevCoords coords model.overlays
                                     in
-                                    ( newOverlay :: g, model.monsters, model.roomData )
+                                    { overlays = newOverlay :: g
+                                    , monsters = model.monsters
+                                    , roomData = model.roomData
+                                    , cachedRoomCells = model.cachedRoomCells
+                                    }
 
                                 ( PieceType p, Just target ) ->
                                     case p.ref of
@@ -278,32 +290,70 @@ update msg model =
                                                 m2 =
                                                     List.filterMap (mapPieceToScenarioMonster newPiece model.monsters m.coords target) newPieces
                                             in
-                                            ( model.overlays, m2, model.roomData )
+                                            { overlays = model.overlays
+                                            , monsters = m2
+                                            , roomData = model.roomData
+                                            , cachedRoomCells = model.cachedRoomCells
+                                            }
 
                                         _ ->
-                                            ( model.overlays, model.monsters, model.roomData )
+                                            { overlays = model.overlays
+                                            , monsters = model.monsters
+                                            , roomData = model.roomData
+                                            , cachedRoomCells = model.cachedRoomCells
+                                            }
 
                                 ( RoomType r, Just target ) ->
                                     let
                                         room =
                                             Maybe.withDefault
-                                                (RoomData r.ref ( 0, 0 ) 0)
-                                                (List.filter (\d -> d.ref == r.ref) model.roomData
+                                                (defaultExtendedRoomData r.ref)
+                                                (List.filter (\d -> d.data.ref == r.ref) model.roomData
                                                     |> List.head
                                                 )
 
                                         roomData =
-                                            { room | origin = target } :: List.filter (\d -> d.ref /= r.ref) model.roomData
+                                            room.data
+
+                                        ( deltaX, deltaY ) =
+                                            ( Tuple.first target - Tuple.first room.data.origin
+                                            , Tuple.second target - Tuple.second room.data.origin
+                                            )
+
+                                        newRoom =
+                                            Debug.log
+                                                "RoomData"
+                                                { room
+                                                    | data = { roomData | origin = target }
+                                                    , rotationPoint = ( Tuple.first room.rotationPoint + deltaX, Tuple.second room.rotationPoint + deltaY )
+                                                }
+
+                                        roomList =
+                                            newRoom :: List.filter (\d -> d.data.ref /= r.ref) model.roomData
                                     in
-                                    ( model.overlays, model.monsters, roomData )
+                                    { overlays = model.overlays
+                                    , monsters = model.monsters
+                                    , roomData = roomList
+                                    , cachedRoomCells =
+                                        calculateRoomCells newRoom.data
+                                            :: List.filter (\( ref, _ ) -> ref /= r.ref) model.cachedRoomCells
+                                    }
 
                                 ( _, Nothing ) ->
-                                    ( model.overlays, model.monsters, model.roomData )
+                                    { overlays = model.overlays
+                                    , monsters = model.monsters
+                                    , roomData = model.roomData
+                                    , cachedRoomCells = model.cachedRoomCells
+                                    }
 
                         Nothing ->
-                            ( model.overlays, model.monsters, model.roomData )
+                            { overlays = model.overlays
+                            , monsters = model.monsters
+                            , roomData = model.roomData
+                            , cachedRoomCells = model.cachedRoomCells
+                            }
             in
-            ( { model | currentDraggable = Nothing, overlays = overlays, monsters = monsters, roomData = rooms, cachedRoomCells = calculateRoomCells rooms }, Cmd.none )
+            ( { model | currentDraggable = Nothing, overlays = moveData.overlays, monsters = moveData.monsters, roomData = moveData.roomData, cachedRoomCells = moveData.cachedRoomCells }, Cmd.none )
 
         TouchStart piece ->
             update (MoveStarted piece Nothing) model
@@ -423,6 +473,52 @@ update msg model =
 
         RemoveOverlay id ->
             ( { model | overlays = List.filter (\o -> o.id /= id) model.overlays }, Cmd.none )
+
+        RotateRoom ref ->
+            let
+                r =
+                    List.filter (\r1 -> r1.data.ref == ref) model.roomData
+                        |> List.head
+            in
+            case r of
+                Just room ->
+                    let
+                        turns =
+                            if room.data.turns == 5 then
+                                0
+
+                            else
+                                room.data.turns + 1
+
+                        origin =
+                            rotate room.data.origin room.rotationPoint 1
+
+                        tmpRoom =
+                            room.data
+
+                        newRoom =
+                            { tmpRoom | turns = turns, origin = origin }
+
+                        newRooms =
+                            { room | data = newRoom }
+                                :: List.filter (\r2 -> ref /= r2.data.ref) model.roomData
+
+                        cachedRoomCells =
+                            calculateRoomCells newRoom
+                                :: List.filter (\( r3, _ ) -> ref /= r3) model.cachedRoomCells
+                    in
+                    ( { model | roomData = newRooms, cachedRoomCells = cachedRoomCells }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        RemoveRoom ref ->
+            ( { model
+                | roomData = List.filter (\r -> r.data.ref /= ref) model.roomData
+                , cachedRoomCells = List.filter (\( r, _ ) -> r /= ref) model.cachedRoomCells
+              }
+            , Cmd.none
+            )
 
         NoOp ->
             ( model, Cmd.none )
@@ -553,7 +649,7 @@ view model =
                                 Nothing ->
                                     ( "", 0, 0 )
                       in
-                      lazy4 getAllMapTileHtml model.roomData c x y
+                      lazy4 getLazyMapTileHtml model.roomData c x y
                     ]
                 , Keyed.node
                     "div"
@@ -633,6 +729,15 @@ getHeaderHtml model =
         ]
 
 
+getLazyMapTileHtml : List ExtendedRoomData -> String -> Int -> Int -> Html msg
+getLazyMapTileHtml r c x y =
+    let
+        roomData =
+            List.map (\m -> m.data) r
+    in
+    getAllMapTileHtml roomData c x y
+
+
 getMenuToggleHtml : Model -> Html.Html Msg
 getMenuToggleHtml model =
     div
@@ -667,7 +772,7 @@ getScenarioTitleHtml : String -> Html.Html Msg
 getScenarioTitleHtml scenarioTitle =
     header [ attribute "aria-label" "Scenario Title" ]
         [ span [ class "title" ]
-            [ input [ type_ "text" ] []
+            [ input [ type_ "text", value scenarioTitle ] []
             ]
         ]
 
@@ -754,11 +859,11 @@ getCellHtml overlays pieces monsters encodedDraggable x y =
         |> Dom.render
 
 
-getMapTileListHtml : List RoomData -> String -> SideMenu -> Html Msg
+getMapTileListHtml : List ExtendedRoomData -> String -> SideMenu -> Html Msg
 getMapTileListHtml mapTiles currentDraggable sideMenu =
     let
         currentRefs =
-            List.map (\r -> r.ref) mapTiles
+            List.map (\r -> r.data.ref) mapTiles
 
         htmlClass =
             if sideMenu == MapTileMenu then
@@ -1034,7 +1139,7 @@ lazyBoardOverlayListHtml id overlayStr isDragging =
             li [] []
 
 
-getContextMenu : ContextMenu -> ( Int, Int ) -> List ( MapTileRef, List MapTile ) -> List BoardOverlay -> List ScenarioMonster -> Html Msg
+getContextMenu : ContextMenu -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) Bool ) -> List BoardOverlay -> List ScenarioMonster -> Html Msg
 getContextMenu state ( x, y ) rooms overlays monsters =
     let
         filteredOverlays =
@@ -1042,8 +1147,9 @@ getContextMenu state ( x, y ) rooms overlays monsters =
 
         filteredRoom =
             List.filter
-                (\( _, cells ) -> List.any (\c -> c.x == x && c.y == y) cells)
+                (\( _, cells ) -> Maybe.withDefault False (Dict.get ( x, y ) cells))
                 rooms
+                |> List.map (\( r, _ ) -> r)
 
         monster =
             List.filter (\m -> m.initialX == x && m.initialY == y) monsters
@@ -1091,7 +1197,7 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                        )
                     ++ (filteredRoom
                             |> List.map
-                                (\( room, _ ) ->
+                                (\room ->
                                     let
                                         refStr =
                                             Maybe.withDefault "" (refToString room)
@@ -1103,7 +1209,10 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                         restChars =
                                             String.slice 1 (String.length refStr) refStr
                                     in
-                                    li [ class "rotate-map-tile" ]
+                                    li
+                                        [ class "rotate-map-tile"
+                                        , onClick (RotateRoom room)
+                                        ]
                                         [ text ("Rotate " ++ firstChar ++ restChars)
                                         ]
                                 )
@@ -1144,7 +1253,7 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                         filteredOverlays
                     ++ (filteredRoom
                             |> List.map
-                                (\( room, _ ) ->
+                                (\room ->
                                     let
                                         refStr =
                                             Maybe.withDefault "" (refToString room)
@@ -1156,7 +1265,10 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                         restChars =
                                             String.slice 1 (String.length refStr) refStr
                                     in
-                                    li [ class "remove-map-tile" ]
+                                    li
+                                        [ class "remove-map-tile"
+                                        , onClick (RemoveRoom room)
+                                        ]
                                         [ text ("Remove " ++ firstChar ++ restChars)
                                         ]
                                 )
@@ -1275,23 +1387,50 @@ getMonsterLevelHtml stateChange active selectedLevel playerSize id =
         ]
 
 
-calculateRoomCells : List RoomData -> List ( MapTileRef, List MapTile )
-calculateRoomCells rooms =
-    rooms
-        |> List.map
-            (\r ->
-                let
-                    cells =
-                        getMapTileListByRef r.ref
+calculateRoomCells : RoomData -> ( MapTileRef, Dict ( Int, Int ) Bool )
+calculateRoomCells room =
+    let
+        cells =
+            getGridByRef room.ref
+                |> Array.indexedMap
+                    (\y c ->
+                        Array.indexedMap
+                            (\x p ->
+                                let
+                                    cellLoc =
+                                        case room.origin of
+                                            ( originX, originY ) ->
+                                                let
+                                                    newX =
+                                                        if modBy 2 originY == 1 && modBy 2 y == 1 then
+                                                            x + 1
 
-                    refPoint =
-                        ( 0, 0 )
-                in
-                ( r.ref
-                , List.map
-                    (\c ->
-                        normaliseAndRotateMapTile r.turns refPoint ( c.x, c.y ) c
+                                                        else
+                                                            x
+                                                in
+                                                normaliseAndRotatePoint room.turns room.origin room.origin ( newX + originX, y + originY )
+                                in
+                                ( cellLoc, p )
+                            )
+                            c
                     )
-                    cells
-                )
-            )
+                |> Array.foldr (\a b -> Array.toList a ++ b) []
+                |> Dict.fromList
+    in
+    ( room.ref, cells )
+
+
+defaultExtendedRoomData : MapTileRef -> ExtendedRoomData
+defaultExtendedRoomData ref =
+    let
+        rotationPoint =
+            getGridByRef ref
+                |> Array.map (\row -> Array.length row)
+                |> (\arr -> ( Array.length arr, Array.foldr (\a b -> max a b) 0 arr ))
+                |> (\( y, x ) ->
+                        ( x // 2, y // 2 )
+                   )
+    in
+    { data = RoomData ref ( 0, 0 ) 0
+    , rotationPoint = rotationPoint
+    }
