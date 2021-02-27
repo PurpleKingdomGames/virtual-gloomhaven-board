@@ -315,18 +315,25 @@ update msg model =
                                         roomData =
                                             room.data
 
+                                        ( cells, newOrigin ) =
+                                            calculateRoomCells { roomData | origin = target }
+
                                         ( deltaX, deltaY ) =
-                                            ( Tuple.first target - Tuple.first room.data.origin
-                                            , Tuple.second target - Tuple.second room.data.origin
-                                            )
+                                            case ( newOrigin, target ) of
+                                                ( ( oX, oY ), ( tX, tY ) ) ->
+                                                    let
+                                                        ( dX, dY ) =
+                                                            ( tX - oX, tY - oY )
+                                                    in
+                                                    ( Tuple.first target - Tuple.first room.data.origin - dX
+                                                    , Tuple.second target - Tuple.second room.data.origin - dY
+                                                    )
 
                                         newRoom =
-                                            Debug.log
-                                                "RoomData"
-                                                { room
-                                                    | data = { roomData | origin = target }
-                                                    , rotationPoint = ( Tuple.first room.rotationPoint + deltaX, Tuple.second room.rotationPoint + deltaY )
-                                                }
+                                            { room
+                                                | data = { roomData | origin = newOrigin }
+                                                , rotationPoint = ( Tuple.first room.rotationPoint + deltaX, Tuple.second room.rotationPoint + deltaY )
+                                            }
 
                                         roomList =
                                             newRoom :: List.filter (\d -> d.data.ref /= r.ref) model.roomData
@@ -335,7 +342,7 @@ update msg model =
                                     , monsters = model.monsters
                                     , roomData = roomList
                                     , cachedRoomCells =
-                                        calculateRoomCells newRoom.data
+                                        cells
                                             :: List.filter (\( ref, _ ) -> ref /= r.ref) model.cachedRoomCells
                                     }
 
@@ -499,12 +506,15 @@ update msg model =
                         newRoom =
                             { tmpRoom | turns = turns, origin = origin }
 
+                        ( cells, newOrigin ) =
+                            calculateRoomCells newRoom
+
                         newRooms =
-                            { room | data = newRoom }
+                            { room | data = { newRoom | origin = newOrigin } }
                                 :: List.filter (\r2 -> ref /= r2.data.ref) model.roomData
 
                         cachedRoomCells =
-                            calculateRoomCells newRoom
+                            cells
                                 :: List.filter (\( r3, _ ) -> ref /= r3) model.cachedRoomCells
                     in
                     ( { model | roomData = newRooms, cachedRoomCells = cachedRoomCells }, Cmd.none )
@@ -1387,7 +1397,7 @@ getMonsterLevelHtml stateChange active selectedLevel playerSize id =
         ]
 
 
-calculateRoomCells : RoomData -> ( MapTileRef, Dict ( Int, Int ) Bool )
+calculateRoomCells : RoomData -> ( ( MapTileRef, Dict ( Int, Int ) Bool ), ( Int, Int ) )
 calculateRoomCells room =
     let
         cells =
@@ -1416,8 +1426,53 @@ calculateRoomCells room =
                     )
                 |> Array.foldr (\a b -> Array.toList a ++ b) []
                 |> Dict.fromList
+
+        ( deltaX, deltaY ) =
+            Dict.keys cells
+                |> List.foldr
+                    (\( x, y ) ( ( minX, maxX ), ( minY, maxY ) ) ->
+                        ( ( min x minX, max x maxX ), ( min y minY, min y maxY ) )
+                    )
+                    ( ( 0, 0 ), ( 0, 0 ) )
+                |> (\( ( minX, maxX ), ( minY, maxY ) ) ->
+                        let
+                            newX =
+                                if minX < 0 then
+                                    -minX
+
+                                else if maxX >= gridSize then
+                                    (gridSize - 1) - maxX
+
+                                else
+                                    0
+
+                            newY =
+                                if minY < 0 then
+                                    -minY
+
+                                else if maxY >= gridSize then
+                                    (gridSize - 1) - maxY
+
+                                else
+                                    0
+                        in
+                        ( newX, newY )
+                   )
+
+        newCells =
+            if deltaX == 0 && deltaY == 0 then
+                cells
+
+            else
+                Dict.toList cells
+                    |> List.map (\( ( x, y ), v ) -> ( ( x + deltaX, y + deltaY ), v ))
+                    |> Dict.fromList
     in
-    ( room.ref, cells )
+    ( ( room.ref, newCells )
+    , case room.origin of
+        ( x, y ) ->
+            ( x + deltaX, y + deltaY )
+    )
 
 
 defaultExtendedRoomData : MapTileRef -> ExtendedRoomData
