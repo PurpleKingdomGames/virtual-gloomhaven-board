@@ -507,10 +507,24 @@ update msg model =
                             { tmpRoom | turns = turns, origin = origin }
 
                         ( cells, newOrigin ) =
-                            calculateRoomCells newRoom
+                            calculateRoomCells { tmpRoom | turns = turns, origin = origin }
+
+                        newRotationPoint =
+                            case ( origin, newOrigin ) of
+                                ( ( oX, oY ), ( tX, tY ) ) ->
+                                    let
+                                        ( dX, dY ) =
+                                            ( tX - oX, tY - oY )
+                                    in
+                                    Debug.log
+                                        (Debug.toString ( dX, dY ))
+                                        ( Tuple.first room.rotationPoint + dX, Tuple.second room.rotationPoint + dY )
 
                         newRooms =
-                            { room | data = { newRoom | origin = newOrigin } }
+                            { room
+                                | data = { newRoom | origin = newOrigin }
+                                , rotationPoint = newRotationPoint
+                            }
                                 :: List.filter (\r2 -> ref /= r2.data.ref) model.roomData
 
                         cachedRoomCells =
@@ -1431,7 +1445,7 @@ calculateRoomCells room =
             Dict.keys cells
                 |> List.foldr
                     (\( x, y ) ( ( minX, maxX ), ( minY, maxY ) ) ->
-                        ( ( min x minX, max x maxX ), ( min y minY, min y maxY ) )
+                        ( ( min x minX, max x maxX ), ( min y minY, max y maxY ) )
                     )
                     ( ( 0, 0 ), ( 0, 0 ) )
                 |> (\( ( minX, maxX ), ( minY, maxY ) ) ->
@@ -1465,7 +1479,18 @@ calculateRoomCells room =
 
             else
                 Dict.toList cells
-                    |> List.map (\( ( x, y ), v ) -> ( ( x + deltaX, y + deltaY ), v ))
+                    |> List.map
+                        (\( ( x, y ), v ) ->
+                            let
+                                x1 =
+                                    if modBy 2 y == 0 && modBy 2 (y + deltaY) == 1 then
+                                        x - 1
+
+                                    else
+                                        x
+                            in
+                            ( ( x1 + deltaX, y + deltaY ), v )
+                        )
                     |> Dict.fromList
     in
     ( ( room.ref, newCells )
