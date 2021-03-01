@@ -737,10 +737,10 @@ view model =
                         |> List.indexedMap
                             (getBoardRowHtml model encodedDraggable draggableCoords)
                     )
+                , lazy5 getContextMenu model.contextMenuState model.contextMenuPosition model.cachedRoomCells model.overlays model.monsters
                 ]
             ]
         , lazy getFooterHtml Version.get
-        , lazy5 getContextMenu model.contextMenuState model.contextMenuPosition model.cachedRoomCells model.overlays model.monsters
         ]
 
 
@@ -1297,13 +1297,6 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                         ]
                                 )
                        )
-                    ++ [ li
-                            [ class "cancel-menu"
-                            , onClick (ChangeContextMenuState Closed)
-                            ]
-                            [ text "Cancel"
-                            ]
-                       ]
 
             else
                 []
@@ -1323,7 +1316,19 @@ getContextMenu state ( x, y ) rooms overlays monsters =
         ]
         [ nav []
             [ ul []
-                menuList
+                (if isOpen then
+                    menuList
+                        ++ [ li
+                                [ class "cancel-menu"
+                                , onClick (ChangeContextMenuState Closed)
+                                ]
+                                [ text "Cancel"
+                                ]
+                           ]
+
+                 else
+                    []
+                )
             ]
         ]
 
