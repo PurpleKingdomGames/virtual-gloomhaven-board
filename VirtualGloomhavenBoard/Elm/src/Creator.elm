@@ -1,9 +1,9 @@
 port module Creator exposing (main)
 
 import AppStorage exposing (MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece)
-import Array exposing (Array)
+import Array
 import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable, scenarioMonsterToHtml)
-import BoardMapTile exposing (MapTile, MapTileRef(..), getAllRefs, getGridByRef, getMapTileListByRef, refToString, stringToRef)
+import BoardMapTile exposing (MapTileRef(..), getAllRefs, getGridByRef, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
 import Dict exposing (Dict)
@@ -12,19 +12,19 @@ import DragPorts
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, moveOverlayWithoutState, movePieceWithoutState)
 import Hexagon exposing (rotate)
 import Html exposing (Html, div, header, input, li, nav, section, span, text, ul)
-import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, tabindex, target, type_, value)
+import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, style, tabindex, target, type_, value)
 import Html.Events exposing (onClick)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6)
+import HtmlEvents exposing (onClickPreventDefault)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import List
 import Maybe
 import Monster exposing (MonsterLevel(..), MonsterType(..), getAllBosses, getAllMonsters, monsterTypeToString)
-import Random exposing (maxInt)
-import Scenario exposing (ScenarioMonster, normaliseAndRotateMapTile, normaliseAndRotatePoint)
+import Scenario exposing (ScenarioMonster, normaliseAndRotatePoint)
 import Version
 
 
@@ -32,6 +32,12 @@ port getCellFromPoint : ( Float, Float, Bool ) -> Cmd msg
 
 
 port onCellFromPoint : (( Int, Int, Bool ) -> msg) -> Sub msg
+
+
+port getContextPosition : ( Int, Int ) -> Cmd msg
+
+
+port onContextPosition : (( Int, Int ) -> msg) -> Sub msg
 
 
 type alias Model =
@@ -44,6 +50,7 @@ type alias Model =
     , sideMenu : SideMenu
     , contextMenuState : ContextMenu
     , contextMenuPosition : ( Int, Int )
+    , contextMenuAbsPosition : ( Int, Int )
     , cachedDoors : List String
     , cachedObstacles : List String
     , cachedMisc : List String
@@ -83,10 +90,12 @@ type Msg
     | TouchMove ( Float, Float )
     | TouchCanceled
     | TouchEnd ( Float, Float )
+    | CellFromPoint ( Int, Int, Bool )
     | ChangeSideMenu SideMenu
     | OpenContextMenu ( Int, Int )
     | ChangeContextMenuState ContextMenu
     | ChangeMonsterState Int Int MonsterLevel
+    | ChangeContextMenuAbsosition ( Int, Int )
     | RemoveMonster Int
     | RotateOverlay Int
     | RemoveOverlay Int
@@ -175,7 +184,7 @@ init _ =
                     )
                     ( [], [], [] )
     in
-    ( Model "" [] [] [] Nothing False MapTileMenu Closed ( 0, 0 ) doors obstacles misc []
+    ( Model "" [] [] [] Nothing False MapTileMenu Closed ( 0, 0 ) ( 0, 0 ) doors obstacles misc []
     , Cmd.none
     )
 
@@ -193,7 +202,7 @@ update msg model =
                         Nothing ->
                             Cmd.none
             in
-            ( { model | currentDraggable = Just piece }, cmd )
+            ( { model | currentDraggable = Just piece, contextMenuState = Closed }, cmd )
 
         MoveTargetChanged coords maybeDragOver ->
             case model.currentDraggable of
@@ -374,14 +383,31 @@ update msg model =
         TouchEnd ( x, y ) ->
             ( model, getCellFromPoint ( x, y, True ) )
 
+        CellFromPoint ( x, y, endTouch ) ->
+            if endTouch then
+                case model.currentDraggable of
+                    Just _ ->
+                        update
+                            MoveCompleted
+                            model
+
+                    Nothing ->
+                        ( model, Cmd.none )
+
+            else
+                update (MoveTargetChanged ( x, y ) Nothing) model
+
         ChangeSideMenu menu ->
             ( { model | sideMenu = menu }, Cmd.none )
 
         OpenContextMenu pos ->
-            ( { model | contextMenuState = Open, contextMenuPosition = pos }, Cmd.none )
+            ( { model | contextMenuState = Open, contextMenuPosition = pos }, getContextPosition pos )
 
         ChangeContextMenuState state ->
             ( { model | contextMenuState = state }, Cmd.none )
+
+        ChangeContextMenuAbsosition pos ->
+            ( { model | contextMenuAbsPosition = pos }, Cmd.none )
 
         ChangeMonsterState id playerSize level ->
             let
@@ -516,9 +542,7 @@ update msg model =
                                         ( dX, dY ) =
                                             ( tX - oX, tY - oY )
                                     in
-                                    Debug.log
-                                        (Debug.toString ( dX, dY ))
-                                        ( Tuple.first room.rotationPoint + dX, Tuple.second room.rotationPoint + dY )
+                                    ( Tuple.first room.rotationPoint + dX, Tuple.second room.rotationPoint + dY )
 
                         newRooms =
                             { room
@@ -554,6 +578,7 @@ view model =
         [ class "content scenario-creator"
         , id "content"
         , Touch.onCancel (\_ -> TouchCanceled)
+        , onClick (ChangeContextMenuState Closed)
         ]
         [ getHeaderHtml model
         , div [ class "main" ]
@@ -737,7 +762,7 @@ view model =
                         |> List.indexedMap
                             (getBoardRowHtml model encodedDraggable draggableCoords)
                     )
-                , lazy5 getContextMenu model.contextMenuState model.contextMenuPosition model.cachedRoomCells model.overlays model.monsters
+                , lazy6 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.cachedRoomCells model.overlays model.monsters
                 ]
             ]
         , lazy getFooterHtml Version.get
@@ -863,7 +888,10 @@ getBoardRowHtml model encodedDraggable cellsForDraggable y row =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.batch []
+    Sub.batch
+        [ onContextPosition ChangeContextMenuAbsosition
+        , onCellFromPoint CellFromPoint
+        ]
 
 
 getCellHtml : List BoardOverlay -> List Piece -> List ScenarioMonster -> String -> Int -> Int -> Html Msg
@@ -1163,8 +1191,8 @@ lazyBoardOverlayListHtml id overlayStr isDragging =
             li [] []
 
 
-getContextMenu : ContextMenu -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) Bool ) -> List BoardOverlay -> List ScenarioMonster -> Html Msg
-getContextMenu state ( x, y ) rooms overlays monsters =
+getContextMenu : ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) Bool ) -> List BoardOverlay -> List ScenarioMonster -> Html Msg
+getContextMenu state ( x, y ) ( absX, absY ) rooms overlays monsters =
     let
         filteredOverlays =
             List.filter (\o -> List.any (\c -> c == ( x, y )) o.cells) overlays
@@ -1213,7 +1241,7 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                 (\o ->
                                     li
                                         [ class "rotate-overlay"
-                                        , onClick (RotateOverlay o.id)
+                                        , onClickPreventDefault (RotateOverlay o.id)
                                         ]
                                         [ text ("Rotate " ++ getOverlayLabel o.ref)
                                         ]
@@ -1235,7 +1263,7 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                     in
                                     li
                                         [ class "rotate-map-tile"
-                                        , onClick (RotateRoom room)
+                                        , onClickPreventDefault (RotateRoom room)
                                         ]
                                         [ text ("Rotate " ++ firstChar ++ restChars)
                                         ]
@@ -1256,7 +1284,7 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                 in
                                 [ li
                                     [ class "remove-monster"
-                                    , onClick (RemoveMonster m.monster.id)
+                                    , onClickPreventDefault (RemoveMonster m.monster.id)
                                     ]
                                     [ text ("Remove " ++ monsterName)
                                     ]
@@ -1269,7 +1297,7 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                         (\o ->
                             li
                                 [ class "remove-overlay"
-                                , onClick (RemoveOverlay o.id)
+                                , onClickPreventDefault (RemoveOverlay o.id)
                                 ]
                                 [ text ("Remove " ++ getOverlayLabel o.ref)
                                 ]
@@ -1291,7 +1319,7 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                                     in
                                     li
                                         [ class "remove-map-tile"
-                                        , onClick (RemoveRoom room)
+                                        , onClickPreventDefault (RemoveRoom room)
                                         ]
                                         [ text ("Remove " ++ firstChar ++ restChars)
                                         ]
@@ -1313,6 +1341,8 @@ getContextMenu state ( x, y ) rooms overlays monsters =
              else
                 ""
             )
+        , style "top" (String.fromInt absY ++ "px")
+        , style "left" (String.fromInt absX ++ "px")
         ]
         [ nav []
             [ ul []
@@ -1320,7 +1350,7 @@ getContextMenu state ( x, y ) rooms overlays monsters =
                     menuList
                         ++ [ li
                                 [ class "cancel-menu"
-                                , onClick (ChangeContextMenuState Closed)
+                                , onClickPreventDefault (ChangeContextMenuState Closed)
                                 ]
                                 [ text "Cancel"
                                 ]
@@ -1367,7 +1397,7 @@ getMonsterLevelHtml stateChange active selectedLevel playerSize id =
              else
                 ""
             )
-        , onClick (ChangeContextMenuState stateChange)
+        , onClickPreventDefault (ChangeContextMenuState stateChange)
         ]
         [ span [] [ text (String.fromInt playerSize ++ " Player State") ]
         , ul []
@@ -1380,7 +1410,7 @@ getMonsterLevelHtml stateChange active selectedLevel playerSize id =
                      else
                         ""
                     )
-                , onClick (ChangeMonsterState id playerSize Monster.None)
+                , onClickPreventDefault (ChangeMonsterState id playerSize Monster.None)
                 ]
                 [ text "None" ]
             , li
@@ -1392,7 +1422,7 @@ getMonsterLevelHtml stateChange active selectedLevel playerSize id =
                      else
                         ""
                     )
-                , onClick (ChangeMonsterState id playerSize Monster.Normal)
+                , onClickPreventDefault (ChangeMonsterState id playerSize Monster.Normal)
                 ]
                 [ text "Normal" ]
             , li
@@ -1404,12 +1434,12 @@ getMonsterLevelHtml stateChange active selectedLevel playerSize id =
                      else
                         ""
                     )
-                , onClick (ChangeMonsterState id playerSize Monster.Elite)
+                , onClickPreventDefault (ChangeMonsterState id playerSize Monster.Elite)
                 ]
                 [ text "Elite" ]
             , li
                 [ class "monster-cancel"
-                , onClick (ChangeContextMenuState Open)
+                , onClickPreventDefault (ChangeContextMenuState Open)
                 ]
                 [ text "Cancel" ]
             ]

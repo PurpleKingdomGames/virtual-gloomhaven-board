@@ -8,6 +8,7 @@
     opacity: 0;
     transition: opacity 0.3s;
     visibility: hidden;
+    width: 14rem;
 
     &.open {
         opacity: 1;
@@ -76,6 +77,10 @@
                             visibility: visible;
                         }
                     }
+                }
+
+                &.cancel-menu, .monster-cancel {
+                    display: none;
                 }
 
                 &.cancel-menu, &:not([class^="remove"]) + [class^="remove"] {
