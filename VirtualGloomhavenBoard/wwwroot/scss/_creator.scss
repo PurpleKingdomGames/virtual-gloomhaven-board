@@ -196,6 +196,53 @@ html
                             @include mixins.mask(url('/img/hex-border-mask.png'), alpha, top right, 90px);
                         }
                     }
+
+                    .room-origin {
+                        width: 76px;
+                        height: 90px;
+                        position: absolute;
+                        top: -1.3rem;
+                        transform: scale(0.5);
+                        left: -1.1rem;
+                        z-index: 1;
+
+                        &:hover {
+                            cursor: move;
+                        }
+
+                        &:after {
+                            content: " ";
+                            width: 76px;
+                            height: 90px;
+                            display: block;
+                            background-image: url('/img/arrows-alt-solid.svg');
+                            background-repeat: no-repeat;
+                            background-size: 60%;
+                            background-position: center;
+                            position: absolute;
+                            top: 0;
+                        }
+
+                        &:before {
+                            content: " ";
+                            width: 76px;
+                            height: 90px;
+                            display: block;
+                            background-image: url('/img/hex-mask.png');
+                            background-repeat: no-repeat;
+                            background-size: 100%;
+                            background-position: center;
+                            filter: brightness(50);
+                        }
+
+                        &.dragging {
+                            opacity: 0;
+
+                            &:before, &:after {
+                                opacity: 0;
+                            }
+                        }
+                    }
                 }
             }
         }

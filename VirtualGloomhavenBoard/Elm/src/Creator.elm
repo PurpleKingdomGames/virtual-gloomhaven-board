@@ -7,7 +7,7 @@ import BoardMapTile exposing (MapTileRef(..), getAllRefs, getGridByRef, refToStr
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
 import Dict exposing (Dict)
-import Dom
+import Dom exposing (render)
 import DragPorts
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, moveOverlayWithoutState, movePieceWithoutState)
 import Hexagon exposing (rotate)
@@ -17,7 +17,7 @@ import Html.Events exposing (onClick)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6, lazy7, lazy8)
 import HtmlEvents exposing (onClickPreventDefault)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -574,198 +574,201 @@ update msg model =
 
 view : Model -> Html.Html Msg
 view model =
-    div
+    Keyed.node
+        "div"
         [ class "content scenario-creator"
         , id "content"
         , Touch.onCancel (\_ -> TouchCanceled)
         , onClick (ChangeContextMenuState Closed)
         ]
-        [ getHeaderHtml model
-        , div [ class "main" ]
-            [ div [ class "page-shadow" ] []
-            , Keyed.node
-                "div"
-                [ class
-                    "action-list"
-                ]
-                (let
-                    roomDragabble =
-                        case model.currentDraggable of
-                            Just m ->
-                                case m.ref of
-                                    RoomType r ->
-                                        case m.coords of
-                                            Just _ ->
-                                                ""
-
-                                            Nothing ->
-                                                Maybe.withDefault "" (refToString r.ref)
-
-                                    _ ->
-                                        ""
-
-                            Nothing ->
-                                ""
-
-                    overlayDragabble =
-                        case model.currentDraggable of
-                            Just m ->
-                                case m.ref of
-                                    OverlayType o _ ->
-                                        case m.coords of
-                                            Just _ ->
-                                                ""
-
-                                            Nothing ->
-                                                Maybe.withDefault "" (getBoardOverlayName o.ref)
-
-                                    _ ->
-                                        ""
-
-                            Nothing ->
-                                ""
-
-                    monsterDraggable =
-                        case model.currentDraggable of
-                            Just m ->
-                                case m.ref of
-                                    PieceType p ->
-                                        case p.ref of
-                                            AI (Enemy monster) ->
-                                                case m.coords of
-                                                    Just _ ->
-                                                        ""
-
-                                                    Nothing ->
-                                                        Maybe.withDefault "" (monsterTypeToString monster.monster)
-
-                                            _ ->
-                                                ""
-
-                                    _ ->
-                                        ""
-
-                            Nothing ->
-                                ""
-
-                    monsterId =
-                        1
-                            + (List.map (\m -> m.monster.id) model.monsters
-                                |> List.maximum
-                                |> Maybe.withDefault 0
-                              )
-
-                    overlayId =
-                        1
-                            + (List.map (\o -> o.id) model.overlays
-                                |> List.maximum
-                                |> Maybe.withDefault 0
-                              )
-                 in
-                 [ ( "map-tile-list", lazy3 getMapTileListHtml model.roomData roomDragabble model.sideMenu )
-                 , ( "board-door-list", lazy5 getOverlayListHtml overlayId model.cachedDoors "Doors" overlayDragabble (model.sideMenu == DoorMenu) )
-                 , ( "board-obstacle-list", lazy5 getOverlayListHtml overlayId model.cachedObstacles "Obstacles" overlayDragabble (model.sideMenu == ObstacleMenu) )
-                 , ( "board-misc-list", lazy5 getOverlayListHtml overlayId model.cachedMisc "Misc." overlayDragabble (model.sideMenu == MiscMenu) )
-                 , ( "board-monster-list", lazy3 getScenarioMonsterListHtml monsterId monsterDraggable (model.sideMenu == MonsterMenu) )
-                 , ( "board-boss-list", lazy3 getScenarioBossListHtml monsterId monsterDraggable (model.sideMenu == BossMenu) )
-                 ]
-                )
-            , div
-                [ class "board-wrapper" ]
-                [ div [ class "map-bg" ] []
-                , div
-                    [ class "mapTiles" ]
-                    [ let
-                        ( c, x, y ) =
+        [ ( "head", getHeaderHtml model )
+        , ( "main"
+          , div [ class "main" ]
+                [ div [ class "page-shadow" ] []
+                , Keyed.node
+                    "div"
+                    [ class
+                        "action-list"
+                    ]
+                    (let
+                        roomDragabble =
                             case model.currentDraggable of
                                 Just m ->
                                     case m.ref of
                                         RoomType r ->
-                                            let
-                                                ref =
-                                                    Maybe.withDefault "" (refToString r.ref)
-                                            in
-                                            case m.target of
-                                                Just ( x1, y1 ) ->
-                                                    ( ref, x1, y1 )
+                                            case m.coords of
+                                                Just _ ->
+                                                    ""
 
                                                 Nothing ->
-                                                    ( "", 0, 0 )
+                                                    Maybe.withDefault "" (refToString r.ref)
 
                                         _ ->
-                                            ( "", 0, 0 )
-
-                                Nothing ->
-                                    ( "", 0, 0 )
-                      in
-                      lazy4 getLazyMapTileHtml model.roomData c x y
-                    ]
-                , Keyed.node
-                    "div"
-                    [ class "board" ]
-                    (let
-                        encodedDraggable =
-                            case model.currentDraggable of
-                                Just c ->
-                                    Encode.encode 0 (encodeMoveablePiece c)
+                                            ""
 
                                 Nothing ->
                                     ""
 
-                        draggableCoords =
+                        overlayDragabble =
                             case model.currentDraggable of
                                 Just m ->
                                     case m.ref of
                                         OverlayType o _ ->
-                                            let
-                                                coordList =
-                                                    case m.coords of
-                                                        Just initCoords ->
-                                                            model.overlays
-                                                                |> List.map (\o1 -> o1.cells)
-                                                                |> List.filter (\c1 -> List.any (\c -> c == initCoords) c1)
-                                                                |> List.foldl (++) []
-
-                                                        Nothing ->
-                                                            []
-
-                                                targetCoords =
-                                                    case m.target of
-                                                        Just _ ->
-                                                            o.cells
-
-                                                        Nothing ->
-                                                            []
-                                            in
-                                            coordList ++ targetCoords
-
-                                        _ ->
-                                            (case m.coords of
-                                                Just initCoords ->
-                                                    [ initCoords ]
+                                            case m.coords of
+                                                Just _ ->
+                                                    ""
 
                                                 Nothing ->
-                                                    []
-                                            )
-                                                ++ (case m.target of
-                                                        Just targetCoords ->
-                                                            [ targetCoords ]
+                                                    Maybe.withDefault "" (getBoardOverlayName o.ref)
 
-                                                        Nothing ->
-                                                            []
-                                                   )
+                                        _ ->
+                                            ""
 
                                 Nothing ->
-                                    []
+                                    ""
+
+                        monsterDraggable =
+                            case model.currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        PieceType p ->
+                                            case p.ref of
+                                                AI (Enemy monster) ->
+                                                    case m.coords of
+                                                        Just _ ->
+                                                            ""
+
+                                                        Nothing ->
+                                                            Maybe.withDefault "" (monsterTypeToString monster.monster)
+
+                                                _ ->
+                                                    ""
+
+                                        _ ->
+                                            ""
+
+                                Nothing ->
+                                    ""
+
+                        monsterId =
+                            1
+                                + (List.map (\m -> m.monster.id) model.monsters
+                                    |> List.maximum
+                                    |> Maybe.withDefault 0
+                                  )
+
+                        overlayId =
+                            1
+                                + (List.map (\o -> o.id) model.overlays
+                                    |> List.maximum
+                                    |> Maybe.withDefault 0
+                                  )
                      in
-                     List.repeat gridSize (List.repeat gridSize 0)
-                        |> List.indexedMap
-                            (getBoardRowHtml model encodedDraggable draggableCoords)
+                     [ ( "map-tile-list", lazy3 getMapTileListHtml model.roomData roomDragabble model.sideMenu )
+                     , ( "board-door-list", lazy5 getOverlayListHtml overlayId model.cachedDoors "Doors" overlayDragabble (model.sideMenu == DoorMenu) )
+                     , ( "board-obstacle-list", lazy5 getOverlayListHtml overlayId model.cachedObstacles "Obstacles" overlayDragabble (model.sideMenu == ObstacleMenu) )
+                     , ( "board-misc-list", lazy5 getOverlayListHtml overlayId model.cachedMisc "Misc." overlayDragabble (model.sideMenu == MiscMenu) )
+                     , ( "board-monster-list", lazy3 getScenarioMonsterListHtml monsterId monsterDraggable (model.sideMenu == MonsterMenu) )
+                     , ( "board-boss-list", lazy3 getScenarioBossListHtml monsterId monsterDraggable (model.sideMenu == BossMenu) )
+                     ]
                     )
-                , lazy6 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.cachedRoomCells model.overlays model.monsters
+                , div
+                    [ class "board-wrapper" ]
+                    [ div [ class "map-bg" ] []
+                    , div
+                        [ class "mapTiles" ]
+                        [ let
+                            ( c, x, y ) =
+                                case model.currentDraggable of
+                                    Just m ->
+                                        case m.ref of
+                                            RoomType r ->
+                                                let
+                                                    ref =
+                                                        Maybe.withDefault "" (refToString r.ref)
+                                                in
+                                                case m.target of
+                                                    Just ( x1, y1 ) ->
+                                                        ( ref, x1, y1 )
+
+                                                    Nothing ->
+                                                        ( "", 0, 0 )
+
+                                            _ ->
+                                                ( "", 0, 0 )
+
+                                    Nothing ->
+                                        ( "", 0, 0 )
+                          in
+                          lazy4 getLazyMapTileHtml model.roomData c x y
+                        ]
+                    , Keyed.node
+                        "div"
+                        [ class "board" ]
+                        (let
+                            encodedDraggable =
+                                case model.currentDraggable of
+                                    Just c ->
+                                        Encode.encode 0 (encodeMoveablePiece c)
+
+                                    Nothing ->
+                                        ""
+
+                            draggableCoords =
+                                case model.currentDraggable of
+                                    Just m ->
+                                        case m.ref of
+                                            OverlayType o _ ->
+                                                let
+                                                    coordList =
+                                                        case m.coords of
+                                                            Just initCoords ->
+                                                                model.overlays
+                                                                    |> List.map (\o1 -> o1.cells)
+                                                                    |> List.filter (\c1 -> List.any (\c -> c == initCoords) c1)
+                                                                    |> List.foldl (++) []
+
+                                                            Nothing ->
+                                                                []
+
+                                                    targetCoords =
+                                                        case m.target of
+                                                            Just _ ->
+                                                                o.cells
+
+                                                            Nothing ->
+                                                                []
+                                                in
+                                                coordList ++ targetCoords
+
+                                            _ ->
+                                                (case m.coords of
+                                                    Just initCoords ->
+                                                        [ initCoords ]
+
+                                                    Nothing ->
+                                                        []
+                                                )
+                                                    ++ (case m.target of
+                                                            Just targetCoords ->
+                                                                [ targetCoords ]
+
+                                                            Nothing ->
+                                                                []
+                                                       )
+
+                                    Nothing ->
+                                        []
+                         in
+                         List.repeat gridSize (List.repeat gridSize 0)
+                            |> List.indexedMap
+                                (getBoardRowHtml model encodedDraggable draggableCoords)
+                        )
+                    , lazy6 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.cachedRoomCells model.overlays model.monsters
+                    ]
                 ]
-            ]
-        , lazy getFooterHtml Version.get
+          )
+        , ( "foot", lazy getFooterHtml Version.get )
         ]
 
 
@@ -878,8 +881,21 @@ getBoardRowHtml model encodedDraggable cellsForDraggable y row =
 
                         else
                             ""
+
+                    ( roomRef, turns ) =
+                        List.filterMap
+                            (\r ->
+                                if r.data.origin == ( x, y ) then
+                                    Maybe.map (\s -> ( s, r.data.turns )) (refToString r.data.ref)
+
+                                else
+                                    Nothing
+                            )
+                            model.roomData
+                            |> List.head
+                            |> Maybe.withDefault ( "", 0 )
                 in
-                ( id, lazy6 getCellHtml model.overlays emptyList model.monsters currentDraggable x y )
+                ( id, lazy8 getCellHtml model.overlays emptyList model.monsters roomRef turns currentDraggable x y )
             )
             row
         )
@@ -894,8 +910,8 @@ subscriptions _ =
         ]
 
 
-getCellHtml : List BoardOverlay -> List Piece -> List ScenarioMonster -> String -> Int -> Int -> Html Msg
-getCellHtml overlays pieces monsters encodedDraggable x y =
+getCellHtml : List BoardOverlay -> List Piece -> List ScenarioMonster -> String -> Int -> String -> Int -> Int -> Html Msg
+getCellHtml overlays pieces monsters roomOrigin turns encodedDraggable x y =
     let
         currentDraggable =
             case Decode.decodeString decodeMoveablePiece encodedDraggable of
@@ -904,9 +920,40 @@ getCellHtml overlays pieces monsters encodedDraggable x y =
 
                 _ ->
                     Nothing
+
+        ref =
+            case stringToRef roomOrigin of
+                Just r ->
+                    r
+
+                Nothing ->
+                    Empty
+
+        isDraggingRoom =
+            case currentDraggable of
+                Just c ->
+                    case c.ref of
+                        RoomType r ->
+                            r.ref == ref
+
+                        _ ->
+                            False
+
+                Nothing ->
+                    False
     in
     BoardHtml.getCellHtml
         (CellModel overlays pieces monsters ( x, y ) currentDraggable True True True dragEvents dropEvents True False)
+        |> Dom.appendChildConditional
+            (Dom.element "div"
+                |> Dom.addClass "room-origin"
+                |> Dom.addClassConditional "dragging" isDraggingRoom
+                |> makeDraggable
+                    (RoomType { ref = ref, origin = ( x, y ), turns = turns })
+                    (Just ( x, y ))
+                    dragEvents
+            )
+            (ref /= Empty)
         |> Dom.addActionStopAndPrevent ( "click", OpenContextMenu ( x, y ) )
         |> Dom.render
 
