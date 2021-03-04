@@ -3,6 +3,29 @@
 html
 {
     .content.scenario-creator {
+        header {
+            .title {
+                input {
+                    text-align: center;
+                    font-size: 2rem;
+                    color: #aaa;
+                    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                    font-family: "PirateOne", Nyala, Georgia, serif;
+                    background-color: transparent;
+                    border: none;
+                    outline: none;
+                    width: 38rem;
+
+                    &:focus {
+                        outline: grey solid 1px;
+                    }
+
+                    &::placeholder {
+                        opacity: 1;
+                    }
+                }
+            }
+        }
         .main {
             .page-shadow {
                 height: 100%;

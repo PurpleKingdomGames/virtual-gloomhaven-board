@@ -7,17 +7,17 @@ import BoardMapTile exposing (MapTileRef(..), getAllRefs, getGridByRef, refToStr
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
 import Dict exposing (Dict)
-import Dom exposing (render)
+import Dom
 import DragPorts
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, moveOverlayWithoutState, movePieceWithoutState)
 import Hexagon exposing (rotate)
 import Html exposing (Html, div, header, input, li, nav, section, span, text, ul)
-import Html.Attributes exposing (alt, attribute, class, coords, href, id, src, style, tabindex, target, type_, value)
-import Html.Events exposing (onClick)
+import Html.Attributes exposing (alt, attribute, class, coords, href, id, maxlength, placeholder, src, style, tabindex, target, type_, value)
+import Html.Events exposing (on, onClick, onInput)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6, lazy7, lazy8)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6, lazy8)
 import HtmlEvents exposing (onClickPreventDefault)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -101,6 +101,7 @@ type Msg
     | RemoveOverlay Int
     | RotateRoom MapTileRef
     | RemoveRoom MapTileRef
+    | ChangeScenarioTitle String
     | NoOp
 
 
@@ -568,6 +569,9 @@ update msg model =
             , Cmd.none
             )
 
+        ChangeScenarioTitle title ->
+            ( { model | scenarioTitle = title }, Cmd.none )
+
         NoOp ->
             ( model, Cmd.none )
 
@@ -824,7 +828,14 @@ getScenarioTitleHtml : String -> Html.Html Msg
 getScenarioTitleHtml scenarioTitle =
     header [ attribute "aria-label" "Scenario Title" ]
         [ span [ class "title" ]
-            [ input [ type_ "text", value scenarioTitle ] []
+            [ input
+                [ type_ "text"
+                , value scenarioTitle
+                , onInput ChangeScenarioTitle
+                , placeholder "Enter Scenario Title"
+                , maxlength 30
+                ]
+                []
             ]
         ]
 
