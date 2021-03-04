@@ -9,6 +9,8 @@ import Browser
 import Dict exposing (Dict)
 import Dom
 import DragPorts
+import File exposing (File)
+import File.Select as Select
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, moveOverlayWithoutState, movePieceWithoutState)
 import Hexagon exposing (rotate)
 import Html exposing (Html, div, header, input, li, nav, section, span, text, ul)
@@ -25,6 +27,7 @@ import List
 import Maybe
 import Monster exposing (MonsterLevel(..), MonsterType(..), getAllBosses, getAllMonsters, monsterTypeToString)
 import Scenario exposing (ScenarioMonster, normaliseAndRotatePoint)
+import Task
 import Version
 
 
@@ -91,6 +94,7 @@ type Msg
     | TouchCanceled
     | TouchEnd ( Float, Float )
     | CellFromPoint ( Int, Int, Bool )
+    | ToggleMenu
     | ChangeSideMenu SideMenu
     | OpenContextMenu ( Int, Int )
     | ChangeContextMenuState ContextMenu
@@ -101,6 +105,9 @@ type Msg
     | RemoveOverlay Int
     | RotateRoom MapTileRef
     | RemoveRoom MapTileRef
+    | LoadFile
+    | ExtractFileString File
+    | LoadScenario String
     | ChangeScenarioTitle String
     | NoOp
 
@@ -398,6 +405,9 @@ update msg model =
             else
                 update (MoveTargetChanged ( x, y ) Nothing) model
 
+        ToggleMenu ->
+            ( { model | menuOpen = model.menuOpen == False }, Cmd.none )
+
         ChangeSideMenu menu ->
             ( { model | sideMenu = menu }, Cmd.none )
 
@@ -568,6 +578,15 @@ update msg model =
               }
             , Cmd.none
             )
+
+        LoadFile ->
+            ( model, Select.file [ "application/json" ] ExtractFileString )
+
+        ExtractFileString file ->
+            ( model, Task.perform LoadScenario (File.toString file) )
+
+        LoadScenario str ->
+            ( model, Cmd.none )
 
         ChangeScenarioTitle title ->
             ( { model | scenarioTitle = title }, Cmd.none )
@@ -806,8 +825,7 @@ getMenuToggleHtml model =
                         ""
                    )
             )
-
-        -- , onClick ToggleMenu
+        , onClick ToggleMenu
         , tabindex 0
         , attribute "aria-label" "Toggle Menu"
         , attribute "aria-keyshortcuts" "m"
@@ -856,6 +874,14 @@ getMenuHtml menuOpen =
         |> Dom.appendChild
             (Dom.element "ul"
                 |> Dom.addAttribute (attribute "role" "menu")
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.addAction ( "click", LoadFile )
+                        |> Dom.addClass "section-end"
+                        |> Dom.appendText "Import"
+                    )
                 |> Dom.appendChild
                     (Dom.element "li"
                         |> Dom.addAttribute (attribute "role" "menuitem")
