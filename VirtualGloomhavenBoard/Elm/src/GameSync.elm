@@ -371,6 +371,9 @@ encodeGameStateScenario scenario =
             , ( "id", Encode.int i )
             ]
 
+        CustomScenario s ->
+            [ ( "custom", Encode.string s ) ]
+
 
 encodeMapTileRefList : List MapTileRef -> List String
 encodeMapTileRefList refs =

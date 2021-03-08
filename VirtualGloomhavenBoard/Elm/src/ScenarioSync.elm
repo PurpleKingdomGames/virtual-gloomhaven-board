@@ -49,6 +49,9 @@ loadScenarioById scenario msg =
             case scenario of
                 InbuiltScenario _ i ->
                     i
+
+                _ ->
+                    0
     in
     Http.get
         { url = path ++ String.fromInt id ++ ".json"

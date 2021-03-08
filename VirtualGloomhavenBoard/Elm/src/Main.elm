@@ -1013,6 +1013,9 @@ update msg model =
                                     case getCurrentScenarioInput model of
                                         InbuiltScenario e _ ->
                                             InbuiltScenario e i
+
+                                        s ->
+                                            s
                             in
                             if isValidScenario scenario then
                                 ( { model | currentScenarioInput = Just data }, Cmd.none )
@@ -1782,6 +1785,9 @@ getScenarioDialog model =
             case scenarioInput of
                 InbuiltScenario e _ ->
                     Just e
+
+                _ ->
+                    Nothing
 
         decodeScenarioType =
             targetValue
@@ -2900,6 +2906,9 @@ isValidScenario scenario =
             in
             i >= min && i <= max
 
+        _ ->
+            False
+
 
 getValidScenarioRange : Expansion -> ( Int, Int )
 getValidScenarioRange expansion =
@@ -3029,10 +3038,19 @@ getCurrentScenarioInput model =
                                 InbuiltScenario _ i1 ->
                                     InbuiltScenario e i1
 
+                                _ ->
+                                    InbuiltScenario e 1
+
                 Nothing ->
                     case model.game.state.scenario of
                         InbuiltScenario _ i ->
                             InbuiltScenario e i
+
+                        _ ->
+                            InbuiltScenario e 1
+
+        Just (CustomScenario _) ->
+            model.game.state.scenario
 
         Nothing ->
             case model.game.state.scenario of
@@ -3048,6 +3066,9 @@ getCurrentScenarioInput model =
 
                         Nothing ->
                             model.game.state.scenario
+
+                _ ->
+                    model.game.state.scenario
 
 
 getScenarioSelectHtml : GameStateScenario -> Bool -> Element Msg
@@ -3103,6 +3124,9 @@ getScenarioSelectHtml scenario validScenario =
                                         |> List.sortBy (\( k, _ ) -> k)
                                         |> List.map (\( _, v ) -> v)
                                     )
+
+                _ ->
+                    Dom.element "div"
     in
     Dom.element "div"
         |> Dom.addClass wrapperClass

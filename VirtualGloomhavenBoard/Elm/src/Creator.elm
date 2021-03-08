@@ -6,16 +6,17 @@ import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml,
 import BoardMapTile exposing (MapTileRef(..), getAllRefs, getGridByRef, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
+import Character exposing (CharacterClass(..))
 import Dict exposing (Dict)
 import Dom
 import DragPorts
 import File exposing (File)
 import File.Select as Select
-import Game exposing (AIType(..), Piece, PieceType(..), RoomData, moveOverlayWithoutState, movePieceWithoutState)
+import Game exposing (AIType(..), GameStateScenario(..), Piece, PieceType(..), RoomData, generateGameMap, moveOverlayWithoutState, movePieceWithoutState)
 import Hexagon exposing (rotate)
 import Html exposing (Html, div, header, input, li, nav, section, span, text, ul)
 import Html.Attributes exposing (alt, attribute, class, coords, href, id, maxlength, placeholder, src, style, tabindex, target, type_, value)
-import Html.Events exposing (on, onClick, onInput)
+import Html.Events exposing (onClick, onInput)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
@@ -26,7 +27,9 @@ import Json.Encode as Encode
 import List
 import Maybe
 import Monster exposing (MonsterLevel(..), MonsterType(..), getAllBosses, getAllMonsters, monsterTypeToString)
+import Random
 import Scenario exposing (ScenarioMonster, normaliseAndRotatePoint)
+import ScenarioSync exposing (decodeScenario)
 import Task
 import Version
 
@@ -57,7 +60,7 @@ type alias Model =
     , cachedDoors : List String
     , cachedObstacles : List String
     , cachedMisc : List String
-    , cachedRoomCells : List ( MapTileRef, Dict ( Int, Int ) Bool )
+    , cachedRoomCells : List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) )
     }
 
 
@@ -329,28 +332,8 @@ update msg model =
                                                     |> List.head
                                                 )
 
-                                        roomData =
-                                            room.data
-
-                                        ( cells, newOrigin ) =
-                                            calculateRoomCells { roomData | origin = target }
-
-                                        ( deltaX, deltaY ) =
-                                            case ( newOrigin, target ) of
-                                                ( ( oX, oY ), ( tX, tY ) ) ->
-                                                    let
-                                                        ( dX, dY ) =
-                                                            ( tX - oX, tY - oY )
-                                                    in
-                                                    ( Tuple.first target - Tuple.first room.data.origin - dX
-                                                    , Tuple.second target - Tuple.second room.data.origin - dY
-                                                    )
-
-                                        newRoom =
-                                            { room
-                                                | data = { roomData | origin = newOrigin }
-                                                , rotationPoint = ( Tuple.first room.rotationPoint + deltaX, Tuple.second room.rotationPoint + deltaY )
-                                            }
+                                        ( cells, newRoom ) =
+                                            moveRoom target room
 
                                         roomList =
                                             newRoom :: List.filter (\d -> d.data.ref /= r.ref) model.roomData
@@ -527,39 +510,11 @@ update msg model =
             case r of
                 Just room ->
                     let
-                        turns =
-                            if room.data.turns == 5 then
-                                0
-
-                            else
-                                room.data.turns + 1
-
-                        origin =
-                            rotate room.data.origin room.rotationPoint 1
-
-                        tmpRoom =
-                            room.data
-
-                        newRoom =
-                            { tmpRoom | turns = turns, origin = origin }
-
-                        ( cells, newOrigin ) =
-                            calculateRoomCells { tmpRoom | turns = turns, origin = origin }
-
-                        newRotationPoint =
-                            case ( origin, newOrigin ) of
-                                ( ( oX, oY ), ( tX, tY ) ) ->
-                                    let
-                                        ( dX, dY ) =
-                                            ( tX - oX, tY - oY )
-                                    in
-                                    ( Tuple.first room.rotationPoint + dX, Tuple.second room.rotationPoint + dY )
+                        ( cells, newRoom ) =
+                            rotateRoom 1 room
 
                         newRooms =
-                            { room
-                                | data = { newRoom | origin = newOrigin }
-                                , rotationPoint = newRotationPoint
-                            }
+                            newRoom
                                 :: List.filter (\r2 -> ref /= r2.data.ref) model.roomData
 
                         cachedRoomCells =
@@ -586,7 +541,156 @@ update msg model =
             ( model, Task.perform LoadScenario (File.toString file) )
 
         LoadScenario str ->
-            ( model, Cmd.none )
+            case Decode.decodeString decodeScenario str of
+                Ok scenario ->
+                    let
+                        ( rooms, initOverlays, twoPlayerMonsters ) =
+                            generateGameMap (CustomScenario str) scenario "" [ Brute, Cragheart ] (Random.initialSeed 0)
+                                |> (\g ->
+                                        ( g.roomData
+                                        , g.state.overlays
+                                        , g.state.pieces
+                                            |> List.filterMap
+                                                (\m ->
+                                                    case m.ref of
+                                                        AI (Enemy monster) ->
+                                                            Just
+                                                                (ScenarioMonster
+                                                                    monster
+                                                                    m.x
+                                                                    m.y
+                                                                    monster.level
+                                                                    Monster.None
+                                                                    Monster.None
+                                                                )
+
+                                                        _ ->
+                                                            Nothing
+                                                )
+                                        )
+                                   )
+
+                        threePlayerMonsters =
+                            generateGameMap (CustomScenario str) scenario "" [ Brute, Cragheart, Spellweaver ] (Random.initialSeed 0)
+                                |> (\g ->
+                                        g.state.pieces
+                                            |> List.filterMap
+                                                (\m ->
+                                                    case m.ref of
+                                                        AI (Enemy monster) ->
+                                                            Just
+                                                                (ScenarioMonster
+                                                                    monster
+                                                                    m.x
+                                                                    m.y
+                                                                    Monster.None
+                                                                    monster.level
+                                                                    Monster.None
+                                                                )
+
+                                                        _ ->
+                                                            Nothing
+                                                )
+                                   )
+                                |> List.foldr
+                                    (\monster currentMonsters ->
+                                        let
+                                            m =
+                                                List.filter (\m3 -> m3.initialX == monster.initialX && m3.initialY == monster.initialY) currentMonsters
+                                                    |> List.head
+                                        in
+                                        case m of
+                                            Just m1 ->
+                                                { m1 | threePlayer = monster.threePlayer }
+                                                    :: List.filter (\m2 -> m2 /= m1) currentMonsters
+
+                                            Nothing ->
+                                                monster :: currentMonsters
+                                    )
+                                    twoPlayerMonsters
+
+                        ( _, monsters ) =
+                            generateGameMap (CustomScenario str) scenario "" [ Brute, Cragheart, Spellweaver, Tinkerer ] (Random.initialSeed 0)
+                                |> (\g ->
+                                        g.state.pieces
+                                            |> List.filterMap
+                                                (\m ->
+                                                    case m.ref of
+                                                        AI (Enemy monster) ->
+                                                            Just
+                                                                (ScenarioMonster
+                                                                    monster
+                                                                    m.x
+                                                                    m.y
+                                                                    Monster.None
+                                                                    Monster.None
+                                                                    monster.level
+                                                                )
+
+                                                        _ ->
+                                                            Nothing
+                                                )
+                                   )
+                                |> List.foldr
+                                    (\monster currentMonsters ->
+                                        let
+                                            m =
+                                                List.filter (\m3 -> m3.initialX == monster.initialX && m3.initialY == monster.initialY) currentMonsters
+                                                    |> List.head
+                                        in
+                                        case m of
+                                            Just m1 ->
+                                                { m1 | fourPlayer = monster.fourPlayer }
+                                                    :: List.filter (\m2 -> m2 /= m1) currentMonsters
+
+                                            Nothing ->
+                                                monster :: currentMonsters
+                                    )
+                                    threePlayerMonsters
+                                |> List.foldr
+                                    (\a ( i, b ) ->
+                                        let
+                                            m =
+                                                a.monster
+                                        in
+                                        ( i + 1, { a | monster = { m | id = i } } :: b )
+                                    )
+                                    ( 1, [] )
+
+                        ( _, overlays ) =
+                            List.foldr
+                                (\a ( i, b ) ->
+                                    ( i + 1, { a | id = i } :: b )
+                                )
+                                ( 1, [] )
+                                initOverlays
+
+                        ( cells, roomData ) =
+                            rooms
+                                |> List.map
+                                    (\r ->
+                                        defaultExtendedRoomData r.ref
+                                            |> rotateRoom r.turns
+                                            |> (\( _, r1 ) -> moveRoom r.origin r1)
+                                    )
+                                |> List.foldr
+                                    (\( c, r ) ( cells1, rooms1 ) -> ( c :: cells1, r :: rooms1 ))
+                                    ( [], [] )
+                    in
+                    ( { model
+                        | scenarioTitle = scenario.title
+                        , overlays = overlays
+                        , monsters = monsters
+                        , roomData = roomData
+                        , cachedRoomCells = cells
+                      }
+                    , Cmd.none
+                    )
+
+                Err _ ->
+                    Debug.log
+                        "err"
+                        ( model, Cmd.none )
 
         ChangeScenarioTitle title ->
             ( { model | scenarioTitle = title }, Cmd.none )
@@ -1275,7 +1379,7 @@ lazyBoardOverlayListHtml id overlayStr isDragging =
             li [] []
 
 
-getContextMenu : ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) Bool ) -> List BoardOverlay -> List ScenarioMonster -> Html Msg
+getContextMenu : ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> List BoardOverlay -> List ScenarioMonster -> Html Msg
 getContextMenu state ( x, y ) ( absX, absY ) rooms overlays monsters =
     let
         filteredOverlays =
@@ -1283,7 +1387,14 @@ getContextMenu state ( x, y ) ( absX, absY ) rooms overlays monsters =
 
         filteredRoom =
             List.filter
-                (\( _, cells ) -> Maybe.withDefault False (Dict.get ( x, y ) cells))
+                (\( _, cells ) ->
+                    case Dict.get ( x, y ) cells of
+                        Just ( _, p ) ->
+                            p
+
+                        Nothing ->
+                            False
+                )
                 rooms
                 |> List.map (\( r, _ ) -> r)
 
@@ -1530,7 +1641,7 @@ getMonsterLevelHtml stateChange active selectedLevel playerSize id =
         ]
 
 
-calculateRoomCells : RoomData -> ( ( MapTileRef, Dict ( Int, Int ) Bool ), ( Int, Int ) )
+calculateRoomCells : RoomData -> ( ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ), ( Int, Int ) )
 calculateRoomCells room =
     let
         cells =
@@ -1553,7 +1664,7 @@ calculateRoomCells room =
                                                 in
                                                 normaliseAndRotatePoint room.turns room.origin room.origin ( newX + originX, y + originY )
                                 in
-                                ( cellLoc, p )
+                                ( cellLoc, ( ( x, y ), p ) )
                             )
                             c
                     )
@@ -1633,3 +1744,75 @@ defaultExtendedRoomData ref =
     { data = RoomData ref ( 0, 0 ) 0
     , rotationPoint = rotationPoint
     }
+
+
+moveRoom : ( Int, Int ) -> ExtendedRoomData -> ( ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ), ExtendedRoomData )
+moveRoom target room =
+    let
+        roomData =
+            room.data
+
+        ( cells, newOrigin ) =
+            calculateRoomCells { roomData | origin = target }
+
+        ( deltaX, deltaY ) =
+            case ( newOrigin, target ) of
+                ( ( oX, oY ), ( tX, tY ) ) ->
+                    let
+                        ( dX, dY ) =
+                            ( tX - oX, tY - oY )
+                    in
+                    ( Tuple.first target - Tuple.first room.data.origin - dX
+                    , Tuple.second target - Tuple.second room.data.origin - dY
+                    )
+    in
+    ( cells
+    , { room
+        | data = { roomData | origin = newOrigin }
+        , rotationPoint = ( Tuple.first room.rotationPoint + deltaX, Tuple.second room.rotationPoint + deltaY )
+      }
+    )
+
+
+rotateRoom : Int -> ExtendedRoomData -> ( ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ), ExtendedRoomData )
+rotateRoom i extRoom =
+    List.range 1 i
+        |> List.foldr
+            (\_ ( _, room ) ->
+                let
+                    turns =
+                        if room.data.turns == 5 then
+                            0
+
+                        else
+                            room.data.turns + 1
+
+                    origin =
+                        rotate room.data.origin room.rotationPoint 1
+
+                    tmpRoom =
+                        room.data
+
+                    newRoom =
+                        { tmpRoom | turns = turns, origin = origin }
+
+                    ( cells, newOrigin ) =
+                        calculateRoomCells { tmpRoom | turns = turns, origin = origin }
+
+                    newRotationPoint =
+                        case ( origin, newOrigin ) of
+                            ( ( oX, oY ), ( tX, tY ) ) ->
+                                let
+                                    ( dX, dY ) =
+                                        ( tX - oX, tY - oY )
+                                in
+                                ( Tuple.first room.rotationPoint + dX, Tuple.second room.rotationPoint + dY )
+                in
+                ( cells
+                , { room
+                    | data = { newRoom | origin = newOrigin }
+                    , rotationPoint = newRotationPoint
+                  }
+                )
+            )
+            ( ( Empty, Dict.empty ), extRoom )

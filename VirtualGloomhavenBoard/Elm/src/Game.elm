@@ -76,6 +76,7 @@ type alias GameState =
 
 type GameStateScenario
     = InbuiltScenario Expansion Int
+    | CustomScenario String
 
 
 type Expansion
