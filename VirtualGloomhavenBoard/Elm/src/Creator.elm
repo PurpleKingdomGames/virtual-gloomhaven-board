@@ -7,6 +7,7 @@ import BoardMapTile exposing (MapTileRef(..), getAllRefs, getGridByRef, refToStr
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
 import Character exposing (CharacterClass(..))
+import Debug
 import Dict exposing (Dict)
 import Dom
 import DragPorts
@@ -28,9 +29,10 @@ import List
 import Maybe
 import Monster exposing (MonsterLevel(..), MonsterType(..), getAllBosses, getAllMonsters, monsterTypeToString)
 import Random
-import Scenario exposing (ScenarioMonster, normaliseAndRotatePoint)
+import Scenario exposing (MapTileData, Scenario, ScenarioMonster, normaliseAndRotatePoint)
 import ScenarioSync exposing (decodeScenario)
 import Task
+import Tuple
 import Version
 
 
@@ -108,6 +110,7 @@ type Msg
     | RemoveOverlay Int
     | RotateRoom MapTileRef
     | RemoveRoom MapTileRef
+    | ExportFile
     | LoadFile
     | ExtractFileString File
     | LoadScenario String
@@ -533,6 +536,124 @@ update msg model =
               }
             , Cmd.none
             )
+
+        ExportFile ->
+            let
+                overlays =
+                    List.filterMap
+                        (\o ->
+                            Maybe.map
+                                (\origin ->
+                                    let
+                                        ( x, y ) =
+                                            origin
+
+                                        startY =
+                                            y + 1
+
+                                        cells =
+                                            origin
+                                                :: (List.range 1 6
+                                                        |> List.map
+                                                            (\i ->
+                                                                Hexagon.rotate ( x, startY ) origin i
+                                                            )
+                                                   )
+
+                                        rooms =
+                                            List.filterMap
+                                                (\c ->
+                                                    List.filterMap
+                                                        (\r ->
+                                                            if Dict.member c (Tuple.second r) then
+                                                                Just (Tuple.first r)
+
+                                                            else
+                                                                Nothing
+                                                        )
+                                                        model.cachedRoomCells
+                                                        |> List.head
+                                                )
+                                                cells
+                                    in
+                                    case List.head rooms of
+                                        Just c ->
+                                            case o.ref of
+                                                Door d _ ->
+                                                    let
+                                                        distinctRoom =
+                                                            List.foldr
+                                                                (\a b ->
+                                                                    if List.member a b then
+                                                                        b
+
+                                                                    else
+                                                                        a :: b
+                                                                )
+                                                                []
+                                                                rooms
+                                                    in
+                                                    Just ( c, { o | ref = Door d distinctRoom } )
+
+                                                _ ->
+                                                    Just ( c, o )
+
+                                        _ ->
+                                            Nothing
+                                )
+                                (List.head o.cells)
+                        )
+                        model.overlays
+
+                monsters =
+                    List.filterMap
+                        (\m ->
+                            let
+                                origin =
+                                    ( m.initialX, m.initialY )
+
+                                startY =
+                                    m.initialY + 1
+
+                                cells =
+                                    origin
+                                        :: (List.range 1 6
+                                                |> List.map
+                                                    (\i ->
+                                                        Hexagon.rotate ( m.initialX, startY ) origin i
+                                                    )
+                                           )
+
+                                room =
+                                    List.filterMap
+                                        (\c ->
+                                            List.filterMap
+                                                (\r ->
+                                                    if Dict.member c (Tuple.second r) then
+                                                        Just (Tuple.first r)
+
+                                                    else
+                                                        Nothing
+                                                )
+                                                model.cachedRoomCells
+                                                |> List.head
+                                        )
+                                        cells
+                                        |> List.head
+                            in
+                            Maybe.map (\r -> ( r, m )) room
+                        )
+                        model.monsters
+
+                rooms =
+                    List.map (\r -> r.data) model.roomData
+
+                scenario =
+                    Debug.log
+                        "scenario"
+                        (generateScenario model.scenarioTitle rooms overlays monsters model.cachedRoomCells)
+            in
+            ( model, Cmd.none )
 
         LoadFile ->
             ( model, Select.file [ "application/json" ] ExtractFileString )
@@ -978,6 +1099,13 @@ getMenuHtml menuOpen =
         |> Dom.appendChild
             (Dom.element "ul"
                 |> Dom.addAttribute (attribute "role" "menu")
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.addAction ( "click", ExportFile )
+                        |> Dom.appendText "Export"
+                    )
                 |> Dom.appendChild
                     (Dom.element "li"
                         |> Dom.addAttribute (attribute "role" "menuitem")
@@ -1816,3 +1944,13 @@ rotateRoom i extRoom =
                 )
             )
             ( ( Empty, Dict.empty ), extRoom )
+
+
+generateScenario : String -> List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Scenario
+generateScenario title rooms overlays monsters roomCellMap =
+    Scenario 0 title (generateMapTileData rooms overlays monsters roomCellMap) 0 []
+
+
+generateMapTileData : List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> MapTileData
+generateMapTileData rooms overlays monsters roomCellMap =
+    MapTileData A1a [] [] [] 0
