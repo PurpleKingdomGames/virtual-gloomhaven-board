@@ -72,6 +72,10 @@ type alias ExtendedRoomData =
     }
 
 
+type alias ScenarioErr =
+    { message : String }
+
+
 type SideMenu
     = MapTileMenu
     | DoorMenu
@@ -602,6 +606,14 @@ update msg model =
                                             Nothing
                                 )
                                 (List.head o.cells)
+                                |> (\e ->
+                                        case e of
+                                            Just (Just a) ->
+                                                Just a
+
+                                            _ ->
+                                                Nothing
+                                   )
                         )
                         model.overlays
 
@@ -645,13 +657,13 @@ update msg model =
                         )
                         model.monsters
 
-                rooms =
+                roomData =
                     List.map (\r -> r.data) model.roomData
 
                 scenario =
                     Debug.log
                         "scenario"
-                        (generateScenario model.scenarioTitle rooms overlays monsters model.cachedRoomCells)
+                        (generateScenario model.scenarioTitle roomData overlays monsters model.cachedRoomCells)
             in
             ( model, Cmd.none )
 
@@ -1946,11 +1958,105 @@ rotateRoom i extRoom =
             ( ( Empty, Dict.empty ), extRoom )
 
 
-generateScenario : String -> List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Scenario
+generateScenario : String -> List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Result ScenarioErr Scenario
 generateScenario title rooms overlays monsters roomCellMap =
-    Scenario 0 title (generateMapTileData rooms overlays monsters roomCellMap) 0 []
+    let
+        mapTileData =
+            generateMapTileData rooms overlays monsters roomCellMap
+    in
+    case mapTileData of
+        Just m ->
+            Ok (Scenario 0 title m 0 [])
+
+        Nothing ->
+            Err { message = "No map tile data could be found" }
 
 
-generateMapTileData : List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> MapTileData
+generateMapTileData : List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Maybe MapTileData
 generateMapTileData rooms overlays monsters roomCellMap =
-    MapTileData A1a [] [] [] 0
+    case rooms of
+        room :: rest ->
+            let
+                doors =
+                    List.filterMap
+                        (\( r, d ) ->
+                            if r == room.ref then
+                                case d.ref of
+                                    Door _ _ ->
+                                        Just d
+
+                                    _ ->
+                                        Nothing
+
+                            else
+                                Nothing
+                        )
+                        overlays
+                        |> List.map
+                            (\o ->
+                                let
+                                    cells =
+                                        List.filterMap (\c -> mapCoordsToRoom room.ref c roomCellMap) o.cells
+                                in
+                                { o | cells = cells }
+                            )
+
+                boardOverlays =
+                    List.filterMap
+                        (\( r, o ) ->
+                            if r == room.ref then
+                                case o.ref of
+                                    Door _ _ ->
+                                        Nothing
+
+                                    _ ->
+                                        Just o
+
+                            else
+                                Nothing
+                        )
+                        overlays
+                        |> List.map
+                            (\o ->
+                                let
+                                    cells =
+                                        List.filterMap (\c -> mapCoordsToRoom room.ref c roomCellMap) o.cells
+                                in
+                                { o | cells = cells }
+                            )
+
+                filteredMonsters =
+                    List.filterMap
+                        (\( r, m ) ->
+                            if r == room.ref then
+                                Just m
+
+                            else
+                                Nothing
+                        )
+                        monsters
+                        |> List.filterMap
+                            (\m ->
+                                Maybe.map
+                                    (\( x, y ) -> { m | initialX = x, initialY = y })
+                                    (mapCoordsToRoom room.ref ( m.initialX, m.initialY ) roomCellMap)
+                            )
+            in
+            Nothing
+
+        _ ->
+            Nothing
+
+
+mapCoordsToRoom : MapTileRef -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Maybe ( Int, Int )
+mapCoordsToRoom ref origin roomCellData =
+    List.filterMap
+        (\( r, d ) ->
+            if r == ref then
+                Maybe.map (\( m, _ ) -> m) (Dict.get origin d)
+
+            else
+                Nothing
+        )
+        roomCellData
+        |> List.head
