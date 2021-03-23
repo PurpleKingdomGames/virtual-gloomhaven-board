@@ -76,6 +76,14 @@ type alias ScenarioErr =
     { message : String }
 
 
+type alias ExportModel =
+    { rooms : List RoomData
+    , doors : List BoardOverlay
+    , overlays : List ( MapTileRef, BoardOverlay )
+    , mapTileData : MapTileData
+    }
+
+
 type SideMenu
     = MapTileMenu
     | DoorMenu
@@ -1963,24 +1971,36 @@ generateScenario title rooms overlays monsters roomCellMap =
     case List.head rooms of
         Just r ->
             let
-                ( _, _, mapTileData ) =
-                    generateMapTileData r rooms overlays monsters roomCellMap
+                doors =
+                    List.filterMap
+                        (\( _, o ) ->
+                            case o.ref of
+                                Door _ _ ->
+                                    Just o
+
+                                _ ->
+                                    Nothing
+                        )
+                        overlays
+
+                mapTileModel =
+                    generateMapTileData r rooms doors overlays monsters roomCellMap
             in
-            Ok (Scenario 0 title mapTileData 0 [])
+            Ok (Scenario 0 title mapTileModel.mapTileData 0 [])
 
         Nothing ->
             Err { message = "No map tile data could be found" }
 
 
-generateMapTileData : RoomData -> List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> ( List RoomData, List ( MapTileRef, BoardOverlay ), MapTileData )
-generateMapTileData room rooms overlays monsters roomCellMap =
+generateMapTileData : RoomData -> List RoomData -> List BoardOverlay -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> ExportModel
+generateMapTileData room rooms doors overlays monsters roomCellMap =
     let
         filteredOverlays =
             List.filter
                 (\( r, o ) ->
                     case o.ref of
-                        Door _ connections ->
-                            r /= room.ref && List.all (\c -> c /= room.ref) connections
+                        Door _ _ ->
+                            False
 
                         _ ->
                             r == room.ref
@@ -1989,40 +2009,49 @@ generateMapTileData room rooms overlays monsters roomCellMap =
 
         filteredDoors =
             List.filterMap
-                (\( r, d ) ->
-                    if r == room.ref then
-                        case d.ref of
-                            Door _ _ ->
+                (\d ->
+                    case d.ref of
+                        Door _ connections ->
+                            if List.member room.ref connections then
                                 Just d
 
-                            _ ->
+                            else
                                 Nothing
 
-                    else
-                        Nothing
+                        _ ->
+                            Nothing
                 )
-                overlays
+                doors
 
-        ( remainingRooms, remainingOverlays, mapTileData ) =
+        ( remainingDoors, remainingOverlays, mapTileData ) =
             filteredDoors
                 |> List.foldl
-                    (\o ( leftRooms, leftOverlays, maptileDatas ) ->
+                    (\o ( leftDoors, leftOverlays, maptileDatas ) ->
                         case o.ref of
                             Door subType connections ->
                                 case List.head o.cells of
                                     Just cell ->
                                         let
+                                            newDoorList =
+                                                List.filter (\d -> d /= o) leftDoors
+
                                             cells =
-                                                List.filterMap
-                                                    (\ref ->
-                                                        Maybe.map
-                                                            (\c ->
-                                                                ( ref, c )
+                                                Debug.log
+                                                    (Debug.toString rooms)
+                                                    (List.filterMap
+                                                        (\ref ->
+                                                            List.filter (\r -> r.ref == ref) rooms
+                                                                |> List.head
+                                                        )
+                                                        connections
+                                                        |> List.filterMap
+                                                            (\r ->
+                                                                Maybe.map
+                                                                    (\newCoords -> ( r.ref, newCoords ))
+                                                                    (mapCoordsToRoom r.ref r.turns cell roomCellMap)
                                                             )
-                                                            (mapCoordsToRoom ref cell roomCellMap)
+                                                        |> Array.fromList
                                                     )
-                                                    connections
-                                                    |> Array.fromList
                                         in
                                         case ( Array.get 0 cells, Array.get 1 cells ) of
                                             ( Just ( ref1, room1 ), Just ( ref2, room2 ) ) ->
@@ -2055,45 +2084,42 @@ generateMapTileData room rooms overlays monsters roomCellMap =
                                                 case connectingRoom of
                                                     Just r ->
                                                         let
-                                                            remainingRooms1 =
-                                                                List.filter (\r1 -> r1.ref == r.ref) rooms
-
-                                                            ( leftDoors, overlays2, linkedMapTileData ) =
-                                                                generateMapTileData r remainingRooms1 leftOverlays monsters roomCellMap
+                                                            newModel =
+                                                                generateMapTileData r rooms newDoorList leftOverlays monsters roomCellMap
                                                         in
-                                                        ( leftDoors
-                                                        , overlays2
-                                                        , DoorLink subType o.direction thisRoomCell connectionCell linkedMapTileData
+                                                        ( newModel.doors
+                                                        , newModel.overlays
+                                                        , DoorLink subType o.direction thisRoomCell connectionCell newModel.mapTileData
                                                             :: maptileDatas
                                                         )
 
                                                     Nothing ->
-                                                        ( leftRooms, leftOverlays, maptileDatas )
+                                                        ( leftDoors, leftOverlays, maptileDatas )
 
                                             ( Just ( _, room1 ), Nothing ) ->
-                                                ( leftRooms
+                                                ( newDoorList
                                                 , leftOverlays
                                                 , DoorLink subType o.direction room1 room1 (MapTileData room.ref [] [] [] room.turns)
                                                     :: maptileDatas
                                                 )
 
                                             ( Nothing, Just ( _, room1 ) ) ->
-                                                ( leftRooms
+                                                ( newDoorList
                                                 , leftOverlays
                                                 , DoorLink subType o.direction room1 room1 (MapTileData room.ref [] [] [] room.turns)
                                                     :: maptileDatas
                                                 )
 
                                             ( Nothing, Nothing ) ->
-                                                ( leftRooms, leftOverlays, maptileDatas )
+                                                ( leftDoors, leftOverlays, maptileDatas )
 
                                     Nothing ->
-                                        ( leftRooms, leftOverlays, maptileDatas )
+                                        ( leftDoors, leftOverlays, maptileDatas )
 
                             _ ->
-                                ( leftRooms, leftOverlays, maptileDatas )
+                                ( leftDoors, leftOverlays, maptileDatas )
                     )
-                    ( rooms, filteredOverlays, [] )
+                    ( doors, filteredOverlays, [] )
 
         boardOverlays =
             List.filterMap
@@ -2114,7 +2140,7 @@ generateMapTileData room rooms overlays monsters roomCellMap =
                     (\o ->
                         let
                             cells =
-                                List.filterMap (\c -> mapCoordsToRoom room.ref c roomCellMap) o.cells
+                                List.filterMap (\c -> mapCoordsToRoom room.ref room.turns c roomCellMap) o.cells
                         in
                         { o | cells = cells }
                     )
@@ -2133,21 +2159,39 @@ generateMapTileData room rooms overlays monsters roomCellMap =
                     (\m ->
                         Maybe.map
                             (\( x, y ) -> { m | initialX = x, initialY = y })
-                            (mapCoordsToRoom room.ref ( m.initialX, m.initialY ) roomCellMap)
+                            (mapCoordsToRoom room.ref room.turns ( m.initialX, m.initialY ) roomCellMap)
                     )
     in
-    ( remainingRooms, remainingOverlays, MapTileData room.ref mapTileData boardOverlays filteredMonsters room.turns )
+    { rooms = rooms
+    , doors = remainingDoors
+    , overlays = remainingOverlays
+    , mapTileData = MapTileData room.ref mapTileData boardOverlays filteredMonsters room.turns
+    }
 
 
-mapCoordsToRoom : MapTileRef -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Maybe ( Int, Int )
-mapCoordsToRoom ref origin roomCellData =
-    List.filterMap
-        (\( r, d ) ->
-            if r == ref then
-                Maybe.map (\( m, _ ) -> m) (Dict.get origin d)
-
-            else
-                Nothing
+mapCoordsToRoom : MapTileRef -> Int -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Maybe ( Int, Int )
+mapCoordsToRoom ref turns origin roomCellData =
+    let
+        roomOrigin =
+            roomCellData
+                |> List.filter (\( r, _ ) -> r == ref)
+                |> List.head
+                |> Maybe.map
+                    (\( _, d ) ->
+                        Dict.toList d
+                            |> List.filter (\( _, ( o, _ ) ) -> o == ( 0, 0 ))
+                    )
+                |> Maybe.andThen (\l -> List.head l)
+                |> Maybe.andThen (\( k, _ ) -> Just k)
+    in
+    Maybe.map
+        (\o ->
+            let
+                -- Rotate the cell around the origin
+                rotatedCell =
+                    rotate origin o turns
+            in
+            -- Get the delta
+            ( Tuple.first rotatedCell - Tuple.first o, Tuple.second rotatedCell - Tuple.second o )
         )
-        roomCellData
-        |> List.head
+        roomOrigin
