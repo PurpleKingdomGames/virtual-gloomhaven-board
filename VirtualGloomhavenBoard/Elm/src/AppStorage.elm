@@ -3,12 +3,12 @@ port module AppStorage exposing (AppModeType(..), AppOverrides, CampaignTrackerU
 import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass, stringToCharacter)
 import Game exposing (GameState, Piece, RoomData)
-import GameSync exposing (decodeGameState, decodePiece, decodeRoom, encodeGameState, encodeOverlay, encodePiece, encodeRoom)
+import GameSync exposing (decodeGameState, decodePiece, decodeRoom, encodeGameState, encodePiece, encodeRoom)
 import Html exposing (s)
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map7, maybe, succeed)
 import Json.Encode as Encode exposing (object)
 import List exposing (filterMap)
-import SharedSync exposing (decodeBoardOverlay, decodeCoords, encodeCoords)
+import SharedSync exposing (decodeBoardOverlay, decodeCoords, encodeCoords, encodeOverlay)
 
 
 port saveData : Encode.Value -> Cmd msg

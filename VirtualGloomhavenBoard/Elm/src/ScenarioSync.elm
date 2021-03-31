@@ -1,14 +1,15 @@
-module ScenarioSync exposing (decodeScenario, loadScenarioById)
+module ScenarioSync exposing (decodeScenario, encodeScenario, loadScenarioById)
 
-import BoardMapTile exposing (stringToRef)
-import BoardOverlay exposing (BoardOverlayDirectionType, DoorSubType)
+import BoardMapTile exposing (refToString, stringToRef)
+import BoardOverlay exposing (BoardOverlayDirectionType, CorridorMaterial(..), CorridorSize(..), DoorSubType(..))
 import Game exposing (Expansion(..), GameStateScenario(..))
-import Http exposing (Error, expectJson, get)
+import Http exposing (Error, expectJson)
 import Json.Decode exposing (Decoder, andThen, fail, field, float, int, lazy, list, map5, map6, map7, string, succeed)
+import Json.Encode as Encode exposing (object)
 import List exposing (all, filterMap, map)
-import Monster exposing (Monster, MonsterType, stringToMonsterType)
+import Monster exposing (Monster, MonsterLevel(..), MonsterType, monsterTypeToString, stringToMonsterType)
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
-import SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMonsterLevel)
+import SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMonsterLevel, encodeOverlayDirection, encodeOverlays)
 
 
 type alias DoorDataObj =
@@ -30,6 +31,17 @@ decodeScenario =
         (field "mapTileData" decodeMapTileData)
         (field "angle" float)
         (field "additionalMonsters" (list string) |> andThen decodeMonsterList)
+
+
+encodeScenario : Scenario -> Encode.Value
+encodeScenario scenario =
+    object
+        [ ( "id", Encode.int scenario.id )
+        , ( "title", Encode.string scenario.title )
+        , ( "mapTileData", Encode.object (encodeMapTileData scenario.mapTilesData) )
+        , ( "angle", Encode.float scenario.angle )
+        , ( "additionalMonsters", Encode.list Encode.string (encodeAdditionalMonsters scenario.additionalMonsters) )
+        ]
 
 
 loadScenarioById : GameStateScenario -> (Result Error Scenario -> msg) -> Cmd msg
@@ -127,3 +139,134 @@ decodeScenarioMonster =
         (field "twoPlayer" string |> andThen decodeMonsterLevel)
         (field "threePlayer" string |> andThen decodeMonsterLevel)
         (field "fourPlayer" string |> andThen decodeMonsterLevel)
+
+
+encodeAdditionalMonsters : List MonsterType -> List String
+encodeAdditionalMonsters monsters =
+    List.filterMap
+        (\m -> monsterTypeToString m)
+        monsters
+
+
+encodeMapTileData : MapTileData -> List ( String, Encode.Value )
+encodeMapTileData mapTileData =
+    [ ( "ref"
+      , case refToString mapTileData.ref of
+            Just s ->
+                Encode.string s
+
+            Nothing ->
+                Encode.null
+      )
+    , ( "doors", Encode.list Encode.object (encodeDoors mapTileData.doors) )
+    , ( "overlays", Encode.list Encode.object (encodeOverlays mapTileData.overlays) )
+    , ( "monsters", Encode.list Encode.object (encodeMonsters mapTileData.monsters) )
+    , ( "turns", Encode.int mapTileData.turns )
+    ]
+
+
+encodeDoors : List DoorData -> List (List ( String, Encode.Value ))
+encodeDoors doors =
+    List.map
+        (\d ->
+            case d of
+                DoorLink subType direction ( room1X, room1Y ) ( room2X, room2Y ) mapTileData ->
+                    encodeDoor subType
+                        ++ [ ( "direction", Encode.string (encodeOverlayDirection direction) )
+                           , ( "room1X", Encode.int room1X )
+                           , ( "room1Y", Encode.int room1Y )
+                           , ( "room2X", Encode.int room2X )
+                           , ( "room2Y", Encode.int room2Y )
+                           , ( "mapTileData", Encode.object (encodeMapTileData mapTileData) )
+                           ]
+        )
+        doors
+
+
+encodeDoor : DoorSubType -> List ( String, Encode.Value )
+encodeDoor doorType =
+    case doorType of
+        Corridor material size ->
+            [ ( "material"
+              , Encode.string
+                    (case material of
+                        Dark ->
+                            "dark"
+
+                        Earth ->
+                            "earth"
+
+                        ManmadeStone ->
+                            "manmade-stone"
+
+                        NaturalStone ->
+                            "natural-stone"
+
+                        PressurePlate ->
+                            "pressure-plate"
+
+                        Wood ->
+                            "wood"
+                    )
+              )
+            , ( "size"
+              , Encode.int
+                    (case size of
+                        One ->
+                            1
+
+                        Two ->
+                            2
+                    )
+              )
+            ]
+
+        AltarDoor ->
+            [ ( "subType", Encode.string "altar" ) ]
+
+        BreakableWall ->
+            [ ( "subType", Encode.string "breakable-wall" ) ]
+
+        DarkFog ->
+            [ ( "subType", Encode.string "dark-fog" ) ]
+
+        LightFog ->
+            [ ( "subType", Encode.string "light-fog" ) ]
+
+        Stone ->
+            [ ( "subType", Encode.string "stone" ) ]
+
+        Wooden ->
+            [ ( "subType", Encode.string "wooden" ) ]
+
+
+encodeMonsters : List ScenarioMonster -> List (List ( String, Encode.Value ))
+encodeMonsters monsters =
+    List.filterMap
+        (\m ->
+            Maybe.map
+                (\t ->
+                    [ ( "monster", Encode.string t )
+                    , ( "initialX", Encode.int m.initialX )
+                    , ( "initialY", Encode.int m.initialY )
+                    , ( "twoPlayer", Encode.string (encodeMonsterLevel m.twoPlayer) )
+                    , ( "threePlayer", Encode.string (encodeMonsterLevel m.threePlayer) )
+                    , ( "fourPlayer", Encode.string (encodeMonsterLevel m.fourPlayer) )
+                    ]
+                )
+                (monsterTypeToString m.monster.monster)
+        )
+        monsters
+
+
+encodeMonsterLevel : MonsterLevel -> String
+encodeMonsterLevel monsterLevel =
+    case monsterLevel of
+        None ->
+            "none"
+
+        Normal ->
+            "normal"
+
+        Elite ->
+            "elite"

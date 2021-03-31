@@ -12,6 +12,7 @@ import Dict exposing (Dict)
 import Dom
 import DragPorts
 import File exposing (File)
+import File.Download as Download
 import File.Select as Select
 import Game exposing (AIType(..), GameStateScenario(..), Piece, PieceType(..), RoomData, generateGameMap, moveOverlayWithoutState, movePieceWithoutState)
 import Hexagon exposing (rotate)
@@ -30,7 +31,7 @@ import Maybe
 import Monster exposing (MonsterLevel(..), MonsterType(..), getAllBosses, getAllMonsters, monsterTypeToString)
 import Random
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster, normaliseAndRotatePoint)
-import ScenarioSync exposing (decodeScenario)
+import ScenarioSync exposing (decodeScenario, encodeScenario)
 import Task
 import Tuple
 import Version
@@ -669,11 +670,16 @@ update msg model =
                     List.map (\r -> r.data) model.roomData
 
                 scenario =
-                    Debug.log
-                        "scenario"
-                        (generateScenario model.scenarioTitle roomData overlays monsters model.cachedRoomCells)
+                    generateScenario model.scenarioTitle roomData overlays monsters model.cachedRoomCells
             in
-            ( model, Cmd.none )
+            case scenario of
+                Ok s ->
+                    ( model
+                    , Download.string (model.scenarioTitle ++ ".json") "application/json" (Encode.encode 4 (encodeScenario s))
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
 
         LoadFile ->
             ( model, Select.file [ "application/json" ] ExtractFileString )
@@ -1997,13 +2003,13 @@ generateMapTileData room rooms doors overlays monsters roomCellMap =
     let
         filteredOverlays =
             List.filter
-                (\( r, o ) ->
+                (\( _, o ) ->
                     case o.ref of
                         Door _ _ ->
                             False
 
                         _ ->
-                            r == room.ref
+                            True
                 )
                 overlays
 
@@ -2036,22 +2042,19 @@ generateMapTileData room rooms doors overlays monsters roomCellMap =
                                                 List.filter (\d -> d /= o) leftDoors
 
                                             cells =
-                                                Debug.log
-                                                    (Debug.toString rooms)
-                                                    (List.filterMap
-                                                        (\ref ->
-                                                            List.filter (\r -> r.ref == ref) rooms
-                                                                |> List.head
-                                                        )
-                                                        connections
-                                                        |> List.filterMap
-                                                            (\r ->
-                                                                Maybe.map
-                                                                    (\newCoords -> ( r.ref, newCoords ))
-                                                                    (mapCoordsToRoom r.ref r.turns cell roomCellMap)
-                                                            )
-                                                        |> Array.fromList
+                                                List.filterMap
+                                                    (\ref ->
+                                                        List.filter (\r -> r.ref == ref) rooms
+                                                            |> List.head
                                                     )
+                                                    connections
+                                                    |> List.filterMap
+                                                        (\r ->
+                                                            Maybe.map
+                                                                (\newCoords -> ( r.ref, newCoords ))
+                                                                (mapCoordsToRoom r.ref r.turns cell roomCellMap)
+                                                        )
+                                                    |> Array.fromList
                                         in
                                         case ( Array.get 0 cells, Array.get 1 cells ) of
                                             ( Just ( ref1, room1 ), Just ( ref2, room2 ) ) ->
@@ -2164,7 +2167,7 @@ generateMapTileData room rooms doors overlays monsters roomCellMap =
     in
     { rooms = rooms
     , doors = remainingDoors
-    , overlays = remainingOverlays
+    , overlays = remainingOverlays |> List.filter (\( r, _ ) -> r /= room.ref)
     , mapTileData = MapTileData room.ref mapTileData boardOverlays filteredMonsters room.turns
     }
 

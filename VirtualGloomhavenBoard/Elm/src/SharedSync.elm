@@ -1,13 +1,349 @@
-module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeCoords, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel, encodeCoords)
+module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeCoords, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel, encodeCoords, encodeMapTileRefList, encodeOverlay, encodeOverlayDirection, encodeOverlays)
 
-import BoardMapTile exposing (MapTileRef(..), stringToRef)
+import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
 import Html.Attributes exposing (id)
-import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map3, map4, maybe, string, succeed)
-import Json.Encode as Encode
+import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map4, maybe, succeed)
+import Json.Encode as Encode exposing (object)
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
-import Random exposing (Seed)
+
+
+encodeOverlays : List BoardOverlay -> List (List ( String, Encode.Value ))
+encodeOverlays overlays =
+    List.map encodeOverlay overlays
+
+
+encodeOverlay : BoardOverlay -> List ( String, Encode.Value )
+encodeOverlay o =
+    [ ( "ref", encodeOverlayType o.ref )
+    , ( "id", Encode.int o.id )
+    , ( "direction", Encode.string (encodeOverlayDirection o.direction) )
+    , ( "cells", Encode.list (Encode.list Encode.int) (encodeOverlayCells o.cells) )
+    ]
+
+
+encodeOverlayDirection : BoardOverlayDirectionType -> String
+encodeOverlayDirection dir =
+    case dir of
+        Default ->
+            "default"
+
+        DiagonalLeft ->
+            "diagonal-left"
+
+        DiagonalRight ->
+            "diagonal-right"
+
+        DiagonalLeftReverse ->
+            "diagonal-left-reverse"
+
+        DiagonalRightReverse ->
+            "diagonal-right-reverse"
+
+        Horizontal ->
+            "horizontal"
+
+        Vertical ->
+            "vertical"
+
+        VerticalReverse ->
+            "vertical-reverse"
+
+
+encodeOverlayCells : List ( Int, Int ) -> List (List Int)
+encodeOverlayCells cells =
+    List.map (\( a, b ) -> [ a, b ]) cells
+
+
+encodeOverlayType : BoardOverlayType -> Encode.Value
+encodeOverlayType overlay =
+    case overlay of
+        DifficultTerrain d ->
+            object
+                [ ( "type", Encode.string "difficult-terrain" )
+                , ( "subType", Encode.string (encodeDifficultTerrain d) )
+                ]
+
+        Door (Corridor m i) refs ->
+            object
+                [ ( "type", Encode.string "door" )
+                , ( "subType", Encode.string "corridor" )
+                , ( "material", Encode.string (encodeMaterial m) )
+                , ( "size", Encode.int (encodeSize i) )
+                , ( "links", Encode.list Encode.string (encodeMapTileRefList refs) )
+                ]
+
+        Door s refs ->
+            object
+                [ ( "type", Encode.string "door" )
+                , ( "subType", Encode.string (encodeDoor s) )
+                , ( "links", Encode.list Encode.string (encodeMapTileRefList refs) )
+                ]
+
+        Hazard h ->
+            object
+                [ ( "type", Encode.string "hazard" )
+                , ( "subType", Encode.string (encodeHazard h) )
+                ]
+
+        Obstacle o ->
+            object
+                [ ( "type", Encode.string "obstacle" )
+                , ( "subType", Encode.string (encodeObstacle o) )
+                ]
+
+        Rift ->
+            object [ ( "type", Encode.string "rift" ) ]
+
+        StartingLocation ->
+            object [ ( "type", Encode.string "starting-location" ) ]
+
+        Trap t ->
+            object
+                [ ( "type", Encode.string "trap" )
+                , ( "subType", Encode.string (encodeTrap t) )
+                ]
+
+        Treasure t ->
+            object
+                (( "type", Encode.string "treasure" )
+                    :: encodeTreasure t
+                )
+
+        Wall w ->
+            object
+                [ ( "type", Encode.string "wall" )
+                , ( "subType", Encode.string (encodeWall w) )
+                ]
+
+
+encodeDoor : DoorSubType -> String
+encodeDoor door =
+    case door of
+        AltarDoor ->
+            "altar"
+
+        Stone ->
+            "stone"
+
+        Wooden ->
+            "wooden"
+
+        BreakableWall ->
+            "breakable-wall"
+
+        Corridor _ _ ->
+            "corridor"
+
+        DarkFog ->
+            "dark-fog"
+
+        LightFog ->
+            "light-fog"
+
+
+encodeMaterial : CorridorMaterial -> String
+encodeMaterial m =
+    case m of
+        Dark ->
+            "dark"
+
+        Earth ->
+            "earth"
+
+        ManmadeStone ->
+            "manmade-stone"
+
+        NaturalStone ->
+            "natural-stone"
+
+        PressurePlate ->
+            "pressure-plate"
+
+        Wood ->
+            "wood"
+
+
+encodeSize : CorridorSize -> Int
+encodeSize i =
+    case i of
+        One ->
+            1
+
+        Two ->
+            2
+
+
+encodeTrap : TrapSubType -> String
+encodeTrap trap =
+    case trap of
+        BearTrap ->
+            "bear"
+
+        Spike ->
+            "spike"
+
+        Poison ->
+            "poison"
+
+
+encodeDifficultTerrain : DifficultTerrainSubType -> String
+encodeDifficultTerrain terrain =
+    case terrain of
+        Log ->
+            "log"
+
+        Rubble ->
+            "rubble"
+
+        Stairs ->
+            "stairs"
+
+        VerticalStairs ->
+            "stairs-vert"
+
+        Water ->
+            "water"
+
+
+encodeHazard : HazardSubType -> String
+encodeHazard hazard =
+    case hazard of
+        HotCoals ->
+            "hot-coals"
+
+        Thorns ->
+            "thorns"
+
+
+encodeObstacle : ObstacleSubType -> String
+encodeObstacle obstacle =
+    case obstacle of
+        Altar ->
+            "altar"
+
+        Barrel ->
+            "barrel"
+
+        Bookcase ->
+            "bookcase"
+
+        Boulder1 ->
+            "boulder-1"
+
+        Boulder2 ->
+            "boulder-2"
+
+        Boulder3 ->
+            "boulder-3"
+
+        Bush ->
+            "bush"
+
+        Cabinet ->
+            "cabinet"
+
+        Crate ->
+            "crate"
+
+        Crystal ->
+            "crystal"
+
+        DarkPit ->
+            "dark-pit"
+
+        Fountain ->
+            "fountain"
+
+        Mirror ->
+            "mirror"
+
+        Nest ->
+            "nest"
+
+        Pillar ->
+            "pillar"
+
+        RockColumn ->
+            "rock-column"
+
+        Sarcophagus ->
+            "sarcophagus"
+
+        Shelf ->
+            "shelf"
+
+        Stalagmites ->
+            "stalagmites"
+
+        Stump ->
+            "stump"
+
+        Table ->
+            "table"
+
+        Totem ->
+            "totem"
+
+        Tree3 ->
+            "tree-3"
+
+        WallSection ->
+            "wall-section"
+
+
+encodeTreasure : TreasureSubType -> List ( String, Encode.Value )
+encodeTreasure treasure =
+    case treasure of
+        Chest c ->
+            [ ( "subType", Encode.string "chest" )
+            , ( "id", Encode.string (encodeTreasureChest c) )
+            ]
+
+        Coin i ->
+            [ ( "subType", Encode.string "coin" )
+            , ( "amount", Encode.int i )
+            ]
+
+
+encodeWall : WallSubType -> String
+encodeWall wallType =
+    case wallType of
+        HugeRock ->
+            "huge-rock"
+
+        Iron ->
+            "iron"
+
+        LargeRock ->
+            "large-rock"
+
+        ObsidianGlass ->
+            "obsidian-glass"
+
+        Rock ->
+            "rock"
+
+
+encodeTreasureChest : ChestType -> String
+encodeTreasureChest chest =
+    case chest of
+        NormalChest i ->
+            String.fromInt i
+
+        Goal ->
+            "goal"
+
+        Locked ->
+            "locked"
+
+
+encodeMapTileRefList : List MapTileRef -> List String
+encodeMapTileRefList refs =
+    List.map (\r -> refToString r) refs
+        |> List.filter (\r -> r /= Nothing)
+        |> List.map (\r -> Maybe.withDefault "" r)
 
 
 decodeDoor : Decoder DoorSubType
