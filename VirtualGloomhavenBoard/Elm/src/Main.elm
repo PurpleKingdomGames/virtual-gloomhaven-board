@@ -12,6 +12,8 @@ import Character exposing (CharacterClass(..), characterToString, getSoloScenari
 import Dict exposing (Dict)
 import Dom exposing (Element)
 import DragPorts
+import File exposing (File)
+import File.Select as Select
 import Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, ensureOverlayIds, update)
 import Html exposing (a, div, footer, header, iframe, span, text)
@@ -22,7 +24,7 @@ import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy, lazy2, lazy3, lazy5, lazy6, lazy8)
 import Http exposing (Error)
-import Json.Decode as Decode
+import Json.Decode as Decode exposing (Error, decodeString)
 import Json.Encode as Encode
 import List exposing (all, any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
 import List.Extra
@@ -30,7 +32,7 @@ import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..
 import Process
 import Random exposing (Seed)
 import Scenario exposing (DoorData(..), Scenario)
-import ScenarioSync exposing (loadScenarioById)
+import ScenarioSync exposing (decodeScenario, loadScenarioById)
 import String exposing (join, split)
 import Task
 import Version
@@ -56,6 +58,7 @@ type alias Model =
     , currentScenarioInput : Maybe String
     , currentClientSettings : Maybe TransientClientSettings
     , currentPlayerList : Maybe (List CharacterClass)
+    , currentSelectedFile : Maybe ( String, Maybe (Result Decode.Error Scenario) )
     , deadPlayerList : List CharacterClass
     , currentDraggable : Maybe MoveablePiece
     , connectionStatus : ConnectionStatus
@@ -111,8 +114,11 @@ type ConnectionStatus
 
 
 type Msg
-    = LoadedScenario Seed GameStateScenario (Maybe Game.GameState) Bool (Result Error Scenario)
+    = LoadedScenario Seed GameStateScenario (Maybe Game.GameState) Bool (Result Http.Error Scenario)
     | ReloadScenario
+    | ChooseScenarioFile
+    | ExtractScenarioFile File
+    | LoadScenarioFile String
     | MoveStarted MoveablePiece (Maybe ( DragDrop.EffectAllowed, Decode.Value ))
     | MoveTargetChanged ( Int, Int ) (Maybe ( DragDrop.DropEffect, Decode.Value ))
     | MoveCanceled
@@ -270,6 +276,7 @@ init ( oldState, maybeOverrides, seed ) =
         Nothing
         Nothing
         Nothing
+        Nothing
         (getDeadPlayers initGameState)
         Nothing
         Disconnected
@@ -367,6 +374,24 @@ update msg model =
 
         ReloadScenario ->
             update (ChangeScenario model.game.state.scenario True) model
+
+        ChooseScenarioFile ->
+            ( model, Select.file [ "application/json" ] ExtractScenarioFile )
+
+        ExtractScenarioFile file ->
+            ( { model | currentSelectedFile = Just ( File.name file, Nothing ) }
+            , Task.perform LoadScenarioFile (File.toString file)
+            )
+
+        LoadScenarioFile str ->
+            case model.currentSelectedFile of
+                Just ( filename, _ ) ->
+                    ( { model | currentSelectedFile = Just ( filename, Just (decodeString decodeScenario str) ) }
+                    , Cmd.none
+                    )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         MoveStarted piece maybeDragData ->
             let
@@ -540,7 +565,7 @@ update msg model =
                     model.config
 
                 newModel =
-                    { model | config = { config | gameMode = mode }, currentClientSettings = Nothing, currentPlayerList = Nothing, currentScenarioInput = Nothing }
+                    { model | config = { config | gameMode = mode }, currentClientSettings = Nothing, currentPlayerList = Nothing, currentScenarioInput = Nothing, currentSelectedFile = Nothing }
             in
             ( newModel, saveToStorage newModel.game.state newModel.config )
 
@@ -606,7 +631,7 @@ update msg model =
                 ( { model | config = { config | appMode = AppStorage.Game } }, Cmd.none )
 
         EnterScenarioType gameStateType ->
-            ( { model | currentScenarioType = Just gameStateType, currentScenarioInput = Just "1" }, Cmd.none )
+            ( { model | currentScenarioType = Just gameStateType, currentScenarioInput = Just "1", currentSelectedFile = Nothing }, Cmd.none )
 
         EnterScenarioNumber strId ->
             ( { model | currentScenarioInput = Just strId }, Cmd.none )
@@ -1778,8 +1803,39 @@ getScenarioDialog model =
         scenarioInput =
             getCurrentScenarioInput model
 
+        scenarioErr =
+            case scenarioInput of
+                CustomScenario _ ->
+                    case model.currentSelectedFile of
+                        Just ( _, Just (Ok _) ) ->
+                            Nothing
+
+                        Just ( _, Just (Err e) ) ->
+                            let
+                                eX =
+                                    Decode.errorToString e
+
+                                errStr =
+                                    if String.length eX > 10 then
+                                        String.slice 0 7 eX ++ "..."
+
+                                    else
+                                        eX
+                            in
+                            Just ("Cannot decode file: '" ++ errStr ++ "'")
+
+                        _ ->
+                            Nothing
+
+                _ ->
+                    if isValidScenario scenarioInput then
+                        Nothing
+
+                    else
+                        Just "Invalid scenario number"
+
         validScenario =
-            isValidScenario scenarioInput
+            scenarioErr == Nothing
 
         expansion =
             case scenarioInput of
@@ -1788,6 +1844,22 @@ getScenarioDialog model =
 
                 _ ->
                     Nothing
+
+        filename =
+            case model.currentSelectedFile of
+                Just ( f, _ ) ->
+                    f
+
+                Nothing ->
+                    ""
+
+        isCustom =
+            case scenarioInput of
+                CustomScenario _ ->
+                    True
+
+                _ ->
+                    False
 
         decodeScenarioType =
             targetValue
@@ -1809,6 +1881,13 @@ getScenarioDialog model =
 
                                     _ ->
                                         Decode.fail "Incorrect type"
+
+                            [ t ] ->
+                                if t == "custom" then
+                                    Decode.succeed (CustomScenario "")
+
+                                else
+                                    Decode.fail "Incorrect type"
 
                             _ ->
                                 Decode.fail "String in wrong format"
@@ -1837,9 +1916,13 @@ getScenarioDialog model =
                                 |> Dom.addAttribute (attribute "value" "inbuilt|solo")
                                 |> Dom.addAttribute (selected (expansion == Just Solo))
                                 |> Dom.appendText "Solo"
+                            , Dom.element "option"
+                                |> Dom.addAttribute (attribute "value" "custom")
+                                |> Dom.addAttribute (selected isCustom)
+                                |> Dom.appendText "Custom"
                             ]
                     ]
-            , getScenarioSelectHtml scenarioInput validScenario
+            , getScenarioSelectHtml scenarioInput filename scenarioErr
             , Dom.element "div"
                 |> Dom.addClass "button-wrapper"
                 |> Dom.appendChildList
@@ -3049,8 +3132,8 @@ getCurrentScenarioInput model =
                         _ ->
                             InbuiltScenario e 1
 
-        Just (CustomScenario _) ->
-            model.game.state.scenario
+        Just (CustomScenario f) ->
+            CustomScenario f
 
         Nothing ->
             case model.game.state.scenario of
@@ -3071,8 +3154,8 @@ getCurrentScenarioInput model =
                     model.game.state.scenario
 
 
-getScenarioSelectHtml : GameStateScenario -> Bool -> Element Msg
-getScenarioSelectHtml scenario validScenario =
+getScenarioSelectHtml : GameStateScenario -> String -> Maybe String -> Element Msg
+getScenarioSelectHtml scenario filename errStr =
     let
         wrapperClass =
             case scenario of
@@ -3125,26 +3208,38 @@ getScenarioSelectHtml scenario validScenario =
                                         |> List.map (\( _, v ) -> v)
                                     )
 
-                _ ->
+                CustomScenario _ ->
                     Dom.element "div"
+                        |> Dom.addClass "button-wrapper"
+                        |> Dom.addActionStopPropagation ( "click", ChooseScenarioFile )
+                        |> Dom.appendChild
+                            (Dom.element "button"
+                                |> Dom.addAttribute (attribute "id" "scenarioIdInput")
+                                |> Dom.appendText "Choose file"
+                            )
+                        |> Dom.appendChild
+                            (Dom.element "span"
+                                |> Dom.appendText filename
+                            )
     in
     Dom.element "div"
         |> Dom.addClass wrapperClass
-        |> Dom.addClassConditional "error" (validScenario == False)
+        |> Dom.addClassConditional "error" (errStr /= Nothing)
         |> Dom.appendChildList
             ([ Dom.element "label"
                 |> Dom.addAttribute (attribute "for" "scenarioIdInput")
                 |> Dom.appendText "Scenario"
              , scenarioSelectInput
              ]
-                ++ (if validScenario then
-                        []
+                ++ (case errStr of
+                        Nothing ->
+                            []
 
-                    else
-                        [ Dom.element "div"
-                            |> Dom.addClass "error-label"
-                            |> Dom.appendText "Invalid scenario number"
-                        ]
+                        Just e ->
+                            [ Dom.element "div"
+                                |> Dom.addClass "error-label"
+                                |> Dom.appendText e
+                            ]
                    )
             )
 
