@@ -2,7 +2,7 @@ module BoardOverlayTests exposing (suite)
 
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName)
-import Expect exposing (equal)
+import Expect
 import Test exposing (Test, describe, test)
 
 

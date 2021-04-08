@@ -3,7 +3,7 @@ module ScenarioSyncTests exposing (suite)
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass(..))
-import Expect exposing (equal)
+import Expect
 import Game exposing (AIType(..), PieceType(..))
 import Json.Decode exposing (decodeString)
 import Monster exposing (BossType(..), Monster, MonsterLevel(..), MonsterType(..), NormalMonsterType(..))
@@ -379,7 +379,7 @@ decodedScenario =
                         ( 3, 0 )
                         (MapTileData A4b
                             []
-                            [ BoardOverlay (Treasure (Chest (NormalChest 67))) Default [ ( 0, 2 ) ]
+                            [ BoardOverlay (Treasure (Chest (NormalChest 67))) 0 Default [ ( 0, 2 ) ]
                             ]
                             [ ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 0 1 Monster.None Normal Elite
                             , ScenarioMonster (Monster (NormalType LivingCorpse) 0 Monster.None False) 1 2 Elite Elite Elite
@@ -425,9 +425,9 @@ decodedScenario =
                             3
                         )
                     ]
-                    [ BoardOverlay (Obstacle Sarcophagus) Default [ ( 3, 2 ), ( 2, 2 ) ]
-                    , BoardOverlay (Obstacle Sarcophagus) DiagonalLeft [ ( 1, 5 ), ( 1, 4 ) ]
-                    , BoardOverlay (Obstacle Sarcophagus) DiagonalRight [ ( 3, 5 ), ( 4, 4 ) ]
+                    [ BoardOverlay (Obstacle Sarcophagus) 0 Default [ ( 3, 2 ), ( 2, 2 ) ]
+                    , BoardOverlay (Obstacle Sarcophagus) 0 DiagonalLeft [ ( 1, 5 ), ( 1, 4 ) ]
+                    , BoardOverlay (Obstacle Sarcophagus) 0 DiagonalRight [ ( 3, 5 ), ( 4, 4 ) ]
                     ]
                     [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None False) 1 1 Elite Elite Elite
                     , ScenarioMonster (Monster (BossType BanditCommander) 0 Monster.None False) 2 1 Normal Normal Normal
@@ -436,13 +436,13 @@ decodedScenario =
                     3
                 )
             ]
-            [ BoardOverlay (Trap BearTrap) Default [ ( 0, 1 ) ]
-            , BoardOverlay (Trap BearTrap) Default [ ( 2, 1 ) ]
-            , BoardOverlay StartingLocation Default [ ( 0, 3 ) ]
-            , BoardOverlay StartingLocation Default [ ( 1, 3 ) ]
-            , BoardOverlay StartingLocation Default [ ( 2, 3 ) ]
-            , BoardOverlay StartingLocation Default [ ( 1, 2 ) ]
-            , BoardOverlay StartingLocation Default [ ( 2, 2 ) ]
+            [ BoardOverlay (Trap BearTrap) 0 Default [ ( 0, 1 ) ]
+            , BoardOverlay (Trap BearTrap) 0 Default [ ( 2, 1 ) ]
+            , BoardOverlay StartingLocation 0 Default [ ( 0, 3 ) ]
+            , BoardOverlay StartingLocation 0 Default [ ( 1, 3 ) ]
+            , BoardOverlay StartingLocation 0 Default [ ( 2, 3 ) ]
+            , BoardOverlay StartingLocation 0 Default [ ( 1, 2 ) ]
+            , BoardOverlay StartingLocation 0 Default [ ( 2, 2 ) ]
             ]
             [ ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None False) 0 0 Normal Normal Normal
             , ScenarioMonster (Monster (NormalType BanditArcher) 0 Monster.None False) 1 0 Monster.None Monster.None Normal

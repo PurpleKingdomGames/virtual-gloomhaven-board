@@ -5,7 +5,7 @@ import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..))
 import Character exposing (CharacterClass(..))
 import Dict
-import Expect exposing (equal)
+import Expect
 import Game exposing (AIType(..), Expansion(..), GameState, GameStateScenario(..), Piece, PieceType(..), SummonsType(..))
 import GameSync exposing (decodeGameState, encodeGameState)
 import Json.Decode exposing (decodeString)
@@ -42,6 +42,7 @@ encodedJson =
             "ref": {
                 "type": "starting-location"
             },
+            "id": 0,
             "direction": "default",
             "cells": [
                 [
@@ -56,6 +57,7 @@ encodedJson =
                 "subType": "chest",
                 "id": "goal"
             },
+            "id": 1,
             "direction": "diagonal-right",
             "cells": [
                 [
@@ -70,6 +72,7 @@ encodedJson =
                 "subType": "chest",
                 "id": "1"
             },
+            "id": 2,
             "direction": "diagonal-right",
             "cells": [
                 [
@@ -84,6 +87,7 @@ encodedJson =
                 "subType": "coin",
                 "amount": 2
             },
+            "id": 3,
             "direction": "diagonal-left",
             "cells": [
                 [
@@ -98,6 +102,7 @@ encodedJson =
                 "subType": "coin",
                 "amount": 1
             },
+            "id": 4,
             "direction": "diagonal-left",
             "cells": [
                 [
@@ -115,6 +120,7 @@ encodedJson =
                     "a2a"
                 ]
             },
+            "id": 5,
             "direction": "horizontal",
             "cells": [
                 [
@@ -128,6 +134,7 @@ encodedJson =
                 "type": "trap",
                 "subType": "bear"
             },
+            "id": 6,
             "direction": "vertical",
             "cells": [
                 [
@@ -141,6 +148,7 @@ encodedJson =
                 "type": "obstacle",
                 "subType": "sarcophagus"
             },
+            "id": 7,
             "direction": "horizontal",
             "cells": [
                 [
@@ -224,14 +232,14 @@ decodedState =
         [ Brute, Cragheart, Tinkerer ]
         2
         [ A1b, A2a ]
-        [ BoardOverlay StartingLocation Default [ ( 0, 1 ) ]
-        , BoardOverlay (Treasure (Chest Goal)) DiagonalRight [ ( 1, 2 ) ]
-        , BoardOverlay (Treasure (Chest (NormalChest 1))) DiagonalRight [ ( 2, 2 ) ]
-        , BoardOverlay (Treasure (Coin 2)) DiagonalLeft [ ( 2, 3 ) ]
-        , BoardOverlay (Treasure (Coin 1)) DiagonalLeft [ ( 2, 4 ) ]
-        , BoardOverlay (Door Stone [ A1a, A2a ]) Horizontal [ ( 6, 5 ) ]
-        , BoardOverlay (Trap BearTrap) Vertical [ ( 7, 5 ) ]
-        , BoardOverlay (Obstacle Sarcophagus) Horizontal [ ( 6, 5 ), ( 7, 5 ) ]
+        [ BoardOverlay StartingLocation 0 Default [ ( 0, 1 ) ]
+        , BoardOverlay (Treasure (Chest Goal)) 1 DiagonalRight [ ( 1, 2 ) ]
+        , BoardOverlay (Treasure (Chest (NormalChest 1))) 2 DiagonalRight [ ( 2, 2 ) ]
+        , BoardOverlay (Treasure (Coin 2)) 3 DiagonalLeft [ ( 2, 3 ) ]
+        , BoardOverlay (Treasure (Coin 1)) 4 DiagonalLeft [ ( 2, 4 ) ]
+        , BoardOverlay (Door Stone [ A1a, A2a ]) 5 Horizontal [ ( 6, 5 ) ]
+        , BoardOverlay (Trap BearTrap) 6 Vertical [ ( 7, 5 ) ]
+        , BoardOverlay (Obstacle Sarcophagus) 7 Horizontal [ ( 6, 5 ), ( 7, 5 ) ]
         ]
         [ Piece (Player Cragheart) 1 2
         , Piece (AI (Enemy (Monster (NormalType Cultist) 3 Monster.Normal False))) 3 5

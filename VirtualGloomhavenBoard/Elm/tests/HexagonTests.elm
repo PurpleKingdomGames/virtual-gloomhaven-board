@@ -1,7 +1,7 @@
 module HexagonTests exposing (suite)
 
-import Expect exposing (equal)
-import Hexagon exposing (rotate)
+import Expect
+import Hexagon
 import Test exposing (Test, describe, test)
 
 

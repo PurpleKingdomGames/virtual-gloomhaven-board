@@ -4,8 +4,8 @@ import Array exposing (fromList, toList)
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), TrapSubType(..))
 import Character exposing (CharacterClass(..))
-import Expect exposing (equalLists)
-import Game exposing (Cell, Expansion(..), GameStateScenario(..), PieceType(..), generateGameMap)
+import Expect
+import Game exposing (Cell, Expansion(..), GameStateScenario(..), PieceType(..))
 import Random exposing (Seed)
 import Scenario exposing (MapTileData, Scenario)
 import Test exposing (Test, describe, test)
@@ -24,7 +24,7 @@ suite =
                 \_ ->
                     let
                         scenario =
-                            Scenario 0 "Test" (MapTileData B3b [] [ BoardOverlay (Trap BearTrap) Default [ ( 0, 3 ) ], BoardOverlay (Trap BearTrap) Default [ ( 2, 3 ) ] ] [] 0) 0 []
+                            Scenario 0 "Test" (MapTileData B3b [] [ BoardOverlay (Trap BearTrap) 1 Default [ ( 0, 3 ) ], BoardOverlay (Trap BearTrap) 2 Default [ ( 2, 3 ) ] ] [] 0) 0 []
 
                         expectedBoard =
                             [ fromList
@@ -37,7 +37,7 @@ suite =
                                 [ Cell [ B3b ] True
                                 , Cell [ B3b ] True
                                 , Cell [ B3b ] True
-                                , Cell [ B3b ] False
+                                , Cell [] False
                                 ]
                             , fromList
                                 [ Cell [ B3b ] True
@@ -49,7 +49,7 @@ suite =
                                 [ Cell [ B3b ] True
                                 , Cell [ B3b ] True
                                 , Cell [ B3b ] True
-                                , Cell [ B3b ] False
+                                , Cell [] False
                                 ]
                             ]
                     in
@@ -59,7 +59,7 @@ suite =
                 \_ ->
                     let
                         scenario =
-                            Scenario 0 "Test" (MapTileData B3b [] [ BoardOverlay (Trap BearTrap) Default [ ( 0, 3 ), ( 1, 3 ) ], BoardOverlay (Trap BearTrap) Default [ ( 2, 3 ) ] ] [] 3) 0 []
+                            Scenario 0 "Test" (MapTileData B3b [] [ BoardOverlay (Trap BearTrap) 1 Default [ ( 0, 3 ), ( 1, 3 ) ], BoardOverlay (Trap BearTrap) 2 Default [ ( 2, 3 ) ] ] [] 3) 0 []
 
                         expectedBoard =
                             [ fromList
@@ -71,7 +71,7 @@ suite =
                                 , Cell [] False
                                 ]
                             , fromList
-                                [ Cell [ B3b ] False
+                                [ Cell [] False
                                 , Cell [ B3b ] True
                                 , Cell [ B3b ] True
                                 , Cell [ B3b ] True
@@ -87,7 +87,7 @@ suite =
                                 , Cell [] False
                                 ]
                             , fromList
-                                [ Cell [ B3b ] False
+                                [ Cell [] False
                                 , Cell [ B3b ] True
                                 , Cell [ B3b ] True
                                 , Cell [ B3b ] True

@@ -2,8 +2,8 @@ module ScenarioTests exposing (suite)
 
 import BoardMapTile exposing (MapTile, MapTileRef(..))
 import BoardOverlay exposing (BoardOverlayDirectionType(..), DoorSubType(..))
-import Expect exposing (equal, equalLists)
-import Scenario exposing (BoardBounds, DoorData(..), MapTileData, mapTileDataToList)
+import Expect
+import Scenario exposing (BoardBounds, DoorData(..), MapTileData)
 import Test exposing (Test, describe, test)
 
 
@@ -123,21 +123,21 @@ suite =
                             , MapTile A1a 3 7 0 2 0 False True
                             , MapTile A1a 4 7 0 3 0 False True
                             , MapTile A1a 5 7 0 4 0 False True
-                            , MapTile A1a 1 8 0 0 1 True True
-                            , MapTile A1a 2 8 0 1 1 True True
-                            , MapTile A1a 3 8 0 2 1 True True
-                            , MapTile A1a 4 8 0 3 1 True True
-                            , MapTile A1a 5 8 0 4 1 False True
+                            , MapTile A1a 2 8 0 0 1 True True
+                            , MapTile A1a 3 8 0 1 1 True True
+                            , MapTile A1a 4 8 0 2 1 True True
+                            , MapTile A1a 5 8 0 3 1 True True
+                            , MapTile A1a 6 8 0 4 1 False True
                             , MapTile A1a 1 9 0 0 2 True True
                             , MapTile A1a 2 9 0 1 2 True True
                             , MapTile A1a 3 9 0 2 2 True True
                             , MapTile A1a 4 9 0 3 2 True True
                             , MapTile A1a 5 9 0 4 2 True True
-                            , MapTile A1a 1 10 0 0 3 False True
-                            , MapTile A1a 2 10 0 1 3 False True
-                            , MapTile A1a 3 10 0 2 3 False True
-                            , MapTile A1a 4 10 0 3 3 False True
-                            , MapTile A1a 5 10 0 4 3 False True
+                            , MapTile A1a 2 10 0 0 3 False True
+                            , MapTile A1a 3 10 0 1 3 False True
+                            , MapTile A1a 4 10 0 2 3 False True
+                            , MapTile A1a 5 10 0 3 3 False True
+                            , MapTile A1a 6 10 0 4 3 False True
                             ]
                     in
                     Scenario.mapTileDataToList tileData Nothing
