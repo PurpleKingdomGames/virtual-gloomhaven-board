@@ -6,7 +6,7 @@ import BoardHtml exposing (getMapTileHtml)
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Browser
-import Browser.Dom as BrowserDom exposing (Error)
+import Browser.Dom as BrowserDom
 import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
 import Character exposing (CharacterClass(..), characterToString, getSoloScenarios)
 import Dict exposing (Dict)
@@ -23,8 +23,8 @@ import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy, lazy2, lazy3, lazy5, lazy6, lazy8)
-import Http exposing (Error)
-import Json.Decode as Decode exposing (Error, decodeString)
+import Http
+import Json.Decode as Decode exposing (decodeString)
 import Json.Encode as Encode
 import List exposing (all, any, filter, filterMap, head, map, member, reverse, sort, sortWith, take)
 import List.Extra
@@ -114,7 +114,8 @@ type ConnectionStatus
 
 
 type Msg
-    = LoadedScenario Seed GameStateScenario (Maybe Game.GameState) Bool (Result Http.Error Scenario)
+    = LoadedScenarioHttp Seed GameStateScenario (Maybe Game.GameState) Bool (Result Http.Error Scenario)
+    | LoadedScenarioJson Seed GameStateScenario (Maybe Game.GameState) Bool (Result Decode.Error Scenario)
     | ReloadScenario
     | ChooseScenarioFile
     | ExtractScenarioFile File
@@ -295,7 +296,7 @@ init ( oldState, maybeOverrides, seed ) =
         [ connectToServer
         , loadScenarioById
             initScenario
-            (LoadedScenario
+            (LoadedScenarioHttp
                 (Random.initialSeed seed)
                 initScenario
                 (if forceScenarioRefresh then
@@ -317,57 +318,18 @@ update msg model =
             Maybe.withDefault "" model.config.roomCode
     in
     case msg of
-        LoadedScenario seed gameStateScenario initGameState addToUndo result ->
+        LoadedScenarioHttp seed gameStateScenario initGameState addToUndo result ->
             case result of
                 Ok scenario ->
-                    let
-                        game =
-                            generateGameMap gameStateScenario scenario roomCode model.game.state.players seed
-                                |> (let
-                                        players =
-                                            case initGameState of
-                                                Just gs ->
-                                                    gs.players
+                    loadScenario model roomCode seed gameStateScenario initGameState addToUndo scenario
 
-                                                Nothing ->
-                                                    model.game.state.players
-                                    in
-                                    assignPlayers players
-                                   )
+                Err _ ->
+                    ( { model | currentLoadState = Failed }, Cmd.none )
 
-                        gameState =
-                            (case initGameState of
-                                Just gs ->
-                                    if gs.scenario == gameStateScenario then
-                                        gs
-
-                                    else
-                                        game.state
-
-                                Nothing ->
-                                    game.state
-                            )
-                                |> ensureOverlayIds
-
-                        newModel =
-                            { model
-                                | game =
-                                    { game
-                                        | state =
-                                            { gameState
-                                                | roomCode = model.game.state.roomCode
-                                                , updateCount = model.game.state.updateCount
-                                            }
-                                    }
-                                , currentLoadState = Loaded
-                            }
-                    in
-                    ( newModel
-                    , Cmd.batch
-                        [ pushGameState model newModel.game.state addToUndo
-                        , scrollToFirtVisibleCell ()
-                        ]
-                    )
+        LoadedScenarioJson seed gameStateScenario initGameState addToUndo result ->
+            case result of
+                Ok scenario ->
+                    loadScenario model roomCode seed gameStateScenario initGameState addToUndo scenario
 
                 Err _ ->
                     ( { model | currentLoadState = Failed }, Cmd.none )
@@ -384,13 +346,16 @@ update msg model =
             )
 
         LoadScenarioFile str ->
-            case model.currentSelectedFile of
-                Just ( filename, _ ) ->
-                    ( { model | currentSelectedFile = Just ( filename, Just (decodeString decodeScenario str) ) }
+            case ( getCurrentScenarioInput model, model.currentSelectedFile ) of
+                ( CustomScenario _, Just ( filename, _ ) ) ->
+                    ( { model
+                        | currentScenarioType = Just (CustomScenario str)
+                        , currentSelectedFile = Just ( filename, Just (decodeString decodeScenario str) )
+                      }
                     , Cmd.none
                     )
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none )
 
         MoveStarted piece maybeDragData ->
@@ -625,7 +590,20 @@ update msg model =
                     model.config
             in
             if forceReload || newScenario /= model.game.state.scenario then
-                ( { model | config = { config | appMode = AppStorage.Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioType = Nothing, currentScenarioInput = Nothing }, loadScenarioById newScenario (LoadedScenario model.game.seed newScenario Nothing True) )
+                let
+                    newModel =
+                        { model | config = { config | appMode = AppStorage.Game }, currentLoadState = Loading newScenario, currentDraggable = Nothing, currentScenarioType = Nothing, currentScenarioInput = Nothing }
+                in
+                case newScenario of
+                    InbuiltScenario _ _ ->
+                        ( newModel
+                        , loadScenarioById newScenario (LoadedScenarioHttp model.game.seed newScenario Nothing True)
+                        )
+
+                    CustomScenario str ->
+                        update
+                            (LoadedScenarioJson model.game.seed newScenario Nothing True (decodeString decodeScenario str))
+                            newModel
 
             else
                 ( { model | config = { config | appMode = AppStorage.Game } }, Cmd.none )
@@ -891,7 +869,7 @@ update msg model =
 
             else
                 ( { model | currentLoadState = Loading gameState.scenario }
-                , loadScenarioById gameState.scenario (LoadedScenario game.seed gameState.scenario (Just gameState) True)
+                , loadScenarioById gameState.scenario (LoadedScenarioHttp game.seed gameState.scenario (Just gameState) True)
                 )
 
         PushToUndoStack state ->
@@ -915,9 +893,16 @@ update msg model =
                         ( newModel, pushGameState newModel newState False )
 
                     else
-                        ( { newModel | currentLoadState = Loading state.scenario }
-                        , loadScenarioById state.scenario (LoadedScenario model.game.seed state.scenario (Just newState) False)
-                        )
+                        case state.scenario of
+                            InbuiltScenario _ _ ->
+                                ( { newModel | currentLoadState = Loading state.scenario }
+                                , loadScenarioById state.scenario (LoadedScenarioHttp model.game.seed state.scenario (Just newState) False)
+                                )
+
+                            CustomScenario str ->
+                                update
+                                    (LoadedScenarioJson model.game.seed state.scenario (Just newState) False (decodeString decodeScenario str))
+                                    { newModel | currentLoadState = Loading state.scenario }
 
                 _ ->
                     ( model, Cmd.none )
@@ -1366,7 +1351,7 @@ getMenuToggleHtml model =
 getScenarioTitleHtml : Int -> String -> Bool -> Html.Html Msg
 getScenarioTitleHtml id titleTxt isSolo =
     header [ attribute "aria-label" "Scenario" ]
-        (if id /= 0 then
+        (if titleTxt /= "" then
             [ if isSolo then
                 let
                     icon =
@@ -1383,8 +1368,11 @@ getScenarioTitleHtml id titleTxt isSolo =
                     Nothing ->
                         span [ class "number" ] []
 
-              else
+              else if id /= 0 then
                 span [ class "number" ] [ text (String.fromInt id) ]
+
+              else
+                span [ class "number" ] []
             , span [ class "title" ] [ text titleTxt ]
             ]
 
@@ -3327,3 +3315,55 @@ makeDroppable coords element =
     in
     element
         |> Dom.addAttributeList (DragDrop.onDropTarget config)
+
+
+loadScenario : Model -> String -> Seed -> GameStateScenario -> Maybe Game.GameState -> Bool -> Scenario -> ( Model, Cmd Msg )
+loadScenario model roomCode seed gameStateScenario initGameState addToUndo scenario =
+    let
+        game =
+            generateGameMap gameStateScenario scenario roomCode model.game.state.players seed
+                |> (let
+                        players =
+                            case initGameState of
+                                Just gs ->
+                                    gs.players
+
+                                Nothing ->
+                                    model.game.state.players
+                    in
+                    assignPlayers players
+                   )
+
+        gameState =
+            (case initGameState of
+                Just gs ->
+                    if gs.scenario == gameStateScenario then
+                        gs
+
+                    else
+                        game.state
+
+                Nothing ->
+                    game.state
+            )
+                |> ensureOverlayIds
+
+        newModel =
+            { model
+                | game =
+                    { game
+                        | state =
+                            { gameState
+                                | roomCode = model.game.state.roomCode
+                                , updateCount = model.game.state.updateCount
+                            }
+                    }
+                , currentLoadState = Loaded
+            }
+    in
+    ( newModel
+    , Cmd.batch
+        [ pushGameState model newModel.game.state addToUndo
+        , scrollToFirtVisibleCell ()
+        ]
+    )
