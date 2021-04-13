@@ -17,10 +17,7 @@
         <DefineConstants>RELEASE</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
-        <Watch
-        Include="**\*.cs;**\*.js;**\*.html;**\*.elm;**\*.scss"
-        Exclude="bin\**\*;obj\**\*;Elm\tests\*;Elm\elm-stuff;\*;wwwroot\js\main.min.js;wwwroot\js\creator.min.js"
-        />
+        <Watch Include="**\*.cs;**\*.js;**\*.html;**\*.elm;**\*.scss" Exclude="bin\**\*;obj\**\*;Elm\tests\*;Elm\elm-stuff;\*;wwwroot\js\main.min.js;wwwroot\js\creator.min.js" />
     </ItemGroup>
 
     <ItemGroup>
@@ -66,6 +63,18 @@
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
+        <Content Include="wwwroot\js\signalr-protocol-msgpack.min.js">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
+
+        <Content Include="wwwroot\js\msgpack5.min.js">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
+
         <Content Include="wwwroot\index.html">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
@@ -93,6 +102,10 @@
 
     <ItemGroup>
         <TrimmerRootAssembly Include="System.Xml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="5.0.5" />
     </ItemGroup>
 
     <Target Name="BuildDebug" BeforeTargets="BeforeBuild" Condition="'$(Configuration)'=='Debug'">

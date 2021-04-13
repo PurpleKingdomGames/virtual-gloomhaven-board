@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Http;
 using System;
 using Microsoft.Net.Http.Headers;
+using Microsoft.AspNetCore.Rewrite;
 
 namespace VirtualGloomhavenBoard
 {
@@ -22,7 +23,10 @@ namespace VirtualGloomhavenBoard
         // This method gets called by the runtime. Use this method to add services to the container.
         public static void ConfigureServices(IServiceCollection services)
         {
-            services.AddSignalR();
+            services
+                .AddSignalR()
+                .AddMessagePackProtocol()
+            ;
             services.AddResponseCompression();
             services.AddResponseCaching();
         }
@@ -79,9 +83,8 @@ namespace VirtualGloomhavenBoard
 
             app.UseRouting();
             app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapHub<SignalRHandler>("/ws");
-            });
+                endpoints.MapHub<SignalRHandler>("/ws")
+            );
         }
     }
 }

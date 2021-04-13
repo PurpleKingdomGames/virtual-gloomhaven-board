@@ -13,6 +13,7 @@
     const conn = new signalR
         .HubConnectionBuilder()
         .withUrl("/ws")
+        .withHubProtocol(new signalR.protocols.msgpack.MessagePackHubProtocol())
         .configureLogging(signalR.LogLevel.Information)
         .withAutomaticReconnect([0, 3000, 5000, 10000, 15000, 30000])
         .build()
