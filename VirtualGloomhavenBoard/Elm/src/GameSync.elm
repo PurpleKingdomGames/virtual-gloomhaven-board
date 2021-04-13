@@ -202,7 +202,7 @@ subscriptions =
 decodeGameState : Decoder GameState
 decodeGameState =
     map8 GameState
-        (field "scenario" (Decode.oneOf [ decodeScenarioInt, decodeGameStateScenario ]))
+        (field "scenario" (Decode.oneOf [ decodeScenarioInt, decodeInbuiltScenario, decodeCustomScenario ]))
         (field "players" (Decode.list decodeCharacter))
         (field "updateCount" Decode.int)
         (field "visibleRooms" (Decode.list Decode.string) |> andThen decodeMapRefList)
@@ -231,8 +231,8 @@ decodeScenarioInt =
     Decode.int |> andThen (\i -> succeed (InbuiltScenario Gloomhaven i))
 
 
-decodeGameStateScenario : Decoder GameStateScenario
-decodeGameStateScenario =
+decodeInbuiltScenario : Decoder GameStateScenario
+decodeInbuiltScenario =
     field "expansion" Decode.string
         |> andThen
             (\s ->
@@ -258,6 +258,12 @@ decodeGameStateScenario =
                     Nothing ->
                         fail ("Could not find expansion " ++ strExp)
             )
+
+
+decodeCustomScenario : Decoder GameStateScenario
+decodeCustomScenario =
+    field "custom" Decode.string
+        |> andThen (\s -> succeed (CustomScenario s))
 
 
 decodePiece : Decoder Piece

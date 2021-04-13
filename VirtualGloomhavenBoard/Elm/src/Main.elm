@@ -268,47 +268,72 @@ init ( oldState, maybeOverrides, seed ) =
 
                 Nothing ->
                     initGameState.scenario
-    in
-    ( Model
-        { initGame | state = initGameState }
-        initConfig
-        (Loading initGameState.scenario)
-        Nothing
-        Nothing
-        Nothing
-        Nothing
-        Nothing
-        (getDeadPlayers initGameState)
-        Nothing
-        Disconnected
-        []
-        False
-        False
-        False
-        overrides.lockScenario
-        overrides.lockPlayers
-        overrides.lockRoomCode
-        overrides.initRoomCodeSeed
-        []
-        True
-        Nothing
-    , Cmd.batch
-        [ connectToServer
-        , loadScenarioById
-            initScenario
-            (LoadedScenarioHttp
-                (Random.initialSeed seed)
-                initScenario
-                (if forceScenarioRefresh then
-                    Nothing
 
-                 else
-                    Just initGameState
-                )
+        model =
+            Model
+                { initGame | state = initGameState }
+                initConfig
+                (Loading initGameState.scenario)
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                (getDeadPlayers initGameState)
+                Nothing
+                Disconnected
+                []
                 False
+                False
+                False
+                overrides.lockScenario
+                overrides.lockPlayers
+                overrides.lockRoomCode
+                overrides.initRoomCodeSeed
+                []
+                True
+                Nothing
+    in
+    case initScenario of
+        InbuiltScenario _ _ ->
+            ( model
+            , Cmd.batch
+                [ connectToServer
+                , loadScenarioById
+                    initScenario
+                    (LoadedScenarioHttp
+                        (Random.initialSeed seed)
+                        initScenario
+                        (if forceScenarioRefresh then
+                            Nothing
+
+                         else
+                            Just initGameState
+                        )
+                        False
+                    )
+                ]
             )
-        ]
-    )
+
+        CustomScenario s ->
+            let
+                ( m, msg ) =
+                    update
+                        (LoadedScenarioJson
+                            (Random.initialSeed seed)
+                            initScenario
+                            (if forceScenarioRefresh then
+                                Nothing
+
+                             else
+                                Just initGameState
+                            )
+                            False
+                            (decodeString decodeScenario s)
+                        )
+                        model
+            in
+            ( m, Cmd.batch [ connectToServer, msg ] )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -868,9 +893,16 @@ update msg model =
                 )
 
             else
-                ( { model | currentLoadState = Loading gameState.scenario }
-                , loadScenarioById gameState.scenario (LoadedScenarioHttp game.seed gameState.scenario (Just gameState) True)
-                )
+                case gameState.scenario of
+                    InbuiltScenario _ _ ->
+                        ( { model | currentLoadState = Loading gameState.scenario }
+                        , loadScenarioById gameState.scenario (LoadedScenarioHttp game.seed gameState.scenario (Just gameState) True)
+                        )
+
+                    CustomScenario s ->
+                        update
+                            (LoadedScenarioJson game.seed gameState.scenario (Just gameState) True (decodeString decodeScenario s))
+                            { model | currentLoadState = Loading gameState.scenario }
 
         PushToUndoStack state ->
             let
@@ -3199,6 +3231,7 @@ getScenarioSelectHtml scenario filename errStr =
                 CustomScenario _ ->
                     Dom.element "div"
                         |> Dom.addClass "button-wrapper"
+                        |> Dom.addClass "file-choose"
                         |> Dom.addActionStopPropagation ( "click", ChooseScenarioFile )
                         |> Dom.appendChild
                             (Dom.element "button"
