@@ -33,6 +33,20 @@
             input[type="number"] {
                 text-align: center;
             }
+
+            .file-choose {
+                flex-direction: column;
+                align-items: flex-start;
+
+                button {
+                    width: 100px;
+                }
+
+                span {
+                    order: -1;
+                    margin: 0.5rem 0;
+                }
+            }
         }
 
         .client-form {

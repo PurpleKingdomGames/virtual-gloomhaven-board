@@ -204,6 +204,12 @@ html {
                         content: '# ';
                         speak: never;
                     }
+
+                    &:empty {
+                        &:before {
+                            display: none;
+                        }
+                    }
                 }
             }
 
