@@ -9,7 +9,7 @@ import Json.Encode as Encode exposing (object)
 import List exposing (all, filterMap, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, monsterTypeToString, stringToMonsterType)
 import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
-import SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMonsterLevel, encodeOverlayDirection, encodeOverlays)
+import SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMonsterLevel, decodeScenarioMonster, encodeMonsters, encodeOverlayDirection, encodeOverlays)
 
 
 type alias DoorDataObj =
@@ -120,27 +120,6 @@ decodeDoors =
             )
 
 
-decodeScenarioMonster : Decoder ScenarioMonster
-decodeScenarioMonster =
-    map6 ScenarioMonster
-        (field "monster" string
-            |> andThen
-                (\m ->
-                    case stringToMonsterType m of
-                        Just monster ->
-                            succeed (Monster monster 0 Monster.None False)
-
-                        Nothing ->
-                            fail ("Could not decode monster " ++ m)
-                )
-        )
-        (field "initialX" int)
-        (field "initialY" int)
-        (field "twoPlayer" string |> andThen decodeMonsterLevel)
-        (field "threePlayer" string |> andThen decodeMonsterLevel)
-        (field "fourPlayer" string |> andThen decodeMonsterLevel)
-
-
 encodeAdditionalMonsters : List MonsterType -> List String
 encodeAdditionalMonsters monsters =
     List.filterMap
@@ -238,35 +217,3 @@ encodeDoor doorType =
 
         Wooden ->
             [ ( "subType", Encode.string "wooden" ) ]
-
-
-encodeMonsters : List ScenarioMonster -> List (List ( String, Encode.Value ))
-encodeMonsters monsters =
-    List.filterMap
-        (\m ->
-            Maybe.map
-                (\t ->
-                    [ ( "monster", Encode.string t )
-                    , ( "initialX", Encode.int m.initialX )
-                    , ( "initialY", Encode.int m.initialY )
-                    , ( "twoPlayer", Encode.string (encodeMonsterLevel m.twoPlayer) )
-                    , ( "threePlayer", Encode.string (encodeMonsterLevel m.threePlayer) )
-                    , ( "fourPlayer", Encode.string (encodeMonsterLevel m.fourPlayer) )
-                    ]
-                )
-                (monsterTypeToString m.monster.monster)
-        )
-        monsters
-
-
-encodeMonsterLevel : MonsterLevel -> String
-encodeMonsterLevel monsterLevel =
-    case monsterLevel of
-        None ->
-            "none"
-
-        Normal ->
-            "normal"
-
-        Elite ->
-            "elite"

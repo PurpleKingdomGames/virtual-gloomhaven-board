@@ -1,17 +1,21 @@
-port module AppStorage exposing (AppModeType(..), AppOverrides, CampaignTrackerUrl(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, empty, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
+port module AppStorage exposing (AppModeType(..), AppOverrides, CampaignTrackerUrl(..), Config, ExtendedRoomData, GameModeType(..), MapData, MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, empty, emptyOverrides, encodeMapData, encodeMoveablePiece, loadFromStorage, loadMapFromStorage, loadOverrides, saveMapToStorage, saveToStorage)
 
 import BoardOverlay exposing (BoardOverlay)
 import Character exposing (CharacterClass, stringToCharacter)
 import Game exposing (GameState, Piece, RoomData)
 import GameSync exposing (decodeGameState, decodePiece, decodeRoom, encodeGameState, encodePiece, encodeRoom)
 import Html exposing (s)
-import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map7, maybe, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map7, maybe, succeed)
 import Json.Encode as Encode exposing (object)
 import List exposing (filterMap)
-import SharedSync exposing (decodeBoardOverlay, decodeCoords, encodeCoords, encodeOverlay)
+import Scenario exposing (ScenarioMonster)
+import SharedSync exposing (decodeBoardOverlay, decodeCoords, decodeScenarioMonster, encodeCoords, encodeMonsters, encodeOverlay, encodeOverlays)
 
 
 port saveData : Encode.Value -> Cmd msg
+
+
+port saveMapData : Encode.Value -> Cmd msg
 
 
 type alias StoredData =
@@ -28,6 +32,20 @@ type alias Config =
     , envelopeX : Bool
     , boardOnly : Bool
     , campaignTracker : Maybe CampaignTrackerUrl
+    }
+
+
+type alias MapData =
+    { scenarioTitle : String
+    , roomData : List ExtendedRoomData
+    , overlays : List BoardOverlay
+    , monsters : List ScenarioMonster
+    }
+
+
+type alias ExtendedRoomData =
+    { data : RoomData
+    , rotationPoint : ( Int, Int )
     }
 
 
@@ -101,6 +119,16 @@ loadFromStorage value =
     decodeStoredData value
 
 
+saveMapToStorage : MapData -> Cmd msg
+saveMapToStorage map =
+    saveMapData (encodeMapData map)
+
+
+loadMapFromStorage : Decode.Value -> Result Decode.Error MapData
+loadMapFromStorage value =
+    decodeValue mapDataDecoder value
+
+
 loadOverrides : Decode.Value -> Result Decode.Error AppOverrides
 loadOverrides value =
     decodeValue appOverridesDecoder value
@@ -112,6 +140,27 @@ encodeStoredData data =
         [ ( "config", encodeConfig data.config )
         , ( "gameState", encodeGameState data.gameState )
         ]
+
+
+encodeMapData : MapData -> Encode.Value
+encodeMapData data =
+    object
+        [ ( "scenarioTitle", Encode.string data.scenarioTitle )
+        , ( "roomData", Encode.list Encode.object (encodeExtendedRoomData data.roomData) )
+        , ( "overlays", Encode.list Encode.object (encodeOverlays data.overlays) )
+        , ( "monsters", Encode.list Encode.object (encodeMonsters data.monsters) )
+        ]
+
+
+encodeExtendedRoomData : List ExtendedRoomData -> List (List ( String, Encode.Value ))
+encodeExtendedRoomData roomData =
+    List.map
+        (\r ->
+            [ ( "data", Encode.object (encodeRoom r.data) )
+            , ( "rotationPoint", Encode.object (encodeCoords r.rotationPoint) )
+            ]
+        )
+        roomData
 
 
 decodeStoredData : Decode.Value -> Result Decode.Error ( GameState, Config )
@@ -197,6 +246,15 @@ storedDataDecoder =
     map2 StoredData
         (field "config" decodeConfig)
         (field "gameState" decodeGameState)
+
+
+mapDataDecoder : Decoder MapData
+mapDataDecoder =
+    map4 MapData
+        (field "scenarioTitle" Decode.string)
+        (field "roomData" (Decode.list decodeExtendedRoomData))
+        (field "overlays" (Decode.list decodeBoardOverlay))
+        (field "monsters" (Decode.list decodeScenarioMonster))
 
 
 appOverridesDecoder : Decoder AppOverrides
@@ -335,6 +393,14 @@ decodeCampaignTrackerUrl =
                 field "url" Decode.string
                     |> andThen (\url -> Decode.succeed (CampaignTrackerUrl name url))
             )
+
+
+decodeExtendedRoomData : Decoder ExtendedRoomData
+decodeExtendedRoomData =
+    map2
+        ExtendedRoomData
+        (field "data" decodeRoom)
+        (field "rotationPoint" decodeCoords)
 
 
 encodeMoveablePiece : MoveablePiece -> Encode.Value

@@ -1,13 +1,12 @@
 port module Creator exposing (main)
 
-import AppStorage exposing (MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece)
+import AppStorage exposing (ExtendedRoomData, MapData, MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece, loadMapFromStorage, saveMapToStorage)
 import Array
 import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable, scenarioMonsterToHtml)
 import BoardMapTile exposing (MapTileRef(..), getAllRefs, getGridByRef, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
 import Character exposing (CharacterClass(..))
-import Debug
 import Dict exposing (Dict)
 import Dom
 import DragPorts
@@ -50,10 +49,7 @@ port onContextPosition : (( Int, Int ) -> msg) -> Sub msg
 
 
 type alias Model =
-    { scenarioTitle : String
-    , roomData : List ExtendedRoomData
-    , overlays : List BoardOverlay
-    , monsters : List ScenarioMonster
+    { map : MapData
     , currentDraggable : Maybe MoveablePiece
     , menuOpen : Bool
     , sideMenu : SideMenu
@@ -64,12 +60,6 @@ type alias Model =
     , cachedObstacles : List String
     , cachedMisc : List String
     , cachedRoomCells : List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) )
-    }
-
-
-type alias ExtendedRoomData =
-    { data : RoomData
-    , rotationPoint : ( Int, Int )
     }
 
 
@@ -151,7 +141,7 @@ emptyList =
     []
 
 
-main : Program () Model Msg
+main : Program (Maybe Decode.Value) Model Msg
 main =
     Browser.element
         { init = init
@@ -161,9 +151,22 @@ main =
         }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
+init : Maybe Decode.Value -> ( Model, Cmd Msg )
+init initMap =
     let
+        mapData =
+            case initMap of
+                Just m ->
+                    case loadMapFromStorage m of
+                        Ok map ->
+                            map
+
+                        Err _ ->
+                            MapData "" [] [] []
+
+                Nothing ->
+                    MapData "" [] [] []
+
         ( doors, obstacles, misc ) =
             getOverlayTypesWithLabel
                 |> Dict.filter
@@ -210,8 +213,17 @@ init _ =
                                 ( d, o, k :: m )
                     )
                     ( [], [], [] )
+
+        cachedRoomData =
+            List.map
+                (\r ->
+                    case calculateRoomCells r.data of
+                        ( d, _ ) ->
+                            d
+                )
+                mapData.roomData
     in
-    ( Model "" [] [] [] Nothing False MapTileMenu Closed ( 0, 0 ) ( 0, 0 ) doors obstacles misc []
+    ( Model mapData Nothing False MapTileMenu Closed ( 0, 0 ) ( 0, 0 ) doors obstacles misc cachedRoomData
     , Cmd.none
     )
 
@@ -252,7 +264,7 @@ update msg model =
                                     OverlayType o prevCoords ->
                                         let
                                             ( _, newOverlay, newCoords ) =
-                                                moveOverlayWithoutState o m.coords prevCoords coords model.overlays
+                                                moveOverlayWithoutState o m.coords prevCoords coords model.map.overlays
 
                                             moveablePieceType =
                                                 OverlayType newOverlay newCoords
@@ -269,7 +281,7 @@ update msg model =
                                     PieceType p ->
                                         let
                                             pieces =
-                                                model.monsters
+                                                model.map.monsters
                                                     |> List.map (\m1 -> Piece (AI (Enemy m1.monster)) m1.initialX m1.initialY)
 
                                             newPiece =
@@ -304,11 +316,11 @@ update msg model =
                                 ( OverlayType o prevCoords, Just coords ) ->
                                     let
                                         ( g, newOverlay, _ ) =
-                                            moveOverlayWithoutState o m.coords prevCoords coords model.overlays
+                                            moveOverlayWithoutState o m.coords prevCoords coords model.map.overlays
                                     in
                                     { overlays = newOverlay :: g
-                                    , monsters = model.monsters
-                                    , roomData = model.roomData
+                                    , monsters = model.map.monsters
+                                    , roomData = model.map.roomData
                                     , cachedRoomCells = model.cachedRoomCells
                                     }
 
@@ -317,25 +329,25 @@ update msg model =
                                         AI (Enemy _) ->
                                             let
                                                 pieces =
-                                                    model.monsters
+                                                    model.map.monsters
                                                         |> List.map (\m1 -> Piece (AI (Enemy m1.monster)) m1.initialX m1.initialY)
 
                                                 ( newPieces, newPiece ) =
                                                     movePieceWithoutState p m.coords target pieces
 
                                                 m2 =
-                                                    List.filterMap (mapPieceToScenarioMonster newPiece model.monsters m.coords target) newPieces
+                                                    List.filterMap (mapPieceToScenarioMonster newPiece model.map.monsters m.coords target) newPieces
                                             in
-                                            { overlays = model.overlays
+                                            { overlays = model.map.overlays
                                             , monsters = m2
-                                            , roomData = model.roomData
+                                            , roomData = model.map.roomData
                                             , cachedRoomCells = model.cachedRoomCells
                                             }
 
                                         _ ->
-                                            { overlays = model.overlays
-                                            , monsters = model.monsters
-                                            , roomData = model.roomData
+                                            { overlays = model.map.overlays
+                                            , monsters = model.map.monsters
+                                            , roomData = model.map.roomData
                                             , cachedRoomCells = model.cachedRoomCells
                                             }
 
@@ -344,7 +356,7 @@ update msg model =
                                         room =
                                             Maybe.withDefault
                                                 (defaultExtendedRoomData r.ref)
-                                                (List.filter (\d -> d.data.ref == r.ref) model.roomData
+                                                (List.filter (\d -> d.data.ref == r.ref) model.map.roomData
                                                     |> List.head
                                                 )
 
@@ -352,10 +364,10 @@ update msg model =
                                             moveRoom target room
 
                                         roomList =
-                                            newRoom :: List.filter (\d -> d.data.ref /= r.ref) model.roomData
+                                            newRoom :: List.filter (\d -> d.data.ref /= r.ref) model.map.roomData
                                     in
-                                    { overlays = model.overlays
-                                    , monsters = model.monsters
+                                    { overlays = model.map.overlays
+                                    , monsters = model.map.monsters
                                     , roomData = roomList
                                     , cachedRoomCells =
                                         cells
@@ -363,20 +375,26 @@ update msg model =
                                     }
 
                                 ( _, Nothing ) ->
-                                    { overlays = model.overlays
-                                    , monsters = model.monsters
-                                    , roomData = model.roomData
+                                    { overlays = model.map.overlays
+                                    , monsters = model.map.monsters
+                                    , roomData = model.map.roomData
                                     , cachedRoomCells = model.cachedRoomCells
                                     }
 
                         Nothing ->
-                            { overlays = model.overlays
-                            , monsters = model.monsters
-                            , roomData = model.roomData
+                            { overlays = model.map.overlays
+                            , monsters = model.map.monsters
+                            , roomData = model.map.roomData
                             , cachedRoomCells = model.cachedRoomCells
                             }
+
+                map =
+                    model.map
+
+                newMap =
+                    { map | overlays = moveData.overlays, monsters = moveData.monsters, roomData = moveData.roomData }
             in
-            ( { model | currentDraggable = Nothing, overlays = moveData.overlays, monsters = moveData.monsters, roomData = moveData.roomData, cachedRoomCells = moveData.cachedRoomCells }, Cmd.none )
+            ( { model | currentDraggable = Nothing, map = newMap, cachedRoomCells = moveData.cachedRoomCells }, saveMapToStorage newMap )
 
         TouchStart piece ->
             update (MoveStarted piece Nothing) model
@@ -422,7 +440,7 @@ update msg model =
         ChangeMonsterState id playerSize level ->
             let
                 monster =
-                    List.filter (\m1 -> m1.monster.id == id) model.monsters
+                    List.filter (\m1 -> m1.monster.id == id) model.map.monsters
                         |> List.head
             in
             case monster of
@@ -443,20 +461,33 @@ update msg model =
 
                         newMonsterList =
                             newMonster
-                                :: List.filter (\m1 -> m1.monster.id /= id) model.monsters
+                                :: List.filter (\m1 -> m1.monster.id /= id) model.map.monsters
+
+                        map =
+                            model.map
+
+                        newMap =
+                            { map | monsters = newMonsterList }
                     in
-                    ( { model | monsters = newMonsterList, contextMenuState = Open }, Cmd.none )
+                    ( { model | map = newMap, contextMenuState = Open }, saveMapToStorage newMap )
 
                 Nothing ->
                     ( model, Cmd.none )
 
         RemoveMonster id ->
-            ( { model | monsters = List.filter (\m -> m.monster.id /= id) model.monsters }, Cmd.none )
+            let
+                map =
+                    model.map
+
+                newMap =
+                    { map | monsters = List.filter (\m -> m.monster.id /= id) model.map.monsters }
+            in
+            ( { model | map = newMap }, saveMapToStorage newMap )
 
         RotateOverlay id ->
             let
                 o1 =
-                    List.filter (\o -> o.id == id) model.overlays
+                    List.filter (\o -> o.id == id) model.map.overlays
                         |> List.head
             in
             case o1 of
@@ -507,20 +538,33 @@ update msg model =
 
                         overlayList =
                             newOverlay
-                                :: List.filter (\o2 -> o2.id /= id) model.overlays
+                                :: List.filter (\o2 -> o2.id /= id) model.map.overlays
+
+                        map =
+                            model.map
+
+                        newMap =
+                            { map | overlays = overlayList }
                     in
-                    ( { model | overlays = overlayList }, Cmd.none )
+                    ( { model | map = newMap }, saveMapToStorage newMap )
 
                 Nothing ->
                     ( model, Cmd.none )
 
         RemoveOverlay id ->
-            ( { model | overlays = List.filter (\o -> o.id /= id) model.overlays }, Cmd.none )
+            let
+                map =
+                    model.map
+
+                newMap =
+                    { map | overlays = List.filter (\o -> o.id /= id) model.map.overlays }
+            in
+            ( { model | map = newMap }, saveMapToStorage newMap )
 
         RotateRoom ref ->
             let
                 r =
-                    List.filter (\r1 -> r1.data.ref == ref) model.roomData
+                    List.filter (\r1 -> r1.data.ref == ref) model.map.roomData
                         |> List.head
             in
             case r of
@@ -531,23 +575,36 @@ update msg model =
 
                         newRooms =
                             newRoom
-                                :: List.filter (\r2 -> ref /= r2.data.ref) model.roomData
+                                :: List.filter (\r2 -> ref /= r2.data.ref) model.map.roomData
 
                         cachedRoomCells =
                             cells
                                 :: List.filter (\( r3, _ ) -> ref /= r3) model.cachedRoomCells
+
+                        map =
+                            model.map
+
+                        newMap =
+                            { map | roomData = newRooms }
                     in
-                    ( { model | roomData = newRooms, cachedRoomCells = cachedRoomCells }, Cmd.none )
+                    ( { model | map = newMap, cachedRoomCells = cachedRoomCells }, saveMapToStorage newMap )
 
                 Nothing ->
                     ( model, Cmd.none )
 
         RemoveRoom ref ->
+            let
+                map =
+                    model.map
+
+                newMap =
+                    { map | roomData = List.filter (\r -> r.data.ref /= ref) model.map.roomData }
+            in
             ( { model
-                | roomData = List.filter (\r -> r.data.ref /= ref) model.roomData
+                | map = newMap
                 , cachedRoomCells = List.filter (\( r, _ ) -> r /= ref) model.cachedRoomCells
               }
-            , Cmd.none
+            , saveMapToStorage newMap
             )
 
         ExportFile ->
@@ -624,7 +681,7 @@ update msg model =
                                                 Nothing
                                    )
                         )
-                        model.overlays
+                        model.map.overlays
 
                 monsters =
                     List.filterMap
@@ -664,18 +721,18 @@ update msg model =
                             in
                             Maybe.map (\r -> ( r, m )) room
                         )
-                        model.monsters
+                        model.map.monsters
 
                 roomData =
-                    List.map (\r -> r.data) model.roomData
+                    List.map (\r -> r.data) model.map.roomData
 
                 scenario =
-                    generateScenario model.scenarioTitle roomData overlays monsters model.cachedRoomCells
+                    generateScenario model.map.scenarioTitle roomData overlays monsters model.cachedRoomCells
             in
             case scenario of
                 Ok s ->
                     ( model
-                    , Download.string (model.scenarioTitle ++ ".json") "application/json" (Encode.encode 4 (encodeScenario s))
+                    , Download.string (model.map.scenarioTitle ++ ".json") "application/json" (Encode.encode 4 (encodeScenario s))
                     )
 
                 _ ->
@@ -823,24 +880,37 @@ update msg model =
                                 |> List.foldr
                                     (\( c, r ) ( cells1, rooms1 ) -> ( c :: cells1, r :: rooms1 ))
                                     ( [], [] )
+
+                        map =
+                            model.map
+
+                        newMap =
+                            { map
+                                | scenarioTitle = scenario.title
+                                , overlays = overlays
+                                , monsters = monsters
+                                , roomData = roomData
+                            }
                     in
                     ( { model
-                        | scenarioTitle = scenario.title
-                        , overlays = overlays
-                        , monsters = monsters
-                        , roomData = roomData
+                        | map = newMap
                         , cachedRoomCells = cells
                       }
-                    , Cmd.none
+                    , saveMapToStorage newMap
                     )
 
                 Err _ ->
-                    Debug.log
-                        "err"
-                        ( model, Cmd.none )
+                    ( model, Cmd.none )
 
         ChangeScenarioTitle title ->
-            ( { model | scenarioTitle = title }, Cmd.none )
+            let
+                map =
+                    model.map
+
+                newMap =
+                    { map | scenarioTitle = title }
+            in
+            ( { model | map = newMap }, saveMapToStorage newMap )
 
         NoOp ->
             ( model, Cmd.none )
@@ -926,19 +996,19 @@ view model =
 
                         monsterId =
                             1
-                                + (List.map (\m -> m.monster.id) model.monsters
+                                + (List.map (\m -> m.monster.id) model.map.monsters
                                     |> List.maximum
                                     |> Maybe.withDefault 0
                                   )
 
                         overlayId =
                             1
-                                + (List.map (\o -> o.id) model.overlays
+                                + (List.map (\o -> o.id) model.map.overlays
                                     |> List.maximum
                                     |> Maybe.withDefault 0
                                   )
                      in
-                     [ ( "map-tile-list", lazy3 getMapTileListHtml model.roomData roomDragabble model.sideMenu )
+                     [ ( "map-tile-list", lazy3 getMapTileListHtml model.map.roomData roomDragabble model.sideMenu )
                      , ( "board-door-list", lazy5 getOverlayListHtml overlayId model.cachedDoors "Doors" overlayDragabble (model.sideMenu == DoorMenu) )
                      , ( "board-obstacle-list", lazy5 getOverlayListHtml overlayId model.cachedObstacles "Obstacles" overlayDragabble (model.sideMenu == ObstacleMenu) )
                      , ( "board-misc-list", lazy5 getOverlayListHtml overlayId model.cachedMisc "Misc." overlayDragabble (model.sideMenu == MiscMenu) )
@@ -974,7 +1044,7 @@ view model =
                                     Nothing ->
                                         ( "", 0, 0 )
                           in
-                          lazy4 getLazyMapTileHtml model.roomData c x y
+                          lazy4 getLazyMapTileHtml model.map.roomData c x y
                         ]
                     , Keyed.node
                         "div"
@@ -997,7 +1067,7 @@ view model =
                                                     coordList =
                                                         case m.coords of
                                                             Just initCoords ->
-                                                                model.overlays
+                                                                model.map.overlays
                                                                     |> List.map (\o1 -> o1.cells)
                                                                     |> List.filter (\c1 -> List.any (\c -> c == initCoords) c1)
                                                                     |> List.foldl (++) []
@@ -1038,7 +1108,7 @@ view model =
                             |> List.indexedMap
                                 (getBoardRowHtml model encodedDraggable draggableCoords)
                         )
-                    , lazy6 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.cachedRoomCells model.overlays model.monsters
+                    , lazy6 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.cachedRoomCells model.map.overlays model.map.monsters
                     ]
                 ]
           )
@@ -1051,7 +1121,7 @@ getHeaderHtml model =
     div
         [ class "header" ]
         [ getMenuToggleHtml model
-        , lazy getScenarioTitleHtml model.scenarioTitle
+        , lazy getScenarioTitleHtml model.map.scenarioTitle
         ]
 
 
@@ -1186,11 +1256,11 @@ getBoardRowHtml model encodedDraggable cellsForDraggable y row =
                                 else
                                     Nothing
                             )
-                            model.roomData
+                            model.map.roomData
                             |> List.head
                             |> Maybe.withDefault ( "", 0 )
                 in
-                ( id, lazy8 getCellHtml model.overlays emptyList model.monsters roomRef turns currentDraggable x y )
+                ( id, lazy8 getCellHtml model.map.overlays emptyList model.map.monsters roomRef turns currentDraggable x y )
             )
             row
         )

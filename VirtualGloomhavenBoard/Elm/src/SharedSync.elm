@@ -1,12 +1,13 @@
-module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeCoords, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel, encodeCoords, encodeMapTileRefList, encodeOverlay, encodeOverlayDirection, encodeOverlays)
+module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeCoords, decodeDoor, decodeMapRefList, decodeMonster, decodeMonsterLevel, decodeScenarioMonster, encodeCoords, encodeMapTileRefList, encodeMonsters, encodeOverlay, encodeOverlayDirection, encodeOverlays)
 
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
 import Html.Attributes exposing (id)
-import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map4, maybe, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map4, map6, maybe, succeed)
 import Json.Encode as Encode exposing (object)
 import List exposing (all, map)
-import Monster exposing (Monster, MonsterLevel(..), MonsterType, stringToMonsterType)
+import Monster exposing (Monster, MonsterLevel(..), MonsterType, monsterTypeToString, stringToMonsterType)
+import Scenario exposing (ScenarioMonster)
 
 
 encodeOverlays : List BoardOverlay -> List (List ( String, Encode.Value ))
@@ -337,6 +338,38 @@ encodeTreasureChest chest =
 
         Locked ->
             "locked"
+
+
+encodeMonsters : List ScenarioMonster -> List (List ( String, Encode.Value ))
+encodeMonsters monsters =
+    List.filterMap
+        (\m ->
+            Maybe.map
+                (\t ->
+                    [ ( "monster", Encode.string t )
+                    , ( "initialX", Encode.int m.initialX )
+                    , ( "initialY", Encode.int m.initialY )
+                    , ( "twoPlayer", Encode.string (encodeMonsterLevel m.twoPlayer) )
+                    , ( "threePlayer", Encode.string (encodeMonsterLevel m.threePlayer) )
+                    , ( "fourPlayer", Encode.string (encodeMonsterLevel m.fourPlayer) )
+                    ]
+                )
+                (monsterTypeToString m.monster.monster)
+        )
+        monsters
+
+
+encodeMonsterLevel : MonsterLevel -> String
+encodeMonsterLevel monsterLevel =
+    case monsterLevel of
+        None ->
+            "none"
+
+        Normal ->
+            "normal"
+
+        Elite ->
+            "elite"
 
 
 encodeMapTileRefList : List MapTileRef -> List String
@@ -756,6 +789,27 @@ decodeBoardOverlayDirection dir =
 
         _ ->
             fail ("Could not decode overlay direction '" ++ dir ++ "'")
+
+
+decodeScenarioMonster : Decoder ScenarioMonster
+decodeScenarioMonster =
+    map6 ScenarioMonster
+        (field "monster" Decode.string
+            |> andThen
+                (\m ->
+                    case stringToMonsterType m of
+                        Just monster ->
+                            succeed (Monster monster 0 Monster.None False)
+
+                        Nothing ->
+                            fail ("Could not decode monster " ++ m)
+                )
+        )
+        (field "initialX" Decode.int)
+        (field "initialY" Decode.int)
+        (field "twoPlayer" Decode.string |> andThen decodeMonsterLevel)
+        (field "threePlayer" Decode.string |> andThen decodeMonsterLevel)
+        (field "fourPlayer" Decode.string |> andThen decodeMonsterLevel)
 
 
 decodeMonster : Decoder Monster

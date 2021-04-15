@@ -220,7 +220,7 @@ init ( oldState, maybeOverrides, seed ) =
                               }
                             )
 
-                        Err _ ->
+                        Err e ->
                             AppStorage.empty
 
                 Nothing ->
