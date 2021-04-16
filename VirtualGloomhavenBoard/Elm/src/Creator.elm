@@ -15,7 +15,7 @@ import File.Download as Download
 import File.Select as Select
 import Game exposing (AIType(..), GameStateScenario(..), Piece, PieceType(..), RoomData, generateGameMap, moveOverlayWithoutState, movePieceWithoutState)
 import Hexagon exposing (rotate)
-import Html exposing (Html, div, header, input, li, nav, section, span, text, ul)
+import Html exposing (Html, a, div, header, input, li, nav, section, span, text, ul)
 import Html.Attributes exposing (alt, attribute, class, coords, href, id, maxlength, placeholder, src, style, tabindex, target, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Events.Extra.Drag as DragDrop
@@ -60,11 +60,9 @@ type alias Model =
     , cachedObstacles : List String
     , cachedMisc : List String
     , cachedRoomCells : List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) )
+    , errorString : String
+    , showError : Bool
     }
-
-
-type alias ScenarioErr =
-    { message : String }
 
 
 type alias ExportModel =
@@ -118,6 +116,7 @@ type Msg
     | ExtractFileString File
     | LoadScenario String
     | ChangeScenarioTitle String
+    | HideError
     | NoOp
 
 
@@ -223,7 +222,20 @@ init initMap =
                 )
                 mapData.roomData
     in
-    ( Model mapData Nothing False MapTileMenu Closed ( 0, 0 ) ( 0, 0 ) doors obstacles misc cachedRoomData
+    ( Model
+        mapData
+        Nothing
+        False
+        MapTileMenu
+        Closed
+        ( 0, 0 )
+        ( 0, 0 )
+        doors
+        obstacles
+        misc
+        cachedRoomData
+        ""
+        False
     , Cmd.none
     )
 
@@ -735,8 +747,8 @@ update msg model =
                     , Download.string (model.map.scenarioTitle ++ ".json") "application/json" (Encode.encode 4 (encodeScenario s))
                     )
 
-                _ ->
-                    ( model, Cmd.none )
+                Err e ->
+                    ( { model | errorString = e, showError = True }, Cmd.none )
 
         LoadFile ->
             ( model, Select.file [ "application/json" ] ExtractFileString )
@@ -899,8 +911,8 @@ update msg model =
                     , saveMapToStorage newMap
                     )
 
-                Err _ ->
-                    ( model, Cmd.none )
+                Err e ->
+                    ( { model | errorString = Decode.errorToString e, showError = True }, Cmd.none )
 
         ChangeScenarioTitle title ->
             let
@@ -911,6 +923,9 @@ update msg model =
                     { map | scenarioTitle = title }
             in
             ( { model | map = newMap }, saveMapToStorage newMap )
+
+        HideError ->
+            ( { model | showError = False }, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -1110,6 +1125,7 @@ view model =
                         )
                     , lazy6 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.cachedRoomCells model.map.overlays model.map.monsters
                     ]
+                , lazy2 getErrorStatusHtml model.errorString model.showError
                 ]
           )
         , ( "foot", lazy getFooterHtml Version.get )
@@ -1122,6 +1138,31 @@ getHeaderHtml model =
         [ class "header" ]
         [ getMenuToggleHtml model
         , lazy getScenarioTitleHtml model.map.scenarioTitle
+        ]
+
+
+getErrorStatusHtml : String -> Bool -> Html.Html Msg
+getErrorStatusHtml message showMessage =
+    div
+        [ class
+            ("errorStatus"
+                ++ (if showMessage then
+                        " show"
+
+                    else
+                        ""
+                   )
+            )
+        , attribute "aria-hidden"
+            (if showMessage then
+                "false"
+
+             else
+                "true"
+            )
+        ]
+        [ span [] [ text message ]
+        , a [ onClick HideError ] [ text "Close" ]
         ]
 
 
@@ -2042,7 +2083,7 @@ rotateRoom i extRoom =
             ( ( Empty, Dict.empty ), extRoom )
 
 
-generateScenario : String -> List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Result ScenarioErr Scenario
+generateScenario : String -> List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Result String Scenario
 generateScenario title rooms overlays monsters roomCellMap =
     case List.head rooms of
         Just r ->
@@ -2065,7 +2106,7 @@ generateScenario title rooms overlays monsters roomCellMap =
             Ok (Scenario 0 title mapTileModel.mapTileData 0 [])
 
         Nothing ->
-            Err { message = "No map tile data could be found" }
+            Err "No map tile data could be found"
 
 
 generateMapTileData : RoomData -> List RoomData -> List BoardOverlay -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> ExportModel

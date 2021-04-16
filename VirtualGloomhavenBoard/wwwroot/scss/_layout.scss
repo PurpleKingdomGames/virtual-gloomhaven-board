@@ -453,7 +453,7 @@ html {
                 }
             }
 
-            .connectionStatus {
+            .connectionStatus, .errorStatus {
                 position: absolute;
                 left: 50%;
                 right: 50%;
@@ -470,6 +470,14 @@ html {
                 -moz-box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.75);
                 box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.75);
                 z-index: 1;
+
+                span {
+                    display: inline-block;
+                    width: 100%;
+                    max-height: 2rem;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                }
 
                 &.show {
                     top: 0;
