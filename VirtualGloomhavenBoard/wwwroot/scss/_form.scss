@@ -83,6 +83,10 @@
             font-weight: bold;
             color: red;
             bottom: -1.4rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 1.3rem;
+            max-width: 100%;
         }
     }
 }

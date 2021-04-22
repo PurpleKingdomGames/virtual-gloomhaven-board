@@ -1844,15 +1844,8 @@ getScenarioDialog model =
 
                         Just ( _, Just (Err e) ) ->
                             let
-                                eX =
-                                    Decode.errorToString e
-
                                 errStr =
-                                    if String.length eX > 10 then
-                                        String.slice 0 7 eX ++ "..."
-
-                                    else
-                                        eX
+                                    Decode.errorToString e
                             in
                             Just ("Cannot decode file: '" ++ errStr ++ "'")
 
