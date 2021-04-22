@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.IO;
 using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Rewrite;
 
@@ -78,6 +79,11 @@ namespace VirtualGloomhavenBoard
             };
 
             app.UseResponseCompression();
+
+            app.UseRewriter(new RewriteOptions()
+                .AddRewrite("^Creator", "/creator.html", true)
+            );
+
             app.UseDefaultFiles();
             app.UseStaticFiles(fileOptions);
 

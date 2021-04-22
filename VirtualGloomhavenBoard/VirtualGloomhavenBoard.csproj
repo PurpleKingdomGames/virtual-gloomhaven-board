@@ -51,6 +51,12 @@
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
+        <Content Include="wwwroot\js\app-creator.js">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
+
         <Content Include="wwwroot\js\dragPorts.js">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>

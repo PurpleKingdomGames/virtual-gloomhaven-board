@@ -1759,6 +1759,18 @@ getMenuHtml lockScenario lockPlayers scenarioId campaignTrackerName campaignTrac
                     (Dom.element "li"
                         |> Dom.addAttribute (attribute "role" "menuitem")
                         |> Dom.addAttribute (tabindex 0)
+                        |> Dom.addClass "section-end"
+                        |> Dom.appendChild
+                            (Dom.element "a"
+                                |> Dom.addAttribute (href "/Creator")
+                                |> Dom.addAttribute (target "creator_window")
+                                |> Dom.appendText "Scenario Creator"
+                            )
+                    )
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
                         |> Dom.appendChild
                             (Dom.element "a"
                                 |> Dom.addAttribute (href "https://github.com/sponsors/PurpleKingdomGames?o=esb")

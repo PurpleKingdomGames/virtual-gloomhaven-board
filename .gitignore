@@ -6,7 +6,5 @@ obj/
 bin/
 **/wwwroot/js/main*
 **/wwwroot/js/creator*
+**/wwwroot/js/node_modules
 **/wwwroot/css/
-
-# Only until the creator is ready
-creator.html
