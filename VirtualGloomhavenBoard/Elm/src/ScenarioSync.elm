@@ -166,7 +166,8 @@ encodeDoor : DoorSubType -> List ( String, Encode.Value )
 encodeDoor doorType =
     case doorType of
         Corridor material size ->
-            [ ( "material"
+            [ ( "subType", Encode.string "corridor" )
+            , ( "material"
               , Encode.string
                     (case material of
                         Dark ->
