@@ -743,6 +743,19 @@ update msg model =
                                         |> List.head
                             in
                             Maybe.map (\r -> ( r, m )) room
+                                |> Maybe.andThen
+                                    (\( r, m1 ) ->
+                                        List.filter (\m2 -> m2.data.ref == r) model.map.roomData
+                                            |> List.head
+                                            |> Maybe.andThen
+                                                (\m2 ->
+                                                    mapCoordsToRoom m2.data.ref m2.data.turns ( m.initialX, m.initialY ) model.cachedRoomCells
+                                                )
+                                            |> Maybe.map
+                                                (\( newX, newY ) ->
+                                                    ( r, { m | initialX = newX, initialY = newY } )
+                                                )
+                                    )
                         )
                         model.map.monsters
 
