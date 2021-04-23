@@ -678,7 +678,18 @@ update msg model =
                                                     Just ( c, { o | ref = Door d distinctRoom } )
 
                                                 _ ->
-                                                    Just ( c, o )
+                                                    List.filter (\m -> m.data.ref == c) model.map.roomData
+                                                        |> List.head
+                                                        |> Maybe.map
+                                                            (\m ->
+                                                                let
+                                                                    newCells =
+                                                                        List.filterMap
+                                                                            (\cell -> mapCoordsToRoom m.data.ref m.data.turns cell model.cachedRoomCells)
+                                                                            o.cells
+                                                                in
+                                                                ( c, { o | cells = newCells } )
+                                                            )
 
                                         _ ->
                                             Nothing
@@ -2296,7 +2307,7 @@ assignDoorData mapTile otherMapTiles allMapTiles doorsForThisTile doorsForOtherT
                 ( doorsForOtherTiles, otherMapTiles, [] )
                 doorsForThisTile
     in
-    ( { mapTile | doors = List.reverse doorData }, otherMapTiles, remainingDoors )
+    ( { mapTile | doors = doorData }, otherMapTiles, remainingDoors )
 
 
 mapCoordsToRoom : MapTileRef -> Int -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Maybe ( Int, Int )
