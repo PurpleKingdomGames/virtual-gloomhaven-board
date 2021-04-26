@@ -107,7 +107,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [4, 2]
+                                            [
+                                                4,
+                                                2
+                                            ]
                                         ]
                                     },
                                     {
@@ -117,7 +120,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [2, 2]
+                                            [
+                                                2,
+                                                2
+                                            ]
                                         ]
                                     }
                                 ],
@@ -147,7 +153,7 @@
                                         "fourPlayer": "none"
                                     },
                                     {
-                                        "monster": "living-spirit",
+                                        "monster": "night-demon",
                                         "initialX": 0,
                                         "initialY": 3,
                                         "twoPlayer": "none",
@@ -155,7 +161,7 @@
                                         "fourPlayer": "normal"
                                     },
                                     {
-                                        "monster": "living-spirit",
+                                        "monster": "night-demon",
                                         "initialX": 4,
                                         "initialY": 3,
                                         "twoPlayer": "normal",
@@ -300,7 +306,10 @@
                                                     },
                                                     "direction": "default",
                                                     "cells": [
-                                                        [1, 1]
+                                                        [
+                                                            1,
+                                                            1
+                                                        ]
                                                     ]
                                                 },
                                                 {
@@ -310,7 +319,10 @@
                                                     },
                                                     "direction": "default",
                                                     "cells": [
-                                                        [2, 0]
+                                                        [
+                                                            2,
+                                                            0
+                                                        ]
                                                     ]
                                                 },
                                                 {
@@ -320,7 +332,10 @@
                                                     },
                                                     "direction": "default",
                                                     "cells": [
-                                                        [5, 2]
+                                                        [
+                                                            5,
+                                                            2
+                                                        ]
                                                     ]
                                                 }
                                             ],
@@ -503,18 +518,24 @@
                                                                 },
                                                                 "direction": "default",
                                                                 "cells": [
-                                                                    [1, 1]
+                                                                    [
+                                                                        1,
+                                                                        1
+                                                                    ]
                                                                 ]
                                                             },
                                                             {
                                                                 "ref": {
                                                                     "type": "treasure",
                                                                     "subType": "chest",
-                                                                    "id": "73"
+                                                                    "id": "75"
                                                                 },
                                                                 "direction": "default",
                                                                 "cells": [
-                                                                    [2, 2]
+                                                                    [
+                                                                        2,
+                                                                        2
+                                                                    ]
                                                                 ]
                                                             },
                                                             {
@@ -525,7 +546,10 @@
                                                                 },
                                                                 "direction": "default",
                                                                 "cells": [
-                                                                    [0, 2]
+                                                                    [
+                                                                        0,
+                                                                        2
+                                                                    ]
                                                                 ]
                                                             },
                                                             {
@@ -536,7 +560,10 @@
                                                                 },
                                                                 "direction": "default",
                                                                 "cells": [
-                                                                    [4, 2]
+                                                                    [
+                                                                        4,
+                                                                        2
+                                                                    ]
                                                                 ]
                                                             }
                                                         ],
@@ -584,7 +611,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [2, 2]
+                                            [
+                                                2,
+                                                2
+                                            ]
                                         ]
                                     },
                                     {
@@ -594,7 +624,10 @@
                                         },
                                         "direction": "default",
                                         "cells": [
-                                            [1, 1]
+                                            [
+                                                1,
+                                                1
+                                            ]
                                         ]
                                     }
                                 ],
@@ -644,7 +677,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [2, 0]
+                                [
+                                    2,
+                                    0
+                                ]
                             ]
                         },
                         {
@@ -654,7 +690,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [4, 5]
+                                [
+                                    4,
+                                    5
+                                ]
                             ]
                         },
                         {
@@ -664,7 +703,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [5, 0]
+                                [
+                                    5,
+                                    0
+                                ]
                             ]
                         },
                         {
@@ -674,7 +716,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [2, 3]
+                                [
+                                    2,
+                                    3
+                                ]
                             ]
                         }
                     ],
@@ -739,7 +784,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [0, 0]
+                    [
+                        0,
+                        0
+                    ]
                 ]
             },
             {
@@ -748,7 +796,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [0, 1]
+                    [
+                        0,
+                        1
+                    ]
                 ]
             },
             {
@@ -757,7 +808,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [0, 2]
+                    [
+                        0,
+                        2
+                    ]
                 ]
             },
             {
@@ -766,7 +820,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [0, 3]
+                    [
+                        0,
+                        3
+                    ]
                 ]
             }
         ],
