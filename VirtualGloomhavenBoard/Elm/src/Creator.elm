@@ -2,6 +2,7 @@ port module Creator exposing (main)
 
 import AppStorage exposing (ExtendedRoomData, MapData, MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece, loadMapFromStorage, saveMapToStorage)
 import Array
+import Bitwise
 import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable, scenarioMonsterToHtml)
 import BoardMapTile exposing (MapTileRef(..), getAllRefs, getGridByRef, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
@@ -2300,9 +2301,22 @@ mapCoordsToRoom ref turns origin roomCellData =
                 -- Rotate the cell around the origin
                 rotatedCell =
                     rotate origin o turns
+
+                y =
+                    Tuple.second rotatedCell - Tuple.second o
+
+                x =
+                    (Tuple.first rotatedCell - Tuple.first o)
+                        |> (+)
+                            (if Bitwise.and y 1 == 1 && (Bitwise.and (Tuple.second rotatedCell) 1 == 0) then
+                                -1
+
+                             else
+                                0
+                            )
             in
             -- Get the delta
-            ( Tuple.first rotatedCell - Tuple.first o, Tuple.second rotatedCell - Tuple.second o )
+            ( x, y )
         )
         roomOrigin
 
