@@ -7,6 +7,11 @@
     });
     DragPorts.setup(app);
 
+    app.ports.getConfirmCreateNew.subscribe(() => {
+        if (window.confirm('Create a new Scenario? Any data not exported will be lost'))
+            app.ports.onConfirmCreateNew.send(null)
+    })
+
     app.ports.getCellFromPoint.subscribe((args) => {
         let elem = document.elementFromPoint(args[0], args[1])
         let i = 0

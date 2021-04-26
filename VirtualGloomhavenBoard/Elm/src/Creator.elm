@@ -48,6 +48,12 @@ port getContextPosition : ( Int, Int ) -> Cmd msg
 port onContextPosition : (( Int, Int ) -> msg) -> Sub msg
 
 
+port getConfirmCreateNew : () -> Cmd msg
+
+
+port onConfirmCreateNew : (() -> msg) -> Sub msg
+
+
 type alias Model =
     { map : MapData
     , currentDraggable : Maybe MoveablePiece
@@ -111,6 +117,8 @@ type Msg
     | RemoveOverlay Int
     | RotateRoom MapTileRef
     | RemoveRoom MapTileRef
+    | ConfirmCreateNew
+    | CreateNew ()
     | ExportFile
     | LoadFile
     | ExtractFileString File
@@ -165,79 +173,8 @@ init initMap =
 
                 Nothing ->
                     MapData "" [] [] []
-
-        ( doors, obstacles, misc ) =
-            getOverlayTypesWithLabel
-                |> Dict.filter
-                    (\_ v ->
-                        case v of
-                            Door (Corridor _ Two) _ ->
-                                False
-
-                            Door AltarDoor _ ->
-                                False
-
-                            Door BreakableWall _ ->
-                                False
-
-                            Rift ->
-                                False
-
-                            Treasure (Coin _) ->
-                                False
-
-                            _ ->
-                                True
-                    )
-                |> Dict.toList
-                |> List.sortBy
-                    (\( _, v ) ->
-                        case v of
-                            StartingLocation ->
-                                0
-
-                            _ ->
-                                1
-                    )
-                |> List.foldr
-                    (\( k, v ) ( d, o, m ) ->
-                        case v of
-                            Door _ _ ->
-                                ( k :: d, o, m )
-
-                            Obstacle _ ->
-                                ( d, k :: o, m )
-
-                            _ ->
-                                ( d, o, k :: m )
-                    )
-                    ( [], [], [] )
-
-        cachedRoomData =
-            List.map
-                (\r ->
-                    case calculateRoomCells r.data of
-                        ( d, _ ) ->
-                            d
-                )
-                mapData.roomData
     in
-    ( Model
-        mapData
-        Nothing
-        False
-        MapTileMenu
-        Closed
-        ( 0, 0 )
-        ( 0, 0 )
-        doors
-        obstacles
-        misc
-        cachedRoomData
-        ""
-        False
-    , Cmd.none
-    )
+    ( initModel mapData, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -618,6 +555,16 @@ update msg model =
               }
             , saveMapToStorage newMap
             )
+
+        ConfirmCreateNew ->
+            ( model, getConfirmCreateNew () )
+
+        CreateNew _ ->
+            let
+                mapData =
+                    MapData "" [] [] []
+            in
+            ( initModel mapData, saveMapToStorage mapData )
 
         ExportFile ->
             let
@@ -1264,6 +1211,14 @@ getMenuHtml menuOpen =
                     (Dom.element "li"
                         |> Dom.addAttribute (attribute "role" "menuitem")
                         |> Dom.addAttribute (tabindex 0)
+                        |> Dom.addAction ( "click", ConfirmCreateNew )
+                        |> Dom.addClass "section-end"
+                        |> Dom.appendText "Create New"
+                    )
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
                         |> Dom.addAction ( "click", ExportFile )
                         |> Dom.appendText "Export"
                     )
@@ -1337,6 +1292,7 @@ subscriptions _ =
     Sub.batch
         [ onContextPosition ChangeContextMenuAbsosition
         , onCellFromPoint CellFromPoint
+        , onConfirmCreateNew CreateNew
         ]
 
 
@@ -2349,3 +2305,78 @@ mapCoordsToRoom ref turns origin roomCellData =
             ( Tuple.first rotatedCell - Tuple.first o, Tuple.second rotatedCell - Tuple.second o )
         )
         roomOrigin
+
+
+initModel : MapData -> Model
+initModel mapData =
+    let
+        ( doors, obstacles, misc ) =
+            getOverlayTypesWithLabel
+                |> Dict.filter
+                    (\_ v ->
+                        case v of
+                            Door (Corridor _ Two) _ ->
+                                False
+
+                            Door AltarDoor _ ->
+                                False
+
+                            Door BreakableWall _ ->
+                                False
+
+                            Rift ->
+                                False
+
+                            Treasure (Coin _) ->
+                                False
+
+                            _ ->
+                                True
+                    )
+                |> Dict.toList
+                |> List.sortBy
+                    (\( _, v ) ->
+                        case v of
+                            StartingLocation ->
+                                0
+
+                            _ ->
+                                1
+                    )
+                |> List.foldr
+                    (\( k, v ) ( d, o, m ) ->
+                        case v of
+                            Door _ _ ->
+                                ( k :: d, o, m )
+
+                            Obstacle _ ->
+                                ( d, k :: o, m )
+
+                            _ ->
+                                ( d, o, k :: m )
+                    )
+                    ( [], [], [] )
+
+        cachedRoomData =
+            List.map
+                (\r ->
+                    case calculateRoomCells r.data of
+                        ( d, _ ) ->
+                            d
+                )
+                mapData.roomData
+    in
+    Model
+        mapData
+        Nothing
+        False
+        MapTileMenu
+        Closed
+        ( 0, 0 )
+        ( 0, 0 )
+        doors
+        obstacles
+        misc
+        cachedRoomData
+        ""
+        False
