@@ -2300,7 +2300,7 @@ mapCoordsToRoom ref turns origin roomCellData =
             let
                 -- Rotate the cell around the origin
                 rotatedCell =
-                    rotate origin o turns
+                    rotate origin o (6 - turns)
 
                 y =
                     Tuple.second rotatedCell - Tuple.second o
