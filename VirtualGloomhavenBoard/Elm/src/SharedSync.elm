@@ -775,6 +775,9 @@ decodeBoardOverlayDirection dir =
         "vertical" ->
             succeed Vertical
 
+        "vertical-reverse" ->
+            succeed VerticalReverse
+
         "diagonal-left" ->
             succeed DiagonalLeft
 
