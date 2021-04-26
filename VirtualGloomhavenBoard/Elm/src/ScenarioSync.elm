@@ -4,12 +4,12 @@ import BoardMapTile exposing (refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlayDirectionType, CorridorMaterial(..), CorridorSize(..), DoorSubType(..))
 import Game exposing (Expansion(..), GameStateScenario(..))
 import Http exposing (Error, expectJson)
-import Json.Decode exposing (Decoder, andThen, fail, field, float, int, lazy, list, map5, map6, map7, string, succeed)
+import Json.Decode exposing (Decoder, andThen, fail, field, float, int, lazy, list, map5, map7, string, succeed)
 import Json.Encode as Encode exposing (object)
 import List exposing (all, filterMap, map)
-import Monster exposing (Monster, MonsterLevel(..), MonsterType, monsterTypeToString, stringToMonsterType)
-import Scenario exposing (DoorData(..), MapTileData, Scenario, ScenarioMonster)
-import SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeMonsterLevel, decodeScenarioMonster, encodeMonsters, encodeOverlayDirection, encodeOverlays)
+import Monster exposing (MonsterLevel(..), MonsterType, monsterTypeToString, stringToMonsterType)
+import Scenario exposing (DoorData(..), MapTileData, Scenario)
+import SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, decodeDoor, decodeScenarioMonster, encodeMonsters, encodeOverlayDirection, encodeOverlays)
 
 
 type alias DoorDataObj =
