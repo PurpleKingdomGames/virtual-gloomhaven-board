@@ -23,7 +23,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [2, 0]
+                                [
+                                    2,
+                                    0
+                                ]
                             ]
                         },
                         {
@@ -34,7 +37,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [1, 1]
+                                [
+                                    1,
+                                    1
+                                ]
                             ]
                         },
                         {
@@ -45,7 +51,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [1, 2]
+                                [
+                                    1,
+                                    2
+                                ]
                             ]
                         },
                         {
@@ -56,13 +65,16 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [2, 2]
+                                [
+                                    2,
+                                    2
+                                ]
                             ]
                         }
                     ],
                     "monsters": [
                         {
-                            "monster": "living-spirit",
+                            "monster": "night-demon",
                             "initialX": 1,
                             "initialY": 0,
                             "twoPlayer": "normal",
@@ -70,7 +82,7 @@
                             "fourPlayer": "elite"
                         },
                         {
-                            "monster": "living-spirit",
+                            "monster": "night-demon",
                             "initialX": 2,
                             "initialY": 1,
                             "twoPlayer": "elite",
@@ -78,7 +90,7 @@
                             "fourPlayer": "elite"
                         },
                         {
-                            "monster": "living-spirit",
+                            "monster": "night-demon",
                             "initialX": 0,
                             "initialY": 2,
                             "twoPlayer": "none",
@@ -86,7 +98,7 @@
                             "fourPlayer": "normal"
                         },
                         {
-                            "monster": "living-spirit",
+                            "monster": "night-demon",
                             "initialX": 2,
                             "initialY": 3,
                             "twoPlayer": "none",
@@ -116,7 +128,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [1, 1]
+                                [
+                                    1,
+                                    1
+                                ]
                             ]
                         },
                         {
@@ -127,7 +142,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [1, 2]
+                                [
+                                    1,
+                                    2
+                                ]
                             ]
                         },
                         {
@@ -138,7 +156,10 @@
                             },
                             "direction": "default",
                             "cells": [
-                                [2, 2]
+                                [
+                                    2,
+                                    2
+                                ]
                             ]
                         }
                     ],
@@ -187,7 +208,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [0, 2]
+                    [
+                        0,
+                        2
+                    ]
                 ]
             },
             {
@@ -196,7 +220,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [1, 2]
+                    [
+                        1,
+                        2
+                    ]
                 ]
             },
             {
@@ -205,7 +232,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [0, 3]
+                    [
+                        0,
+                        3
+                    ]
                 ]
             },
             {
@@ -214,7 +244,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [0, 4]
+                    [
+                        0,
+                        4
+                    ]
                 ]
             },
             {
@@ -223,7 +256,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [1, 4]
+                    [
+                        1,
+                        4
+                    ]
                 ]
             },
             {
@@ -233,7 +269,10 @@
                 },
                 "direction": "default",
                 "cells": [
-                    [3, 3]
+                    [
+                        3,
+                        3
+                    ]
                 ]
             }
         ],
@@ -314,5 +353,7 @@
         "turns": 0
     },
     "angle": 0,
-    "additionalMonsters": [ "living-bones" ]
+    "additionalMonsters": [
+        "living-bones"
+    ]
 }
