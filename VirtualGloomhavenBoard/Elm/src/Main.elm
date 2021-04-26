@@ -2859,6 +2859,9 @@ addActionsForCell currentMode coords overlays element =
                                 ( DestroyOverlay, Trap _ ) ->
                                     Dom.addAction ( "click", RemoveOverlay overlay )
 
+                                ( DestroyOverlay, DifficultTerrain _ ) ->
+                                    Dom.addAction ( "click", RemoveOverlay overlay )
+
                                 ( LootCell, Treasure _ ) ->
                                     Dom.addAction ( "click", RemoveOverlay overlay )
 
