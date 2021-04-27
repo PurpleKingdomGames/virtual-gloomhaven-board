@@ -87,6 +87,13 @@
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
+
+        <Content Include="wwwroot\creator.html">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
+
         <Content Include="wwwroot\manifest.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
