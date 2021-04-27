@@ -634,21 +634,15 @@ overlayToHtml dragOverlays dragDoors model =
            )
         |> (if dragOverlays then
                 case model.overlay.ref of
-                    Obstacle _ ->
-                        makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
-
-                    Rift ->
-                        makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
-
-                    Trap _ ->
-                        makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
-
                     Treasure (Coin _) ->
                         if model.coords == Nothing then
                             makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
 
                         else
                             Dom.addAttribute (attribute "draggable" "false")
+
+                    Treasure (Chest _) ->
+                        Dom.addAttribute (attribute "draggable" "false")
 
                     Door _ _ ->
                         if dragDoors then
@@ -658,7 +652,7 @@ overlayToHtml dragOverlays dragDoors model =
                             Dom.addAttribute (attribute "draggable" "false")
 
                     _ ->
-                        Dom.addAttribute (attribute "draggable" "false")
+                        makeDraggable (OverlayType model.overlay Nothing) model.coords model.dragEvents
 
             else
                 \e -> e

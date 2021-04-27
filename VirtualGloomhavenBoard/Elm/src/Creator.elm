@@ -72,14 +72,6 @@ type alias Model =
     }
 
 
-type alias ExportModel =
-    { rooms : List RoomData
-    , doors : List BoardOverlay
-    , overlays : List ( MapTileRef, BoardOverlay )
-    , mapTileData : MapTileData
-    }
-
-
 type SideMenu
     = MapTileMenu
     | DoorMenu
@@ -692,7 +684,7 @@ update msg model =
                             in
                             Maybe.map (\r -> ( r, m )) room
                                 |> Maybe.andThen
-                                    (\( r, m1 ) ->
+                                    (\( r, _ ) ->
                                         List.filter (\m2 -> m2.data.ref == r) model.map.roomData
                                             |> List.head
                                             |> Maybe.andThen
@@ -2067,7 +2059,7 @@ rotateRoom i extRoom =
 generateScenario : String -> List RoomData -> List ( MapTileRef, BoardOverlay ) -> List ( MapTileRef, ScenarioMonster ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> Result String Scenario
 generateScenario title rooms overlays monsters roomCellMap =
     case List.head rooms of
-        Just r ->
+        Just _ ->
             let
                 doors =
                     List.filterMap
@@ -2194,7 +2186,7 @@ assignMapTileData overlays monsters roomData =
 assignDoorData : MapTileData -> List MapTileData -> List MapTileData -> List BoardOverlay -> List BoardOverlay -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> ( MapTileData, List MapTileData, List BoardOverlay )
 assignDoorData mapTile otherMapTiles allMapTiles doorsForThisTile doorsForOtherTiles roomCellMap =
     let
-        ( remainingDoors, remainingTiles, doorData ) =
+        ( remainingDoors, _, doorData ) =
             List.foldl
                 (\door ( od, om, dd ) ->
                     case ( List.head door.cells, door.ref ) of
@@ -2217,9 +2209,6 @@ assignDoorData mapTile otherMapTiles allMapTiles doorsForThisTile doorsForOtherT
 
                                         connectingCoords =
                                             mapCoordsToRoom connectingRoom.ref connectingRoom.turns cell roomCellMap
-
-                                        filteredTiles =
-                                            List.filter (\m -> m.ref /= connectingRoom.ref) om
 
                                         ( connectingMapTile, om2, od2 ) =
                                             case
