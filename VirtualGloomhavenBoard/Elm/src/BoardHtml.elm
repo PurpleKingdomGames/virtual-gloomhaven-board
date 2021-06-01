@@ -1,4 +1,4 @@
-module BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable, scenarioMonsterToHtml)
+module BoardHtml exposing (CellModel, ContextMenu, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable, scenarioMonsterToHtml)
 
 import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..))
 import Array exposing (fromList, toIndexedList)
@@ -19,6 +19,14 @@ import List exposing (any, map)
 import List.Extra exposing (uniqueBy)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType(..), monsterTypeToString)
 import Scenario exposing (ScenarioMonster)
+
+
+type ContextMenu
+    = Open
+    | Closed
+    | TwoPlayerSubMenu
+    | ThreePlayerSubMenu
+    | FourPlayerSubMenu
 
 
 type alias CellModel msg =

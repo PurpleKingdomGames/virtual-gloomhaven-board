@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import AppStorage exposing (AppModeType(..), CampaignTrackerUrl(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
-import BoardHtml exposing (getMapTileHtml)
+import BoardHtml exposing (ContextMenu, getMapTileHtml)
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Browser
@@ -73,6 +73,9 @@ type alias Model =
     , keysDown : List String
     , roomCodePassesServerCheck : Bool
     , tooltipTarget : Maybe ( BrowserDom.Element, String )
+    , contextMenuState : ContextMenu
+    , contextMenuPosition : ( Int, Int )
+    , contextMenuAbsPosition : ( Int, Int )
     }
 
 
@@ -1124,91 +1127,7 @@ view model =
         ]
         ([ getHeaderHtml model
          , div [ class "main" ]
-            [ div
-                [ class
-                    ("action-list"
-                        ++ (if model.sideMenuOpen then
-                                " show"
-
-                            else
-                                ""
-                           )
-                    )
-                ]
-                [ lazy getNavHtml model.config.gameMode
-                , let
-                    bearSummoned =
-                        (List.member BeastTyrant model.game.state.players == False)
-                            || List.any (\p -> p.ref == AI (Summons BearSummons)) model.game.state.pieces
-
-                    hasDiviner =
-                        List.member Diviner model.game.state.players
-
-                    maxSummons =
-                        filterMap
-                            (\p ->
-                                case p.ref of
-                                    AI (Summons (NormalSummons i)) ->
-                                        Just i
-
-                                    _ ->
-                                        Nothing
-                            )
-                            model.game.state.pieces
-                            |> sort
-                            |> reverse
-                            |> head
-
-                    nextId =
-                        case maxSummons of
-                            Just i ->
-                                i + 1
-
-                            Nothing ->
-                                1
-
-                    nextOverlayId =
-                        case
-                            List.map (\o -> o.id) model.game.state.overlays
-                                |> List.maximum
-                        of
-                            Just i ->
-                                i + 1
-
-                            Nothing ->
-                                1
-                  in
-                  lazy8 getNewPieceHtml
-                    model.config.gameMode
-                    (case model.currentDraggable of
-                        Just m ->
-                            case m.coords of
-                                Nothing ->
-                                    case m.ref of
-                                        PieceType p ->
-                                            getLabelForPiece p
-
-                                        OverlayType o _ ->
-                                            getLabelForOverlay o Nothing
-
-                                        RoomType _ ->
-                                            ""
-
-                                Just _ ->
-                                    ""
-
-                        Nothing ->
-                            ""
-                    )
-                    hasDiviner
-                    bearSummoned
-                    nextId
-                    nextOverlayId
-                    model.game.state.availableMonsters
-                    model.deadPlayerList
-                , div [ class "side-toggle", onClick ToggleSideMenu ] []
-                ]
-            , div [ class "board-wrapper", id "board" ]
+            [ div [ class "board-wrapper", id "board" ]
                 [ div [ class "map-bg" ] []
                 , lazy5 getMapTileHtml model.game.state.visibleRooms model.game.roomData "" 0 0
                 , Html.main_ [ class "board" ]
@@ -1271,6 +1190,7 @@ view model =
                     )
                 ]
             , lazy getConnectionStatusHtml model.connectionStatus
+            , lazy6 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.cachedRoomCells model.map.overlays model.map.monsters
             ]
          , lazy getFooterHtml Version.get
          ]
@@ -1413,6 +1333,169 @@ getScenarioTitleHtml id titleTxt isSolo =
         )
 
 
+etContextMenu : ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> List BoardOverlay -> List ScenarioMonster -> Html Msg
+
+
+getContextMenu state ( x, y ) ( absX, absY ) rooms overlays monsters =
+    let
+        filteredOverlays =
+            List.filter (\o -> List.any (\c -> c == ( x, y )) o.cells) overlays
+
+        filteredRoom =
+            List.filter
+                (\( _, cells ) ->
+                    case Dict.get ( x, y ) cells of
+                        Just ( _, p ) ->
+                            p
+
+                        Nothing ->
+                            False
+                )
+                rooms
+                |> List.map (\( r, _ ) -> r)
+
+        monster =
+            List.filter (\m -> m.initialX == x && m.initialY == y) monsters
+                |> List.head
+
+        menuList =
+            if state /= Closed then
+                (List.filter
+                    (\o ->
+                        case o.ref of
+                            StartingLocation ->
+                                False
+
+                            _ ->
+                                True
+                    )
+                    filteredOverlays
+                    |> List.map
+                        (\o ->
+                            li
+                                [ class "rotate-overlay"
+                                , onClickPreventDefault (RotateOverlay o.id)
+                                ]
+                                [ text ("Rotate " ++ getOverlayLabel o.ref)
+                                ]
+                        )
+                )
+                    ++ (filteredRoom
+                            |> List.map
+                                (\room ->
+                                    let
+                                        refStr =
+                                            Maybe.withDefault "" (refToString room)
+
+                                        firstChar =
+                                            String.slice 0 1 refStr
+                                                |> String.toUpper
+
+                                        restChars =
+                                            String.slice 1 (String.length refStr) refStr
+                                    in
+                                    li
+                                        [ class "rotate-map-tile"
+                                        , onClickPreventDefault (RotateRoom room)
+                                        ]
+                                        [ text ("Rotate " ++ firstChar ++ restChars)
+                                        ]
+                                )
+                       )
+                    ++ (case monster of
+                            Just m ->
+                                let
+                                    monsterName =
+                                        Maybe.withDefault "" (monsterTypeToString m.monster.monster)
+                                            |> String.split "-"
+                                            |> List.map
+                                                (\s ->
+                                                    String.toUpper (String.slice 0 1 s)
+                                                        ++ String.slice 1 (String.length s) s
+                                                )
+                                            |> String.join " "
+                                in
+                                [ li
+                                    [ class "remove-monster"
+                                    , onClickPreventDefault (RemoveMonster m.monster.id)
+                                    ]
+                                    [ text ("Remove " ++ monsterName)
+                                    ]
+                                ]
+
+                            Nothing ->
+                                []
+                       )
+                    ++ List.map
+                        (\o ->
+                            li
+                                [ class "remove-overlay"
+                                , onClickPreventDefault (RemoveOverlay o.id)
+                                ]
+                                [ text ("Remove " ++ getOverlayLabel o.ref)
+                                ]
+                        )
+                        filteredOverlays
+                    ++ (filteredRoom
+                            |> List.map
+                                (\room ->
+                                    let
+                                        refStr =
+                                            Maybe.withDefault "" (refToString room)
+
+                                        firstChar =
+                                            String.slice 0 1 refStr
+                                                |> String.toUpper
+
+                                        restChars =
+                                            String.slice 1 (String.length refStr) refStr
+                                    in
+                                    li
+                                        [ class "remove-map-tile"
+                                        , onClickPreventDefault (RemoveRoom room)
+                                        ]
+                                        [ text ("Remove " ++ firstChar ++ restChars)
+                                        ]
+                                )
+                       )
+
+            else
+                []
+
+        isOpen =
+            state /= Closed && List.length menuList > 0
+    in
+    div
+        [ class "context-menu"
+        , class
+            (if isOpen then
+                "open"
+
+             else
+                ""
+            )
+        , style "top" (String.fromInt absY ++ "px")
+        , style "left" (String.fromInt absX ++ "px")
+        ]
+        [ nav []
+            [ ul []
+                (if isOpen then
+                    menuList
+                        ++ [ li
+                                [ class "cancel-menu"
+                                , onClickPreventDefault (ChangeContextMenuState Closed)
+                                ]
+                                [ text "Cancel"
+                                ]
+                           ]
+
+                 else
+                    []
+                )
+            ]
+        ]
+
+
 getRoomCodeHtml : Maybe String -> Bool -> Html.Html Msg
 getRoomCodeHtml roomCode showRoomCode =
     div
@@ -1497,175 +1580,6 @@ getFooterHtml v =
                 ]
             ]
         ]
-
-
-getNewPieceHtml : GameModeType -> String -> Bool -> Bool -> Int -> Int -> Dict String (Array Int) -> List CharacterClass -> Html.Html Msg
-getNewPieceHtml gameMode currentDraggable hasDiviner bearSummoned nextSummonsId nextOverlayId availableMonsters deadPlayers =
-    Dom.element "div"
-        |> Dom.addClassConditional "show" (gameMode == AddPiece)
-        |> Dom.addClass "new-piece-wrapper"
-        |> Dom.appendChild
-            (Dom.element "div"
-                |> Dom.addClass "new-piece-list"
-                |> Dom.appendChild
-                    (Dom.element "ul"
-                        |> Dom.appendChildConditional
-                            (Dom.element "li"
-                                |> Dom.appendChild
-                                    (Tuple.second
-                                        (pieceToHtml
-                                            (PieceModel
-                                                gameMode
-                                                (getLabelForPiece (Piece (AI (Summons BearSummons)) 0 0) == currentDraggable)
-                                                Nothing
-                                                (Piece (AI (Summons BearSummons)) 0 0)
-                                            )
-                                        )
-                                    )
-                            )
-                            (bearSummoned == False)
-                        |> Dom.appendChildConditional
-                            (Dom.element "li"
-                                |> Dom.appendChild
-                                    (Tuple.second
-                                        (overlayToHtml
-                                            (BoardOverlayModel
-                                                gameMode
-                                                (getLabelForOverlay (BoardOverlay Rift nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
-                                                Nothing
-                                                (BoardOverlay Rift nextOverlayId Default [ ( 0, 0 ) ])
-                                            )
-                                        )
-                                    )
-                            )
-                            hasDiviner
-                        |> Dom.appendChild
-                            (Dom.element "li"
-                                |> Dom.appendChild
-                                    (Tuple.second
-                                        (pieceToHtml
-                                            (PieceModel
-                                                gameMode
-                                                (getLabelForPiece (Piece (AI (Summons (NormalSummons nextSummonsId))) 0 0) == currentDraggable)
-                                                Nothing
-                                                (Piece (AI (Summons (NormalSummons nextSummonsId))) 0 0)
-                                            )
-                                        )
-                                    )
-                            )
-                        |> Dom.appendChild
-                            (Dom.element "li"
-                                |> Dom.appendChild
-                                    (Tuple.second
-                                        (overlayToHtml
-                                            (BoardOverlayModel
-                                                gameMode
-                                                (getLabelForOverlay (BoardOverlay (Treasure (Coin 1)) nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
-                                                Nothing
-                                                (BoardOverlay (Treasure (Coin 1)) nextOverlayId Default [ ( 0, 0 ) ])
-                                            )
-                                        )
-                                    )
-                            )
-                        |> Dom.appendChild
-                            (Dom.element "li"
-                                |> Dom.appendChild
-                                    (Tuple.second
-                                        (overlayToHtml
-                                            (BoardOverlayModel
-                                                gameMode
-                                                (getLabelForOverlay (BoardOverlay (Trap BearTrap) nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
-                                                Nothing
-                                                (BoardOverlay (Trap BearTrap) nextOverlayId Default [ ( 0, 0 ) ])
-                                            )
-                                        )
-                                    )
-                            )
-                        |> Dom.appendChild
-                            (Dom.element "li"
-                                |> Dom.appendChild
-                                    (Tuple.second
-                                        (overlayToHtml
-                                            (BoardOverlayModel
-                                                gameMode
-                                                (getLabelForOverlay (BoardOverlay (DifficultTerrain Water) nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
-                                                Nothing
-                                                (BoardOverlay (DifficultTerrain Water) nextOverlayId Default [ ( 0, 0 ) ])
-                                            )
-                                        )
-                                    )
-                            )
-                        |> Dom.appendChild
-                            (Dom.element "li"
-                                |> Dom.setChildListWithKeys
-                                    [ overlayToHtml
-                                        (BoardOverlayModel
-                                            gameMode
-                                            (getLabelForOverlay (BoardOverlay (Obstacle Boulder1) nextOverlayId Default [ ( 0, 0 ) ]) Nothing == currentDraggable)
-                                            Nothing
-                                            (BoardOverlay (Obstacle Boulder1) nextOverlayId Default [ ( 0, 0 ) ])
-                                        )
-                                    ]
-                            )
-                        |> Dom.appendChildList
-                            (deadPlayers
-                                |> List.map
-                                    (\p ->
-                                        Dom.element "li"
-                                            |> Dom.setChildListWithKeys
-                                                [ pieceToHtml
-                                                    (PieceModel
-                                                        gameMode
-                                                        (getLabelForPiece (Piece (Player p) 0 0) == currentDraggable)
-                                                        Nothing
-                                                        (Piece (Player p) 0 0)
-                                                    )
-                                                ]
-                                    )
-                            )
-                        |> Dom.appendChildList
-                            (Dict.toList availableMonsters
-                                |> List.filter (\( _, v ) -> length v > 0)
-                                |> List.map (\( k, _ ) -> k)
-                                |> List.sort
-                                |> List.reverse
-                                |> filterMap (\k -> stringToMonsterType k)
-                                |> List.map
-                                    (\k ->
-                                        (Dom.element "li"
-                                            |> Dom.setChildListWithKeys
-                                                [ pieceToHtml
-                                                    (PieceModel
-                                                        gameMode
-                                                        (getLabelForPiece (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0) == currentDraggable)
-                                                        Nothing
-                                                        (Piece (AI (Enemy (Monster k 0 Normal True))) 0 0)
-                                                    )
-                                                ]
-                                        )
-                                            :: (case k of
-                                                    NormalType _ ->
-                                                        [ Dom.element "li"
-                                                            |> Dom.setChildListWithKeys
-                                                                [ pieceToHtml
-                                                                    (PieceModel
-                                                                        gameMode
-                                                                        (getLabelForPiece (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0) == currentDraggable)
-                                                                        Nothing
-                                                                        (Piece (AI (Enemy (Monster k 0 Elite True))) 0 0)
-                                                                    )
-                                                                ]
-                                                        ]
-
-                                                    _ ->
-                                                        []
-                                               )
-                                    )
-                                |> List.foldl (++) []
-                            )
-                    )
-            )
-        |> Dom.render
 
 
 getMenuHtml : Bool -> Bool -> Int -> Maybe String -> Maybe String -> Bool -> Html.Html Msg
@@ -2159,140 +2073,6 @@ getCharacterChoiceInput name class enabled =
                         |> Dom.addActionStopPropagation ( "click", ToggleCharacter class (enabled == False) )
                     )
             )
-
-
-getNavHtml : GameModeType -> Html.Html Msg
-getNavHtml gameMode =
-    Dom.element "div"
-        |> Dom.addClass "sidebar-wrapper"
-        |> Dom.appendChild
-            (Dom.element "nav"
-                |> Dom.appendChild
-                    (Dom.element "ul"
-                        |> Dom.appendChildList
-                            [ Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "button")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.addAttribute
-                                    (attribute "aria-pressed"
-                                        (if gameMode == MovePiece then
-                                            "true"
-
-                                         else
-                                            "false"
-                                        )
-                                    )
-                                |> Dom.addAction ( "click", ChangeGameMode MovePiece )
-                                |> Dom.addClass "move-piece"
-                                |> tooltipHtml "moveAction" "Move Monsters or Players"
-                                |> Dom.addClassConditional "active" (gameMode == MovePiece)
-                                |> Dom.appendText "Move Piece"
-                            , Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "button")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.addAttribute
-                                    (attribute "aria-pressed"
-                                        (if gameMode == KillPiece then
-                                            "true"
-
-                                         else
-                                            "false"
-                                        )
-                                    )
-                                |> Dom.addAction ( "click", ChangeGameMode KillPiece )
-                                |> tooltipHtml "removeAction" "Remove Monsters or Players"
-                                |> Dom.addClass "kill-piece"
-                                |> Dom.addClassConditional "active" (gameMode == KillPiece)
-                                |> Dom.appendText "Kill Piece"
-                            , Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "button")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.addAttribute
-                                    (attribute "aria-pressed"
-                                        (if gameMode == LootCell then
-                                            "true"
-
-                                         else
-                                            "false"
-                                        )
-                                    )
-                                |> Dom.addAction ( "click", ChangeGameMode LootCell )
-                                |> tooltipHtml "lootAction" "Loot a tile"
-                                |> Dom.addClass "loot"
-                                |> Dom.addClassConditional "active" (gameMode == LootCell)
-                                |> Dom.appendText "Loot"
-                            , Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "button")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.addAttribute
-                                    (attribute "aria-pressed"
-                                        (if gameMode == MoveOverlay then
-                                            "true"
-
-                                         else
-                                            "false"
-                                        )
-                                    )
-                                |> Dom.addAction ( "click", ChangeGameMode MoveOverlay )
-                                |> tooltipHtml "moveObstacleAction" "Move Obstacles or Traps"
-                                |> Dom.addClass "move-overlay"
-                                |> Dom.addClassConditional "active" (gameMode == MoveOverlay)
-                                |> Dom.appendText "Move Overlay"
-                            , Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "button")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.addAttribute
-                                    (attribute "aria-pressed"
-                                        (if gameMode == DestroyOverlay then
-                                            "true"
-
-                                         else
-                                            "false"
-                                        )
-                                    )
-                                |> Dom.addAction ( "click", ChangeGameMode DestroyOverlay )
-                                |> tooltipHtml "removeObstacleAction" "Remove Obstacles or Traps"
-                                |> Dom.addClass "destroy-overlay"
-                                |> Dom.addClassConditional "active" (gameMode == DestroyOverlay)
-                                |> Dom.appendText "Destroy Overlay"
-                            , Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "button")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.addAttribute
-                                    (attribute "aria-pressed"
-                                        (if gameMode == RevealRoom then
-                                            "true"
-
-                                         else
-                                            "false"
-                                        )
-                                    )
-                                |> Dom.addAction ( "click", ChangeGameMode RevealRoom )
-                                |> tooltipHtml "openDoorAction" "Open a door"
-                                |> Dom.addClass "reveal-room"
-                                |> Dom.addClassConditional "active" (gameMode == RevealRoom)
-                                |> Dom.appendText "Reveal Room"
-                            , Dom.element "li"
-                                |> Dom.addAttribute (attribute "role" "button")
-                                |> Dom.addAttribute (tabindex 0)
-                                |> Dom.addAttribute
-                                    (attribute "aria-pressed"
-                                        (if gameMode == AddPiece then
-                                            "true"
-
-                                         else
-                                            "false"
-                                        )
-                                    )
-                                |> Dom.addAction ( "click", ChangeGameMode AddPiece )
-                                |> tooltipHtml "summonAction" "Summon a piece to the board"
-                                |> Dom.addClass "add-piece"
-                                |> Dom.addClassConditional "active" (gameMode == AddPiece)
-                                |> Dom.appendText "Add Piece"
-                            ]
-                    )
-            )
-        |> Dom.render
 
 
 getBoardHtml : Model -> Game -> String -> List ( Int, Int ) -> Int -> Array Cell -> Html.Html Msg

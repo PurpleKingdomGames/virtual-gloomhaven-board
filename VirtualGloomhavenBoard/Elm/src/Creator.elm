@@ -3,7 +3,7 @@ port module Creator exposing (main)
 import AppStorage exposing (ExtendedRoomData, MapData, MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, encodeMoveablePiece, loadMapFromStorage, saveMapToStorage)
 import Array
 import Bitwise
-import BoardHtml exposing (CellModel, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable, scenarioMonsterToHtml)
+import BoardHtml exposing (CellModel, ContextMenu, DragEvents, DropEvents, getAllMapTileHtml, getFooterHtml, getOverlayImageName, makeDraggable, scenarioMonsterToHtml)
 import BoardMapTile exposing (MapTileRef(..), getAllRefs, getGridByRef, refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), WallSubType(..), getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 import Browser
@@ -79,14 +79,6 @@ type SideMenu
     | MiscMenu
     | MonsterMenu
     | BossMenu
-
-
-type ContextMenu
-    = Open
-    | Closed
-    | TwoPlayerSubMenu
-    | ThreePlayerSubMenu
-    | FourPlayerSubMenu
 
 
 type Msg
