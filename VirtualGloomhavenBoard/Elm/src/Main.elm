@@ -2701,7 +2701,7 @@ overlayToHtml model =
                 Wall _ ->
                     "wall"
             )
-        |> Dom.addClass
+        |> Dom.addClassConditional
             (case model.overlay.direction of
                 Default ->
                     ""
@@ -2727,6 +2727,7 @@ overlayToHtml model =
                 DiagonalLeftReverse ->
                     "diagonal-left-reverse"
             )
+            (model.overlay.direction /= Default)
         |> Dom.addAttributeConditional
             (attribute "data-index"
                 (case model.overlay.ref of
