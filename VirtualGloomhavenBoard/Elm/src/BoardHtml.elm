@@ -1,4 +1,4 @@
-module BoardHtml exposing (CellModel, ContextMenu, DragEvents, DropEvents, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable, scenarioMonsterToHtml)
+module BoardHtml exposing (CellModel, ContextMenu(..), DragEvents, DropEvents, formatNameString, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable, scenarioMonsterToHtml)
 
 import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..))
 import Array exposing (fromList, toIndexedList)
@@ -27,6 +27,10 @@ type ContextMenu
     | TwoPlayerSubMenu
     | ThreePlayerSubMenu
     | FourPlayerSubMenu
+    | SpawnSubMenu
+    | SummonSubMenu
+    | AddObstacleSubMenu
+    | AddTrapSubMenu
 
 
 type alias CellModel msg =
@@ -1072,3 +1076,15 @@ getFooterHtml v =
                 ]
             ]
         ]
+
+
+formatNameString : String -> String
+formatNameString name =
+    name
+        |> String.split "-"
+        |> List.map
+            (\s ->
+                String.toUpper (String.slice 0 1 s)
+                    ++ String.slice 1 (String.length s) s
+            )
+        |> String.join " "

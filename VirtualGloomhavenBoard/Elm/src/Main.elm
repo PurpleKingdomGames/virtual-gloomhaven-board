@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import AppStorage exposing (AppModeType(..), CampaignTrackerUrl(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
-import BoardHtml exposing (ContextMenu, getMapTileHtml)
+import BoardHtml exposing (ContextMenu(..), formatNameString, getMapTileHtml)
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Browser
@@ -16,13 +16,14 @@ import File exposing (File)
 import File.Select as Select
 import Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, ensureOverlayIds, update)
-import Html exposing (a, div, footer, header, iframe, span, text)
+import Html exposing (Html, a, div, footer, header, iframe, li, nav, span, text, ul)
 import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, selected, src, style, tabindex, target, title, value)
 import Html.Events exposing (on, onClick, targetValue)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy5, lazy6, lazy8)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6, lazy7, lazy8)
+import HtmlEvents exposing (onClickPreventDefault)
 import Http
 import Json.Decode as Decode exposing (decodeString)
 import Json.Encode as Encode
@@ -133,12 +134,15 @@ type Msg
     | TouchEnd ( Float, Float )
     | CellFromPoint ( Int, Int, Bool )
     | GameStateUpdated Game.GameState
+    | AddOverlay BoardOverlay
+    | AddPiece Piece
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
     | ChangeGameMode GameModeType
     | ChangeAppMode AppModeType
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
     | ChangeScenario GameStateScenario Bool
+    | ChangeContextMenuState ContextMenu
     | ToggleCharacter CharacterClass Bool
     | ToggleBoardOnly Bool
     | ToggleFullscreen Bool
@@ -296,6 +300,9 @@ init ( oldState, maybeOverrides, seed ) =
                 []
                 True
                 Nothing
+                Closed
+                ( 0, 0 )
+                ( 0, 0 )
     in
     case initScenario of
         InbuiltScenario _ _ ->
@@ -532,6 +539,12 @@ update msg model =
             else
                 update (MoveTargetChanged ( x, y ) Nothing) model
 
+        AddOverlay overlay ->
+            ( model, Cmd.none )
+
+        AddPiece piece ->
+            ( model, Cmd.none )
+
         RemoveOverlay overlay ->
             let
                 game =
@@ -716,6 +729,9 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
+
+        ChangeContextMenuState menuState ->
+            ( { model | contextMenuState = menuState }, Cmd.none )
 
         ToggleCharacter character enabled ->
             let
@@ -1190,7 +1206,7 @@ view model =
                     )
                 ]
             , lazy getConnectionStatusHtml model.connectionStatus
-            , lazy6 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.cachedRoomCells model.map.overlays model.map.monsters
+            , lazy7 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.game.state.pieces model.game.state.overlays model.game.state.players model.game.state.availableMonsters
             ]
          , lazy getFooterHtml Version.get
          ]
@@ -1333,131 +1349,131 @@ getScenarioTitleHtml id titleTxt isSolo =
         )
 
 
-etContextMenu : ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> List ( MapTileRef, Dict ( Int, Int ) ( ( Int, Int ), Bool ) ) -> List BoardOverlay -> List ScenarioMonster -> Html Msg
-
-
-getContextMenu state ( x, y ) ( absX, absY ) rooms overlays monsters =
+getContextMenu : ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> List Piece -> List BoardOverlay -> List CharacterClass -> Dict String (Array Int) -> Html Msg
+getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMonsters =
     let
-        filteredOverlays =
-            List.filter (\o -> List.any (\c -> c == ( x, y )) o.cells) overlays
+        bearSummoned =
+            (List.member BeastTyrant players == False)
+                || List.any (\p -> p.ref == AI (Summons BearSummons)) pieces
 
-        filteredRoom =
-            List.filter
-                (\( _, cells ) ->
-                    case Dict.get ( x, y ) cells of
-                        Just ( _, p ) ->
-                            p
+        hasDiviner =
+            List.member Diviner players
 
-                        Nothing ->
-                            False
+        maxSummons =
+            filterMap
+                (\p ->
+                    case p.ref of
+                        AI (Summons (NormalSummons i)) ->
+                            Just i
+
+                        _ ->
+                            Nothing
                 )
-                rooms
-                |> List.map (\( r, _ ) -> r)
+                pieces
+                |> sort
+                |> reverse
+                |> head
 
-        monster =
-            List.filter (\m -> m.initialX == x && m.initialY == y) monsters
+        nextId =
+            case maxSummons of
+                Just i ->
+                    i + 1
+
+                Nothing ->
+                    1
+
+        nextOverlayId =
+            case
+                List.map (\o -> o.id) overlays
+                    |> List.maximum
+            of
+                Just i ->
+                    i + 1
+
+                Nothing ->
+                    1
+
+        piece =
+            List.filter (\p -> p.x == x && p.y == y) pieces
                 |> List.head
+
+        filteredOverlays =
+            List.filter
+                (\o ->
+                    case o.ref of
+                        StartingLocation ->
+                            False
+
+                        Door _ _ ->
+                            False
+
+                        _ ->
+                            True
+                )
+                overlays
+                |> List.filter (\o -> List.any (\c -> c == ( x, y )) o.cells)
 
         menuList =
             if state /= Closed then
-                (List.filter
-                    (\o ->
-                        case o.ref of
-                            StartingLocation ->
-                                False
+                (case piece of
+                    Just p ->
+                        let
+                            pieceName =
+                                (case p.ref of
+                                    Player character ->
+                                        Maybe.withDefault "" (characterToString character)
 
-                            _ ->
-                                True
-                    )
-                    filteredOverlays
-                    |> List.map
-                        (\o ->
-                            li
-                                [ class "rotate-overlay"
-                                , onClickPreventDefault (RotateOverlay o.id)
-                                ]
-                                [ text ("Rotate " ++ getOverlayLabel o.ref)
-                                ]
-                        )
-                )
-                    ++ (filteredRoom
-                            |> List.map
-                                (\room ->
-                                    let
-                                        refStr =
-                                            Maybe.withDefault "" (refToString room)
+                                    AI (Enemy monster) ->
+                                        Maybe.withDefault "" (monsterTypeToString monster.monster)
 
-                                        firstChar =
-                                            String.slice 0 1 refStr
-                                                |> String.toUpper
+                                    AI (Summons summons) ->
+                                        case summons of
+                                            NormalSummons i ->
+                                                "Summons " ++ String.fromInt i
 
-                                        restChars =
-                                            String.slice 1 (String.length refStr) refStr
-                                    in
-                                    li
-                                        [ class "rotate-map-tile"
-                                        , onClickPreventDefault (RotateRoom room)
-                                        ]
-                                        [ text ("Rotate " ++ firstChar ++ restChars)
-                                        ]
+                                            BearSummons ->
+                                                "Bear"
+
+                                    Game.None ->
+                                        ""
                                 )
-                       )
-                    ++ (case monster of
-                            Just m ->
-                                let
-                                    monsterName =
-                                        Maybe.withDefault "" (monsterTypeToString m.monster.monster)
-                                            |> String.split "-"
-                                            |> List.map
-                                                (\s ->
-                                                    String.toUpper (String.slice 0 1 s)
-                                                        ++ String.slice 1 (String.length s) s
-                                                )
-                                            |> String.join " "
-                                in
-                                [ li
-                                    [ class "remove-monster"
-                                    , onClickPreventDefault (RemoveMonster m.monster.id)
-                                    ]
-                                    [ text ("Remove " ++ monsterName)
-                                    ]
-                                ]
+                                    |> formatNameString
+                        in
+                        [ li
+                            [ class "remove-piece"
+                            , onClickPreventDefault (RemovePiece p)
+                            ]
+                            [ text ("Remove " ++ pieceName)
+                            ]
+                        ]
 
-                            Nothing ->
-                                []
-                       )
+                    Nothing ->
+                        [ li
+                            [ class "summon-piece"
+                            , onClickPreventDefault (ChangeContextMenuState SummonSubMenu)
+                            ]
+                            [ text "Summon"
+                            , lazy4 getSummonMenuHtml ( x, y ) (bearSummoned == False) nextId availableMonsters
+                            ]
+                        , li
+                            [ class "spawn-piece"
+                            , onClickPreventDefault (ChangeContextMenuState SummonSubMenu)
+                            ]
+                            [ text "Spawn"
+                            , lazy2 getSpawnMenuHtml ( x, y ) availableMonsters
+                            ]
+                        ]
+                )
                     ++ List.map
                         (\o ->
                             li
                                 [ class "remove-overlay"
-                                , onClickPreventDefault (RemoveOverlay o.id)
+                                , onClickPreventDefault (RemoveOverlay o)
                                 ]
                                 [ text ("Remove " ++ getOverlayLabel o.ref)
                                 ]
                         )
                         filteredOverlays
-                    ++ (filteredRoom
-                            |> List.map
-                                (\room ->
-                                    let
-                                        refStr =
-                                            Maybe.withDefault "" (refToString room)
-
-                                        firstChar =
-                                            String.slice 0 1 refStr
-                                                |> String.toUpper
-
-                                        restChars =
-                                            String.slice 1 (String.length refStr) refStr
-                                    in
-                                    li
-                                        [ class "remove-map-tile"
-                                        , onClickPreventDefault (RemoveRoom room)
-                                        ]
-                                        [ text ("Remove " ++ firstChar ++ restChars)
-                                        ]
-                                )
-                       )
 
             else
                 []
@@ -2657,6 +2673,71 @@ addActionsForCell currentMode coords overlays element =
 
         _ ->
             element
+
+
+getSummonMenuHtml : ( Int, Int ) -> Bool -> Int -> Dict String (Array Int) -> Html Msg
+getSummonMenuHtml ( x, y ) canSummonBear nextSummonId availableMonsters =
+    Dom.element "ul"
+        |> Dom.appendChildConditional
+            (Dom.element "li"
+                |> Dom.appendText "Bear"
+                |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons BearSummons)) x y) )
+            )
+            canSummonBear
+        |> Dom.appendChild
+            (Dom.element "li"
+                |> Dom.appendText "Summons"
+                |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons (NormalSummons nextSummonId))) x y) )
+            )
+        |> Dom.appendChildList
+            (getAvailableMonsterContextList ( x, y ) availableMonsters True)
+        |> Dom.render
+
+
+getSpawnMenuHtml : ( Int, Int ) -> Dict String (Array Int) -> Html Msg
+getSpawnMenuHtml coords availableMonsters =
+    Dom.element "ul"
+        |> Dom.appendChildList
+            (getAvailableMonsterContextList coords availableMonsters False)
+        |> Dom.render
+
+
+getAvailableMonsterContextList : ( Int, Int ) -> Dict String (Array Int) -> Bool -> List (Element Msg)
+getAvailableMonsterContextList coords availableMonsters isSummons =
+    Dict.toList availableMonsters
+        |> List.filter (\( _, v ) -> length v > 0)
+        |> List.map (\( k, _ ) -> k)
+        |> List.sort
+        |> List.reverse
+        |> filterMap
+            (\k ->
+                stringToMonsterType k
+                    |> Maybe.map (\monsterType -> ( formatNameString k, monsterType ))
+            )
+        |> List.map
+            (\( monsterName, monsterType ) ->
+                getMonsterLiForType coords monsterName monsterType Normal isSummons
+                    :: (case monsterType of
+                            NormalType _ ->
+                                [ getMonsterLiForType coords monsterName monsterType Elite isSummons
+                                ]
+
+                            BossType _ ->
+                                []
+                       )
+            )
+        |> List.foldl (++) []
+
+
+getMonsterLiForType : ( Int, Int ) -> String -> MonsterType -> MonsterLevel -> Bool -> Element Msg
+getMonsterLiForType ( x, y ) name monsterType monsterLevel isSummons =
+    let
+        piece =
+            Piece (AI (Enemy (Monster monsterType 0 monsterLevel isSummons))) x y
+    in
+    Dom.element "li"
+        |> Dom.appendText name
+        |> onClickPreventDefault ( "click", AddPiece piece )
 
 
 getCharacterListSettings : Model -> List CharacterClass
