@@ -17,7 +17,7 @@
         .configureLogging(signalR.LogLevel.Information)
         .withAutomaticReconnect([0, 3000, 5000, 10000, 15000, 30000])
         .build()
-        ;
+    ;
 
     let lastGameState = null;
     let roomCode = null;
@@ -44,7 +44,7 @@
             conn
                 .invoke("SendGameState", roomCode, lastGameState)
                 .catch(err => console.error(err))
-                ;
+            ;
     });
 
     app.ports.saveData.subscribe((data) => {
@@ -69,7 +69,7 @@
             conn
                 .invoke("CreateRoom", seed)
                 .catch(err => console.error(err))
-                ;
+            ;
     });
 
     app.ports.joinRoom.subscribe((args) => {
@@ -116,6 +116,42 @@
             parseInt(elem.dataset.cellY),
             args[2]
         ])
+    });
+
+    app.ports.getContextPosition.subscribe((args) => {
+        let elem = document
+            .querySelector("[data-cell-x='" + args[0] + "'][data-cell-y='" + args[1] + "']")
+        ;
+
+        let contextMenus = document.getElementsByClassName('context-menu');
+
+        if (elem == null || contextMenus == null || contextMenus.length == 0 || elem.className.substring(0, 7) != 'hexagon')
+            return;
+
+        let contextMenu = contextMenus[0];
+        let compare = elem;
+        let offsetX = elem.offsetLeft;
+        let offsetY = elem.offsetTop;
+        do {
+            compare = compare.offsetParent;
+
+            offsetX += compare.offsetLeft;
+            offsetY += compare.offsetTop;
+        } while (!compare.offsetParent.classList.contains('board-wrapper'))
+
+        offsetY += 25;
+        offsetX += parseInt(contextMenu.clientWidth / 4);
+
+        // compare is now the row
+        let wrapper = compare.offsetParent;
+
+        if (offsetX + contextMenu.clientWidth > wrapper.scrollWidth)
+            offsetX -= parseInt((contextMenu.clientWidth / 2) + parseInt(contextMenu.clientWidth / 4))
+
+        if (offsetY + contextMenu.clientHeight > wrapper.scrollHeight)
+            offsetY -= contextMenu.clientHeight
+
+        app.ports.onContextPosition.send([offsetX, offsetY]);
     });
 
     var scrollCheck = null;

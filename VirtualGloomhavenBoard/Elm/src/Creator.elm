@@ -96,7 +96,7 @@ type Msg
     | OpenContextMenu ( Int, Int )
     | ChangeContextMenuState ContextMenu
     | ChangeMonsterState Int Int MonsterLevel
-    | ChangeContextMenuAbsosition ( Int, Int )
+    | ChangeContextMenuAbsposition ( Int, Int )
     | RemoveMonster Int
     | RotateOverlay Int
     | RemoveOverlay Int
@@ -368,7 +368,7 @@ update msg model =
         ChangeContextMenuState state ->
             ( { model | contextMenuState = state }, Cmd.none )
 
-        ChangeContextMenuAbsosition pos ->
+        ChangeContextMenuAbsposition pos ->
             ( { model | contextMenuAbsPosition = pos }, Cmd.none )
 
         ChangeMonsterState id playerSize level ->
@@ -1275,7 +1275,7 @@ getBoardRowHtml model encodedDraggable cellsForDraggable y row =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ onContextPosition ChangeContextMenuAbsosition
+        [ onContextPosition ChangeContextMenuAbsposition
         , onCellFromPoint CellFromPoint
         , onConfirmCreateNew CreateNew
         ]

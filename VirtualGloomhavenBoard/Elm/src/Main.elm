@@ -48,6 +48,12 @@ port getCellFromPoint : ( Float, Float, Bool ) -> Cmd msg
 port onCellFromPoint : (( Int, Int, Bool ) -> msg) -> Sub msg
 
 
+port getContextPosition : ( Int, Int ) -> Cmd msg
+
+
+port onContextPosition : (( Int, Int ) -> msg) -> Sub msg
+
+
 port scrollToFirtVisibleCell : () -> Cmd msg
 
 
@@ -142,7 +148,9 @@ type Msg
     | ChangeAppMode AppModeType
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
     | ChangeScenario GameStateScenario Bool
+    | OpenContextMenu ( Int, Int )
     | ChangeContextMenuState ContextMenu
+    | ChangeContextMenuAbsposition ( Int, Int )
     | ToggleCharacter CharacterClass Bool
     | ToggleBoardOnly Bool
     | ToggleFullscreen Bool
@@ -543,7 +551,34 @@ update msg model =
             ( model, Cmd.none )
 
         AddPiece piece ->
-            ( model, Cmd.none )
+            let
+                oldGame =
+                    model.game
+
+                game =
+                    case piece.ref of
+                        AI (Enemy monster) ->
+                            (if monster.id == 0 then
+                                assignIdentifier oldGame.state.availableMonsters piece
+
+                             else
+                                ( piece, oldGame.state.availableMonsters )
+                            )
+                                |> (\( p2, d ) ->
+                                        let
+                                            newGame =
+                                                Tuple.first (movePiece p2 Nothing ( piece.x, piece.y ) oldGame)
+
+                                            newState =
+                                                newGame.state
+                                        in
+                                        { newGame | state = { newState | availableMonsters = d } }
+                                   )
+
+                        _ ->
+                            Tuple.first (movePiece piece Nothing ( piece.x, piece.y ) oldGame)
+            in
+            ( { model | game = game, deadPlayerList = getDeadPlayers game.state, currentDraggable = Nothing }, pushGameState model game.state True )
 
         RemoveOverlay overlay ->
             let
@@ -732,6 +767,12 @@ update msg model =
 
         ChangeContextMenuState menuState ->
             ( { model | contextMenuState = menuState }, Cmd.none )
+
+        OpenContextMenu pos ->
+            ( { model | contextMenuState = Open, contextMenuPosition = pos }, getContextPosition pos )
+
+        ChangeContextMenuAbsposition pos ->
+            ( { model | contextMenuAbsPosition = pos }, Cmd.none )
 
         ToggleCharacter character enabled ->
             let
@@ -1256,6 +1297,7 @@ subscriptions _ =
         , onPaste Paste
         , onVisibilityChange VisibilityChanged
         , onCellFromPoint CellFromPoint
+        , onContextPosition ChangeContextMenuAbsposition
         ]
 
 
@@ -1396,6 +1438,19 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
         piece =
             List.filter (\p -> p.x == x && p.y == y) pieces
                 |> List.head
+
+        rooms =
+            List.filter (\o -> List.any (\c -> c == ( x, y )) o.cells) overlays
+                |> List.filterMap
+                    (\o ->
+                        case o.ref of
+                            Door _ refs ->
+                                Just refs
+
+                            _ ->
+                                Nothing
+                    )
+                |> List.foldl (++) []
 
         filteredOverlays =
             List.filter
@@ -2297,6 +2352,7 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                 else
                     e
            )
+        |> Dom.addActionStopAndPrevent ( "click", OpenContextMenu ( x, y ) )
         |> Dom.render
 
 
@@ -2384,7 +2440,7 @@ pieceToHtml model =
                 Game.None ->
                     Dom.addClass "none"
            )
-        |> (if (model.gameMode == MovePiece && model.coords /= Nothing) || (model.gameMode == AddPiece && model.coords == Nothing) then
+        |> (if model.gameMode == MovePiece && model.coords /= Nothing then
                 makeDraggable (PieceType model.piece) model.coords
 
             else
@@ -2569,17 +2625,13 @@ overlayToHtml model =
                 _ ->
                     \e -> e
            )
-        |> (if (model.gameMode == MoveOverlay && model.coords /= Nothing) || (model.gameMode == AddPiece && model.coords == Nothing) then
+        |> (if model.gameMode == MoveOverlay && model.coords /= Nothing then
                 case model.overlay.ref of
                     Door _ _ ->
                         Dom.addAttribute (attribute "draggable" "false")
 
                     Treasure (Coin _) ->
-                        if model.gameMode == AddPiece && model.coords == Nothing then
-                            makeDraggable (OverlayType model.overlay Nothing) model.coords
-
-                        else
-                            Dom.addAttribute (attribute "draggable" "false")
+                        Dom.addAttribute (attribute "draggable" "false")
 
                     _ ->
                         makeDraggable (OverlayType model.overlay Nothing) model.coords
@@ -2719,7 +2771,7 @@ getAvailableMonsterContextList coords availableMonsters isSummons =
                 getMonsterLiForType coords monsterName monsterType Normal isSummons
                     :: (case monsterType of
                             NormalType _ ->
-                                [ getMonsterLiForType coords monsterName monsterType Elite isSummons
+                                [ getMonsterLiForType coords ("Elite " ++ monsterName) monsterType Elite isSummons
                                 ]
 
                             BossType _ ->
@@ -2737,7 +2789,7 @@ getMonsterLiForType ( x, y ) name monsterType monsterLevel isSummons =
     in
     Dom.element "li"
         |> Dom.appendText name
-        |> onClickPreventDefault ( "click", AddPiece piece )
+        |> Dom.addActionStopAndPrevent ( "click", AddPiece piece )
 
 
 getCharacterListSettings : Model -> List CharacterClass
