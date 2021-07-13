@@ -17,7 +17,7 @@
         .configureLogging(signalR.LogLevel.Information)
         .withAutomaticReconnect([0, 3000, 5000, 10000, 15000, 30000])
         .build()
-    ;
+        ;
 
     let lastGameState = null;
     let roomCode = null;
@@ -44,7 +44,7 @@
             conn
                 .invoke("SendGameState", roomCode, lastGameState)
                 .catch(err => console.error(err))
-            ;
+                ;
     });
 
     app.ports.saveData.subscribe((data) => {
@@ -69,7 +69,7 @@
             conn
                 .invoke("CreateRoom", seed)
                 .catch(err => console.error(err))
-            ;
+                ;
     });
 
     app.ports.joinRoom.subscribe((args) => {
@@ -121,7 +121,7 @@
     app.ports.getContextPosition.subscribe((args) => {
         let elem = document
             .querySelector("[data-cell-x='" + args[0] + "'][data-cell-y='" + args[1] + "']")
-        ;
+            ;
 
         let contextMenus = document.getElementsByClassName('context-menu');
 
@@ -144,6 +144,9 @@
 
         // compare is now the row
         let wrapper = compare.offsetParent;
+
+        offsetX -= wrapper.scrollLeft;
+        offsetY -= wrapper.scrollTop;
 
         if (offsetX + contextMenu.clientWidth > wrapper.scrollWidth)
             offsetX -= parseInt((contextMenu.clientWidth / 2) + parseInt(contextMenu.clientWidth / 4))

@@ -60,6 +60,9 @@
         // compare is now the row
         let wrapper = compare.offsetParent;
 
+        offsetX -= wrapper.scrollLeft;
+        offsetY -= wrapper.scrollTop;
+
         if (offsetX + contextMenu.clientWidth > wrapper.scrollWidth)
             offsetX -= parseInt((contextMenu.clientWidth / 2) + parseInt(contextMenu.clientWidth / 4))
 
