@@ -1774,7 +1774,7 @@ getContextMenu state ( x, y ) ( absX, absY ) rooms overlays monsters =
                 (if isOpen then
                     menuList
                         ++ [ li
-                                [ class "cancel-menu"
+                                [ class "cancel-menu cancel"
                                 , onClickPreventDefault (ChangeContextMenuState Closed)
                                 ]
                                 [ text "Cancel"
@@ -1814,7 +1814,7 @@ mapPieceToScenarioMonster newPiece monsterList origin ( targetX, targetY ) piece
 getMonsterLevelHtml : ContextMenu -> Bool -> MonsterLevel -> Int -> Int -> Html Msg
 getMonsterLevelHtml stateChange active selectedLevel playerSize id =
     li
-        [ class "edit-monster"
+        [ class "edit-monster has-sub-menu"
         , class
             (if active then
                 "active"
@@ -1863,7 +1863,7 @@ getMonsterLevelHtml stateChange active selectedLevel playerSize id =
                 ]
                 [ text "Elite" ]
             , li
-                [ class "monster-cancel"
+                [ class "cancel"
                 , onClickPreventDefault (ChangeContextMenuState Open)
                 ]
                 [ text "Cancel" ]

@@ -31,7 +31,7 @@
                     background-color: rgba(0, 0, 0, 0.2)
                 }
 
-                &.edit-monster {
+                &.has-sub-menu {
                     &:after {
                         content: '\25BA';
                         font-size: 0.6rem;
@@ -79,7 +79,7 @@
                     }
                 }
 
-                &.cancel-menu, .monster-cancel {
+                &.cancel {
                     display: none;
                 }
 

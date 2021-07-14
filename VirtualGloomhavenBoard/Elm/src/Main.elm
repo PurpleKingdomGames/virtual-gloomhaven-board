@@ -16,6 +16,7 @@ import File exposing (File)
 import File.Select as Select
 import Game exposing (AIType(..), Cell, Expansion(..), Game, GameState, GameStateScenario(..), Piece, PieceType(..), SummonsType(..), assignIdentifier, assignPlayers, generateGameMap, getPieceName, getPieceType, moveOverlay, movePiece, removePieceFromBoard, revealRooms)
 import GameSync exposing (Msg(..), connectToServer, ensureOverlayIds, update)
+import Hexagon exposing (rotate)
 import Html exposing (Html, a, div, footer, header, iframe, li, nav, span, text, ul)
 import Html.Attributes exposing (alt, attribute, checked, class, href, id, maxlength, minlength, required, selected, src, style, tabindex, target, title, value)
 import Html.Events exposing (on, onClick, targetValue)
@@ -142,6 +143,7 @@ type Msg
     | GameStateUpdated Game.GameState
     | AddOverlay BoardOverlay
     | AddPiece Piece
+    | RotateOverlay Int
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
     | ChangeGameMode GameModeType
@@ -579,6 +581,76 @@ update msg model =
                             Tuple.first (movePiece piece Nothing ( piece.x, piece.y ) oldGame)
             in
             ( { model | game = game, deadPlayerList = getDeadPlayers game.state, currentDraggable = Nothing }, pushGameState model game.state True )
+
+        RotateOverlay id ->
+            let
+                o1 =
+                    List.filter (\o -> o.id == id) model.game.state.overlays
+                        |> List.head
+            in
+            case o1 of
+                Just overlay ->
+                    let
+                        refPoint =
+                            Maybe.withDefault ( 0, 0 ) (List.head overlay.cells)
+
+                        cells =
+                            List.map (\c -> rotate c refPoint 1) overlay.cells
+
+                        direction =
+                            case overlay.direction of
+                                Default ->
+                                    DiagonalLeft
+
+                                DiagonalLeft ->
+                                    if List.length cells == 1 then
+                                        Vertical
+
+                                    else
+                                        DiagonalRight
+
+                                Vertical ->
+                                    DiagonalRight
+
+                                DiagonalRight ->
+                                    Horizontal
+
+                                Horizontal ->
+                                    DiagonalLeftReverse
+
+                                DiagonalLeftReverse ->
+                                    if List.length cells == 1 then
+                                        VerticalReverse
+
+                                    else
+                                        DiagonalRightReverse
+
+                                VerticalReverse ->
+                                    DiagonalRightReverse
+
+                                DiagonalRightReverse ->
+                                    Default
+
+                        newOverlay =
+                            { overlay | cells = cells, direction = direction }
+
+                        overlayList =
+                            newOverlay
+                                :: List.filter (\o2 -> o2.id /= id) model.game.state.overlays
+
+                        game =
+                            model.game
+
+                        state =
+                            model.game.state
+
+                        newState =
+                            { state | overlays = overlayList }
+                    in
+                    ( { model | game = { game | state = newState } }, pushGameState model newState True )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         RemoveOverlay overlay ->
             let
@@ -1470,55 +1542,77 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
 
         menuList =
             if state /= Closed then
-                (case piece of
-                    Just p ->
-                        let
-                            pieceName =
-                                (case p.ref of
-                                    Player character ->
-                                        Maybe.withDefault "" (characterToString character)
-
-                                    AI (Enemy monster) ->
-                                        Maybe.withDefault "" (monsterTypeToString monster.monster)
-
-                                    AI (Summons summons) ->
-                                        case summons of
-                                            NormalSummons i ->
-                                                "Summons " ++ String.fromInt i
-
-                                            BearSummons ->
-                                                "Bear"
-
-                                    Game.None ->
-                                        ""
-                                )
-                                    |> formatNameString
-                        in
-                        [ li
-                            [ class "remove-piece"
-                            , onClickPreventDefault (RemovePiece p)
-                            ]
-                            [ text ("Remove " ++ pieceName)
-                            ]
+                (if List.length rooms > 0 then
+                    [ li
+                        [ class "open-door"
+                        , onClickPreventDefault (RevealRoomMsg rooms ( x, y ))
                         ]
-
-                    Nothing ->
-                        [ li
-                            [ class "summon-piece"
-                            , onClickPreventDefault (ChangeContextMenuState SummonSubMenu)
-                            ]
-                            [ text "Summon"
-                            , lazy4 getSummonMenuHtml ( x, y ) (bearSummoned == False) nextId availableMonsters
-                            ]
-                        , li
-                            [ class "spawn-piece"
-                            , onClickPreventDefault (ChangeContextMenuState SummonSubMenu)
-                            ]
-                            [ text "Spawn"
-                            , lazy2 getSpawnMenuHtml ( x, y ) availableMonsters
-                            ]
+                        [ text "Open Door"
                         ]
+                    ]
+
+                 else
+                    []
                 )
+                    ++ (case piece of
+                            Just p ->
+                                let
+                                    pieceName =
+                                        (case p.ref of
+                                            Player character ->
+                                                Maybe.withDefault "" (characterToString character)
+
+                                            AI (Enemy monster) ->
+                                                Maybe.withDefault "" (monsterTypeToString monster.monster)
+
+                                            AI (Summons summons) ->
+                                                case summons of
+                                                    NormalSummons i ->
+                                                        "Summons " ++ String.fromInt i
+
+                                                    BearSummons ->
+                                                        "Bear"
+
+                                            Game.None ->
+                                                ""
+                                        )
+                                            |> formatNameString
+                                in
+                                [ li
+                                    [ class "remove-piece"
+                                    , onClickPreventDefault (RemovePiece p)
+                                    ]
+                                    [ text ("Remove " ++ pieceName)
+                                    ]
+                                ]
+
+                            Nothing ->
+                                [ li
+                                    [ class "summon-piece has-sub-menu"
+                                    , onClickPreventDefault (ChangeContextMenuState SummonSubMenu)
+                                    ]
+                                    [ text "Summon"
+                                    , lazy4 getSummonMenuHtml ( x, y ) (bearSummoned == False) nextId availableMonsters
+                                    ]
+                                , li
+                                    [ class "spawn-piece has-sub-menu"
+                                    , onClickPreventDefault (ChangeContextMenuState SummonSubMenu)
+                                    ]
+                                    [ text "Spawn"
+                                    , lazy2 getSpawnMenuHtml ( x, y ) availableMonsters
+                                    ]
+                                ]
+                       )
+                    ++ List.map
+                        (\o ->
+                            li
+                                [ class "rotate-overlay"
+                                , onClickPreventDefault (RotateOverlay o.id)
+                                ]
+                                [ text ("Rotate " ++ getOverlayLabel o.ref)
+                                ]
+                        )
+                        filteredOverlays
                     ++ List.map
                         (\o ->
                             li
@@ -1553,7 +1647,7 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
                 (if isOpen then
                     menuList
                         ++ [ li
-                                [ class "cancel-menu"
+                                [ class "cancel-menu cancel"
                                 , onClickPreventDefault (ChangeContextMenuState Closed)
                                 ]
                                 [ text "Cancel"
@@ -2743,6 +2837,12 @@ getSummonMenuHtml ( x, y ) canSummonBear nextSummonId availableMonsters =
             )
         |> Dom.appendChildList
             (getAvailableMonsterContextList ( x, y ) availableMonsters True)
+        |> Dom.appendChild
+            (Dom.element "li"
+                |> Dom.addClass "cancel"
+                |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
+                |> Dom.appendText "Cancel"
+            )
         |> Dom.render
 
 
@@ -2751,6 +2851,12 @@ getSpawnMenuHtml coords availableMonsters =
     Dom.element "ul"
         |> Dom.appendChildList
             (getAvailableMonsterContextList coords availableMonsters False)
+        |> Dom.appendChild
+            (Dom.element "li"
+                |> Dom.addClass "cancel"
+                |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
+                |> Dom.appendText "Cancel"
+            )
         |> Dom.render
 
 
