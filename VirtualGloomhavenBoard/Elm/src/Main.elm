@@ -4,7 +4,7 @@ import AppStorage exposing (AppModeType(..), CampaignTrackerUrl(..), Config, Gam
 import Array exposing (Array, fromList, length, toIndexedList, toList)
 import BoardHtml exposing (ContextMenu(..), formatNameString, getMapTileHtml)
 import BoardMapTile exposing (MapTileRef(..))
-import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
+import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Browser
 import Browser.Dom as BrowserDom
 import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
@@ -550,7 +550,67 @@ update msg model =
                 update (MoveTargetChanged ( x, y ) Nothing) model
 
         AddOverlay overlay ->
-            ( model, Cmd.none )
+            if List.any (\b -> b.id == overlay.id) model.game.state.overlays then
+                ( model, Cmd.none )
+
+            else
+                let
+                    oldState =
+                        model.game.state
+
+                    newOverlays =
+                        case overlay.ref of
+                            Treasure (Coin i) ->
+                                let
+                                    newCoin =
+                                        List.filter
+                                            (\c ->
+                                                case c.ref of
+                                                    Treasure (Coin _) ->
+                                                        True
+
+                                                    _ ->
+                                                        False
+                                            )
+                                            oldState.overlays
+                                            |> List.map
+                                                (\c ->
+                                                    case c.ref of
+                                                        Treasure (Coin i2) ->
+                                                            { c | ref = Treasure (Coin (i2 + i)) }
+
+                                                        _ ->
+                                                            c
+                                                )
+                                            |> List.head
+                                            |> Maybe.withDefault
+                                                { overlay | ref = Treasure (Coin i) }
+                                in
+                                newCoin
+                                    :: List.filter
+                                        (\c ->
+                                            case c.ref of
+                                                Treasure (Coin _) ->
+                                                    False
+
+                                                _ ->
+                                                    True
+                                        )
+                                        oldState.overlays
+
+                            _ ->
+                                overlay :: oldState.overlays
+
+                    newState =
+                        { oldState | overlays = newOverlays }
+
+                    oldGame =
+                        model.game
+
+                    newGame =
+                        { oldGame | state = newState }
+                in
+                ( { model | game = newGame }, pushGameState model newState True )
 
         AddPiece piece ->
             let
@@ -1540,6 +1600,54 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
                 overlays
                 |> List.filter (\o -> List.any (\c -> c == ( x, y )) o.cells)
 
+        hasObstacle =
+            List.any
+                (\o ->
+                    case o.ref of
+                        Obstacle _ ->
+                            True
+
+                        _ ->
+                            False
+                )
+                filteredOverlays
+
+        hasDifficultTerrain =
+            List.any
+                (\o ->
+                    case o.ref of
+                        DifficultTerrain _ ->
+                            True
+
+                        _ ->
+                            False
+                )
+                filteredOverlays
+
+        hasTrap =
+            List.any
+                (\o ->
+                    case o.ref of
+                        Trap _ ->
+                            True
+
+                        _ ->
+                            False
+                )
+                filteredOverlays
+
+        hasHazard =
+            List.any
+                (\o ->
+                    case o.ref of
+                        Hazard _ ->
+                            True
+
+                        _ ->
+                            False
+                )
+                filteredOverlays
+
         menuList =
             if state /= Closed then
                 (if List.length rooms > 0 then
@@ -1554,7 +1662,24 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
                  else
                     []
                 )
-                    ++ (case piece of
+                    ++ List.map
+                        (\o ->
+                            li
+                                [ class "rotate-overlay"
+                                , onClickPreventDefault (RotateOverlay o.id)
+                                ]
+                                [ text ("Rotate " ++ getOverlayLabel o.ref)
+                                ]
+                        )
+                        filteredOverlays
+                    ++ li
+                        [ class "place-overlay has-sub-menu"
+                        , onClickPreventDefault (ChangeContextMenuState PlaceOverlayMenu)
+                        ]
+                        [ text "Place Piece"
+                        , lazy7 getPlacePieceMenuHtml ( x, y ) hasDiviner hasObstacle hasTrap hasDifficultTerrain hasHazard nextOverlayId
+                        ]
+                    :: (case piece of
                             Just p ->
                                 let
                                     pieceName =
@@ -1596,23 +1721,13 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
                                     ]
                                 , li
                                     [ class "spawn-piece has-sub-menu"
-                                    , onClickPreventDefault (ChangeContextMenuState SummonSubMenu)
+                                    , onClickPreventDefault (ChangeContextMenuState SpawnSubMenu)
                                     ]
                                     [ text "Spawn"
                                     , lazy2 getSpawnMenuHtml ( x, y ) availableMonsters
                                     ]
                                 ]
                        )
-                    ++ List.map
-                        (\o ->
-                            li
-                                [ class "rotate-overlay"
-                                , onClickPreventDefault (RotateOverlay o.id)
-                                ]
-                                [ text ("Rotate " ++ getOverlayLabel o.ref)
-                                ]
-                        )
-                        filteredOverlays
                     ++ List.map
                         (\o ->
                             li
@@ -2819,6 +2934,59 @@ addActionsForCell currentMode coords overlays element =
 
         _ ->
             element
+
+
+getPlacePieceMenuHtml : ( Int, Int ) -> Bool -> Bool -> Bool -> Bool -> Bool -> Int -> Html Msg
+getPlacePieceMenuHtml ( x, y ) hasDiviner hasObstacle hasTrap hasDifficultTerrain hasHazard nextOverlayId =
+    let
+        overlayList =
+            ([ Treasure (Coin 1) ]
+                ++ (if hasDiviner then
+                        [ Rift ]
+
+                    else
+                        []
+                   )
+                ++ (if hasObstacle == False then
+                        [ Obstacle Barrel, Obstacle Boulder1, Obstacle Crate ]
+
+                    else
+                        []
+                   )
+                ++ (if hasTrap == False then
+                        [ Trap BearTrap, Trap Poison, Trap Spike ]
+
+                    else
+                        []
+                   )
+                ++ (if hasDifficultTerrain == False then
+                        [ DifficultTerrain Water ]
+
+                    else
+                        []
+                   )
+                ++ (if hasHazard == False then
+                        [ Hazard HotCoals, Hazard Thorns ]
+
+                    else
+                        []
+                   )
+            )
+                |> List.map (\o -> BoardOverlay o nextOverlayId Default [ ( x, y ) ])
+                |> List.map (\o -> ( getOverlayLabel o.ref, o ))
+                |> List.sortBy (\( label, _ ) -> label)
+    in
+    Dom.element "ul"
+        |> Dom.appendChildList
+            (List.map
+                (\( label, o ) ->
+                    Dom.element "li"
+                        |> Dom.appendText label
+                        |> Dom.addActionStopAndPrevent ( "click", AddOverlay o )
+                )
+                overlayList
+            )
+        |> Dom.render
 
 
 getSummonMenuHtml : ( Int, Int ) -> Bool -> Int -> Dict String (Array Int) -> Html Msg

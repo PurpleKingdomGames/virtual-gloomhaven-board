@@ -29,6 +29,7 @@ type ContextMenu
     | FourPlayerSubMenu
     | SpawnSubMenu
     | SummonSubMenu
+    | PlaceOverlayMenu
     | AddObstacleSubMenu
     | AddTrapSubMenu
 
