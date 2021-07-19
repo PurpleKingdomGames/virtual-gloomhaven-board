@@ -567,7 +567,11 @@ update msg model =
                                             (\c ->
                                                 case c.ref of
                                                     Treasure (Coin _) ->
-                                                        True
+                                                        if c.cells == overlay.cells then
+                                                            True
+
+                                                        else
+                                                            False
 
                                                     _ ->
                                                         False
@@ -591,7 +595,11 @@ update msg model =
                                         (\c ->
                                             case c.ref of
                                                 Treasure (Coin _) ->
-                                                    False
+                                                    if c.cells == overlay.cells then
+                                                        False
+
+                                                    else
+                                                        True
 
                                                 _ ->
                                                     True
@@ -1313,6 +1321,7 @@ view model =
             )
         , id "content"
         , Touch.onCancel (\_ -> TouchCanceled)
+        , onClick (ChangeContextMenuState Closed)
         ]
         ([ getHeaderHtml model
          , div [ class "main" ]
