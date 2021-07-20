@@ -158,7 +158,6 @@ type Msg
     | ToggleFullscreen Bool
     | ToggleEnvelopeX Bool
     | ToggleMenu
-    | ToggleSideMenu
     | ChangePlayerList
     | EnterScenarioType GameStateScenario
     | EnterScenarioNumber String
@@ -618,7 +617,7 @@ update msg model =
                     newGame =
                         { oldGame | state = newState }
                 in
-                ( { model | game = newGame }, pushGameState model newState True )
+                ( { model | game = newGame, contextMenuState = Closed }, pushGameState model newState True )
 
         AddPiece piece ->
             let
@@ -648,7 +647,7 @@ update msg model =
                         _ ->
                             Tuple.first (movePiece piece Nothing ( piece.x, piece.y ) oldGame)
             in
-            ( { model | game = game, deadPlayerList = getDeadPlayers game.state, currentDraggable = Nothing }, pushGameState model game.state True )
+            ( { model | game = game, deadPlayerList = getDeadPlayers game.state, contextMenuState = Closed, currentDraggable = Nothing }, pushGameState model game.state True )
 
         RotateOverlay id ->
             let
@@ -963,9 +962,6 @@ update msg model =
 
         ToggleMenu ->
             ( { model | menuOpen = model.menuOpen == False }, Cmd.none )
-
-        ToggleSideMenu ->
-            ( { model | sideMenuOpen = model.sideMenuOpen == False }, Cmd.none )
 
         ChangePlayerList ->
             let
@@ -2553,7 +2549,6 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                                     []
                            )
                     )
-                |> addActionsForCell gameMode ( x, y ) (List.map (\o -> o.overlay) overlaysForCell)
     in
     Dom.element "div"
         |> Dom.addClass "cell-wrapper"
@@ -2658,18 +2653,7 @@ pieceToHtml model =
                 Game.None ->
                     Dom.addClass "none"
            )
-        |> (if model.gameMode == MovePiece && model.coords /= Nothing then
-                makeDraggable (PieceType model.piece) model.coords
-
-            else
-                Dom.addAttribute (attribute "draggable" "false")
-           )
-        |> (if model.gameMode == KillPiece then
-                Dom.addAction ( "click", RemovePiece model.piece )
-
-            else
-                \e -> e
-           )
+        |> makeDraggable (PieceType model.piece) model.coords
     )
 
 
@@ -2843,19 +2827,18 @@ overlayToHtml model =
                 _ ->
                     \e -> e
            )
-        |> (if model.gameMode == MoveOverlay && model.coords /= Nothing then
-                case model.overlay.ref of
-                    Door _ _ ->
-                        Dom.addAttribute (attribute "draggable" "false")
+        |> (case model.overlay.ref of
+                Door _ _ ->
+                    Dom.addAttribute (attribute "draggable" "false")
 
-                    Treasure (Coin _) ->
-                        Dom.addAttribute (attribute "draggable" "false")
+                StartingLocation ->
+                    Dom.addAttribute (attribute "draggable" "false")
 
-                    _ ->
-                        makeDraggable (OverlayType model.overlay Nothing) model.coords
+                Treasure (Coin _) ->
+                    Dom.addAttribute (attribute "draggable" "false")
 
-            else
-                Dom.addAttribute (attribute "draggable" "false")
+                _ ->
+                    makeDraggable (OverlayType model.overlay Nothing) model.coords
            )
     )
 
@@ -2907,42 +2890,6 @@ getOverlayImageName overlay coords =
                     ""
     in
     path ++ overlayName ++ extendedOverlayName ++ segmentPart ++ extension
-
-
-addActionsForCell : GameModeType -> ( Int, Int ) -> List BoardOverlay -> Dom.Element Msg -> Dom.Element Msg
-addActionsForCell currentMode coords overlays element =
-    case overlays of
-        overlay :: rest ->
-            let
-                e =
-                    element
-                        |> (case ( currentMode, overlay.ref ) of
-                                ( DestroyOverlay, Obstacle _ ) ->
-                                    Dom.addAction ( "click", RemoveOverlay overlay )
-
-                                ( DestroyOverlay, Rift ) ->
-                                    Dom.addAction ( "click", RemoveOverlay overlay )
-
-                                ( DestroyOverlay, Trap _ ) ->
-                                    Dom.addAction ( "click", RemoveOverlay overlay )
-
-                                ( DestroyOverlay, DifficultTerrain _ ) ->
-                                    Dom.addAction ( "click", RemoveOverlay overlay )
-
-                                ( LootCell, Treasure _ ) ->
-                                    Dom.addAction ( "click", RemoveOverlay overlay )
-
-                                ( RevealRoom, Door _ refs ) ->
-                                    Dom.addAction ( "click", RevealRoomMsg refs coords )
-
-                                _ ->
-                                    \x -> x
-                           )
-            in
-            addActionsForCell currentMode coords rest e
-
-        _ ->
-            element
 
 
 getPlacePieceMenuHtml : ( Int, Int ) -> Bool -> Bool -> Bool -> Bool -> Bool -> Int -> Html Msg
