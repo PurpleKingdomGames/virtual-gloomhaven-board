@@ -537,10 +537,12 @@ update msg model =
         CellFromPoint ( x, y, endTouch ) ->
             if endTouch then
                 case model.currentDraggable of
-                    Just _ ->
-                        update
-                            MoveCompleted
-                            model
+                    Just c ->
+                        if Just ( x, y ) == c.coords then
+                            update (OpenContextMenu ( x, y )) { model | currentDraggable = Nothing }
+
+                        else
+                            update MoveCompleted model
 
                     Nothing ->
                         ( model, Cmd.none )
@@ -1682,7 +1684,7 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
                         , onClickPreventDefault (ChangeContextMenuState PlaceOverlayMenu)
                         ]
                         [ text "Place Piece"
-                        , lazy7 getPlacePieceMenuHtml ( x, y ) hasDiviner hasObstacle hasTrap hasDifficultTerrain hasHazard nextOverlayId
+                        , lazy8 getPlacePieceMenuHtml ( x, y ) (state == PlaceOverlayMenu) hasDiviner hasObstacle hasTrap hasDifficultTerrain hasHazard nextOverlayId
                         ]
                     :: (case piece of
                             Just p ->
@@ -1722,14 +1724,14 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
                                     , onClickPreventDefault (ChangeContextMenuState SummonSubMenu)
                                     ]
                                     [ text "Summon"
-                                    , lazy4 getSummonMenuHtml ( x, y ) (bearSummoned == False) nextId availableMonsters
+                                    , lazy5 getSummonMenuHtml ( x, y ) (state == SummonSubMenu) (bearSummoned == False) nextId availableMonsters
                                     ]
                                 , li
                                     [ class "spawn-piece has-sub-menu"
                                     , onClickPreventDefault (ChangeContextMenuState SpawnSubMenu)
                                     ]
                                     [ text "Spawn"
-                                    , lazy2 getSpawnMenuHtml ( x, y ) availableMonsters
+                                    , lazy3 getSpawnMenuHtml ( x, y ) (state == SpawnSubMenu) availableMonsters
                                     ]
                                 ]
                        )
@@ -1755,6 +1757,13 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
         , class
             (if isOpen then
                 "open"
+
+             else
+                ""
+            )
+        , class
+            (if state /= Open then
+                "sub-menu-open"
 
              else
                 ""
@@ -2892,8 +2901,8 @@ getOverlayImageName overlay coords =
     path ++ overlayName ++ extendedOverlayName ++ segmentPart ++ extension
 
 
-getPlacePieceMenuHtml : ( Int, Int ) -> Bool -> Bool -> Bool -> Bool -> Bool -> Int -> Html Msg
-getPlacePieceMenuHtml ( x, y ) hasDiviner hasObstacle hasTrap hasDifficultTerrain hasHazard nextOverlayId =
+getPlacePieceMenuHtml : ( Int, Int ) -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Int -> Html Msg
+getPlacePieceMenuHtml ( x, y ) isVisible hasDiviner hasObstacle hasTrap hasDifficultTerrain hasHazard nextOverlayId =
     let
         overlayList =
             ([ Treasure (Coin 1) ]
@@ -2933,6 +2942,7 @@ getPlacePieceMenuHtml ( x, y ) hasDiviner hasObstacle hasTrap hasDifficultTerrai
                 |> List.sortBy (\( label, _ ) -> label)
     in
     Dom.element "ul"
+        |> Dom.addClassConditional "open" isVisible
         |> Dom.appendChildList
             (List.map
                 (\( label, o ) ->
@@ -2942,12 +2952,19 @@ getPlacePieceMenuHtml ( x, y ) hasDiviner hasObstacle hasTrap hasDifficultTerrai
                 )
                 overlayList
             )
+        |> Dom.appendChild
+            (Dom.element "li"
+                |> Dom.addClass "cancel-menu cancel"
+                |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
+                |> Dom.appendText "Cancel"
+            )
         |> Dom.render
 
 
-getSummonMenuHtml : ( Int, Int ) -> Bool -> Int -> Dict String (Array Int) -> Html Msg
-getSummonMenuHtml ( x, y ) canSummonBear nextSummonId availableMonsters =
+getSummonMenuHtml : ( Int, Int ) -> Bool -> Bool -> Int -> Dict String (Array Int) -> Html Msg
+getSummonMenuHtml ( x, y ) isOpen canSummonBear nextSummonId availableMonsters =
     Dom.element "ul"
+        |> Dom.addClassConditional "open" isOpen
         |> Dom.appendChildConditional
             (Dom.element "li"
                 |> Dom.appendText "Bear"
@@ -2963,21 +2980,22 @@ getSummonMenuHtml ( x, y ) canSummonBear nextSummonId availableMonsters =
             (getAvailableMonsterContextList ( x, y ) availableMonsters True)
         |> Dom.appendChild
             (Dom.element "li"
-                |> Dom.addClass "cancel"
+                |> Dom.addClass "cancel-menu cancel"
                 |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
                 |> Dom.appendText "Cancel"
             )
         |> Dom.render
 
 
-getSpawnMenuHtml : ( Int, Int ) -> Dict String (Array Int) -> Html Msg
-getSpawnMenuHtml coords availableMonsters =
+getSpawnMenuHtml : ( Int, Int ) -> Bool -> Dict String (Array Int) -> Html Msg
+getSpawnMenuHtml coords isOpen availableMonsters =
     Dom.element "ul"
+        |> Dom.addClassConditional "open" isOpen
         |> Dom.appendChildList
             (getAvailableMonsterContextList coords availableMonsters False)
         |> Dom.appendChild
             (Dom.element "li"
-                |> Dom.addClass "cancel"
+                |> Dom.addClass "cancel-menu cancel"
                 |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
                 |> Dom.appendText "Cancel"
             )

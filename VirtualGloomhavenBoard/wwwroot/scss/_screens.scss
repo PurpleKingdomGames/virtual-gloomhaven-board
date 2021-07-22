@@ -120,6 +120,42 @@
                 }
             }
 
+            .context-menu {
+                &, li ul {
+                    width: 110%;
+                    height: 110%;
+                    position: absolute;
+                    top: -5% !important;
+                    left: -5% !important;
+                    padding: 2.8em 2em;
+                    font-size: 1.5em;
+                    transition: 0.25s left, 0.25s opacity;
+                }
+
+                li.has-sub-menu {
+                    position: initial;
+
+                    ul {
+                        left: 95% !important;
+                        padding: 3.8em 2em;
+                        font-size: 1em;
+                        overflow: auto;
+
+                        &.open {
+                            visibility: visible;
+                        }
+                    }
+                }
+
+                &.sub-menu-open {
+                    left: -110% !important
+                }
+
+                .cancel {
+                    display: block;
+                }
+            }
+
             footer {
                 display: none;
             }

@@ -9,6 +9,7 @@
     transition: opacity 0.3s;
     visibility: hidden;
     width: 14rem;
+    transition: 0.15s opacity;
 
     &.open {
         opacity: 1;
@@ -83,7 +84,7 @@
                     display: none;
                 }
 
-                &.cancel-menu, &:not([class^="remove"]) + [class^="remove"] {
+                &.cancel-menu, ul li.cancel-menu, &:not([class^="remove"]) + [class^="remove"] {
                     margin-top: 0.7rem;
 
                     &:before {
