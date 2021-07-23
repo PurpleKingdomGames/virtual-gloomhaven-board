@@ -27,6 +27,12 @@
             .header {
                 header {
                     font-size: 1.5rem;
+
+                    .title {
+                        input {
+                            width: 50%;
+                        }
+                    }
                 }
 
                 .roomCode {
@@ -50,16 +56,6 @@
                 margin-bottom: 0;
 
                 .action-list {
-
-                    &:not(.show) {
-                        left: -17rem;
-
-                        .side-toggle {
-                            display: block;
-                            right: -10.2rem;
-                        }
-                    }
-
                     .side-toggle {
                         display: block;
                     }
@@ -130,6 +126,7 @@
                     padding: 2.8em 2em;
                     font-size: 1.5em;
                     transition: 0.25s left, 0.25s opacity;
+                    z-index: 2;
                 }
 
                 li.has-sub-menu {
@@ -158,6 +155,14 @@
 
             footer {
                 display: none;
+            }
+
+            &.scenario-creator {
+                .main {
+                    .board-wrapper {
+                        margin-left: 8rem;
+                    }
+                }
             }
         }
 

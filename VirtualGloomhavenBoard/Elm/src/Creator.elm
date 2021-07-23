@@ -345,10 +345,12 @@ update msg model =
         CellFromPoint ( x, y, endTouch ) ->
             if endTouch then
                 case model.currentDraggable of
-                    Just _ ->
-                        update
-                            MoveCompleted
-                            model
+                    Just c ->
+                        if Just ( x, y ) == c.coords then
+                            update (OpenContextMenu ( x, y )) { model | currentDraggable = Nothing }
+
+                        else
+                            update MoveCompleted model
 
                     Nothing ->
                         ( model, Cmd.none )
@@ -990,33 +992,30 @@ view model =
                 , div
                     [ class "board-wrapper" ]
                     [ div [ class "map-bg" ] []
-                    , div
-                        [ class "mapTiles" ]
-                        [ let
-                            ( c, x, y ) =
-                                case model.currentDraggable of
-                                    Just m ->
-                                        case m.ref of
-                                            RoomType r ->
-                                                let
-                                                    ref =
-                                                        Maybe.withDefault "" (refToString r.ref)
-                                                in
-                                                case m.target of
-                                                    Just ( x1, y1 ) ->
-                                                        ( ref, x1, y1 )
+                    , let
+                        ( c, x, y ) =
+                            case model.currentDraggable of
+                                Just m ->
+                                    case m.ref of
+                                        RoomType r ->
+                                            let
+                                                ref =
+                                                    Maybe.withDefault "" (refToString r.ref)
+                                            in
+                                            case m.target of
+                                                Just ( x1, y1 ) ->
+                                                    ( ref, x1, y1 )
 
-                                                    Nothing ->
-                                                        ( "", 0, 0 )
+                                                Nothing ->
+                                                    ( "", 0, 0 )
 
-                                            _ ->
-                                                ( "", 0, 0 )
+                                        _ ->
+                                            ( "", 0, 0 )
 
-                                    Nothing ->
-                                        ( "", 0, 0 )
-                          in
-                          lazy4 getLazyMapTileHtml model.map.roomData c x y
-                        ]
+                                Nothing ->
+                                    ( "", 0, 0 )
+                      in
+                      lazy4 getLazyMapTileHtml model.map.roomData c x y
                     , Keyed.node
                         "div"
                         [ class "board" ]
@@ -1766,6 +1765,13 @@ getContextMenu state ( x, y ) ( absX, absY ) rooms overlays monsters =
              else
                 ""
             )
+        , class
+            (if state /= Open then
+                "sub-menu-open"
+
+             else
+                ""
+            )
         , style "top" (String.fromInt absY ++ "px")
         , style "left" (String.fromInt absX ++ "px")
         ]
@@ -1812,20 +1818,21 @@ mapPieceToScenarioMonster newPiece monsterList origin ( targetX, targetY ) piece
 
 
 getMonsterLevelHtml : ContextMenu -> Bool -> MonsterLevel -> Int -> Int -> Html Msg
-getMonsterLevelHtml stateChange active selectedLevel playerSize id =
+getMonsterLevelHtml stateChange isOpen selectedLevel playerSize id =
     li
         [ class "edit-monster has-sub-menu"
-        , class
-            (if active then
-                "active"
-
-             else
-                ""
-            )
         , onClickPreventDefault (ChangeContextMenuState stateChange)
         ]
         [ span [] [ text (String.fromInt playerSize ++ " Player State") ]
-        , ul []
+        , ul
+            [ class
+                (if isOpen then
+                    "open"
+
+                 else
+                    ""
+                )
+            ]
             [ li
                 [ class "monster-none"
                 , class
@@ -1863,7 +1870,7 @@ getMonsterLevelHtml stateChange active selectedLevel playerSize id =
                 ]
                 [ text "Elite" ]
             , li
-                [ class "cancel"
+                [ class "cancel cancel-menu"
                 , onClickPreventDefault (ChangeContextMenuState Open)
                 ]
                 [ text "Cancel" ]
