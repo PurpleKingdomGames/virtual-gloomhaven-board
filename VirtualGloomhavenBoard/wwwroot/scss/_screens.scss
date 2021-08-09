@@ -280,5 +280,11 @@
                 font-size: 0.75rem;
             }
         }
+
+        .tutorial {
+            &.step-2 {
+                top: 4rem;
+            }
+        }
     }
 }
