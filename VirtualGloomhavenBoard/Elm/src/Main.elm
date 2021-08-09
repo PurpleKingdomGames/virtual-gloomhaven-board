@@ -864,7 +864,8 @@ update msg model =
                     else
                         step
 
-                newConfig = { config | tutorialStep = newStep }
+                newConfig =
+                    { config | tutorialStep = newStep }
             in
             ( { model | config = newConfig }, saveToStorage model.game.state newConfig )
 
@@ -2025,6 +2026,14 @@ getMenuHtml lockScenario lockPlayers scenarioId campaignTrackerName campaignTrac
 
                         _ ->
                             False
+                    )
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addAttribute (attribute "role" "menuitem")
+                        |> Dom.addAttribute (tabindex 0)
+                        |> Dom.addAction ( "click", UpdateTutorialStep boardTutorialStep )
+                        |> Dom.addClass "section-end"
+                        |> Dom.appendText "Reset Tutorial"
                     )
                 |> Dom.appendChild
                     (Dom.element "li"

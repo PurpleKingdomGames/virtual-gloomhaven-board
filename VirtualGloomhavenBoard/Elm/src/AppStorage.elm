@@ -198,6 +198,7 @@ encodeConfig config =
                 Nothing ->
                     Encode.null
           )
+        , ( "tutorialStep", Encode.int config.tutorialStep )
         ]
 
 
