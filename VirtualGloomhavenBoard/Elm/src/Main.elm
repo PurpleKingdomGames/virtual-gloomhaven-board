@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import AppStorage exposing (AppModeType(..), CampaignTrackerUrl(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
-import BoardHtml exposing (ContextMenu(..), formatNameString, getMapTileHtml)
+import BoardHtml exposing (ContextMenu(..), formatNameString, getMapTileHtml, getTutorialHtml)
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Browser
@@ -161,6 +161,7 @@ type Msg
     | ChangePlayerList
     | EnterScenarioType GameStateScenario
     | EnterScenarioNumber String
+    | UpdateTutorialStep Int
     | ChangeRoomCodeInputStart String
     | ChangeRoomCodeInputEnd String
     | ChangeShowRoomCode Bool
@@ -184,6 +185,26 @@ type Msg
 undoLimit : Int
 undoLimit =
     25
+
+
+boardTutorialStep : Int
+boardTutorialStep =
+    0
+
+
+roomCodeTutorialStep : Int
+roomCodeTutorialStep =
+    1
+
+
+menuTutorialStep : Int
+menuTutorialStep =
+    2
+
+
+lastTutorialStep : Int
+lastTutorialStep =
+    3
 
 
 main : Program ( Maybe Decode.Value, Maybe Decode.Value, Int ) Model Msg
@@ -831,6 +852,22 @@ update msg model =
         EnterScenarioNumber strId ->
             ( { model | currentScenarioInput = Just strId }, Cmd.none )
 
+        UpdateTutorialStep step ->
+            let
+                config =
+                    model.config
+
+                newStep =
+                    if step == roomCodeTutorialStep && model.config.showRoomCode == False then
+                        menuTutorialStep
+
+                    else
+                        step
+
+                newConfig = { config | tutorialStep = newStep }
+            in
+            ( { model | config = newConfig }, saveToStorage model.game.state newConfig )
+
         ChangeRoomCodeInputStart startCode ->
             let
                 settings =
@@ -1323,68 +1360,79 @@ view model =
         ]
         ([ getHeaderHtml model
          , div [ class "main" ]
-            [ div [ class "board-wrapper", id "board" ]
-                [ div [ class "map-bg" ] []
-                , lazy5 getMapTileHtml model.game.state.visibleRooms model.game.roomData "" 0 0
-                , Html.main_ [ class "board" ]
-                    (let
-                        encodedDraggable =
-                            case model.currentDraggable of
-                                Just c ->
-                                    Encode.encode 0 (encodeMoveablePiece c)
+            [ Keyed.node
+                "div"
+                [ class "board-wrapper", id "board" ]
+                ([ ( "mapBg", div [ class "map-bg" ] [] )
+                 , ( "mapTiles", lazy5 getMapTileHtml model.game.state.visibleRooms model.game.roomData "" 0 0 )
+                 , ( "mainBoard"
+                   , Html.main_ [ class "board" ]
+                        (let
+                            encodedDraggable =
+                                case model.currentDraggable of
+                                    Just c ->
+                                        Encode.encode 0 (encodeMoveablePiece c)
 
-                                Nothing ->
-                                    ""
+                                    Nothing ->
+                                        ""
 
-                        draggableCoords =
-                            case model.currentDraggable of
-                                Just m ->
-                                    case m.ref of
-                                        OverlayType o _ ->
-                                            let
-                                                coordList =
-                                                    case m.coords of
-                                                        Just initCoords ->
-                                                            model.game.state.overlays
-                                                                |> map (\o1 -> o1.cells)
-                                                                |> filter (\c1 -> any (\c -> c == initCoords) c1)
-                                                                |> List.foldl (++) []
+                            draggableCoords =
+                                case model.currentDraggable of
+                                    Just m ->
+                                        case m.ref of
+                                            OverlayType o _ ->
+                                                let
+                                                    coordList =
+                                                        case m.coords of
+                                                            Just initCoords ->
+                                                                model.game.state.overlays
+                                                                    |> map (\o1 -> o1.cells)
+                                                                    |> filter (\c1 -> any (\c -> c == initCoords) c1)
+                                                                    |> List.foldl (++) []
 
-                                                        Nothing ->
-                                                            []
+                                                            Nothing ->
+                                                                []
 
-                                                targetCoords =
-                                                    case m.target of
-                                                        Just _ ->
-                                                            o.cells
+                                                    targetCoords =
+                                                        case m.target of
+                                                            Just _ ->
+                                                                o.cells
 
-                                                        Nothing ->
-                                                            []
-                                            in
-                                            coordList ++ targetCoords
+                                                            Nothing ->
+                                                                []
+                                                in
+                                                coordList ++ targetCoords
 
-                                        _ ->
-                                            (case m.coords of
-                                                Just initCoords ->
-                                                    [ initCoords ]
+                                            _ ->
+                                                (case m.coords of
+                                                    Just initCoords ->
+                                                        [ initCoords ]
 
-                                                Nothing ->
-                                                    []
-                                            )
-                                                ++ (case m.target of
-                                                        Just targetCoords ->
-                                                            [ targetCoords ]
+                                                    Nothing ->
+                                                        []
+                                                )
+                                                    ++ (case m.target of
+                                                            Just targetCoords ->
+                                                                [ targetCoords ]
 
-                                                        Nothing ->
-                                                            []
-                                                   )
+                                                            Nothing ->
+                                                                []
+                                                       )
 
-                                Nothing ->
-                                    []
-                     in
-                     toList (Array.indexedMap (getBoardHtml model model.game encodedDraggable draggableCoords) model.game.staticBoard)
-                    )
-                ]
+                                    Nothing ->
+                                        []
+                         in
+                         toList (Array.indexedMap (getBoardHtml model model.game encodedDraggable draggableCoords) model.game.staticBoard)
+                        )
+                   )
+                 ]
+                    ++ (if model.config.tutorialStep == boardTutorialStep then
+                            [ getTutorialHtml "This is your board. You can move pieces by dragging and dropping them in place. You can rotate, remove or add pieces by clicking on any space." model.config.tutorialStep (UpdateTutorialStep roomCodeTutorialStep) ]
+
+                        else
+                            []
+                       )
+                )
             , lazy getConnectionStatusHtml model.connectionStatus
             , lazy7 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.game.state.pieces model.game.state.overlays model.game.state.players model.game.state.availableMonsters
             ]
@@ -1455,13 +1503,14 @@ getHeaderHtml model =
         [ class "header" ]
         [ getMenuToggleHtml model
         , lazy3 getScenarioTitleHtml model.game.scenario.id model.game.scenario.title isSoloScenario
-        , lazy2 getRoomCodeHtml model.config.roomCode model.config.showRoomCode
+        , lazy3 getRoomCodeHtml model.config.roomCode model.config.showRoomCode (model.config.tutorialStep == roomCodeTutorialStep)
         ]
 
 
 getMenuToggleHtml : Model -> Html.Html Msg
 getMenuToggleHtml model =
-    div
+    Keyed.node
+        "div"
         [ class
             ("menu"
                 ++ (if model.menuOpen then
@@ -1484,7 +1533,7 @@ getMenuToggleHtml model =
                 "false"
             )
         ]
-        [ let
+        ((let
             ( campaignTrackerName, campaignTrackerUrl ) =
                 case model.config.campaignTracker of
                     Just (CampaignTrackerUrl name url) ->
@@ -1493,8 +1542,15 @@ getMenuToggleHtml model =
                     Nothing ->
                         ( Nothing, Nothing )
           in
-          lazy6 getMenuHtml model.lockScenario model.lockPlayers model.game.scenario.id campaignTrackerName campaignTrackerUrl model.menuOpen
-        ]
+          ( "menuHtml", lazy6 getMenuHtml model.lockScenario model.lockPlayers model.game.scenario.id campaignTrackerName campaignTrackerUrl model.menuOpen )
+         )
+            :: (if model.config.tutorialStep == menuTutorialStep then
+                    [ getTutorialHtml "If you need to change a setting, add players, or undo a turn you've made - you can do it all by clicking the menu icon above." menuTutorialStep (UpdateTutorialStep lastTutorialStep) ]
+
+                else
+                    []
+               )
+        )
 
 
 getScenarioTitleHtml : Int -> String -> Bool -> Html.Html Msg
@@ -1790,9 +1846,10 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
         ]
 
 
-getRoomCodeHtml : Maybe String -> Bool -> Html.Html Msg
-getRoomCodeHtml roomCode showRoomCode =
-    div
+getRoomCodeHtml : Maybe String -> Bool -> Bool -> Html.Html Msg
+getRoomCodeHtml roomCode showRoomCode showTutorial =
+    Keyed.node
+        "div"
         [ class
             "roomCode"
         ]
@@ -1802,9 +1859,15 @@ getRoomCodeHtml roomCode showRoomCode =
 
             Just c ->
                 if showRoomCode then
-                    [ span [] [ text "Room Code" ]
-                    , span [] [ text c ]
+                    [ ( "roomCodeLabel", span [] [ text "Room Code" ] )
+                    , ( "roomCodeText", span [] [ text c ] )
                     ]
+                        ++ (if showTutorial then
+                                [ getTutorialHtml "This is your room code. You can change this in the settings in order to join other people's games. Or you can give this code to your friends so that they can join your game." roomCodeTutorialStep (UpdateTutorialStep menuTutorialStep) ]
+
+                            else
+                                []
+                           )
 
                 else
                     []

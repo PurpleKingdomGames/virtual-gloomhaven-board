@@ -5,7 +5,7 @@ import Character exposing (CharacterClass, stringToCharacter)
 import Game exposing (GameState, Piece, RoomData)
 import GameSync exposing (decodeGameState, decodePiece, decodeRoom, encodeGameState, encodePiece, encodeRoom)
 import Html exposing (s)
-import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map7, maybe, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map7, map8, maybe, succeed)
 import Json.Encode as Encode exposing (object)
 import List exposing (filterMap)
 import Scenario exposing (ScenarioMonster)
@@ -32,6 +32,7 @@ type alias Config =
     , envelopeX : Bool
     , boardOnly : Bool
     , campaignTracker : Maybe CampaignTrackerUrl
+    , tutorialStep : Int
     }
 
 
@@ -96,7 +97,7 @@ type MoveablePieceType
 
 emptyConfig : Config
 emptyConfig =
-    Config Game MovePiece Nothing True False False Nothing
+    Config Game MovePiece Nothing True False False Nothing 0
 
 
 empty : ( GameState, Config )
@@ -279,7 +280,7 @@ appOverridesDecoder =
 
 decodeConfig : Decoder Config
 decodeConfig =
-    map7 Config
+    map8 Config
         (field "appMode" (Decode.string |> Decode.andThen decodeAppMode))
         (field "gameMode" (Decode.string |> Decode.andThen decodeGameMode))
         (field "roomCode" (Decode.nullable Decode.string))
@@ -287,6 +288,7 @@ decodeConfig =
         (maybe (field "envelopeX" Decode.bool) |> andThen (\b -> succeed (Maybe.withDefault False b)))
         (maybe (field "boardOnly" Decode.bool) |> andThen (\b -> succeed (Maybe.withDefault False b)))
         (maybe (field "campaignTracker" decodeCampaignTrackerUrl))
+        (maybe (field "tutorialStep" Decode.int) |> andThen (\i -> succeed (Maybe.withDefault 0 i)))
 
 
 decodeAppMode : String -> Decoder AppModeType

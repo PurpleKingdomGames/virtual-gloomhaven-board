@@ -1,0 +1,33 @@
+.tutorial {
+    font-family: Arial, Helvetica, sans-serif;
+    position: absolute;
+    max-width: 36rem;
+    background: radial-gradient(circle, rgba(241, 236, 232, 0.5) 31%, rgba(156, 124, 108, 0.3) 85%, rgba(81, 64, 30, 0.1) 100%), url("/img/bg.jpg");
+    z-index: 2;
+    padding: 1rem;
+    border: 3px solid #452e27;
+    box-shadow: 0 -5px 40px 0 black;
+    text-shadow: initial;
+    color: black;
+    font-size: 1rem;
+    transition: all 1s;
+
+    &.step-0 {
+        top: 25%;
+        left: 25%;
+    }
+
+    &.step-1 {
+        right: 1rem;
+        top: 3.5rem;
+    }
+
+    &.step-2 {
+        left: 0.5rem;
+    }
+
+    .footer {
+        margin-top: 1rem;
+        justify-content: end;
+    }
+}

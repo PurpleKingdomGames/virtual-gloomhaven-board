@@ -1,4 +1,4 @@
-module BoardHtml exposing (CellModel, ContextMenu(..), DragEvents, DropEvents, formatNameString, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, makeDraggable, makeDroppable, scenarioMonsterToHtml)
+module BoardHtml exposing (CellModel, ContextMenu(..), DragEvents, DropEvents, formatNameString, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, getTutorialHtml, makeDraggable, makeDroppable, scenarioMonsterToHtml)
 
 import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..))
 import Array exposing (fromList, toIndexedList)
@@ -8,8 +8,10 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Character exposing (characterToString)
 import Dom exposing (Element)
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, SummonsType(..), getPieceName, getPieceType)
-import Html exposing (a, div, footer, iframe, img, span, text)
+import GameSync exposing (decodeRoom)
+import Html exposing (a, button, div, footer, iframe, img, span, text)
 import Html.Attributes exposing (alt, attribute, class, href, src, style, target, title)
+import Html.Events exposing (onClick, stopPropagationOn)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
@@ -1089,3 +1091,28 @@ formatNameString name =
                     ++ String.slice 1 (String.length s) s
             )
         |> String.join " "
+
+
+getTutorialHtml : String -> Int -> msg -> ( String, Html.Html msg )
+getTutorialHtml tutorialText stepNo msg =
+    ( "tutorial"
+    , Dom.element "div"
+        |> Dom.addClass "tutorial"
+        |> Dom.addClass ("step-" ++ String.fromInt stepNo)
+        |> Dom.appendChild
+            (Dom.element "div"
+                |> Dom.addClass "body"
+                |> Dom.appendText tutorialText
+            )
+        |> Dom.appendChild
+            (Dom.element "div"
+                |> Dom.addClass "footer"
+                |> Dom.addClass "button-wrapper"
+                |> Dom.appendChild
+                    (Dom.element "button"
+                        |> Dom.appendText "Got it!"
+                        |> Dom.addActionStopPropagation ( "click", msg )
+                    )
+            )
+        |> Dom.render
+    )
