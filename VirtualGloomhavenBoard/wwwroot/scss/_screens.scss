@@ -237,12 +237,6 @@
             }
 
             .main {
-                .action-list {
-                    width: 6.2rem;
-                    transform: scale(1.25);
-                    transform-origin: top left;
-                }
-
                 .board-wrapper {
                     padding-left: 8rem;
                     transform: scale(1.25);
@@ -263,6 +257,25 @@
                     .version {
                         a {
                             margin-right: 7.6rem;
+                        }
+                    }
+                }
+            }
+
+            &.scenario-creator {
+                .main {
+                    .action-list {
+                        width: 10.2rem;
+                        transform: scale(1.25);
+                        transform-origin: top left;
+                        padding-bottom: 16rem;
+
+                        section {
+                            ul {
+                                li {
+                                    padding: 0.2rem 2.2rem;
+                                }
+                            }
                         }
                     }
                 }
