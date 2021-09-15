@@ -868,5 +868,7 @@
         "turns": 3
     },
     "angle": 0,
-    "additionalMonsters": []
+    "additionalMonsters": [
+        "valrath-savage"
+    ]
 }
