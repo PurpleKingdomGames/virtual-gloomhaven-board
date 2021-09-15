@@ -8,10 +8,8 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Character exposing (characterToString)
 import Dom exposing (Element)
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, SummonsType(..), getPieceName, getPieceType)
-import GameSync exposing (decodeRoom)
-import Html exposing (a, button, div, footer, iframe, img, span, text)
+import Html exposing (a, div, footer, iframe, img, span, text)
 import Html.Attributes exposing (alt, attribute, class, href, src, style, target, title)
-import Html.Events exposing (onClick, stopPropagationOn)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
