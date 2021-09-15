@@ -2977,8 +2977,8 @@ getPlacePieceMenuHtml : ( Int, Int ) -> Bool -> Bool -> Bool -> Bool -> Bool -> 
 getPlacePieceMenuHtml ( x, y ) isVisible hasDiviner hasObstacle hasTrap hasDifficultTerrain hasHazard nextOverlayId =
     let
         overlayList =
-            ([ Treasure (Coin 1) ]
-                ++ (if hasDiviner then
+            (Treasure (Coin 1)
+                :: (if hasDiviner then
                         [ Rift ]
 
                     else
@@ -3013,63 +3013,72 @@ getPlacePieceMenuHtml ( x, y ) isVisible hasDiviner hasObstacle hasTrap hasDiffi
                 |> List.map (\o -> ( getOverlayLabel o.ref, o ))
                 |> List.sortBy (\( label, _ ) -> label)
     in
-    Dom.element "ul"
-        |> Dom.addClassConditional "open" isVisible
-        |> Dom.appendChildList
-            (List.map
-                (\( label, o ) ->
-                    Dom.element "li"
-                        |> Dom.appendText label
-                        |> Dom.addActionStopAndPrevent ( "click", AddOverlay o )
-                )
-                overlayList
-            )
+    Dom.element "div"
         |> Dom.appendChild
-            (Dom.element "li"
-                |> Dom.addClass "cancel-menu cancel"
-                |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
-                |> Dom.appendText "Cancel"
+            (Dom.element "ul"
+                |> Dom.addClassConditional "open" isVisible
+                |> Dom.appendChildList
+                    (List.map
+                        (\( label, o ) ->
+                            Dom.element "li"
+                                |> Dom.appendText label
+                                |> Dom.addActionStopAndPrevent ( "click", AddOverlay o )
+                        )
+                        overlayList
+                    )
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addClass "cancel-menu cancel"
+                        |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
+                        |> Dom.appendText "Cancel"
+                    )
             )
         |> Dom.render
 
 
 getSummonMenuHtml : ( Int, Int ) -> Bool -> Bool -> Int -> Dict String (Array Int) -> Html Msg
 getSummonMenuHtml ( x, y ) isOpen canSummonBear nextSummonId availableMonsters =
-    Dom.element "ul"
-        |> Dom.addClassConditional "open" isOpen
-        |> Dom.appendChildConditional
-            (Dom.element "li"
-                |> Dom.appendText "Bear"
-                |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons BearSummons)) x y) )
-            )
-            canSummonBear
+    Dom.element "div"
         |> Dom.appendChild
-            (Dom.element "li"
-                |> Dom.appendText "Summons"
-                |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons (NormalSummons nextSummonId))) x y) )
-            )
-        |> Dom.appendChildList
-            (getAvailableMonsterContextList ( x, y ) availableMonsters True)
-        |> Dom.appendChild
-            (Dom.element "li"
-                |> Dom.addClass "cancel-menu cancel"
-                |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
-                |> Dom.appendText "Cancel"
+            (Dom.element "ul"
+                |> Dom.addClassConditional "open" isOpen
+                |> Dom.appendChildConditional
+                    (Dom.element "li"
+                        |> Dom.appendText "Bear"
+                        |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons BearSummons)) x y) )
+                    )
+                    canSummonBear
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.appendText "Summons"
+                        |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons (NormalSummons nextSummonId))) x y) )
+                    )
+                |> Dom.appendChildList
+                    (getAvailableMonsterContextList ( x, y ) availableMonsters True)
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addClass "cancel-menu cancel"
+                        |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
+                        |> Dom.appendText "Cancel"
+                    )
             )
         |> Dom.render
 
 
 getSpawnMenuHtml : ( Int, Int ) -> Bool -> Dict String (Array Int) -> Html Msg
 getSpawnMenuHtml coords isOpen availableMonsters =
-    Dom.element "ul"
-        |> Dom.addClassConditional "open" isOpen
-        |> Dom.appendChildList
-            (getAvailableMonsterContextList coords availableMonsters False)
+    Dom.element "div"
         |> Dom.appendChild
-            (Dom.element "li"
-                |> Dom.addClass "cancel-menu cancel"
-                |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
-                |> Dom.appendText "Cancel"
+            (Dom.element "ul"
+                |> Dom.addClassConditional "open" isOpen
+                |> Dom.appendChildList
+                    (getAvailableMonsterContextList coords availableMonsters False)
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addClass "cancel-menu cancel"
+                        |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
+                        |> Dom.appendText "Cancel"
+                    )
             )
         |> Dom.render
 

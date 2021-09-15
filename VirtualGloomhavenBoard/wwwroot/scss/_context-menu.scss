@@ -41,7 +41,7 @@
                         top: 0.4rem;
                     }
 
-                    ul {
+                    div {
                         visibility: hidden;
                         position: absolute;
                         right: -7.1rem;
@@ -52,29 +52,35 @@
                         z-index: 2;
                         top: -0.9rem;
                         border-radius: 0.2rem;
+                        max-height: 15rem;
 
-                        li {
-                            padding: 0.2rem 1.3rem;
+                        ul {
+                            max-height: 11rem;
+                            overflow-y: auto;
 
-                            &:hover {
-                                cursor: pointer;
-                                background-color: rgba(0, 0, 0, 0.2)
-                            }
+                            li {
+                                padding: 0.2rem 1.3rem;
 
-                            &.selected {
-                                &:after {
-                                    content: '\2713';
-                                    font-size: 1.1rem;
-                                    position: absolute;
-                                    left: 0rem;
-                                    top: 0.2rem;
+                                &:hover {
+                                    cursor: pointer;
+                                    background-color: rgba(0, 0, 0, 0.2)
+                                }
+
+                                &.selected {
+                                    &:after {
+                                        content: '\2713';
+                                        font-size: 1.1rem;
+                                        position: absolute;
+                                        left: 0rem;
+                                        top: 0.2rem;
+                                    }
                                 }
                             }
                         }
                     }
 
                     &:hover {
-                        ul {
+                        div {
                             visibility: visible;
                         }
                     }
