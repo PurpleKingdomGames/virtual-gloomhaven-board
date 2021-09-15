@@ -372,6 +372,10 @@ $tiles:
                     }
 
                     .monster, .player {
+                        &.out-of-phase {
+                            opacity: 0.5;
+                        }
+
                         &:not(:only-child) {
                             transform: scale(0.85);
                         }

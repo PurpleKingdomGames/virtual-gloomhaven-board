@@ -1432,6 +1432,7 @@ getScenarioMonsterListHtml maxId currentDraggable active =
                                         , id = maxId
                                         , level = Monster.None
                                         , wasSummoned = False
+                                        , outOfPhase = False
                                         }
                                         0
                                         0
@@ -1482,6 +1483,7 @@ getScenarioBossListHtml maxId currentDraggable active =
                                         , id = maxId
                                         , level = Monster.None
                                         , wasSummoned = False
+                                        , outOfPhase = False
                                         }
                                         0
                                         0

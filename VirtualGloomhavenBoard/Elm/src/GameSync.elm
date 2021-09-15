@@ -441,6 +441,7 @@ encodePieceType pieceType =
             , ( "id", Encode.int monster.id )
             , ( "level", Encode.string (encodeMonsterLevel monster.level) )
             , ( "wasSummoned", Encode.bool monster.wasSummoned )
+            , ( "outOfPhase", Encode.bool monster.outOfPhase )
             ]
 
 

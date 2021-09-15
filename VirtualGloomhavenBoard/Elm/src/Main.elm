@@ -23,7 +23,7 @@ import Html.Events exposing (on, onClick, targetValue)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy4, lazy5, lazy6, lazy7, lazy8)
+import Html.Lazy exposing (lazy, lazy3, lazy5, lazy6, lazy8)
 import HtmlEvents exposing (onClickPreventDefault)
 import Http
 import Json.Decode as Decode exposing (decodeString)
@@ -146,6 +146,7 @@ type Msg
     | RotateOverlay Int
     | RemoveOverlay BoardOverlay
     | RemovePiece Piece
+    | PhasePiece Piece
     | ChangeGameMode GameModeType
     | ChangeAppMode AppModeType
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
@@ -761,6 +762,38 @@ update msg model =
                     removePieceFromBoard piece model.game
             in
             ( { model | game = newGame, deadPlayerList = getDeadPlayers newGame.state }, pushGameState model newGame.state True )
+
+        PhasePiece piece ->
+            case piece.ref of
+                AI (Enemy monster) ->
+                    let
+                        game =
+                            model.game
+
+                        gameState =
+                            model.game.state
+
+                        mappedPieces =
+                            map
+                                (\p ->
+                                    if p == piece then
+                                        { p
+                                            | ref =
+                                                AI (Enemy { monster | outOfPhase = monster.outOfPhase == False })
+                                        }
+
+                                    else
+                                        p
+                                )
+                                gameState.pieces
+
+                        newState =
+                            { gameState | pieces = mappedPieces }
+                    in
+                    ( { model | game = { game | state = newState } }, pushGameState model newState True )
+
+                _ ->
+                    ( model, Cmd.none )
 
         ChangeGameMode mode ->
             let
@@ -1435,7 +1468,7 @@ view model =
                        )
                 )
             , lazy getConnectionStatusHtml model.connectionStatus
-            , lazy7 getContextMenu model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.game.state.pieces model.game.state.overlays model.game.state.players model.game.state.availableMonsters
+            , lazy8 getContextMenu model.game.scenario.id model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.game.state.pieces model.game.state.overlays model.game.state.players model.game.state.availableMonsters
             ]
          , lazy getFooterHtml Version.get
          ]
@@ -1587,8 +1620,8 @@ getScenarioTitleHtml id titleTxt isSolo =
         )
 
 
-getContextMenu : ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> List Piece -> List BoardOverlay -> List CharacterClass -> Dict String (Array Int) -> Html Msg
-getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMonsters =
+getContextMenu : Int -> ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> List Piece -> List BoardOverlay -> List CharacterClass -> Dict String (Array Int) -> Html Msg
+getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) pieces overlays players availableMonsters =
     let
         bearSummoned =
             (List.member BeastTyrant players == False)
@@ -1767,13 +1800,26 @@ getContextMenu state ( x, y ) ( absX, absY ) pieces overlays players availableMo
                                         )
                                             |> formatNameString
                                 in
-                                [ li
+                                li
                                     [ class "remove-piece"
                                     , onClickPreventDefault (RemovePiece p)
                                     ]
                                     [ text ("Remove " ++ pieceName)
                                     ]
-                                ]
+                                    :: -- Special Rule for Scenario 61
+                                       (case ( scenarioNumber, p.ref ) of
+                                            ( 61, AI (Enemy _) ) ->
+                                                [ li
+                                                    [ class "phase-piece"
+                                                    , onClickPreventDefault (PhasePiece p)
+                                                    ]
+                                                    [ text ("Phase Shift " ++ pieceName)
+                                                    ]
+                                                ]
+
+                                            _ ->
+                                                []
+                                       )
 
                             Nothing ->
                                 [ li
@@ -2760,6 +2806,7 @@ enemyToHtml monster altText element =
     element
         |> Dom.addClass class
         |> Dom.addClass "hex-mask"
+        |> Dom.addClassConditional "out-of-phase" monster.outOfPhase
         |> Dom.appendChildList
             [ Dom.element "img"
                 |> Dom.addAttribute
@@ -3114,7 +3161,7 @@ getMonsterLiForType : ( Int, Int ) -> String -> MonsterType -> MonsterLevel -> B
 getMonsterLiForType ( x, y ) name monsterType monsterLevel isSummons =
     let
         piece =
-            Piece (AI (Enemy (Monster monsterType 0 monsterLevel isSummons))) x y
+            Piece (AI (Enemy (Monster monsterType 0 monsterLevel isSummons False))) x y
     in
     Dom.element "li"
         |> Dom.appendText name

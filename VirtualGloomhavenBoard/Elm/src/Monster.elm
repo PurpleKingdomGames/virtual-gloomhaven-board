@@ -146,6 +146,7 @@ type alias Monster =
     , id : Int
     , level : MonsterLevel
     , wasSummoned : Bool
+    , outOfPhase : Bool
     }
 
 

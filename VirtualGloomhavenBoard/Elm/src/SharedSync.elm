@@ -3,7 +3,7 @@ module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, dec
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
 import Html.Attributes exposing (id)
-import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map4, map6, maybe, succeed)
+import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map4, map5, map6, maybe, succeed)
 import Json.Encode as Encode exposing (object)
 import List exposing (all, map)
 import Monster exposing (Monster, MonsterLevel(..), MonsterType, monsterTypeToString, stringToMonsterType)
@@ -802,7 +802,7 @@ decodeScenarioMonster =
                 (\m ->
                     case stringToMonsterType m of
                         Just monster ->
-                            succeed (Monster monster 0 Monster.None False)
+                            succeed (Monster monster 0 Monster.None False False)
 
                         Nothing ->
                             fail ("Could not decode monster " ++ m)
@@ -817,11 +817,12 @@ decodeScenarioMonster =
 
 decodeMonster : Decoder Monster
 decodeMonster =
-    map4 Monster
+    map5 Monster
         (field "class" Decode.string |> andThen decodeMonsterType)
         (field "id" Decode.int)
         (field "level" Decode.string |> andThen decodeMonsterLevel)
         (maybe (field "wasSummoned" Decode.bool) |> andThen (\s -> succeed (Maybe.withDefault False s)))
+        (maybe (field "outOfPhase" Decode.bool) |> andThen (\s -> succeed (Maybe.withDefault False s)))
 
 
 decodeMonsterType : String -> Decoder MonsterType
