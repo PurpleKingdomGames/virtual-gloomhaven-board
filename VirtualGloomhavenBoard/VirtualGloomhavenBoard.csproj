@@ -133,7 +133,7 @@
         <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=../wwwroot/js/main.js --optimize" />
         <Exec Command="uglifyjs wwwroot/js/main.js --compress pure_funcs=['F2','F3','F4','F5','F6','F7','F8','F9','A2','A3','A4','A5','A6','A7','A8','A9'],pure_getters,keep_fargs=false,unsafe_comps,unsafe | uglifyjs --mangle --output wwwroot/js/main.min.js" />
         <Exec Command="sass wwwroot/scss/main.scss:wwwroot/css/main.css --update --stop-on-error --style=compressed" />
-        <!-- also build scenario screator optimised (in release)-->
+        <!-- also build scenario creator optimised (in release)-->
         <Exec Command="cd Elm &amp;&amp; elm make src/Creator.elm --output=../wwwroot/js/creator.js --optimize" />
         <Exec Command="uglifyjs wwwroot/js/creator.js --compress pure_funcs=['F2','F3','F4','F5','F6','F7','F8','F9','A2','A3','A4','A5','A6','A7','A8','A9'],pure_getters,keep_fargs=false,unsafe_comps,unsafe | uglifyjs --mangle --output wwwroot/js/creator.min.js" />
         <ItemGroup>
@@ -163,6 +163,11 @@
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
             </Content>
             <Content Include="wwwroot\js\creator.min.js">
+                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+                <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+                <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+            </Content>
+            <Content Include="Elm\src\Version.elm">
                 <CopyToOutputDirectory>Always</CopyToOutputDirectory>
                 <CopyToPublishDirectory>Always</CopyToPublishDirectory>
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>

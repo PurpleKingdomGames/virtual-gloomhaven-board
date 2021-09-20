@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Rewrite;
 
@@ -36,6 +39,24 @@ namespace VirtualGloomhavenBoard
         public void Configure(IApplicationBuilder app)
         {
             string? configHost = Configuration.GetValue<string>("HostUrl");
+
+            Regex versionRegex = new("([0-9]+.[0-9]+.[0-9]+)");
+            string version = versionRegex
+                .Match(
+                    File.ReadAllText(
+                        Path.Combine(
+                            Path.GetDirectoryName(
+                                Assembly.GetExecutingAssembly().Location
+                            ) ?? string.Empty,
+                            "Elm/src",
+                            "Version.elm"
+                        )
+                    )
+                )
+                .Value
+            ;
+            UpdateHtmlWithVersion(new[] { "index.html", "creator.html" }, version);
+
             if (configHost?.ToLower().StartsWith("https://") == true)
             {
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -74,7 +95,6 @@ namespace VirtualGloomhavenBoard
 
                 _.Context.Response.Headers[HeaderNames.Vary] =
                     new string[] { "Accept-Encoding" };
-
             };
 
             app.UseResponseCompression();
@@ -90,6 +110,25 @@ namespace VirtualGloomhavenBoard
             app.UseEndpoints(endpoints =>
                 endpoints.MapHub<SignalRHandler>("/ws")
             );
+        }
+
+        private void UpdateHtmlWithVersion(string[] files, string version)
+        {
+            foreach (string file in files)
+            {
+                string path = Path.Combine(
+                    Path.GetDirectoryName(
+                        Assembly.GetExecutingAssembly().Location
+                    ) ?? string.Empty,
+                    "wwwroot",
+                    file
+                );
+
+                File.WriteAllText(
+                    path,
+                    File.ReadAllText(path).Replace("<version>", version)
+                );
+            }
         }
     }
 }
