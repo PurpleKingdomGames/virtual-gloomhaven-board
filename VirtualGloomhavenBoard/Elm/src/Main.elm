@@ -3288,15 +3288,6 @@ shortcutHtml keys element =
             )
 
 
-tooltipHtml : String -> String -> Element Msg -> Element Msg
-tooltipHtml identifier tooltip element =
-    element
-        |> Dom.addAttribute (attribute "aria-label" tooltip)
-        |> Dom.setId identifier
-        |> Dom.addAction ( "pointerover", InitTooltip identifier tooltip )
-        |> Dom.addAction ( "pointerout", ResetTooltip )
-
-
 isValidScenario : GameStateScenario -> Bool
 isValidScenario scenario =
     case scenario of
