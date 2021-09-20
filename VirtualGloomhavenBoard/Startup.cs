@@ -51,9 +51,8 @@ namespace VirtualGloomhavenBoard
             fileOptions.OnPrepareResponse = _ =>
             {
                 string path = _.Context.Request.Path;
-                if (path.EndsWith(".css") || path.EndsWith(".js"))
+                if (path.EndsWith(".css") || path.EndsWith(".js") || path.EndsWith(".html"))
                 {
-
                     _.Context.Response.GetTypedHeaders().CacheControl =
                         new CacheControlHeaderValue()
                         {
