@@ -18,6 +18,10 @@ $hexHeight: 90px;
     }
 }
 
+.overlay {
+    width: auto;
+}
+
 .hex-mask {
     @include mixins.mask(url('/img/hex-mask.png'), alpha, top right, 90px);
 }
