@@ -6,6 +6,7 @@ import Game exposing (GameState, Piece, RoomData)
 import GameSync exposing (decodeGameState, decodePiece, decodeRoom, encodeGameState, encodePiece, encodeRoom)
 import Html exposing (s)
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map2, map4, map7, map8, maybe, succeed)
+import Json.Decode.Pipeline as Pipeline exposing (..)
 import Json.Encode as Encode exposing (object)
 import List exposing (filterMap)
 import Scenario exposing (ScenarioMonster)
@@ -18,6 +19,11 @@ port saveData : Encode.Value -> Cmd msg
 port saveMapData : Encode.Value -> Cmd msg
 
 
+defaultSummonsColour : String
+defaultSummonsColour =
+    "#963f9d"
+
+
 type alias StoredData =
     { config : Config
     , gameState : GameState
@@ -28,6 +34,7 @@ type alias Config =
     { appMode : AppModeType
     , gameMode : GameModeType
     , roomCode : Maybe String
+    , summonsColour : String
     , showRoomCode : Bool
     , envelopeX : Bool
     , boardOnly : Bool
@@ -97,7 +104,7 @@ type MoveablePieceType
 
 emptyConfig : Config
 emptyConfig =
-    Config Game MovePiece Nothing True False False Nothing 0
+    Config Game MovePiece Nothing defaultSummonsColour True False False Nothing 0
 
 
 empty : ( GameState, Config )
@@ -187,6 +194,7 @@ encodeConfig config =
                 Nothing ->
                     Encode.null
           )
+        , ( "summonsColour", Encode.string config.summonsColour )
         , ( "showRoomCode", Encode.bool config.showRoomCode )
         , ( "envelopeX", Encode.bool config.envelopeX )
         , ( "boardOnly", Encode.bool config.boardOnly )
@@ -276,20 +284,21 @@ appOverridesDecoder =
         (field "lockScenario" Decode.bool)
         (field "lockPlayers" Decode.bool)
         (field "lockRoomCode" Decode.bool)
-        (field "campaignTracker" (maybe decodeCampaignTrackerUrl))
+        (field "campaignTracker" decodeCampaignTrackerUrl)
 
 
 decodeConfig : Decoder Config
 decodeConfig =
-    map8 Config
-        (field "appMode" (Decode.string |> Decode.andThen decodeAppMode))
-        (field "gameMode" (Decode.string |> Decode.andThen decodeGameMode))
-        (field "roomCode" (Decode.nullable Decode.string))
-        (field "showRoomCode" Decode.bool)
-        (maybe (field "envelopeX" Decode.bool) |> andThen (\b -> succeed (Maybe.withDefault False b)))
-        (maybe (field "boardOnly" Decode.bool) |> andThen (\b -> succeed (Maybe.withDefault False b)))
-        (maybe (field "campaignTracker" decodeCampaignTrackerUrl))
-        (maybe (field "tutorialStep" Decode.int) |> andThen (\i -> succeed (Maybe.withDefault 0 i)))
+    Decode.succeed Config
+        |> required "appMode" (Decode.string |> Decode.andThen decodeAppMode)
+        |> required "gameMode" (Decode.string |> Decode.andThen decodeGameMode)
+        |> required "roomCode" (Decode.nullable Decode.string)
+        |> optional "summonsColour" Decode.string defaultSummonsColour
+        |> required "showRoomCode" Decode.bool
+        |> optional "envelopeX" Decode.bool False
+        |> optional "boardOnly" Decode.bool False
+        |> optional "campaignTracker" decodeCampaignTrackerUrl Nothing
+        |> optional "tutorialStep" Decode.int 0
 
 
 decodeAppMode : String -> Decoder AppModeType
@@ -388,13 +397,13 @@ decodeMoveablePieceType =
             )
 
 
-decodeCampaignTrackerUrl : Decoder CampaignTrackerUrl
+decodeCampaignTrackerUrl : Decoder (Maybe CampaignTrackerUrl)
 decodeCampaignTrackerUrl =
     field "name" Decode.string
         |> andThen
             (\name ->
                 field "url" Decode.string
-                    |> andThen (\url -> Decode.succeed (CampaignTrackerUrl name url))
+                    |> andThen (\url -> Decode.succeed (Just (CampaignTrackerUrl name url)))
             )
 
 

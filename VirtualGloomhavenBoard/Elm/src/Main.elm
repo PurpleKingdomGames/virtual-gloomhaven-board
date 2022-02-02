@@ -105,6 +105,7 @@ type alias BoardOverlayModel =
 
 type alias TransientClientSettings =
     { roomCode : ( String, String )
+    , summonsColour : String
     , showRoomCode : Bool
     , boardOnly : Bool
     , fullscreen : Bool
@@ -166,6 +167,7 @@ type Msg
     | ChangeRoomCodeInputStart String
     | ChangeRoomCodeInputEnd String
     | ChangeShowRoomCode Bool
+    | ChangeSummonsColour String
     | ChangeClientSettings (Maybe TransientClientSettings)
     | GameSyncMsg GameSync.Msg
     | PushToUndoStack GameState
@@ -902,6 +904,17 @@ update msg model =
             in
             ( { model | config = newConfig }, saveToStorage model.game.state newConfig )
 
+        ChangeSummonsColour colour ->
+            let
+                settings =
+                    getSplitRoomCodeSettings model
+            in
+            ( { model
+                | currentClientSettings = Just { settings | summonsColour = colour }
+              }
+            , Cmd.none
+            )
+
         ChangeRoomCodeInputStart startCode ->
             let
                 settings =
@@ -960,6 +973,7 @@ update msg model =
                                     | config =
                                         { config
                                             | showRoomCode = settings.showRoomCode
+                                            , summonsColour = settings.summonsColour
                                             , boardOnly = settings.boardOnly
                                             , envelopeX = settings.envelopeX
                                             , appMode = AppStorage.Game
@@ -2352,6 +2366,20 @@ getClientSettingsDialog model =
                         |> Dom.addClass "input-wrapper"
                         |> Dom.appendChild
                             (Dom.element "label"
+                                |> Dom.addAttribute (attribute "for" "summonsColour")
+                                |> Dom.appendText "Summons Colour"
+                                |> Dom.appendChild
+                                    (Dom.element "input"
+                                        |> Dom.addAttribute (attribute "id" "summonsColour")
+                                        |> Dom.addAttribute (attribute "type" "color")
+                                        |> Dom.addAttribute (attribute "value" settings.summonsColour)
+                                        |> Dom.addInputHandler ChangeSummonsColour
+                                    )
+                            )
+                   , Dom.element "div"
+                        |> Dom.addClass "input-wrapper"
+                        |> Dom.appendChild
+                            (Dom.element "label"
                                 |> Dom.addClass "checkbox"
                                 |> Dom.addClassConditional "checked" settings.showRoomCode
                                 |> Dom.addAttribute (attribute "for" "showRoomCode")
@@ -3196,6 +3224,7 @@ getSplitRoomCodeSettings model =
             in
             TransientClientSettings
                 splitCode
+                model.config.summonsColour
                 model.config.showRoomCode
                 model.config.boardOnly
                 model.fullscreen
