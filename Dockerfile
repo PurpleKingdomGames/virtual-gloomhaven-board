@@ -29,7 +29,7 @@ RUN dpkg -i dotnet.deb
 RUN apt-get update; \
     apt-get install -y apt-transport-https && \
     apt-get update && \
-    apt-get install -y dotnet-sdk-5.0
+    apt-get install -y dotnet-sdk-6.0
 
 # Disable telemetry
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
@@ -37,8 +37,8 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 # Build the app
 RUN dotnet publish -c Release --self-contained true -r linux-x64 -o ./publish
 
-# Copy the app to a minimul Linux build
-FROM mcr.microsoft.com/dotnet/aspnet:5.0
+# Copy the app to a minimal Linux build
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 LABEL vendor="Purple Kingdom Games Ltd."
 EXPOSE 5000
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
