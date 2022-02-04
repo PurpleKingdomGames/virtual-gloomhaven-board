@@ -319,7 +319,12 @@ decodeRoom =
 decodeSummons : Decoder AIType
 decodeSummons =
     Decode.oneOf
-        [ field "id" Decode.int |> andThen (\i -> succeed (Summons (NormalSummons i)))
+        [ field "id" Decode.int
+            |> andThen
+                (\i ->
+                    field "colour" Decode.string
+                        |> andThen (\c -> succeed (Summons (NormalSummons i c)))
+                )
         , field "id" Decode.string
             |> andThen
                 (\s ->
@@ -424,16 +429,7 @@ encodePieceType pieceType =
             ]
 
         AI (Summons t) ->
-            [ ( "type", Encode.string "summons" )
-            , ( "id"
-              , case t of
-                    NormalSummons i ->
-                        Encode.int i
-
-                    BearSummons ->
-                        Encode.string "bear"
-              )
-            ]
+            encodeSummons t
 
         AI (Enemy monster) ->
             [ ( "type", Encode.string "monster" )
@@ -467,3 +463,20 @@ encodeAvailableMonsters availableMonsters =
             ]
         )
         (Dict.toList availableMonsters)
+
+
+encodeSummons : SummonsType -> List ( String, Encode.Value )
+encodeSummons summons =
+    let
+        fields =
+            case summons of
+                NormalSummons i colour ->
+                    [ ( "id", Encode.int i )
+                    , ( "colour", Encode.string colour )
+                    ]
+
+                BearSummons ->
+                    [ ( "id", Encode.string "bear" ) ]
+    in
+    ( "type", Encode.string "summons" )
+        :: fields

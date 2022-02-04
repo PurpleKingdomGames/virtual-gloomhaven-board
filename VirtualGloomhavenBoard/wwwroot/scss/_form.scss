@@ -31,6 +31,12 @@
     label {
         position: relative;
 
+        input[type="color"] {
+            padding: 0;
+            width: 1.5rem;
+            float: right;
+        }
+
         &.checkbox {
             cursor: pointer;
 

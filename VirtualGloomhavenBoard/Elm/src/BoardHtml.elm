@@ -727,7 +727,7 @@ pieceToHtml dragPiece model =
                         Enemy m ->
                             enemyToHtml m label
 
-                        Summons (NormalSummons i) ->
+                        Summons (NormalSummons i colour) ->
                             Dom.appendChildList
                                 [ Dom.element "img"
                                     |> Dom.addAttribute (alt label)
@@ -864,7 +864,7 @@ getLabelForPiece piece =
                                 ""
                            )
 
-                Summons (NormalSummons i) ->
+                Summons (NormalSummons i _) ->
                     "Summons Number " ++ String.fromInt i
 
                 Summons BearSummons ->

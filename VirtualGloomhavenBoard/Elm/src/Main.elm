@@ -1482,7 +1482,7 @@ view model =
                        )
                 )
             , lazy getConnectionStatusHtml model.connectionStatus
-            , lazy8 getContextMenu model.game.scenario.id model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.game.state.pieces model.game.state.overlays model.game.state.players model.game.state.availableMonsters
+            , getContextMenu model.game.scenario.id model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.config.summonsColour model.game.state.pieces model.game.state.overlays model.game.state.players model.game.state.availableMonsters
             ]
          , lazy getFooterHtml Version.get
          ]
@@ -1634,8 +1634,8 @@ getScenarioTitleHtml id titleTxt isSolo =
         )
 
 
-getContextMenu : Int -> ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> List Piece -> List BoardOverlay -> List CharacterClass -> Dict String (Array Int) -> Html Msg
-getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) pieces overlays players availableMonsters =
+getContextMenu : Int -> ContextMenu -> ( Int, Int ) -> ( Int, Int ) -> String -> List Piece -> List BoardOverlay -> List CharacterClass -> Dict String (Array Int) -> Html Msg
+getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) summonsColour pieces overlays players availableMonsters =
     let
         bearSummoned =
             (List.member BeastTyrant players == False)
@@ -1648,7 +1648,7 @@ getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) pieces overlays play
             filterMap
                 (\p ->
                     case p.ref of
-                        AI (Summons (NormalSummons i)) ->
+                        AI (Summons (NormalSummons i _)) ->
                             Just i
 
                         _ ->
@@ -1803,7 +1803,7 @@ getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) pieces overlays play
 
                                             AI (Summons summons) ->
                                                 case summons of
-                                                    NormalSummons i ->
+                                                    NormalSummons i _ ->
                                                         "Summons " ++ String.fromInt i
 
                                                     BearSummons ->
@@ -1841,7 +1841,7 @@ getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) pieces overlays play
                                     , onClickPreventDefault (ChangeContextMenuState SummonSubMenu)
                                     ]
                                     [ text "Summon"
-                                    , lazy5 getSummonMenuHtml ( x, y ) (state == SummonSubMenu) (bearSummoned == False) nextId availableMonsters
+                                    , lazy6 getSummonMenuHtml ( x, y ) (state == SummonSubMenu) (bearSummoned == False) nextId summonsColour availableMonsters
                                     ]
                                 , li
                                     [ class "spawn-piece has-sub-menu"
@@ -2791,9 +2791,12 @@ pieceToHtml model =
                         Enemy m ->
                             enemyToHtml m label
 
-                        Summons (NormalSummons i) ->
+                        Summons (NormalSummons i colour) ->
                             Dom.appendChildList
-                                [ Dom.element "img"
+                                [ Dom.element "div"
+                                    |> Dom.addAttribute (class "background")
+                                    |> Dom.addAttribute (attribute "style" ("background-color: " ++ colour ++ ";"))
+                                , Dom.element "img"
                                     |> Dom.addAttribute (alt label)
                                     |> Dom.addAttribute (attribute "src" "/img/characters/summons.png")
                                     |> Dom.addAttribute (attribute "draggable" "false")
@@ -3111,8 +3114,8 @@ getPlacePieceMenuHtml ( x, y ) isVisible hasDiviner hasObstacle hasTrap hasDiffi
         |> Dom.render
 
 
-getSummonMenuHtml : ( Int, Int ) -> Bool -> Bool -> Int -> Dict String (Array Int) -> Html Msg
-getSummonMenuHtml ( x, y ) isOpen canSummonBear nextSummonId availableMonsters =
+getSummonMenuHtml : ( Int, Int ) -> Bool -> Bool -> Int -> String -> Dict String (Array Int) -> Html Msg
+getSummonMenuHtml ( x, y ) isOpen canSummonBear nextSummonId summonsColour availableMonsters =
     Dom.element "div"
         |> Dom.appendChild
             (Dom.element "ul"
@@ -3126,7 +3129,7 @@ getSummonMenuHtml ( x, y ) isOpen canSummonBear nextSummonId availableMonsters =
                 |> Dom.appendChild
                     (Dom.element "li"
                         |> Dom.appendText "Summons"
-                        |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons (NormalSummons nextSummonId))) x y) )
+                        |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons (NormalSummons nextSummonId summonsColour))) x y) )
                     )
                 |> Dom.appendChildList
                     (getAvailableMonsterContextList ( x, y ) availableMonsters True)
@@ -3415,7 +3418,7 @@ getLabelForPiece piece =
                                 ""
                            )
 
-                Summons (NormalSummons i) ->
+                Summons (NormalSummons i _) ->
                     "Summons Number " ++ String.fromInt i
 
                 Summons BearSummons ->

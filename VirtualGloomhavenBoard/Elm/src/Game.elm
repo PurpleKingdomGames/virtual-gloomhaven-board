@@ -30,7 +30,7 @@ type AIType
 
 
 type SummonsType
-    = NormalSummons Int
+    = NormalSummons Int String
     | BearSummons
 
 

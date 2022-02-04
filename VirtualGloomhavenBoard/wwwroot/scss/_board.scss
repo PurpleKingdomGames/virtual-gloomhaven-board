@@ -27,6 +27,16 @@ $hexHeight: 90px;
 }
 
 .summons:not(.bear) {
+    div.background {
+        width: 72px;
+        height: 73px;
+        display: block;
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+        border-radius: 100%;
+    }
+
     img {
         position: relative;
         height: 75px;
