@@ -13,6 +13,7 @@ type BoardOverlayType
     | StartingLocation
     | Trap TrapSubType
     | Treasure TreasureSubType
+    | Token String
     | Wall WallSubType
 
 
@@ -413,6 +414,9 @@ getOverlayLabel overlay =
                                 _ ->
                                     " Coins"
                            )
+
+        Token t ->
+            "Token (" ++ t ++ ")"
 
         Wall w ->
             case w of

@@ -23,7 +23,7 @@ import Html.Events exposing (on, onClick, targetValue)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy3, lazy5, lazy6, lazy8)
+import Html.Lazy exposing (lazy, lazy2, lazy3, lazy5, lazy6, lazy8)
 import HtmlEvents exposing (onClickPreventDefault)
 import Http
 import Json.Decode as Decode exposing (decodeString)
@@ -143,6 +143,7 @@ type Msg
     | CellFromPoint ( Int, Int, Bool )
     | GameStateUpdated Game.GameState
     | AddOverlay BoardOverlay
+    | AddToken BoardOverlay
     | AddPiece Piece
     | RotateOverlay Int
     | RemoveOverlay BoardOverlay
@@ -636,6 +637,26 @@ update msg model =
 
                     newState =
                         { oldState | overlays = newOverlays }
+
+                    oldGame =
+                        model.game
+
+                    newGame =
+                        { oldGame | state = newState }
+                in
+                ( { model | game = newGame, contextMenuState = Closed }, pushGameState model newState True )
+
+        AddToken token ->
+            if List.any (\b -> b.id == token.id) model.game.state.overlays then
+                ( model, Cmd.none )
+
+            else
+                let
+                    oldState =
+                        model.game.state
+
+                    newState =
+                        { oldState | overlays = token :: oldState.overlays }
 
                     oldGame =
                         model.game
@@ -1783,14 +1804,22 @@ getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) summonsColour pieces
                                 ]
                         )
                         filteredOverlays
-                    ++ li
-                        [ class "place-overlay has-sub-menu"
-                        , onClickPreventDefault (ChangeContextMenuState PlaceOverlayMenu)
-                        ]
-                        [ text "Place Piece"
-                        , lazy8 getPlacePieceMenuHtml ( x, y ) (state == PlaceOverlayMenu) hasDiviner hasObstacle hasTrap hasDifficultTerrain hasHazard nextOverlayId
-                        ]
-                    :: (case piece of
+                    ++ [ li
+                            [ class "place-overlay has-sub-menu"
+                            , onClickPreventDefault (ChangeContextMenuState PlaceOverlayMenu)
+                            ]
+                            [ text "Place Piece"
+                            , lazy8 getPlacePieceMenuHtml ( x, y ) (state == PlaceOverlayMenu) hasDiviner hasObstacle hasTrap hasDifficultTerrain hasHazard nextOverlayId
+                            ]
+                       , li
+                            [ class "place-token has-sub-menu"
+                            , onClickPreventDefault (ChangeContextMenuState PlaceTokenMenu)
+                            ]
+                            [ text "Place Token"
+                            , lazy3 getPlaceTokenMenuHtml ( x, y ) (state == PlaceTokenMenu) nextOverlayId
+                            ]
+                       ]
+                    ++ (case piece of
                             Just p ->
                                 let
                                     pieceName =
@@ -2621,7 +2650,7 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                     ((overlaysForCell
                         |> sortWith
                             (\a b ->
-                                compare (getSortOrderForOverlay a.overlay.ref) (getSortOrderForOverlay b.overlay.ref)
+                                compare (BoardHtml.getSortOrderForOverlay a.overlay.ref) (BoardHtml.getSortOrderForOverlay b.overlay.ref)
                             )
                         |> filter
                             (\o ->
@@ -2911,6 +2940,9 @@ overlayToHtml model =
                 Trap _ ->
                     "trap"
 
+                Token _ ->
+                    "token"
+
                 Wall _ ->
                     "wall"
             )
@@ -2972,9 +3004,15 @@ overlayToHtml model =
                     False
             )
         |> Dom.appendChild
-            (Dom.element "img"
-                |> Dom.addAttribute (alt (getOverlayLabel model.overlay.ref))
-                |> Dom.addAttribute (attribute "src" (getOverlayImageName model.overlay model.coords))
+            (case model.overlay.ref of
+                Token val ->
+                    Dom.element "span"
+                        |> Dom.appendText val
+
+                _ ->
+                    Dom.element "img"
+                        |> Dom.addAttribute (alt (getOverlayLabel model.overlay.ref))
+                        |> Dom.addAttribute (attribute "src" (getOverlayImageName model.overlay model.coords))
             )
         |> (case model.overlay.ref of
                 Treasure (Coin i) ->
@@ -3103,6 +3141,54 @@ getPlacePieceMenuHtml ( x, y ) isVisible hasDiviner hasObstacle hasTrap hasDiffi
                                 |> Dom.addActionStopAndPrevent ( "click", AddOverlay o )
                         )
                         overlayList
+                    )
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addClass "cancel-menu cancel"
+                        |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
+                        |> Dom.appendText "Cancel"
+                    )
+            )
+        |> Dom.render
+
+
+getPlaceTokenMenuHtml : ( Int, Int ) -> Bool -> Int -> Html Msg
+getPlaceTokenMenuHtml ( x, y ) isVisible nextOverlayId =
+    let
+        values =
+            [ "a"
+            , "b"
+            , "c"
+            , "d"
+            , "e"
+            , "f"
+            , "1"
+            , "2"
+            , "3"
+            , "4"
+            , "5"
+            , "6"
+            , "7"
+            , "8"
+            , "9"
+            ]
+
+        tokens =
+            values
+                |> map (\v -> ( v, BoardOverlay (Token v) nextOverlayId Default [ ( x, y ) ] ))
+    in
+    Dom.element "div"
+        |> Dom.appendChild
+            (Dom.element "ul"
+                |> Dom.addClassConditional "open" isVisible
+                |> Dom.appendChildList
+                    (List.map
+                        (\( val, token ) ->
+                            Dom.element "li"
+                                |> Dom.appendText val
+                                |> Dom.addActionStopAndPrevent ( "click", AddToken token )
+                        )
+                        tokens
                     )
                 |> Dom.appendChild
                     (Dom.element "li"
@@ -3255,42 +3341,6 @@ pushGameState model state addToUndo =
                            )
                )
         )
-
-
-getSortOrderForOverlay : BoardOverlayType -> Int
-getSortOrderForOverlay overlay =
-    case overlay of
-        Door _ _ ->
-            0
-
-        Hazard _ ->
-            1
-
-        DifficultTerrain _ ->
-            2
-
-        StartingLocation ->
-            3
-
-        Rift ->
-            4
-
-        Treasure t ->
-            case t of
-                Chest _ ->
-                    5
-
-                Coin _ ->
-                    6
-
-        Obstacle _ ->
-            7
-
-        Trap _ ->
-            8
-
-        Wall _ ->
-            9
 
 
 shortcutHtml : List String -> Element msg -> Element msg

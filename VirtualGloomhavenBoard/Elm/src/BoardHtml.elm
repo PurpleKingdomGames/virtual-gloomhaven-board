@@ -1,4 +1,4 @@
-module BoardHtml exposing (CellModel, ContextMenu(..), DragEvents, DropEvents, formatNameString, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, getTutorialHtml, makeDraggable, makeDroppable, scenarioMonsterToHtml)
+module BoardHtml exposing (CellModel, ContextMenu(..), DragEvents, DropEvents, formatNameString, getAllMapTileHtml, getCellHtml, getFooterHtml, getMapTileHtml, getOverlayImageName, getSortOrderForOverlay, getTutorialHtml, makeDraggable, makeDroppable, scenarioMonsterToHtml)
 
 import AppStorage exposing (GameModeType(..), MoveablePiece, MoveablePieceType(..))
 import Array exposing (fromList, toIndexedList)
@@ -30,6 +30,7 @@ type ContextMenu
     | SpawnSubMenu
     | SummonSubMenu
     | PlaceOverlayMenu
+    | PlaceTokenMenu
     | AddObstacleSubMenu
     | AddTrapSubMenu
 
@@ -485,37 +486,40 @@ filterOverlaysForCoord x y overlay =
 getSortOrderForOverlay : BoardOverlayType -> Int
 getSortOrderForOverlay overlay =
     case overlay of
-        Door _ _ ->
+        Token _ ->
             0
 
-        Hazard _ ->
+        Door _ _ ->
             1
 
-        DifficultTerrain _ ->
+        Hazard _ ->
             2
 
-        StartingLocation ->
+        DifficultTerrain _ ->
             3
 
-        Rift ->
+        StartingLocation ->
             4
+
+        Rift ->
+            5
 
         Treasure t ->
             case t of
                 Chest _ ->
-                    5
-
-                Coin _ ->
                     6
 
-        Obstacle _ ->
-            7
+                Coin _ ->
+                    7
 
-        Trap _ ->
+        Obstacle _ ->
             8
 
-        Wall _ ->
+        Trap _ ->
             9
+
+        Wall _ ->
+            10
 
 
 overlayToHtml : Bool -> Bool -> BoardOverlayModel msg -> ( String, Dom.Element msg )
@@ -569,6 +573,9 @@ overlayToHtml dragOverlays dragDoors model =
 
                 Trap _ ->
                     "trap"
+
+                Token _ ->
+                    "token"
 
                 Wall _ ->
                     "wall"

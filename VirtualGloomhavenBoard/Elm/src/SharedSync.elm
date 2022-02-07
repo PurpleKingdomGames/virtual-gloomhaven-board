@@ -112,6 +112,12 @@ encodeOverlayType overlay =
                     :: encodeTreasure t
                 )
 
+        Token t ->
+            object
+                [ ( "type", Encode.string "token" )
+                , ( "value", Encode.string t )
+                ]
+
         Wall w ->
             object
                 [ ( "type", Encode.string "wall" )
@@ -528,6 +534,9 @@ decodeBoardOverlayType =
                 "treasure" ->
                     decodeTreasure
 
+                "token" ->
+                    decodeToken
+
                 "wall" ->
                     decodeWall
 
@@ -735,6 +744,12 @@ decodeTreasureCoin : Decoder BoardOverlayType
 decodeTreasureCoin =
     field "amount" Decode.int
         |> andThen (\i -> succeed (Treasure (Coin i)))
+
+
+decodeToken : Decoder BoardOverlayType
+decodeToken =
+    field "value" Decode.string
+        |> andThen (\s -> succeed (Token s))
 
 
 decodeWall : Decoder BoardOverlayType
