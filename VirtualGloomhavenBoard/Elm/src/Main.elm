@@ -35,6 +35,7 @@ import Process
 import Random exposing (Seed)
 import Scenario exposing (DoorData(..), Scenario)
 import ScenarioSync exposing (decodeScenario, loadScenarioById)
+import SpecialRules
 import String exposing (join, split)
 import Task
 import Version
@@ -833,8 +834,13 @@ update msg model =
                 updatedGame =
                     revealRooms model.game rooms
 
+                -- Make sure we remove any fog as a special rule for 101 (see issue #75)
                 newState =
-                    updatedGame.state
+                    if model.game.state.scenario == InbuiltScenario Gloomhaven 101 then
+                        SpecialRules.scenario101DoorUpdate updatedGame.state
+
+                    else
+                        updatedGame.state
 
                 doorToCorridor =
                     newState.overlays
