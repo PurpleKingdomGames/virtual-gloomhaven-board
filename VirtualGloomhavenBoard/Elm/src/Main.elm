@@ -2645,7 +2645,7 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                 |> Dom.addClass "hexagon"
                 |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
                 |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
-                -- Everything except coins
+                -- Everything except coins and tokens
                 |> Dom.setChildListWithKeys
                     ((overlaysForCell
                         |> sortWith
@@ -2655,6 +2655,9 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                         |> filter
                             (\o ->
                                 case o.overlay.ref of
+                                    Token _ ->
+                                        False
+
                                     Treasure t ->
                                         case t of
                                             Chest _ ->
@@ -2676,11 +2679,14 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                                 Just p ->
                                     [ pieceToHtml p ]
                            )
-                        ++ -- Coins
+                        ++ -- Coins and Tokens
                            (overlaysForCell
                                 |> List.filter
                                     (\o ->
                                         case o.overlay.ref of
+                                            Token _ ->
+                                                True
+
                                             Treasure t ->
                                                 case t of
                                                     Chest _ ->
