@@ -102,6 +102,12 @@ html
                                 max-width: 45px;
                             }
 
+                            .token {
+                                transform: scale(0.85);
+                                top: 0;
+                                left: 33px;
+                            }
+
                             &.size-3 {
                                 img {
                                     position: relative;
