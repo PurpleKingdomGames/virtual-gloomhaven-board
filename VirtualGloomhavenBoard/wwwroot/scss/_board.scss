@@ -20,6 +20,29 @@ $hexHeight: 90px;
 
 .overlay {
     width: auto;
+
+    &.token {
+        transform: scale(0.5);
+        right: 0;
+        left: auto;
+        top: 40px;
+
+        width: 45px;
+        height: 45px;
+        background-color: #913a3d;
+        border: 3px solid #fff;
+        color: #fff;
+        border-radius: 100%;
+        font-size: 1.3rem;
+        line-height: 2.5rem;
+        box-shadow: 2px 1px 5px 0px rgba(0,0,0,0.75);
+
+        &:first-child {
+            transform: scale(1);
+            top: 22px;
+            left: 21px;
+        }
+    }
 }
 
 .hex-mask {
@@ -401,15 +424,6 @@ $tiles:
                             right: 0;
                             left: auto;
                             top: 40px;
-
-                            width: 45px;
-                            height: 45px;
-                            background-color: #913a3d;
-                            border: 3px solid #fff;
-                            border-radius: 100%;
-                            font-size: 1.7rem;
-                            line-height: 2.3rem;
-                            box-shadow: 2px 1px 5px 0px rgba(0,0,0,0.75);
 
                             &:first-child {
                                 transform: scale(1);

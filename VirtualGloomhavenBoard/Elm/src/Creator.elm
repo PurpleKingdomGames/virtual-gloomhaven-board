@@ -1596,10 +1596,21 @@ lazyBoardOverlayListHtml id overlayStr isDragging =
                 |> Dom.appendChildList
                     (List.map
                         (\c ->
-                            Dom.element "img"
-                                |> Dom.addAttribute (alt (getOverlayLabel overlay))
-                                |> Dom.addAttribute (attribute "src" (getOverlayImageName boardOverlayModel (Just c)))
-                                |> Dom.addAttribute (attribute "draggable" "false")
+                            case overlay of
+                                Token val ->
+                                    Dom.element "div"
+                                        |> Dom.addClass "overlay"
+                                        |> Dom.addClass "token"
+                                        |> Dom.appendChild
+                                            (Dom.element "span"
+                                                |> Dom.appendText val
+                                            )
+
+                                _ ->
+                                    Dom.element "img"
+                                        |> Dom.addAttribute (alt (getOverlayLabel overlay))
+                                        |> Dom.addAttribute (attribute "src" (getOverlayImageName boardOverlayModel (Just c)))
+                                        |> Dom.addAttribute (attribute "draggable" "false")
                         )
                         cells
                     )
@@ -2343,6 +2354,9 @@ initModel mapData =
                         case v of
                             StartingLocation ->
                                 0
+
+                            Token _ ->
+                                2
 
                             _ ->
                                 1

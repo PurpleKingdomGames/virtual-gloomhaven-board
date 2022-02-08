@@ -345,7 +345,7 @@ getCellHtml model =
                 |> Dom.addClass "hexagon"
                 |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
                 |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
-                -- Everything except coins
+                -- Everything except coins and tokens
                 |> Dom.setChildListWithKeys
                     ((overlaysForCell
                         |> List.sortWith
@@ -362,6 +362,9 @@ getCellHtml model =
 
                                             _ ->
                                                 False
+
+                                    Token _ ->
+                                        False
 
                                     _ ->
                                         True
@@ -395,6 +398,9 @@ getCellHtml model =
 
                                                     _ ->
                                                         True
+
+                                            Token _ ->
+                                                True
 
                                             _ ->
                                                 False
@@ -637,10 +643,16 @@ overlayToHtml dragOverlays dragDoors model =
                     False
             )
         |> Dom.appendChild
-            (Dom.element "img"
-                |> Dom.addAttribute (alt (getOverlayLabel model.overlay.ref))
-                |> Dom.addAttribute (attribute "src" (getOverlayImageName model.overlay model.coords))
-                |> Dom.addAttribute (attribute "draggable" "false")
+            (case model.overlay.ref of
+                Token val ->
+                    Dom.element "span"
+                        |> Dom.appendText val
+
+                _ ->
+                    Dom.element "img"
+                        |> Dom.addAttribute (alt (getOverlayLabel model.overlay.ref))
+                        |> Dom.addAttribute (attribute "src" (getOverlayImageName model.overlay model.coords))
+                        |> Dom.addAttribute (attribute "draggable" "false")
             )
         |> (case model.overlay.ref of
                 Treasure (Coin i) ->
