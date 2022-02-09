@@ -1667,7 +1667,13 @@ getContextMenu state ( x, y ) ( absX, absY ) rooms overlays monsters =
                                     StartingLocation ->
                                         False
 
+                                    Highlight _ ->
+                                        False
+
                                     Rift ->
+                                        False
+
+                                    Token _ ->
                                         False
 
                                     _ ->

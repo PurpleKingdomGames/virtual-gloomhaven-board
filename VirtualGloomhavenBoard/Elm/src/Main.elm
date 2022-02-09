@@ -1848,7 +1848,20 @@ getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) summonsColour pieces
                                 [ text ("Rotate " ++ getOverlayLabel o.ref)
                                 ]
                         )
-                        filteredOverlays
+                        (filter
+                            (\o ->
+                                case o.ref of
+                                    Highlight _ ->
+                                        False
+
+                                    Token _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                            )
+                            filteredOverlays
+                        )
                     ++ [ li
                             [ class "place-overlay has-sub-menu"
                             , onClickPreventDefault (ChangeContextMenuState PlaceOverlayMenu)
