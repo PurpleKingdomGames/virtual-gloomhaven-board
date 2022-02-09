@@ -4,6 +4,7 @@ import Array exposing (Array)
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
 import Character exposing (CharacterClass, characterToString, stringToCharacter)
+import Colour
 import Dict exposing (Dict)
 import Game exposing (AIType(..), Expansion(..), GameState, GameStateScenario(..), Piece, PieceType(..), RoomData, SummonsType(..))
 import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, fail, field, map3, map8, succeed)
@@ -323,7 +324,7 @@ decodeSummons =
             |> andThen
                 (\i ->
                     field "colour" Decode.string
-                        |> andThen (\c -> succeed (Summons (NormalSummons i c)))
+                        |> andThen (\c -> succeed (Summons (NormalSummons i (Colour.fromHexString c))))
                 )
         , field "id" Decode.string
             |> andThen
@@ -472,7 +473,7 @@ encodeSummons summons =
             case summons of
                 NormalSummons i colour ->
                     [ ( "id", Encode.int i )
-                    , ( "colour", Encode.string colour )
+                    , ( "colour", Encode.string (Colour.toHexString colour) )
                     ]
 
                 BearSummons ->

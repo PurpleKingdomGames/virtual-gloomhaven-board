@@ -9,6 +9,7 @@ import Browser
 import Browser.Dom as BrowserDom
 import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
 import Character exposing (CharacterClass(..), characterToString, getSoloScenarios)
+import Colour
 import Dict exposing (Dict)
 import Dom exposing (Element)
 import DragPorts
@@ -23,7 +24,7 @@ import Html.Events exposing (on, onClick, targetValue)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2, lazy3, lazy5, lazy6, lazy8)
+import Html.Lazy exposing (lazy, lazy3, lazy5, lazy6, lazy8)
 import HtmlEvents exposing (onClickPreventDefault)
 import Http
 import Json.Decode as Decode exposing (decodeString)
@@ -2836,7 +2837,7 @@ pieceToHtml model =
                             Dom.appendChildList
                                 [ Dom.element "div"
                                     |> Dom.addAttribute (class "background")
-                                    |> Dom.addAttribute (attribute "style" ("background-color: " ++ colour ++ ";"))
+                                    |> Dom.addAttribute (attribute "style" ("background-color: " ++ Colour.toHexString colour ++ ";"))
                                 , Dom.element "img"
                                     |> Dom.addAttribute (alt label)
                                     |> Dom.addAttribute (attribute "src" "/img/characters/summons.png")
@@ -3227,7 +3228,7 @@ getSummonMenuHtml ( x, y ) isOpen canSummonBear nextSummonId summonsColour avail
                 |> Dom.appendChild
                     (Dom.element "li"
                         |> Dom.appendText "Summons"
-                        |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons (NormalSummons nextSummonId summonsColour))) x y) )
+                        |> Dom.addActionStopAndPrevent ( "click", AddPiece (Piece (AI (Summons (NormalSummons nextSummonId (Colour.fromHexString summonsColour)))) x y) )
                     )
                 |> Dom.appendChildList
                     (getAvailableMonsterContextList ( x, y ) availableMonsters True)

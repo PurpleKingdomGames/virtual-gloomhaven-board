@@ -17,6 +17,7 @@
             "elm/url": "1.0.0",
             "elm-community/list-extra": "8.5.1",
             "mpizenberg/elm-pointer-events": "4.0.2",
+            "rtfeldman/elm-hex": "1.0.0",
             "visotype/elm-dom": "1.1.3"
         },
         "indirect": {

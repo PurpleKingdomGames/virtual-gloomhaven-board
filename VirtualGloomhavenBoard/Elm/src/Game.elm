@@ -5,6 +5,7 @@ import Bitwise
 import BoardMapTile exposing (MapTile, MapTileRef, refToString)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), CorridorMaterial(..), DoorSubType(..), TreasureSubType(..), getBoardOverlayName)
 import Character exposing (CharacterClass, characterToString)
+import Colour exposing (Colour)
 import Dict exposing (Dict, insert)
 import Hexagon exposing (cubeToOddRow, oddRowToCube)
 import List exposing (all, any, filter, filterMap, foldl, head, map, member)
@@ -30,7 +31,7 @@ type AIType
 
 
 type SummonsType
-    = NormalSummons Int String
+    = NormalSummons Int Colour
     | BearSummons
 
 
