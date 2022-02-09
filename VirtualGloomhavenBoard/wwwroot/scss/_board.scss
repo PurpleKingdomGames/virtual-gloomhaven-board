@@ -421,6 +421,32 @@ $tiles:
                             }
                         }
 
+                        &.highlight {
+                            width: 100%;
+                            height: 100%;
+                            position: absolute;
+                            display: block;
+                            top: 0;
+                            left: 0;
+                            animation-duration: 1s;
+                            animation-name: pulse;
+                            animation-iteration-count: infinite;
+                            animation-direction: alternate;
+                            @include mixins.mask(url('/img/hex-border-mask-thick.png'), alpha, top right, 90px);
+
+                            div {
+                                width: 100%;
+                                height: 100%;
+                            }
+
+
+                            & + .token {
+                                transform: scale(1);
+                                top: 22px;
+                                left: 21px;
+                            }
+                        }
+
                         &.start-location {
                             & + .monster, & + .player {
                                 transform: scale(1);
@@ -489,5 +515,16 @@ $tiles:
                 }
             }
         }
+
     }
 }
+
+@keyframes pulse {
+    from {
+      transform: scale(0.95);
+    }
+
+    to {
+      transform: scale(1.05);
+    }
+  }
