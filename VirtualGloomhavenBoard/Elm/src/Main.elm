@@ -146,6 +146,7 @@ type Msg
     | GameStateUpdated Game.GameState
     | AddOverlay BoardOverlay
     | AddToken BoardOverlay
+    | AddHighlight BoardOverlay
     | AddPiece Piece
     | RotateOverlay Int
     | RemoveOverlay BoardOverlay
@@ -659,6 +660,43 @@ update msg model =
 
                     newState =
                         { oldState | overlays = token :: oldState.overlays }
+
+                    oldGame =
+                        model.game
+
+                    newGame =
+                        { oldGame | state = newState }
+                in
+                ( { model | game = newGame, contextMenuState = Closed }, pushGameState model newState True )
+
+        AddHighlight highlight ->
+            if List.any (\b -> b.id == highlight.id) model.game.state.overlays then
+                ( model, Cmd.none )
+
+            else
+                let
+                    oldState =
+                        model.game.state
+
+                    newState =
+                        { oldState
+                            | overlays =
+                                highlight
+                                    :: filter
+                                        (\o ->
+                                            if o.cells /= highlight.cells then
+                                                True
+
+                                            else
+                                                case o.ref of
+                                                    Highlight _ ->
+                                                        False
+
+                                                    _ ->
+                                                        True
+                                        )
+                                        oldState.overlays
+                        }
 
                     oldGame =
                         model.game
@@ -1825,6 +1863,13 @@ getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) summonsColour pieces
                             [ text "Place Token"
                             , lazy3 getPlaceTokenMenuHtml ( x, y ) (state == PlaceTokenMenu) nextOverlayId
                             ]
+                       , li
+                            [ class "place-highlight has-sub-menu"
+                            , onClickPreventDefault (ChangeContextMenuState PlaceHighlightMenu)
+                            ]
+                            [ text "Highlight"
+                            , lazy3 getPlaceHighlightMenuHtml ( x, y ) (state == PlaceHighlightMenu) nextOverlayId
+                            ]
                        ]
                     ++ (case piece of
                             Just p ->
@@ -2937,6 +2982,9 @@ overlayToHtml model =
                 Hazard _ ->
                     "hazard"
 
+                Highlight _ ->
+                    "highlight"
+
                 DifficultTerrain _ ->
                     "difficult-terrain"
 
@@ -3022,6 +3070,10 @@ overlayToHtml model =
                     Dom.element "span"
                         |> Dom.appendText val
 
+                Highlight c ->
+                    Dom.element "div"
+                        |> Dom.addStyle ( "background-color", Colour.toHexString c )
+
                 _ ->
                     Dom.element "img"
                         |> Dom.addAttribute (alt (getOverlayLabel model.overlay.ref))
@@ -3042,6 +3094,9 @@ overlayToHtml model =
                     Dom.addAttribute (attribute "draggable" "false")
 
                 StartingLocation ->
+                    Dom.addAttribute (attribute "draggable" "false")
+
+                Highlight _ ->
                     Dom.addAttribute (attribute "draggable" "false")
 
                 Treasure (Coin _) ->
@@ -3202,6 +3257,41 @@ getPlaceTokenMenuHtml ( x, y ) isVisible nextOverlayId =
                                 |> Dom.addActionStopAndPrevent ( "click", AddToken token )
                         )
                         tokens
+                    )
+                |> Dom.appendChild
+                    (Dom.element "li"
+                        |> Dom.addClass "cancel-menu cancel"
+                        |> Dom.addActionStopAndPrevent ( "click", ChangeContextMenuState Open )
+                        |> Dom.appendText "Cancel"
+                    )
+            )
+        |> Dom.render
+
+
+getPlaceHighlightMenuHtml : ( Int, Int ) -> Bool -> Int -> Html Msg
+getPlaceHighlightMenuHtml ( x, y ) isVisible nextOverlayId =
+    let
+        values =
+            [ Colour.red
+            , Colour.orange
+            , Colour.yellow
+            , Colour.green
+            , Colour.blue
+            , Colour.indigo
+            ]
+    in
+    Dom.element "div"
+        |> Dom.appendChild
+            (Dom.element "ul"
+                |> Dom.addClassConditional "open" isVisible
+                |> Dom.appendChildList
+                    (List.map
+                        (\c ->
+                            Dom.element "li"
+                                |> Dom.appendText (Colour.toString c)
+                                |> Dom.addActionStopAndPrevent ( "click", AddHighlight (BoardOverlay (Highlight c) nextOverlayId Default [ ( x, y ) ]) )
+                        )
+                        values
                     )
                 |> Dom.appendChild
                     (Dom.element "li"

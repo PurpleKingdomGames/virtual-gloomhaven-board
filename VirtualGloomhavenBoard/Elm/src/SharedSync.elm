@@ -2,6 +2,7 @@ module SharedSync exposing (decodeBoardOverlay, decodeBoardOverlayDirection, dec
 
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..))
+import Colour
 import Html.Attributes exposing (id)
 import Json.Decode as Decode exposing (Decoder, andThen, fail, field, index, map2, map4, map5, map6, maybe, succeed)
 import Json.Encode as Encode exposing (object)
@@ -86,6 +87,12 @@ encodeOverlayType overlay =
             object
                 [ ( "type", Encode.string "hazard" )
                 , ( "subType", Encode.string (encodeHazard h) )
+                ]
+
+        Highlight c ->
+            object
+                [ ( "type", Encode.string "highlight" )
+                , ( "colour", Encode.string (Colour.toHexString c) )
                 ]
 
         Obstacle o ->
@@ -518,6 +525,10 @@ decodeBoardOverlayType =
 
                 "hazard" ->
                     decodeHazard
+
+                "highlight" ->
+                    field "colour" Decode.string
+                        |> andThen (\c -> succeed (Highlight (Colour.fromHexString c)))
 
                 "obstacle" ->
                     decodeObstacle

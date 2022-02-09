@@ -6,6 +6,7 @@ import Bitwise
 import BoardMapTile exposing (MapTileRef(..), refToString, stringToRef)
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), DoorSubType(..), ObstacleSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
 import Character exposing (characterToString)
+import Colour
 import Dom exposing (Element)
 import Game exposing (AIType(..), Piece, PieceType(..), RoomData, SummonsType(..), getPieceName, getPieceType)
 import Html exposing (a, div, footer, iframe, img, span, text)
@@ -31,6 +32,7 @@ type ContextMenu
     | SummonSubMenu
     | PlaceOverlayMenu
     | PlaceTokenMenu
+    | PlaceHighlightMenu
     | AddObstacleSubMenu
     | AddTrapSubMenu
 
@@ -527,6 +529,9 @@ getSortOrderForOverlay overlay =
         Wall _ ->
             10
 
+        Highlight _ ->
+            11
+
 
 overlayToHtml : Bool -> Bool -> BoardOverlayModel msg -> ( String, Dom.Element msg )
 overlayToHtml dragOverlays dragDoors model =
@@ -563,6 +568,9 @@ overlayToHtml dragOverlays dragDoors model =
 
                 Hazard _ ->
                     "hazard"
+
+                Highlight _ ->
+                    "highlight"
 
                 DifficultTerrain _ ->
                     "difficult-terrain"
@@ -648,6 +656,10 @@ overlayToHtml dragOverlays dragDoors model =
                     Dom.element "span"
                         |> Dom.appendText val
 
+                Highlight c ->
+                    Dom.element "div"
+                        |> Dom.addStyle ( "background-color", Colour.toHexString c )
+
                 _ ->
                     Dom.element "img"
                         |> Dom.addAttribute (alt (getOverlayLabel model.overlay.ref))
@@ -674,6 +686,9 @@ overlayToHtml dragOverlays dragDoors model =
                             Dom.addAttribute (attribute "draggable" "false")
 
                     Treasure (Chest _) ->
+                        Dom.addAttribute (attribute "draggable" "false")
+
+                    Highlight _ ->
                         Dom.addAttribute (attribute "draggable" "false")
 
                     Door _ _ ->

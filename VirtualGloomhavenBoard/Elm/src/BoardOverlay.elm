@@ -1,6 +1,7 @@
 module BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), CorridorSize(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), WallSubType(..), getAllOverlayTypes, getBoardOverlayName, getBoardOverlayType, getOverlayLabel, getOverlayTypesWithLabel)
 
 import BoardMapTile exposing (MapTileRef)
+import Colour exposing (Colour)
 import Dict exposing (Dict)
 
 
@@ -8,6 +9,7 @@ type BoardOverlayType
     = DifficultTerrain DifficultTerrainSubType
     | Door DoorSubType (List MapTileRef)
     | Hazard HazardSubType
+    | Highlight Colour
     | Obstacle ObstacleSubType
     | Rift
     | StartingLocation
@@ -310,6 +312,9 @@ getOverlayLabel overlay =
 
                 Thorns ->
                     "Thorns"
+
+        Highlight c ->
+            Colour.toString c ++ " Highlight"
 
         Obstacle o ->
             case o of
