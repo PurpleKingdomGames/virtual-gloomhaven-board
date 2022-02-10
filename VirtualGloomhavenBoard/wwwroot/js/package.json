@@ -1,6 +1,6 @@
 {
     "dependencies": {
-        "@microsoft/signalr": "^5.0.10",
-        "@microsoft/signalr-protocol-msgpack": "^5.0.10"
+        "@microsoft/signalr": "^6.0.2",
+        "@microsoft/signalr-protocol-msgpack": "^6.0.2"
     }
 }
