@@ -241,6 +241,12 @@
                     padding-left: 8rem;
                     transform: scale(1.25);
                     transform-origin: top left;
+
+                    .overlay {
+                        &.token {
+                            line-height: 1.5rem;
+                        }
+                    }
                 }
             }
 
@@ -297,6 +303,24 @@
         .tutorial {
             &.step-2 {
                 top: 4rem;
+            }
+        }
+
+        .input-wrapper {
+            label {
+                &.checkbox {
+                    &::after {
+                        top: 0.3rem;
+                        right: 0.2rem;
+                    }
+                }
+
+                input {
+                    &[type="color"] {
+                        width: 1.3rem;
+                        height: 1.3rem;
+                    }
+                }
             }
         }
     }
