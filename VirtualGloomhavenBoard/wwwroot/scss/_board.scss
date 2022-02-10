@@ -439,11 +439,16 @@ $tiles:
                                 height: 100%;
                             }
 
-
                             & + .token {
                                 transform: scale(1);
                                 top: 22px;
                                 left: 21px;
+                            }
+
+                            & + .coin {
+                                transform: scale(1);
+                                top: 0;
+                                left: 0;
                             }
                         }
 
