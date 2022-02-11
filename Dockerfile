@@ -35,7 +35,7 @@ RUN apt-get update; \
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 
 # Build the app
-RUN dotnet publish -c Release --self-contained true -r linux-x64 -o ./publish
+RUN dotnet publish -c Release -r linux-x64 -o ./publish
 
 # Copy the app to a minimal Linux build
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
