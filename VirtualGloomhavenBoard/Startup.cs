@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -39,6 +40,12 @@ namespace VirtualGloomhavenBoard
         public void Configure(IApplicationBuilder app)
         {
             string? configHost = Configuration.GetValue<string>("HostUrl");
+            string assetPath = Path.Combine(
+                Path.GetDirectoryName(
+                    Assembly.GetExecutingAssembly().Location
+                ) ?? string.Empty,
+                "assets"
+            );
 
             Regex versionRegex = new("([0-9]+.[0-9]+.[0-9]+)");
             string version = versionRegex
@@ -55,7 +62,7 @@ namespace VirtualGloomhavenBoard
                 )
                 .Value
             ;
-            UpdateHtmlWithVersion(new[] { "index.html", "creator.html" }, version);
+            UpdateHtmlWithVersion(new[] { "index.html", "creator.html" }, version, assetPath);
 
             if (configHost?.ToLower().StartsWith("https://") == true)
             {
@@ -68,6 +75,7 @@ namespace VirtualGloomhavenBoard
             contentTypeProvider.Mappings[".scss"] = "text/x-scss";
 
             StaticFileOptions fileOptions = new();
+            fileOptions.FileProvider = new PhysicalFileProvider(assetPath);
             fileOptions.ContentTypeProvider = contentTypeProvider;
             fileOptions.OnPrepareResponse = _ =>
             {
@@ -103,7 +111,12 @@ namespace VirtualGloomhavenBoard
                 .AddRewrite("^Creator", "/creator.html", true)
             );
 
-            app.UseDefaultFiles();
+            DefaultFilesOptions defaultFilesOptions = new DefaultFilesOptions();
+            defaultFilesOptions.DefaultFileNames.Clear();
+            defaultFilesOptions.DefaultFileNames.Add("index.html");
+            defaultFilesOptions.FileProvider = new PhysicalFileProvider(assetPath);
+
+            app.UseDefaultFiles(defaultFilesOptions);
             app.UseStaticFiles(fileOptions);
 
             app.UseRouting();
@@ -112,15 +125,12 @@ namespace VirtualGloomhavenBoard
             );
         }
 
-        private void UpdateHtmlWithVersion(string[] files, string version)
+        private void UpdateHtmlWithVersion(string[] files, string version, string assetPath)
         {
             foreach (string file in files)
             {
                 string path = Path.Combine(
-                    Path.GetDirectoryName(
-                        Assembly.GetExecutingAssembly().Location
-                    ) ?? string.Empty,
-                    "wwwroot",
+                    assetPath,
                     file
                 );
 

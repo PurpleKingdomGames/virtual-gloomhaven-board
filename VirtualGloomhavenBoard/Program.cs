@@ -51,10 +51,7 @@ namespace VirtualGloomhavenBoard
             return Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    #if RELEASE
-                    if (AppDomain.CurrentDomain.BaseDirectory != null)
-                        webBuilder.UseContentRoot(AppDomain.CurrentDomain.BaseDirectory);
-                    #endif
+                    webBuilder.UseContentRoot("assets");
                     webBuilder.UseUrls(hostUrl);
                     webBuilder.UseConfiguration(config);
                     webBuilder.UseStartup<Startup>();

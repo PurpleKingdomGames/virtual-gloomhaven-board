@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <DefaultItemExcludes>$(DefaultItemExcludes);.DS_Store</DefaultItemExcludes>
         <EnableDefaultContentItems>false</EnableDefaultContentItems>
-        <ApplicationIcon>wwwroot/img/favicons/app.ico</ApplicationIcon>
+        <ApplicationIcon>assets/img/favicons/app.ico</ApplicationIcon>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>CS8597;CS8600;CS8601;CS8602;CS8603;CS8604;CS8605;CS8606;CS8607;CS8608;CS8609;CS8610;CS8611;CS8612;CS8613;CS8614;CS8615;CS8616;CS8617;CS8618;CS8619;CS8620;CS8621;CS8622;CS8624;CS8625;CS8626;CS8629;CS8631;CS8632;CS8633;CS8634;CS8638;CS8643;CS8644;CS8645;CS8653;CS8654;CS8655;CS8667;CS8714</WarningsAsErrors>
     </PropertyGroup>
@@ -13,13 +13,14 @@
         <PublishTrimmed>true</PublishTrimmed>
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
         <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
         <DefineConstants>RELEASE</DefineConstants>
         <PublishDir>$(ProjectDir)bin/$(Configuration)/publish</PublishDir>
     </PropertyGroup>
     <ItemGroup>
-        <Watch Include="**\*.cs;**\*.js;**\*.html;**\*.elm;**\*.scss" Exclude="bin\**\*;obj\**\*;Elm\tests\*;Elm\elm-stuff;\*;wwwroot\js\main.min.js;wwwroot\js\creator.min.js" />
+        <Watch Include="**\*.cs;**\*.js;**\*.html;**\*.elm;**\*.scss" Exclude="bin\**\*;obj\**\*;Elm\tests\*;Elm\elm-stuff;\*;assets\js\main.min.js;assets\js\creator.min.js" />
     </ItemGroup>
 
     <ItemGroup>
@@ -29,80 +30,80 @@
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </None>
 
-        <Content Include="wwwroot\img\**\*">
+        <Content Include="assets\img\**\*">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\fonts\**\*">
+        <Content Include="assets\fonts\**\*">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\data\**\*">
+        <Content Include="assets\data\**\*">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\js\app.js">
+        <Content Include="assets\js\app.js">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\js\app-creator.js">
+        <Content Include="assets\js\app-creator.js">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\js\dragPorts.js">
+        <Content Include="assets\js\dragPorts.js">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\js\signalr.min.js">
+        <Content Include="assets\js\signalr.min.js">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\js\signalr-protocol-msgpack.min.js">
+        <Content Include="assets\js\signalr-protocol-msgpack.min.js">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\js\msgpack5.min.js">
+        <Content Include="assets\js\msgpack5.min.js">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\index.html">
+        <Content Include="assets\index.html">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
 
-        <Content Include="wwwroot\creator.html">
+        <Content Include="assets\creator.html">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\manifest.json">
+        <Content Include="assets\manifest.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="wwwroot\browserconfig.xml">
+        <Content Include="assets\browserconfig.xml">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
@@ -120,51 +121,51 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="5.0.14" />
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.2" />
     </ItemGroup>
 
     <Target Name="BuildDebug" BeforeTargets="BeforeBuild" Condition="'$(Configuration)'=='Debug'">
         <!-- build elm normally (in dev)-->
-        <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=../wwwroot/js/main.min.js" />
-        <Exec Command="cd Elm &amp;&amp; elm make src/Creator.elm --output=../wwwroot/js/creator.min.js" />
-        <Exec Command="sass wwwroot/scss/main.scss:wwwroot/css/main.css --update --stop-on-error" />
+        <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=../assets/js/main.min.js" />
+        <Exec Command="cd Elm &amp;&amp; elm make src/Creator.elm --output=../assets/js/creator.min.js" />
+        <Exec Command="sass assets/scss/main.scss:assets/css/main.css --update --stop-on-error" />
     </Target>
 
     <Target Name="BuildElmRelease" BeforeTargets="BeforeBuild" Condition="'$(Configuration)'=='Release'">
         <!-- build elm optimised (in release)-->
-        <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=../wwwroot/js/main.js --optimize" />
-        <Exec Command="uglifyjs wwwroot/js/main.js --compress pure_funcs=['F2','F3','F4','F5','F6','F7','F8','F9','A2','A3','A4','A5','A6','A7','A8','A9'],pure_getters,keep_fargs=false,unsafe_comps,unsafe | uglifyjs --mangle --output wwwroot/js/main.min.js" />
-        <Exec Command="sass wwwroot/scss/main.scss:wwwroot/css/main.css --update --stop-on-error --style=compressed" />
+        <Exec Command="cd Elm &amp;&amp; elm make src/Main.elm --output=../assets/js/main.js --optimize" />
+        <Exec Command="uglifyjs assets/js/main.js --compress pure_funcs=['F2','F3','F4','F5','F6','F7','F8','F9','A2','A3','A4','A5','A6','A7','A8','A9'],pure_getters,keep_fargs=false,unsafe_comps,unsafe | uglifyjs --mangle --output assets/js/main.min.js" />
+        <Exec Command="sass assets/scss/main.scss:assets/css/main.css --update --stop-on-error --style=compressed" />
         <!-- also build scenario creator optimised (in release)-->
-        <Exec Command="cd Elm &amp;&amp; elm make src/Creator.elm --output=../wwwroot/js/creator.js --optimize" />
-        <Exec Command="uglifyjs wwwroot/js/creator.js --compress pure_funcs=['F2','F3','F4','F5','F6','F7','F8','F9','A2','A3','A4','A5','A6','A7','A8','A9'],pure_getters,keep_fargs=false,unsafe_comps,unsafe | uglifyjs --mangle --output wwwroot/js/creator.min.js" />
+        <Exec Command="cd Elm &amp;&amp; elm make src/Creator.elm --output=../assets/js/creator.js --optimize" />
+        <Exec Command="uglifyjs assets/js/creator.js --compress pure_funcs=['F2','F3','F4','F5','F6','F7','F8','F9','A2','A3','A4','A5','A6','A7','A8','A9'],pure_getters,keep_fargs=false,unsafe_comps,unsafe | uglifyjs --mangle --output assets/js/creator.min.js" />
         <ItemGroup>
-            <Content Include="wwwroot\js\main.js">
+            <Content Include="assets\js\main.js">
                 <CopyToOutputDirectory>Always</CopyToOutputDirectory>
                 <CopyToPublishDirectory>Always</CopyToPublishDirectory>
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
             </Content>
-            <Content Include="wwwroot\js\main.min.js">
+            <Content Include="assets\js\main.min.js">
                 <CopyToOutputDirectory>Always</CopyToOutputDirectory>
                 <CopyToPublishDirectory>Always</CopyToPublishDirectory>
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
             </Content>
-            <Content Include="wwwroot\css\main.css">
+            <Content Include="assets\css\main.css">
                 <CopyToOutputDirectory>Always</CopyToOutputDirectory>
                 <CopyToPublishDirectory>Always</CopyToPublishDirectory>
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
             </Content>
-            <Content Include="wwwroot\css\main.css.map">
+            <Content Include="assets\css\main.css.map">
                 <CopyToOutputDirectory>Always</CopyToOutputDirectory>
                 <CopyToPublishDirectory>Always</CopyToPublishDirectory>
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
             </Content>
-            <Content Include="wwwroot\js\creator.js">
+            <Content Include="assets\js\creator.js">
                 <CopyToOutputDirectory>Always</CopyToOutputDirectory>
                 <CopyToPublishDirectory>Always</CopyToPublishDirectory>
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
             </Content>
-            <Content Include="wwwroot\js\creator.min.js">
+            <Content Include="assets\js\creator.min.js">
                 <CopyToOutputDirectory>Always</CopyToOutputDirectory>
                 <CopyToPublishDirectory>Always</CopyToPublishDirectory>
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
