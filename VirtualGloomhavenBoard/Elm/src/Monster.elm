@@ -205,7 +205,7 @@ getMonsterBucketSize monster =
                     6
 
                 AestherScout ->
-                    6
+                    4
 
                 BanditGuard ->
                     6

@@ -1107,7 +1107,7 @@
             {
                 "ref": {
                     "type": "trap",
-                    "subType": "spike"
+                    "subType": "bear"
                 },
                 "direction": "default",
                 "cells": [
