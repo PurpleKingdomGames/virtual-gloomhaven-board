@@ -4,7 +4,7 @@ build/
 .vscode
 obj/
 bin/
-**/wwwroot/js/main*
-**/wwwroot/js/creator*
-**/wwwroot/js/node_modules
-**/wwwroot/css/
+**/assets/js/main*
+**/assets/js/creator*
+**/assets/js/node_modules
+**/assets/css/

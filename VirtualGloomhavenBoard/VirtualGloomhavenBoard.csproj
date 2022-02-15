@@ -20,7 +20,7 @@
         <PublishDir>$(ProjectDir)bin/$(Configuration)/publish</PublishDir>
     </PropertyGroup>
     <ItemGroup>
-        <Watch Include="**\*.cs;**\*.js;**\*.html;**\*.elm;**\*.scss" Exclude="bin\**\*;obj\**\*;Elm\tests\*;Elm\elm-stuff;\*;assets\js\main.min.js;assets\js\creator.min.js" />
+        <Watch Include="**\*.cs;**\*.js;**\*.html;**\*.elm;**\*.scss;**\*.json" Exclude="bin\**\*;obj\**\*;Elm\tests\*;Elm\elm-stuff;\*;" />
     </ItemGroup>
 
     <ItemGroup>
@@ -84,12 +84,32 @@
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
-        <Content Include="assets\index.html">
+        <Content Include="assets\js\main.min.js">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
+        <Content Include="assets\css\main.css">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
+        <Content Include="assets\css\main.css.map">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
+        <Content Include="assets\js\creator.min.js">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
             <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
         </Content>
 
+        <Content Include="assets\index.html">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+        </Content>
 
         <Content Include="assets\creator.html">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -145,27 +165,7 @@
                 <CopyToPublishDirectory>Always</CopyToPublishDirectory>
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
             </Content>
-            <Content Include="assets\js\main.min.js">
-                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-                <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-                <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
-            </Content>
-            <Content Include="assets\css\main.css">
-                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-                <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-                <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
-            </Content>
-            <Content Include="assets\css\main.css.map">
-                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-                <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-                <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
-            </Content>
             <Content Include="assets\js\creator.js">
-                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-                <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-                <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
-            </Content>
-            <Content Include="assets\js\creator.min.js">
                 <CopyToOutputDirectory>Always</CopyToOutputDirectory>
                 <CopyToPublishDirectory>Always</CopyToPublishDirectory>
                 <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
