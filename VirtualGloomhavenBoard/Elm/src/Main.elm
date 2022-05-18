@@ -2,6 +2,7 @@ port module Main exposing (main)
 
 import AppStorage exposing (AppModeType(..), CampaignTrackerUrl(..), Config, GameModeType(..), MoveablePiece, MoveablePieceType(..), decodeMoveablePiece, emptyOverrides, encodeMoveablePiece, loadFromStorage, loadOverrides, saveToStorage)
 import Array exposing (Array, fromList, length, toIndexedList, toList)
+import Bitwise
 import BoardHtml exposing (ContextMenu(..), formatNameString, getMapTileHtml, getTutorialHtml)
 import BoardMapTile exposing (MapTileRef(..))
 import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), BoardOverlayType(..), ChestType(..), CorridorMaterial(..), DifficultTerrainSubType(..), DoorSubType(..), HazardSubType(..), ObstacleSubType(..), TrapSubType(..), TreasureSubType(..), getBoardOverlayName, getOverlayLabel)
@@ -1380,13 +1381,38 @@ update msg model =
                                 ( Just ( x, y ), Nothing ) ->
                                     let
                                         moveKeys =
-                                            [ ( topLeftKey, ( -1, -1 ) )
-                                            , ( topRightKey, ( 0, -1 ) )
-                                            , ( leftKey, ( -1, 0 ) )
-                                            , ( rightKey, ( 1, 0 ) )
-                                            , ( bottomLeftKey, ( -1, 1 ) )
-                                            , ( bottomRightKey, ( 0, 1 ) )
-                                            ]
+                                            Debug.log
+                                                (Debug.toString
+                                                    (if Bitwise.and y 1 == 1 then
+                                                        0
+
+                                                     else
+                                                        -1
+                                                    )
+                                                )
+                                                [ ( topLeftKey
+                                                  , ( if Bitwise.and y 1 == 1 then
+                                                        0
+
+                                                      else
+                                                        -1
+                                                    , -1
+                                                    )
+                                                  )
+                                                , ( topRightKey, ( Bitwise.and y 1, -1 ) )
+                                                , ( leftKey, ( -1, 0 ) )
+                                                , ( rightKey, ( 1, 0 ) )
+                                                , ( bottomLeftKey
+                                                  , ( if Bitwise.and y 1 == 1 then
+                                                        0
+
+                                                      else
+                                                        -1
+                                                    , 1
+                                                    )
+                                                  )
+                                                , ( bottomRightKey, ( Bitwise.and y 1, 1 ) )
+                                                ]
 
                                         movePoint =
                                             moveKeys
