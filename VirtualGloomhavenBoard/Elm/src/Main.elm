@@ -69,6 +69,7 @@ type alias Model =
     , currentClientSettings : Maybe TransientClientSettings
     , currentPlayerList : Maybe (List CharacterClass)
     , currentSelectedFile : Maybe ( String, Maybe (Result Decode.Error Scenario) )
+    , currentSelectedCell : Maybe ( Int, Int )
     , deadPlayerList : List CharacterClass
     , currentDraggable : Maybe MoveablePiece
     , connectionStatus : ConnectionStatus
@@ -156,7 +157,8 @@ type Msg
     | ChangeAppMode AppModeType
     | RevealRoomMsg (List MapTileRef) ( Int, Int )
     | ChangeScenario GameStateScenario Bool
-    | OpenContextMenu ( Int, Int )
+    | SelectCell ( Int, Int )
+    | OpenContextMenu
     | ChangeContextMenuState ContextMenu
     | ChangeContextMenuAbsposition ( Int, Int )
     | ToggleCharacter CharacterClass Bool
@@ -187,6 +189,36 @@ type Msg
     | ExitFullscreen ()
     | Reconnect
     | NoOp
+
+
+topLeftKey : String
+topLeftKey =
+    "q"
+
+
+topRightKey : String
+topRightKey =
+    "e"
+
+
+leftKey : String
+leftKey =
+    "a"
+
+
+rightKey : String
+rightKey =
+    "d"
+
+
+bottomLeftKey : String
+bottomLeftKey =
+    "z"
+
+
+bottomRightKey : String
+bottomRightKey =
+    "c"
 
 
 undoLimit : Int
@@ -318,6 +350,7 @@ init ( oldState, maybeOverrides, seed ) =
                 { initGame | state = initGameState }
                 initConfig
                 (Loading initGameState.scenario)
+                Nothing
                 Nothing
                 Nothing
                 Nothing
@@ -567,7 +600,7 @@ update msg model =
                 case model.currentDraggable of
                     Just c ->
                         if Just ( x, y ) == c.coords then
-                            update (OpenContextMenu ( x, y )) { model | currentDraggable = Nothing }
+                            update (SelectCell ( x, y )) { model | currentDraggable = Nothing }
 
                         else
                             update MoveCompleted model
@@ -1057,11 +1090,19 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
+        SelectCell pos ->
+            ( { model | currentSelectedCell = Just pos }, Cmd.none )
+
         ChangeContextMenuState menuState ->
             ( { model | contextMenuState = menuState }, Cmd.none )
 
-        OpenContextMenu pos ->
-            ( { model | contextMenuState = Open, contextMenuPosition = pos }, getContextPosition pos )
+        OpenContextMenu ->
+            case model.currentSelectedCell of
+                Just pos ->
+                    ( { model | contextMenuState = Open, contextMenuPosition = pos }, getContextPosition pos )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         ChangeContextMenuAbsposition pos ->
             ( { model | contextMenuAbsPosition = pos }, Cmd.none )
@@ -1335,7 +1376,51 @@ update msg model =
                                 }
 
                         Nothing ->
-                            ( newModel, Cmd.none )
+                            case ( model.currentSelectedCell, model.currentDraggable ) of
+                                ( Just ( x, y ), Nothing ) ->
+                                    let
+                                        moveKeys =
+                                            [ ( topLeftKey, ( -1, -1 ) )
+                                            , ( topRightKey, ( 0, -1 ) )
+                                            , ( leftKey, ( -1, 0 ) )
+                                            , ( rightKey, ( 1, 0 ) )
+                                            , ( bottomLeftKey, ( -1, 1 ) )
+                                            , ( bottomRightKey, ( 0, 1 ) )
+                                            ]
+
+                                        movePoint =
+                                            moveKeys
+                                                |> filter (\( k, _ ) -> Just k == (newModel.keysDown |> head))
+                                                |> head
+
+                                        moveablePiece =
+                                            getTopPieceOnTile model.game.state ( x, y )
+                                    in
+                                    case ( moveablePiece, movePoint ) of
+                                        ( Just piece, Just ( _, ( newX, newY ) ) ) ->
+                                            let
+                                                newPos =
+                                                    ( x + newX, y + newY )
+
+                                                ( updatedModel, _ ) =
+                                                    update (MoveStarted piece Nothing) model
+                                                        |> Tuple.first
+                                                        |> update (MoveTargetChanged newPos Nothing)
+                                                        |> Tuple.first
+                                                        |> update MoveCompleted
+                                            in
+                                            -- Need to check the model to make sure it's moved, and then change the selected cell if it has
+                                            if updatedModel == model then
+                                                ( updatedModel, Cmd.none )
+
+                                            else
+                                                ( { updatedModel | currentSelectedCell = Just newPos }, Cmd.none )
+
+                                        _ ->
+                                            ( newModel, Cmd.none )
+
+                                _ ->
+                                    ( newModel, Cmd.none )
 
             else if val == "escape" then
                 update (ChangeAppMode AppStorage.Game) model
@@ -2820,7 +2905,7 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                 else
                     e
            )
-        |> Dom.addActionStopAndPrevent ( "click", OpenContextMenu ( x, y ) )
+        |> Dom.addActionStopAndPrevent ( "click", SelectCell ( x, y ) )
         |> Dom.render
 
 
@@ -3887,3 +3972,27 @@ loadScenario model roomCode seed gameStateScenario initGameState addToUndo scena
         , scrollToFirtVisibleCell ()
         ]
     )
+
+
+getTopPieceOnTile : GameState -> ( Int, Int ) -> Maybe MoveablePiece
+getTopPieceOnTile gamestate ( x, y ) =
+    case getPieceForCoord x y gamestate.pieces of
+        Just p ->
+            Just (MoveablePiece (PieceType p) (Just ( x, y )) Nothing)
+
+        Nothing ->
+            let
+                overlaysForCell =
+                    gamestate.overlays
+                        |> filter (filterOverlaysForCoord x y)
+                        |> sortWith
+                            (\a b ->
+                                compare (BoardHtml.getSortOrderForOverlay b.ref) (BoardHtml.getSortOrderForOverlay a.ref)
+                            )
+            in
+            case head overlaysForCell of
+                Just o ->
+                    Just (MoveablePiece (OverlayType o (Just ( x, y ))) (Just ( x, y )) Nothing)
+
+                Nothing ->
+                    Nothing
