@@ -1381,59 +1381,45 @@ update msg model =
                                 ( Just ( x, y ), Nothing ) ->
                                     let
                                         moveKeys =
-                                            Debug.log
-                                                (Debug.toString
-                                                    (if Bitwise.and y 1 == 1 then
-                                                        0
+                                            [ ( topLeftKey
+                                              , ( if Bitwise.and y 1 == 1 then
+                                                    0
 
-                                                     else
-                                                        -1
-                                                    )
+                                                  else
+                                                    -1
+                                                , -1
                                                 )
-                                                [ ( topLeftKey
-                                                  , ( if Bitwise.and y 1 == 1 then
-                                                        0
+                                              , -1
+                                              )
+                                            , ( topRightKey, ( Bitwise.and y 1, -1 ), 1 )
+                                            , ( leftKey, ( -1, 0 ), 0 )
+                                            , ( rightKey, ( 1, 0 ), 0 )
+                                            , ( bottomLeftKey
+                                              , ( if Bitwise.and y 1 == 1 then
+                                                    0
 
-                                                      else
-                                                        -1
-                                                    , -1
-                                                    )
-                                                  )
-                                                , ( topRightKey, ( Bitwise.and y 1, -1 ) )
-                                                , ( leftKey, ( -1, 0 ) )
-                                                , ( rightKey, ( 1, 0 ) )
-                                                , ( bottomLeftKey
-                                                  , ( if Bitwise.and y 1 == 1 then
-                                                        0
-
-                                                      else
-                                                        -1
-                                                    , 1
-                                                    )
-                                                  )
-                                                , ( bottomRightKey, ( Bitwise.and y 1, 1 ) )
-                                                ]
+                                                  else
+                                                    -1
+                                                , 1
+                                                )
+                                              , -1
+                                              )
+                                            , ( bottomRightKey, ( Bitwise.and y 1, 1 ), 1 )
+                                            ]
 
                                         movePoint =
                                             moveKeys
-                                                |> filter (\( k, _ ) -> Just k == (newModel.keysDown |> head))
+                                                |> filter (\( k, _, _ ) -> Just k == (newModel.keysDown |> head))
                                                 |> head
 
                                         moveablePiece =
                                             getTopPieceOnTile model.game.state ( x, y )
                                     in
                                     case ( moveablePiece, movePoint ) of
-                                        ( Just piece, Just ( _, ( newX, newY ) ) ) ->
+                                        ( Just piece, Just ( _, moveBy, originalX ) ) ->
                                             let
-                                                newPos =
-                                                    ( x + newX, y + newY )
-
-                                                ( updatedModel, _ ) =
-                                                    update (MoveStarted piece Nothing) model
-                                                        |> Tuple.first
-                                                        |> update (MoveTargetChanged newPos Nothing)
-                                                        |> Tuple.first
-                                                        |> update MoveCompleted
+                                                ( updatedModel, newPos ) =
+                                                    moveByPos model piece 0 ( x, y ) originalX moveBy
                                             in
                                             -- Need to check the model to make sure it's moved, and then change the selected cell if it has
                                             if updatedModel == model then
@@ -4016,9 +4002,47 @@ getTopPieceOnTile gamestate ( x, y ) =
                                 compare (BoardHtml.getSortOrderForOverlay b.ref) (BoardHtml.getSortOrderForOverlay a.ref)
                             )
             in
-            case head overlaysForCell of
-                Just o ->
-                    Just (MoveablePiece (OverlayType o (Just ( x, y ))) (Just ( x, y )) Nothing)
+            head overlaysForCell
+                |> Maybe.map
+                    (\o ->
+                        MoveablePiece (OverlayType o (Just ( x, y ))) (Just ( x, y )) Nothing
+                    )
 
-                Nothing ->
-                    Nothing
+
+moveByPos : Model -> MoveablePiece -> Int -> ( Int, Int ) -> Int -> ( Int, Int ) -> ( Model, ( Int, Int ) )
+moveByPos model piece numAttempts ( x, y ) originalX ( newX, newY ) =
+    if numAttempts > 6 then
+        ( model, ( x, y ) )
+
+    else
+        let
+            newPos =
+                ( x + newX, y + newY )
+
+            ( updatedModel, _ ) =
+                update (MoveStarted piece Nothing) model
+                    |> Tuple.first
+                    |> update (MoveTargetChanged newPos Nothing)
+                    |> Tuple.first
+                    |> update MoveCompleted
+        in
+        -- Need to check the model to make sure it's moved, and then change the selected cell if it has
+        if updatedModel == model then
+            let
+                moveBy =
+                    if newY /= 0 then
+                        ( if newX == 0 then
+                            originalX
+
+                          else
+                            0
+                        , newY
+                        )
+
+                    else
+                        ( newX, newY )
+            in
+            moveByPos model piece (numAttempts + 1) newPos originalX moveBy
+
+        else
+            ( updatedModel, newPos )
