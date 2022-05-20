@@ -199,7 +199,7 @@ topLeftKey =
 
 topRightKey : String
 topRightKey =
-    "e"
+    "w"
 
 
 leftKey : String
@@ -209,7 +209,7 @@ leftKey =
 
 rightKey : String
 rightKey =
-    "d"
+    "s"
 
 
 bottomLeftKey : String
@@ -219,7 +219,7 @@ bottomLeftKey =
 
 bottomRightKey : String
 bottomRightKey =
-    "c"
+    "x"
 
 
 undoLimit : Int
@@ -1379,57 +1379,101 @@ update msg model =
                         Nothing ->
                             case ( model.currentSelectedCell, model.currentDraggable ) of
                                 ( Just ( x, y ), Nothing ) ->
-                                    let
-                                        moveKeys =
-                                            [ ( topLeftKey
-                                              , ( if Bitwise.and y 1 == 1 then
-                                                    0
+                                    if newModel.keysDown == [ "l" ] then
+                                        let
+                                            coins =
+                                                newModel.game.state.overlays
+                                                    |> filter
+                                                        (\o ->
+                                                            case o.ref of
+                                                                Treasure (Coin _) ->
+                                                                    o.cells == [ ( x, y ) ]
 
-                                                  else
-                                                    -1
-                                                , -1
-                                                )
-                                              , -1
-                                              )
-                                            , ( topRightKey, ( Bitwise.and y 1, -1 ), 1 )
-                                            , ( leftKey, ( -1, 0 ), 0 )
-                                            , ( rightKey, ( 1, 0 ), 0 )
-                                            , ( bottomLeftKey
-                                              , ( if Bitwise.and y 1 == 1 then
-                                                    0
+                                                                _ ->
+                                                                    False
+                                                        )
+                                                    |> head
+                                        in
+                                        case coins of
+                                            Just o ->
+                                                update (RemoveOverlay o) newModel
 
-                                                  else
-                                                    -1
-                                                , 1
-                                                )
-                                              , -1
-                                              )
-                                            , ( bottomRightKey, ( Bitwise.and y 1, 1 ), 1 )
-                                            ]
+                                            Nothing ->
+                                                ( newModel, Cmd.none )
 
-                                        movePoint =
-                                            moveKeys
-                                                |> filter (\( k, _, _ ) -> Just k == (newModel.keysDown |> head))
-                                                |> head
+                                    else if newModel.keysDown == [ "o" ] then
+                                        let
+                                            rooms =
+                                                List.filter (\o -> List.any (\c -> c == ( x, y )) o.cells) model.game.state.overlays
+                                                    |> List.filterMap
+                                                        (\o ->
+                                                            case o.ref of
+                                                                Door _ refs ->
+                                                                    Just refs
 
-                                        moveablePiece =
-                                            getTopPieceOnTile model.game.state ( x, y )
-                                    in
-                                    case ( moveablePiece, movePoint ) of
-                                        ( Just piece, Just ( _, moveBy, originalX ) ) ->
-                                            let
-                                                ( updatedModel, newPos ) =
-                                                    moveByPos model piece 0 ( x, y ) originalX moveBy
-                                            in
-                                            -- Need to check the model to make sure it's moved, and then change the selected cell if it has
-                                            if updatedModel == model then
-                                                ( updatedModel, Cmd.none )
+                                                                _ ->
+                                                                    Nothing
+                                                        )
+                                                    |> List.foldl (++) []
+                                        in
+                                        if List.length rooms > 0 then
+                                            update (RevealRoomMsg rooms ( x, y )) newModel
 
-                                            else
-                                                ( { updatedModel | currentSelectedCell = Just newPos }, Cmd.none )
-
-                                        _ ->
+                                        else
                                             ( newModel, Cmd.none )
+
+                                    else
+                                        let
+                                            moveKeys =
+                                                [ ( topLeftKey
+                                                  , ( if Bitwise.and y 1 == 1 then
+                                                        0
+
+                                                      else
+                                                        -1
+                                                    , -1
+                                                    )
+                                                  , -1
+                                                  )
+                                                , ( topRightKey, ( Bitwise.and y 1, -1 ), 1 )
+                                                , ( leftKey, ( -1, 0 ), 0 )
+                                                , ( rightKey, ( 1, 0 ), 0 )
+                                                , ( bottomLeftKey
+                                                  , ( if Bitwise.and y 1 == 1 then
+                                                        0
+
+                                                      else
+                                                        -1
+                                                    , 1
+                                                    )
+                                                  , -1
+                                                  )
+                                                , ( bottomRightKey, ( Bitwise.and y 1, 1 ), 1 )
+                                                ]
+
+                                            movePoint =
+                                                moveKeys
+                                                    |> filter (\( k, _, _ ) -> Just k == (newModel.keysDown |> head))
+                                                    |> head
+
+                                            moveablePiece =
+                                                getTopPieceOnTile model.game.state ( x, y )
+                                        in
+                                        case ( moveablePiece, movePoint ) of
+                                            ( Just piece, Just ( _, moveBy, originalX ) ) ->
+                                                let
+                                                    ( updatedModel, newPos ) =
+                                                        moveByPos model piece 0 ( x, y ) originalX moveBy
+                                                in
+                                                -- Need to check the model to make sure it's moved, and then change the selected cell if it has
+                                                if updatedModel == model then
+                                                    ( updatedModel, Cmd.none )
+
+                                                else
+                                                    ( { updatedModel | currentSelectedCell = Just newPos }, Cmd.none )
+
+                                            _ ->
+                                                ( newModel, Cmd.none )
 
                                 _ ->
                                     ( newModel, Cmd.none )
