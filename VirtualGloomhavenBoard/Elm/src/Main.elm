@@ -1090,7 +1090,8 @@ update msg model =
                     ( model, Cmd.none )
 
         SelectCell pos ->
-            ( { model | currentSelectedCell = Just pos }, Cmd.none )
+            { model | currentSelectedCell = Just pos }
+                |> update OpenContextMenu
 
         ChangeContextMenuState menuState ->
             ( { model | contextMenuState = menuState }, Cmd.none )
@@ -1361,6 +1362,9 @@ update msg model =
                 if newModel.keysDown == [ "m" ] then
                     update ToggleMenu newModel
 
+                else if newModel.keysDown == [ "escape" ] then
+                    update (ChangeContextMenuState Closed) newModel
+
                 else
                     case head (filter (\( keys, _ ) -> all (\k -> member k newModel.keysDown) keys) ctrlCombi) of
                         Just ( keys, cmd ) ->
@@ -1468,7 +1472,7 @@ update msg model =
                                                     ( updatedModel, Cmd.none )
 
                                                 else
-                                                    ( { updatedModel | currentSelectedCell = Just newPos }, Cmd.none )
+                                                    ( { updatedModel | currentSelectedCell = Just newPos, contextMenuPosition = newPos }, getContextPosition newPos )
 
                                             _ ->
                                                 ( newModel, Cmd.none )

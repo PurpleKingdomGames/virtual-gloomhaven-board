@@ -91,7 +91,9 @@
                     display: none;
                 }
 
-                &.cancel-menu, ul li.cancel-menu, &:not([class^="remove"]) + [class^="remove"] {
+                &.cancel-menu,
+                ul li.cancel-menu,
+                &:not([class^="remove"])+[class^="remove"] {
                     margin-top: 0.7rem;
 
                     &:before {
