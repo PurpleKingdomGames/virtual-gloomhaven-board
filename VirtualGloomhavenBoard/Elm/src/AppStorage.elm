@@ -185,7 +185,6 @@ encodeConfig : Config -> Encode.Value
 encodeConfig config =
     object
         [ ( "appMode", Encode.string (encodeAppMode config.appMode) )
-        , ( "gameMode", Encode.string (encodeGameMode config.gameMode) )
         , ( "roomCode"
           , case config.roomCode of
                 Just r ->
@@ -291,7 +290,7 @@ decodeConfig : Decoder Config
 decodeConfig =
     Decode.succeed Config
         |> required "appMode" (Decode.string |> Decode.andThen decodeAppMode)
-        |> required "gameMode" (Decode.string |> Decode.andThen decodeGameMode)
+        |> optional "gameMode" (Decode.string |> Decode.andThen decodeGameMode) MovePiece
         |> required "roomCode" (Decode.nullable Decode.string)
         |> optional "summonsColour" Decode.string defaultSummonsColour
         |> required "showRoomCode" Decode.bool
