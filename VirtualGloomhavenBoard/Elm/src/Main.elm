@@ -92,16 +92,14 @@ type alias Model =
 
 
 type alias PieceModel =
-    { gameMode : GameModeType
-    , isDragging : Bool
+    { isDragging : Bool
     , coords : Maybe ( Int, Int )
     , piece : Piece
     }
 
 
 type alias BoardOverlayModel =
-    { gameMode : GameModeType
-    , isDragging : Bool
+    { isDragging : Bool
     , coords : Maybe ( Int, Int )
     , overlay : BoardOverlay
     }
@@ -2770,7 +2768,6 @@ getBoardHtml model game encodedDraggable cellsForDraggable y row =
                     in
                     ( "board-cell-" ++ String.fromInt x ++ "-" ++ String.fromInt y
                     , lazy8 getCellHtml
-                        model.config.gameMode
                         model.game.state.overlays
                         model.game.state.pieces
                         x
@@ -2783,6 +2780,7 @@ getBoardHtml model game encodedDraggable cellsForDraggable y row =
                         )
                         cell.passable
                         (cellVisible == False)
+                        (model.currentSelectedCell == Just ( x, y ))
                     )
                 )
                 row
@@ -2790,8 +2788,8 @@ getBoardHtml model game encodedDraggable cellsForDraggable y row =
         )
 
 
-getCellHtml : GameModeType -> List BoardOverlay -> List Piece -> Int -> Int -> String -> Bool -> Bool -> Html.Html Msg
-getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
+getCellHtml : List BoardOverlay -> List Piece -> Int -> Int -> String -> Bool -> Bool -> Bool -> Html.Html Msg
+getCellHtml overlays pieces x y encodedDraggable passable hidden selected =
     let
         currentDraggable =
             case Decode.decodeString decodeMoveablePiece encodedDraggable of
@@ -2806,7 +2804,6 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                 |> map
                     (\o ->
                         BoardOverlayModel
-                            gameMode
                             (case currentDraggable of
                                 Just m ->
                                     case m.ref of
@@ -2827,7 +2824,6 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
             Maybe.map
                 (\p ->
                     PieceModel
-                        gameMode
                         (case currentDraggable of
                             Just m ->
                                 case m.ref of
@@ -2851,6 +2847,7 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                 |> Dom.addClass "hexagon"
                 |> Dom.addAttribute (attribute "data-cell-x" (String.fromInt x))
                 |> Dom.addAttribute (attribute "data-cell-y" (String.fromInt y))
+                |> Dom.addClassConditional "selected" selected
                 -- Everything except coins and tokens
                 |> Dom.setChildListWithKeys
                     ((overlaysForCell
@@ -2914,7 +2911,6 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                                             if m.target == Just ( x, y ) then
                                                 [ pieceToHtml
                                                     (PieceModel
-                                                        gameMode
                                                         False
                                                         (Just ( x, y ))
                                                         p
@@ -2928,7 +2924,6 @@ getCellHtml gameMode overlays pieces x y encodedDraggable passable hidden =
                                             if any (\c -> c == ( x, y )) o.cells then
                                                 [ overlayToHtml
                                                     (BoardOverlayModel
-                                                        gameMode
                                                         False
                                                         (Just ( x, y ))
                                                         o
