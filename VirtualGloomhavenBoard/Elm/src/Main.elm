@@ -25,7 +25,7 @@ import Html.Events exposing (on, onClick, targetValue)
 import Html.Events.Extra.Drag as DragDrop
 import Html.Events.Extra.Touch as Touch
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy3, lazy5, lazy6, lazy8)
+import Html.Lazy exposing (lazy, lazy3, lazy4, lazy5, lazy6, lazy8)
 import HtmlEvents exposing (onClickPreventDefault)
 import Http
 import Json.Decode as Decode exposing (decodeString)
@@ -1600,6 +1600,26 @@ view model =
     let
         config =
             model.config
+
+        cellVisible =
+            case model.currentSelectedCell of
+                Just ( x, y ) ->
+                    model.game.staticBoard
+                        |> Array.get x
+                        |> Maybe.map (\c -> Array.get y c)
+                        |> Maybe.map
+                            (\c ->
+                                case c of
+                                    Just cell ->
+                                        cell.passable
+
+                                    Nothing ->
+                                        False
+                            )
+                        |> (==) (Just True)
+
+                Nothing ->
+                    False
     in
     div
         [ class
@@ -1615,7 +1635,13 @@ view model =
         , Touch.onCancel (\_ -> TouchCanceled)
         , onClick (ChangeContextMenuState Closed)
         ]
-        ([ getHeaderHtml model
+        ([ lazy4
+            getSelectedCellAria
+            model.currentSelectedCell
+            model.game.state.pieces
+            model.game.state.overlays
+            cellVisible
+         , getHeaderHtml model
          , div [ class "main" ]
             [ Keyed.node
                 "div"
@@ -1762,6 +1788,38 @@ getHeaderHtml model =
         , lazy3 getScenarioTitleHtml model.game.scenario.id model.game.scenario.title isSoloScenario
         , lazy3 getRoomCodeHtml model.config.roomCode model.config.showRoomCode (model.config.tutorialStep == roomCodeTutorialStep)
         ]
+
+
+getSelectedCellAria : Maybe ( Int, Int ) -> List Piece -> List BoardOverlay -> Bool -> Html.Html Msg
+getSelectedCellAria selectedCell pieces overlays cellVisible =
+    case selectedCell of
+        Just ( x, y ) ->
+            let
+                piece =
+                    pieces
+                        |> filter (\p -> p.x == x && p.y == y)
+                        |> head
+
+                filteredOverlays =
+                    overlays
+                        |> filter (\o -> any (\c -> c == ( x, y )) o.cells)
+
+                txt =
+                    if cellVisible == False then
+                        "Cell is has not been revealed"
+
+                    else
+                        case piece of
+                            Just p ->
+                                "The " ++ getLabelForPiece p ++ " is standing on"
+
+                            Nothing ->
+                                "This cell contains"
+            in
+            div [ class "cell-details", attribute "aria-live" "polite" ] [ text txt ]
+
+        Nothing ->
+            div [ class "cell-details", attribute "aria-live" "polite" ] []
 
 
 getMenuToggleHtml : Model -> Html.Html Msg
