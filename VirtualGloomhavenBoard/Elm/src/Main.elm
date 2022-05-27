@@ -38,7 +38,7 @@ import Random exposing (Seed)
 import Scenario exposing (DoorData(..), Scenario)
 import ScenarioSync exposing (decodeScenario, loadScenarioById)
 import SpecialRules
-import String exposing (join, split)
+import String exposing (join, left, split, toLower, trim)
 import Task
 import Version
 
@@ -1605,8 +1605,8 @@ view model =
             case model.currentSelectedCell of
                 Just ( x, y ) ->
                     model.game.staticBoard
-                        |> Array.get x
-                        |> Maybe.map (\c -> Array.get y c)
+                        |> Array.get y
+                        |> Maybe.map (\c -> Array.get x c)
                         |> Maybe.map
                             (\c ->
                                 case c of
@@ -1804,22 +1804,52 @@ getSelectedCellAria selectedCell pieces overlays cellVisible =
                     overlays
                         |> filter (\o -> any (\c -> c == ( x, y )) o.cells)
 
-                txt =
+                description =
                     if cellVisible == False then
-                        "Cell is has not been revealed"
+                        [ text "This cell is has not been revealed" ]
 
                     else
                         case piece of
                             Just p ->
-                                "The " ++ getLabelForPiece p ++ " is standing on"
+                                case List.length filteredOverlays of
+                                    0 ->
+                                        [ text ("This cell contains only a " ++ getLabelForPieceWithRealName p)
+                                        ]
+
+                                    _ ->
+                                        getOverlaysDecriptionHtml ("The " ++ getLabelForPieceWithRealName p ++ " is standing on ") filteredOverlays
 
                             Nothing ->
-                                "This cell contains"
+                                if List.length filteredOverlays == 0 then
+                                    [ text "This cell is empty" ]
+
+                                else
+                                    getOverlaysDecriptionHtml "This cell contains" filteredOverlays
             in
-            div [ class "cell-details", attribute "aria-live" "polite" ] [ text txt ]
+            div [ class "cell-details", attribute "aria-live" "polite" ] description
 
         Nothing ->
             div [ class "cell-details", attribute "aria-live" "polite" ] []
+
+
+getOverlaysDecriptionHtml : String -> List BoardOverlay -> List (Html.Html Msg)
+getOverlaysDecriptionHtml prefix overlays =
+    case List.length overlays of
+        0 ->
+            [ text prefix ]
+
+        1 ->
+            case head overlays of
+                Just o ->
+                    [ text (prefix ++ " " ++ getOverlayLabelWithPrefix o.ref) ]
+
+                Nothing ->
+                    [ text prefix ]
+
+        _ ->
+            [ text prefix
+            , ul [] (map (\o -> li [] [ text (getOverlayLabelWithPrefix o.ref) ]) overlays)
+            ]
 
 
 getMenuToggleHtml : Model -> Html.Html Msg
@@ -3746,6 +3776,52 @@ getLabelForOverlay overlay coords =
             "Add new " ++ getOverlayLabel overlay.ref
 
 
+getOverlayLabelWithPrefix : BoardOverlayType -> String
+getOverlayLabelWithPrefix overlayType =
+    let
+        overlayLabel =
+            getOverlayLabel overlayType
+
+        singularPrex =
+            if member (left 1 (toLower overlayLabel)) [ "a", "e", "i", "o", "u" ] then
+                "an"
+
+            else
+                "a"
+
+        prefix =
+            case overlayType of
+                DifficultTerrain t ->
+                    case t of
+                        Water ->
+                            ""
+
+                        _ ->
+                            singularPrex
+
+                Door d _ ->
+                    case d of
+                        DarkFog ->
+                            ""
+
+                        LightFog ->
+                            ""
+
+                        _ ->
+                            singularPrex
+
+                Treasure _ ->
+                    ""
+
+                _ ->
+                    singularPrex
+    in
+    prefix
+        ++ " "
+        ++ overlayLabel
+        |> trim
+
+
 getLabelForPiece : Piece -> String
 getLabelForPiece piece =
     case piece.ref of
@@ -3790,6 +3866,11 @@ getLabelForPiece piece =
 
         Game.None ->
             "None"
+
+
+getLabelForPieceWithRealName : Piece -> String
+getLabelForPieceWithRealName piece =
+    ""
 
 
 getDeadPlayers : GameState -> List CharacterClass
