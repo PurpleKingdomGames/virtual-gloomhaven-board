@@ -1,4 +1,4 @@
-module Character exposing (CharacterClass(..), characterDictionary, characterToString, getSoloScenarios, stringToCharacter)
+module Character exposing (CharacterClass(..), characterDictionary, characterToString, getRealCharacterName, getSoloScenarios, stringToCharacter)
 
 import Dict exposing (Dict, filter, fromList, get, toList)
 import List exposing (head)
@@ -91,6 +91,67 @@ characterToString character =
 stringToCharacter : String -> Maybe CharacterClass
 stringToCharacter character =
     get (String.toLower character) characterDictionary
+
+
+getRealCharacterName : CharacterClass -> String
+getRealCharacterName character =
+    case character of
+        BeastTyrant ->
+            "Beast Tyrant"
+
+        Berserker ->
+            "Berserker"
+
+        Bladeswarm ->
+            "Bladeswarm"
+
+        Brute ->
+            "Brute"
+
+        Cragheart ->
+            "Cragheart"
+
+        Diviner ->
+            "Diviner"
+
+        Doomstalker ->
+            "Doomstalker"
+
+        Elementalist ->
+            "Elementalist"
+
+        Mindthief ->
+            "Mindthief"
+
+        Nightshroud ->
+            "Nightshroud"
+
+        PlagueHerald ->
+            "Plague Herald"
+
+        Quartermaster ->
+            "Quartermaster"
+
+        Sawbones ->
+            "Sawbones"
+
+        Scoundrel ->
+            "Scoundrel"
+
+        Soothsinger ->
+            "Soothsinger"
+
+        Spellweaver ->
+            "Spellweaver"
+
+        Summoner ->
+            "Summoner"
+
+        Sunkeeper ->
+            "Sunkeeper"
+
+        Tinkerer ->
+            "Tinkerer"
 
 
 getSoloScenarios : Dict String ( Int, String )

@@ -9,7 +9,7 @@ import BoardOverlay exposing (BoardOverlay, BoardOverlayDirectionType(..), Board
 import Browser
 import Browser.Dom as BrowserDom
 import Browser.Events exposing (Visibility(..), onKeyDown, onKeyUp, onVisibilityChange)
-import Character exposing (CharacterClass(..), characterToString, getSoloScenarios)
+import Character exposing (CharacterClass(..), characterToString, getRealCharacterName, getSoloScenarios)
 import Colour
 import Dict exposing (Dict)
 import Dom exposing (Element)
@@ -1645,7 +1645,7 @@ view model =
          , div [ class "main" ]
             [ Keyed.node
                 "div"
-                [ class "board-wrapper", id "board" ]
+                [ class "board-wrapper", id "board", attribute "aria-hidden" "true" ]
                 ([ ( "mapBg", div [ class "map-bg" ] [] )
                  , ( "mapTiles", lazy5 getMapTileHtml model.game.state.visibleRooms model.game.roomData "" 0 0 )
                  , ( "mainBoard"
@@ -1826,10 +1826,10 @@ getSelectedCellAria selectedCell pieces overlays cellVisible =
                                 else
                                     getOverlaysDecriptionHtml "This cell contains" filteredOverlays
             in
-            div [ class "cell-details", attribute "aria-live" "polite" ] description
+            div [ class "cell-details", attribute "aria-live" "assertive", attribute "role" "status" ] description
 
         Nothing ->
-            div [ class "cell-details", attribute "aria-live" "polite" ] []
+            div [ class "cell-details", attribute "aria-live" "assertive", attribute "role" "status" ] []
 
 
 getOverlaysDecriptionHtml : String -> List BoardOverlay -> List (Html.Html Msg)
@@ -1900,7 +1900,7 @@ getMenuToggleHtml model =
 
 getScenarioTitleHtml : Int -> String -> Bool -> Html.Html Msg
 getScenarioTitleHtml id titleTxt isSolo =
-    header [ attribute "aria-label" "Scenario" ]
+    header [ attribute "aria-label" "Scenario", attribute "aria-live" "assertive", attribute "role" "status" ]
         (if titleTxt /= "" then
             [ if isSolo then
                 let
@@ -3097,16 +3097,6 @@ pieceToHtml model =
     in
     ( label
     , Dom.element "div"
-        |> Dom.addAttribute
-            (attribute "aria-label"
-                (case model.coords of
-                    Just ( x, y ) ->
-                        label ++ " at " ++ String.fromInt x ++ ", " ++ String.fromInt y
-
-                    Nothing ->
-                        "Add New " ++ label
-                )
-            )
         |> Dom.addClass (getPieceType model.piece.ref)
         |> Dom.addClass (getPieceName model.piece.ref)
         |> Dom.addClassConditional "being-dragged" model.isDragging
@@ -3870,7 +3860,12 @@ getLabelForPiece piece =
 
 getLabelForPieceWithRealName : Piece -> String
 getLabelForPieceWithRealName piece =
-    ""
+    case piece.ref of
+        Player p ->
+            getRealCharacterName p
+
+        _ ->
+            getLabelForPiece piece
 
 
 getDeadPlayers : GameState -> List CharacterClass

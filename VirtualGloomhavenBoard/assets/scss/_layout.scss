@@ -3,7 +3,7 @@
 @font-face {
     font-family: 'PirateOne';
     src: url('/fonts/PirataOne-Gloomhaven.eot');
-    src: url('/fonts/PirataOne-Gloomhaven.woff2') format('woff2'),url('/fonts/PirataOne-Gloomhaven.woff') format('woff'), url('/fonts/PirataOne-Gloomhaven.ttf') format('truetype'), url('/fonts/PirataOne-Gloomhaven.svg') format('svg');
+    src: url('/fonts/PirataOne-Gloomhaven.woff2') format('woff2'), url('/fonts/PirataOne-Gloomhaven.woff') format('woff'), url('/fonts/PirataOne-Gloomhaven.ttf') format('truetype'), url('/fonts/PirataOne-Gloomhaven.svg') format('svg');
 }
 
 :root {
@@ -13,7 +13,8 @@
 html {
     font-family: 'PirateOne', Nyala, Georgia, serif;
 
-    &, body {
+    &,
+    body {
         margin: 0;
         padding: 0;
         height: 100vh;
@@ -41,6 +42,11 @@ html {
         width: 100vw;
         flex-direction: column;
         height: 100vh;
+
+        .cell-details {
+            position: absolute;
+            visibility: hidden;
+        }
 
         .header {
             position: absolute;
@@ -148,7 +154,8 @@ html {
                                 transition: 0s;
                             }
 
-                            a:hover, &:hover {
+                            a:hover,
+                            &:hover {
                                 color: #fff;
 
                                 .shortcut {
@@ -383,7 +390,7 @@ html {
                             }
                         }
 
-                        & + .side-toggle {
+                        &+.side-toggle {
                             right: -10.1rem;
                         }
                     }
@@ -431,7 +438,7 @@ html {
 
             .board-wrapper {
                 height: 100%;
-                width:100%;
+                width: 100%;
                 overflow: auto;
                 background-image: radial-gradient(circle, rgba(241, 236, 232, 0.5) 31%, rgba(156, 124, 108, 0.3) 85%, rgba(81, 64, 30, 0.1) 100%), url("/img/bg.jpg");
                 background-repeat: repeat;
@@ -451,7 +458,8 @@ html {
                 }
             }
 
-            .connectionStatus, .errorStatus {
+            .connectionStatus,
+            .errorStatus {
                 position: absolute;
                 left: 50%;
                 right: 50%;
@@ -464,9 +472,9 @@ html {
                 font-size: 1.4rem;
                 transition: top 0.5s;
                 top: -3rem;
-                -webkit-box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.75);
-                -moz-box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.75);
-                box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.75);
+                -webkit-box-shadow: -1px 3px 5px 0px rgba(0, 0, 0, 0.75);
+                -moz-box-shadow: -1px 3px 5px 0px rgba(0, 0, 0, 0.75);
+                box-shadow: -1px 3px 5px 0px rgba(0, 0, 0, 0.75);
                 z-index: 1;
 
                 span {
@@ -481,7 +489,8 @@ html {
                     top: 0;
                 }
 
-                &:before, &:after {
+                &:before,
+                &:after {
                     content: '';
                     width: 4rem;
                     height: 2.9rem;
@@ -541,7 +550,8 @@ html {
 
             .pkg {
                 padding: 1rem;
-                display: flex;;
+                display: flex;
+                ;
                 flex-wrap: wrap;
                 justify-content: end;
 
@@ -584,6 +594,7 @@ html {
         &.board-only {
             .header {
                 top: -3.4rem;
+
                 .menu {
                     &:before {
                         top: 4rem;
