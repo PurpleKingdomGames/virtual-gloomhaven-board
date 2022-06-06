@@ -44,8 +44,12 @@ html {
         height: 100vh;
 
         .cell-details {
+            top: 0;
+            left: -2px;
+            width: 1px;
+            height: 1px;
             position: absolute;
-            visibility: hidden;
+            overflow: hidden;
         }
 
         .header {
@@ -231,7 +235,7 @@ html {
                 span {
                     &:last-child {
                         font-family: Arial, Helvetica, sans-serif;
-                        speak-as: spell-out;
+                        speak-as: literal-punctuation;
                     }
                 }
             }

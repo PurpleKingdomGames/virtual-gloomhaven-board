@@ -1635,14 +1635,8 @@ view model =
         , Touch.onCancel (\_ -> TouchCanceled)
         , onClick (ChangeContextMenuState Closed)
         ]
-        ([ lazy4
-            getSelectedCellAria
-            model.currentSelectedCell
-            model.game.state.pieces
-            model.game.state.overlays
-            cellVisible
-         , getHeaderHtml model
-         , div [ class "main" ]
+        ([ getHeaderHtml model
+         , div [ class "main", attribute "aria-label" "Gloomhaven board layout" ]
             [ Keyed.node
                 "div"
                 [ class "board-wrapper", id "board", attribute "aria-hidden" "true" ]
@@ -1717,6 +1711,11 @@ view model =
                        )
                 )
             , lazy getConnectionStatusHtml model.connectionStatus
+            , getSelectedCellAria
+                model.currentSelectedCell
+                model.game.state.pieces
+                model.game.state.overlays
+                cellVisible
             , getContextMenu model.game.scenario.id model.contextMenuState model.contextMenuPosition model.contextMenuAbsPosition model.config.summonsColour model.game.state.pieces model.game.state.overlays model.game.state.players model.game.state.availableMonsters
             ]
          , lazy getFooterHtml Version.get
@@ -1792,64 +1791,73 @@ getHeaderHtml model =
 
 getSelectedCellAria : Maybe ( Int, Int ) -> List Piece -> List BoardOverlay -> Bool -> Html.Html Msg
 getSelectedCellAria selectedCell pieces overlays cellVisible =
-    case selectedCell of
-        Just ( x, y ) ->
-            let
-                piece =
-                    pieces
-                        |> filter (\p -> p.x == x && p.y == y)
-                        |> head
+    Keyed.node
+        "div"
+        [ class "cell-details"
+        , attribute "aria-live" "assertive"
+        , attribute "aria-atomic" "true"
+        , attribute "aria-hidden" "false"
+        ]
+        (case selectedCell of
+            Just ( x, y ) ->
+                let
+                    piece =
+                        pieces
+                            |> filter (\p -> p.x == x && p.y == y)
+                            |> head
 
-                filteredOverlays =
-                    overlays
-                        |> filter (\o -> any (\c -> c == ( x, y )) o.cells)
+                    filteredOverlays =
+                        overlays
+                            |> filter (\o -> any (\c -> c == ( x, y )) o.cells)
 
-                description =
-                    if cellVisible == False then
-                        [ text "This cell is has not been revealed" ]
+                    description =
+                        if cellVisible == False then
+                            text "This cell is has not been revealed"
 
-                    else
-                        case piece of
-                            Just p ->
-                                case List.length filteredOverlays of
-                                    0 ->
-                                        [ text ("This cell contains only a " ++ getLabelForPieceWithRealName p)
-                                        ]
+                        else
+                            case piece of
+                                Just p ->
+                                    case List.length filteredOverlays of
+                                        0 ->
+                                            text ("This cell contains only a " ++ getLabelForPieceWithRealName p)
 
-                                    _ ->
-                                        getOverlaysDecriptionHtml ("The " ++ getLabelForPieceWithRealName p ++ " is standing on ") filteredOverlays
+                                        _ ->
+                                            getOverlaysDecriptionHtml ("The " ++ getLabelForPieceWithRealName p ++ " is standing on ") filteredOverlays
 
-                            Nothing ->
-                                if List.length filteredOverlays == 0 then
-                                    [ text "This cell is empty" ]
+                                Nothing ->
+                                    if List.length filteredOverlays == 0 then
+                                        text "This cell is empty"
 
-                                else
-                                    getOverlaysDecriptionHtml "This cell contains" filteredOverlays
-            in
-            div [ class "cell-details", attribute "aria-live" "assertive", attribute "role" "status" ] description
+                                    else
+                                        getOverlaysDecriptionHtml "This cell contains" filteredOverlays
+                in
+                [ ( "cell-description", description ) ]
 
-        Nothing ->
-            div [ class "cell-details", attribute "aria-live" "assertive", attribute "role" "status" ] []
+            Nothing ->
+                []
+        )
 
 
-getOverlaysDecriptionHtml : String -> List BoardOverlay -> List (Html.Html Msg)
+getOverlaysDecriptionHtml : String -> List BoardOverlay -> Html.Html Msg
 getOverlaysDecriptionHtml prefix overlays =
     case List.length overlays of
         0 ->
-            [ text prefix ]
+            text prefix
 
         1 ->
             case head overlays of
                 Just o ->
-                    [ text (prefix ++ " " ++ getOverlayLabelWithPrefix o.ref) ]
+                    text (prefix ++ " " ++ getOverlayLabelWithPrefix o.ref)
 
                 Nothing ->
-                    [ text prefix ]
+                    text prefix
 
         _ ->
-            [ text prefix
-            , ul [] (map (\o -> li [] [ text (getOverlayLabelWithPrefix o.ref) ]) overlays)
-            ]
+            div
+                []
+                [ text prefix
+                , ul [] (map (\o -> li [] [ text (getOverlayLabelWithPrefix o.ref) ]) overlays)
+                ]
 
 
 getMenuToggleHtml : Model -> Html.Html Msg
@@ -1900,7 +1908,7 @@ getMenuToggleHtml model =
 
 getScenarioTitleHtml : Int -> String -> Bool -> Html.Html Msg
 getScenarioTitleHtml id titleTxt isSolo =
-    header [ attribute "aria-label" "Scenario", attribute "aria-live" "assertive", attribute "role" "status" ]
+    header [ attribute "aria-label" "Scenario", attribute "aria-live" "assertive" ]
         (if titleTxt /= "" then
             [ if isSolo then
                 let
@@ -2121,7 +2129,7 @@ getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) summonsColour pieces
                                     pieceName =
                                         (case p.ref of
                                             Player character ->
-                                                Maybe.withDefault "" (characterToString character)
+                                                (getRealCharacterName character)
 
                                             AI (Enemy monster) ->
                                                 Maybe.withDefault "" (monsterTypeToString monster.monster)
@@ -2212,8 +2220,18 @@ getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) summonsColour pieces
             )
         , style "top" (String.fromInt absY ++ "px")
         , style "left" (String.fromInt absX ++ "px")
+        , attribute "aria-live" "polite"
+        , attribute "aria-atomic" "true"
+        , attribute "aria-hidden"
+            (if isOpen then
+                "false"
+
+             else
+                "true"
+            )
         ]
-        [ nav []
+        [ nav
+            []
             [ ul []
                 (if isOpen then
                     menuList
@@ -2246,7 +2264,7 @@ getRoomCodeHtml roomCode showRoomCode showTutorial =
             Just c ->
                 if showRoomCode then
                     [ ( "roomCodeLabel", span [] [ text "Room Code" ] )
-                    , ( "roomCodeText", span [] [ text c ] )
+                    , ( "roomCodeText", span [ attribute "aria-live" "polite" ] [ text c ] )
                     ]
                         ++ (if showTutorial then
                                 [ getTutorialHtml "This is your room code. You can change this in the settings in order to join other people's games. Or you can give this code to your friends so that they can join your game." roomCodeTutorialStep (UpdateTutorialStep menuTutorialStep) ]
@@ -2279,6 +2297,7 @@ getConnectionStatusHtml connectionStatus =
              else
                 "true"
             )
+        , attribute "role" "alert"
         ]
         [ span [] [ text "You are currently offline" ]
         , a [ onClick Reconnect ] [ text "Reconnect" ]
