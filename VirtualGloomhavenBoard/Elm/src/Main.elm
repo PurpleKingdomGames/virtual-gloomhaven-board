@@ -1831,7 +1831,9 @@ getSelectedCellAria selectedCell pieces overlays cellVisible =
                                     else
                                         getOverlaysDecriptionHtml "This cell contains" filteredOverlays
                 in
-                [ ( "cell-description", description ) ]
+                [ ( "aria-cachebuster", span [ attribute "aria-hidden" "true" ] [ text ("(" ++ String.fromInt x ++ "," ++ String.fromInt y ++ ")") ] )
+                , ( "cell-description", description )
+                ]
 
             Nothing ->
                 []
@@ -2129,7 +2131,7 @@ getContextMenu scenarioNumber state ( x, y ) ( absX, absY ) summonsColour pieces
                                     pieceName =
                                         (case p.ref of
                                             Player character ->
-                                                (getRealCharacterName character)
+                                                getRealCharacterName character
 
                                             AI (Enemy monster) ->
                                                 Maybe.withDefault "" (monsterTypeToString monster.monster)
