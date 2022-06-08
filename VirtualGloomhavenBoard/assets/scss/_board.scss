@@ -318,10 +318,6 @@ $tiles: (
                     left: -7px;
                     touch-action: none;
 
-                    &.selected {
-                        transform: scale(1.05);
-                    }
-
                     >div {
                         position: absolute;
                         top: 0;
