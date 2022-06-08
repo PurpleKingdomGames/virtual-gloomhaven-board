@@ -302,13 +302,26 @@ init ( oldState, maybeOverrides, seed ) =
                     AppStorage.empty
 
         forceScenarioRefresh =
-            case overrides.initPlayers of
+            (case overrides.initPlayers of
                 Nothing ->
                     List.length gs.players == 0
 
                 Just p ->
                     (List.length p > 0 && p /= gs.players)
                         || (List.length gs.players == 0)
+            )
+                || (case overrides.initScenario of
+                        Just newScenario ->
+                            case gs.scenario of
+                                InbuiltScenario Gloomhaven oldScenario ->
+                                    newScenario /= oldScenario
+
+                                _ ->
+                                    True
+
+                        Nothing ->
+                            False
+                   )
 
         initGameState =
             { gs

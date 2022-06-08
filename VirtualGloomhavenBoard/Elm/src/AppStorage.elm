@@ -268,9 +268,9 @@ mapDataDecoder =
 
 appOverridesDecoder : Decoder AppOverrides
 appOverridesDecoder =
-    map7 AppOverrides
-        (field "initScenario" (maybe Decode.int))
-        (field "initPlayers"
+    Decode.succeed AppOverrides
+        |> required "initScenario" (maybe Decode.int)
+        |> required "initPlayers"
             (maybe (Decode.list Decode.string)
                 |> andThen
                     (\s ->
@@ -278,12 +278,11 @@ appOverridesDecoder =
                             |> succeed
                     )
             )
-        )
-        (field "initRoomCodeSeed" (maybe Decode.int))
-        (field "lockScenario" Decode.bool)
-        (field "lockPlayers" Decode.bool)
-        (field "lockRoomCode" Decode.bool)
-        (field "campaignTracker" decodeCampaignTrackerUrl)
+        |> required "initRoomCodeSeed" (maybe Decode.int)
+        |> required "lockScenario" Decode.bool
+        |> required "lockPlayers" Decode.bool
+        |> required "lockRoomCode" Decode.bool
+        |> optional "campaignTracker" decodeCampaignTrackerUrl Nothing
 
 
 decodeConfig : Decoder Config
