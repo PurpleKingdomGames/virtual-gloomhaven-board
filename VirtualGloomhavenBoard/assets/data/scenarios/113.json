@@ -44,7 +44,7 @@
                 "room2X": -2,
                 "room2Y": 8,
                 "mapTileData": {
-                    "ref": "l3b",
+                    "ref": "l2a",
                     "doors": [],
                     "overlays": [],
                     "monsters": [],
@@ -61,7 +61,7 @@
                 "room2X": -2,
                 "room2Y": -2,
                 "mapTileData": {
-                    "ref": "l2a",
+                    "ref": "l3b",
                     "doors": [],
                     "overlays": [],
                     "monsters": [],
@@ -78,7 +78,7 @@
                 "room2X": -3,
                 "room2Y": -1,
                 "mapTileData": {
-                    "ref": "l2a",
+                    "ref": "l3b",
                     "doors": [],
                     "overlays": [],
                     "monsters": [],
@@ -95,7 +95,7 @@
                 "room2X": -3,
                 "room2Y": 7,
                 "mapTileData": {
-                    "ref": "l3b",
+                    "ref": "l2a",
                     "doors": [
                         {
                             "subType": "dark-fog",
@@ -224,7 +224,7 @@
                             "room2X": 3,
                             "room2Y": 6,
                             "mapTileData": {
-                                "ref": "l3b",
+                                "ref": "l2a",
                                 "doors": [],
                                 "overlays": [],
                                 "monsters": [],
@@ -241,7 +241,7 @@
                             "room2X": 3,
                             "room2Y": 5,
                             "mapTileData": {
-                                "ref": "l3b",
+                                "ref": "l2a",
                                 "doors": [],
                                 "overlays": [],
                                 "monsters": [],
@@ -258,7 +258,7 @@
                             "room2X": 2,
                             "room2Y": -12,
                             "mapTileData": {
-                                "ref": "l2a",
+                                "ref": "l3b",
                                 "doors": [
                                     {
                                         "subType": "corridor",
@@ -270,7 +270,7 @@
                                         "room2X": 2,
                                         "room2Y": 18,
                                         "mapTileData": {
-                                            "ref": "l3b",
+                                            "ref": "l2a",
                                             "doors": [],
                                             "overlays": [],
                                             "monsters": [],
@@ -287,7 +287,7 @@
                                         "room2X": 3,
                                         "room2Y": 0,
                                         "mapTileData": {
-                                            "ref": "l2a",
+                                            "ref": "l3b",
                                             "doors": [],
                                             "overlays": [],
                                             "monsters": [],
@@ -304,7 +304,7 @@
                                         "room2X": 3,
                                         "room2Y": 1,
                                         "mapTileData": {
-                                            "ref": "l2a",
+                                            "ref": "l3b",
                                             "doors": [],
                                             "overlays": [],
                                             "monsters": [],
