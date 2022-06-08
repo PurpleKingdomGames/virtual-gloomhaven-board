@@ -202,7 +202,7 @@ getMonsterBucketSize monster =
         NormalType t ->
             case t of
                 AestherAshblade ->
-                    6
+                    4
 
                 AestherScout ->
                     4
