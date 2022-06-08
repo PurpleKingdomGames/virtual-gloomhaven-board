@@ -2348,9 +2348,6 @@ initModel mapData =
                             Rift ->
                                 False
 
-                            Treasure (Coin _) ->
-                                False
-
                             _ ->
                                 True
                     )

@@ -196,7 +196,7 @@ overlayDictionary =
         , ( "trap-spike", Trap Spike )
         , ( "trap-poison", Trap Poison )
         , ( "treasure-chest", Treasure (Chest Locked) )
-        , ( "treasure-coin", Treasure (Coin 0) )
+        , ( "treasure-coin", Treasure (Coin 1) )
         , ( "wall-huge-rock", Wall HugeRock )
         , ( "wall-iron", Wall Iron )
         , ( "wall-large-rock", Wall LargeRock )
@@ -219,7 +219,7 @@ getBoardOverlayName overlay =
                             Treasure (Chest Locked)
 
                         Coin _ ->
-                            Treasure (Coin 0)
+                            Treasure (Coin 1)
 
                 _ ->
                     overlay
