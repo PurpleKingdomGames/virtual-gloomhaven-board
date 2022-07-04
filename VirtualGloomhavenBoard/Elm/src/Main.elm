@@ -1652,7 +1652,7 @@ view model =
          , div [ class "main", attribute "aria-label" "Gloomhaven board layout" ]
             [ Keyed.node
                 "div"
-                [ class "board-wrapper", id "board", attribute "aria-hidden" "true" ]
+                [ class "board-wrapper", id "board" ]
                 ([ ( "mapBg", div [ class "map-bg" ] [] )
                  , ( "mapTiles", lazy5 getMapTileHtml model.game.state.visibleRooms model.game.roomData "" 0 0 )
                  , ( "mainBoard"
