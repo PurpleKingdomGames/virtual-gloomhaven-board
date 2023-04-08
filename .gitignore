@@ -37,3 +37,7 @@ metals.sbt
 .bsp
 .ammonite
 .coursier
+
+# parcel
+.parcel-cache
+dist

@@ -6,7 +6,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        jdkToUse = pkgs.jdk17;
+        jdkToUse = pkgs.jdk19;
         sbtWithJRE = pkgs.sbt.override { jre = jdkToUse; };
       in
       {
