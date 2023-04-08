@@ -1,3 +1,5 @@
+package vgb
+
 import cats.effect.IO
 import tyrian.Html.*
 import tyrian.*

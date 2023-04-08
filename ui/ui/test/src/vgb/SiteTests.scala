@@ -1,4 +1,4 @@
-
+package vgb
 
 import cats.effect.IO
 class SiteTests extends munit.FunSuite {
