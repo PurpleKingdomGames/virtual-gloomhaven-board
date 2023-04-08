@@ -10,7 +10,7 @@ The quickest and easiest way to get up and running is by opening
 
 ### Using a Local Server
 If you'd rather use a local server than the online version (perhaps you're playing
-ove LAN, or just fancy the technical challenge), then you can do that too!
+over LAN, or just fancy the technical challenge), then you can do that too!
 In essence all you need to do is download the correct file and set up port forwarding,
 but more detailed instructions are below:
 
