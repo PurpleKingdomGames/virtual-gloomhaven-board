@@ -5,9 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - uses: olafurpg/setup-scala@v11
+    - uses: olafurpg/setup-scala@v14
       with:
-        java-version: adopt@1.19
+        java-version: adopt@1.17
     - uses: jodersky/setup-mill@master
       with:
         mill-version: 0.10.12
