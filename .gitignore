@@ -1,10 +1,39 @@
 elm-stuff/
 build/
-.metals/
-.vscode
 obj/
 bin/
 **/assets/js/main*
 **/assets/js/creator*
 **/assets/js/node_modules
 **/assets/css/
+
+# JS
+node_modules
+
+# sbt
+target
+
+# mill
+out
+
+# Scala-CLI
+.scala-build
+
+# Direnv
+.envrc
+.direnv
+
+# Misc
+.DS_Store
+
+# IDE's and other build tools
+.idea
+*.iml
+.vscode
+.vim
+.metals
+.bloop
+metals.sbt
+.bsp
+.ammonite
+.coursier
