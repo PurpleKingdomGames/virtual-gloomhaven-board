@@ -1,5 +1,6 @@
 package vgb
 
+import tyrian.Html
 import tyrian.Html.*
 
 object BoardHtml {
@@ -25,22 +26,63 @@ object BoardHtml {
         }
     )
 
-// getAllMapTileHtml : List RoomData -> String -> Int -> Int -> Html.Html Msg
-// getAllMapTileHtml roomData currentDraggable draggableX draggableY =
-//     let
-//         allRooms =
-//             if List.member currentDraggable (List.map (\r -> Maybe.withDefault "" (refToString r.ref)) roomData) then
-//                 roomData
+  def getAllMapTileHtml(roomData: List[RoomData], currentDraggable: String, draggableX: Int, draggableY: Int): Html[Msg] = {
+    val allRooms = if (roomData.exists(r => BoardMapTile.refToString(r.ref).contains(currentDraggable))) {
+      roomData
+    } else {
+      BoardMapTile.stringToRef(currentDraggable) match {
+        case Some(r) => RoomData(r, (draggableX, draggableY), 0) :: roomData
+        case None => roomData
+      }
+    }
+    getMapTileHtml(allRooms.map(_.ref), allRooms, currentDraggable, draggableX, draggableY)
+  }
 
-//             else
-//                 case stringToRef currentDraggable of
-//                     Just r ->
-//                         RoomData r ( draggableX, draggableY ) 0 :: roomData
+  // getAllMapTileHtml : List RoomData -> String -> Int -> Int -> Html.Html Msg
+  // getAllMapTileHtml roomData currentDraggable draggableX draggableY =
+  //     let
+  //         allRooms =
+  //             if List.member currentDraggable (List.map (\r -> Maybe.withDefault "" (refToString r.ref)) roomData) then
+  //                 roomData
 
-//                     Nothing ->
-//                         roomData
-//     in
-//     getMapTileHtml (map (\d -> d.ref) allRooms) allRooms currentDraggable draggableX draggableY
+  //             else
+  //                 case stringToRef currentDraggable of
+  //                     Just r ->
+  //                         RoomData r ( draggableX, draggableY ) 0 :: roomData
+
+  //                     Nothing ->
+  //                         roomData
+  //     in
+  //     getMapTileHtml (map (\d -> d.ref) allRooms) allRooms currentDraggable draggableX draggableY
+
+  def getSingleMapTileHtml(isVisible: Boolean, ref: String, turns: Int, x: Int, y: Int): Html[Msg] = {
+    val xPx = x * 76 + (if (y & 1) == 1 then 38 else 0)
+    val yPx = y * 67
+    
+    <div>
+      <div class="mapTile { s"rotate-$turns" } { if (isVisible) "visible" else "hidden" }" style={ s"top: ${yPx}px; left: ${xPx}px;" }>
+        <img src={ s"/img/map-tiles/$ref.png" } class={ s"ref-$ref" } alt={ s"Map tile $ref" } aria-hidden={ if (isVisible) "false" else "true" }/>
+      </div>
+      <div class={ s"mapTile outline { s"rotate-$turns" } { if (isVisible) "hidden" else "visible" }" } style={ s"top: ${yPx}px; left: ${xPx}px;" } aria-hidden={ if (isVisible) "true" else "false" }>
+        { stringToRef(ref) match {
+            case Some(Empty) => Nil
+            case Some(r) =>
+              val overlayPrefix = r match {
+                case J1a => "ja"
+                case J2a => "ja"
+                case J1b => "jb"
+                case J1ba => "jb"
+                case J1bb => "jb"
+                case J2b => "jb"
+                case _ => ref.take(1)
+              }
+              <img src={ s"/img/map-tiles/$overlayPrefix-outline.png" } class={ s"ref-$ref" } alt={ s"The outline of map tile $ref" }/>
+            case None => Nil
+          }
+        }
+      </div>
+    </div>
+  }
 
 // getSingleMapTileHtml : Bool -> String -> Int -> Int -> Int -> Html.Html Msg
 // getSingleMapTileHtml isVisible ref turns x y =
@@ -372,15 +414,25 @@ object BoardHtml {
 //                     e
 //            )
 
+  def getPieceForCoord(x: Int, y: Int, pieces: List[Piece]): Option[Piece] =
+    pieces.filter(p => p.x == x && p.y == y).headOption
+
 // getPieceForCoord : Int -> Int -> List Piece -> Maybe Piece
 // getPieceForCoord x y pieces =
 //     List.filter (\p -> p.x == x && p.y == y) pieces
 //         |> List.head
+  def getScenarioMonsterForCoord(x: Int, y: Int, monsters: List[ScenarioMonster]): Option[ScenarioMonster] =
+    monsters.filter(m => m.initialX == x && m.initialY == y).headOption
+
 
 // getScenarioMonsterForCoord : Int -> Int -> List ScenarioMonster -> Maybe ScenarioMonster
 // getScenarioMonsterForCoord x y monsters =
 //     List.filter (\m -> m.initialX == x && m.initialY == y) monsters
 //         |> List.head
+
+
+  def filterOverlaysForCoord(x: Int, y: Int, overlay: BoardOverlay): Boolean =
+    overlay.cells.exists { case (oX, oY) => oX == x && oY == y }
 
 // filterOverlaysForCoord : Int -> Int -> BoardOverlay -> Bool
 // filterOverlaysForCoord x y overlay =
@@ -390,6 +442,24 @@ object BoardHtml {
 
 //         Nothing ->
 //             False
+
+  def getSortOrderForOverlay(overlay: BoardOverlayType): Int =
+    overlay match {
+      case Token(_) => 0
+      case Door(_, _) => 1
+      case Hazard(_) => 2
+      case DifficultTerrain(_) => 3
+      case StartingLocation => 4
+      case Rift => 5
+      case Treasure(t) => t match {
+        case Chest(_) => 6
+        case Coin(_) => 7
+      }
+      case Obstacle(_) => 8
+      case Trap(_) => 9
+      case Wall(_) => 10
+      case Highlight(_) => 11
+    }
 
 // getSortOrderForOverlay : BoardOverlayType -> Int
 // getSortOrderForOverlay overlay =
@@ -431,6 +501,113 @@ object BoardHtml {
 
 //         Highlight _ ->
 //             11
+
+// def overlayToHtml(dragOverlays: Boolean, dragDoors: Boolean, model: BoardOverlayModel[Msg]): (String, Dom.Element[Msg]) = {
+//   val label = getLabelForOverlay(model.overlay, model.coords)
+//   (
+//     label,
+//     Dom.element("div")
+//       .addAttribute(attribute("aria-label", label))
+//       .addClass("overlay")
+//       .addClassConditional("being-dragged", model.isDragging)
+//       .addClass(
+//         model.overlay.ref match {
+//           case StartingLocation => "start-location"
+//           case Rift => "rift"
+//           case Treasure(t) =>
+//             "treasure " + (t match {
+//               case Coin(_) => "coin"
+//               case Chest(_) => "chest"
+//             })
+//           case Obstacle(_) => "obstacle"
+//           case Hazard(_) => "hazard"
+//           case Highlight(_) => "highlight"
+//           case DifficultTerrain(_) => "difficult-terrain"
+//           case Door(c, _) =>
+//             "door" + (c match {
+//               case Corridor(_, _) => " corridor"
+//               case _ => ""
+//             })
+//           case Trap(_) => "trap"
+//           case Token(_) => "token"
+//           case Wall(_) => "wall"
+//         }
+//       )
+//       .addClass(
+//         model.overlay.direction match {
+//           case Default => ""
+//           case Vertical => "vertical"
+//           case VerticalReverse => "vertical-reverse"
+//           case Horizontal => "horizontal"
+//           case DiagonalRight => "diagonal-right"
+//           case DiagonalLeft => "diagonal-left"
+//           case DiagonalRightReverse => "diagonal-right-reverse"
+//           case DiagonalLeftReverse => "diagonal-left-reverse"
+//         }
+//       )
+//       .addAttributeConditional(
+//         attribute(
+//           "data-index",
+//           model.overlay.ref match {
+//             case Treasure(t) => t match {
+//               case Chest(NormalChest(i)) => String.valueOf(i)
+//               case Goal => "Goal"
+//               case Locked => "???"
+//               case _ => ""
+//             }
+//             case _ => ""
+//           }
+//         )
+//       )(
+//         model.overlay.ref match {
+//           case Treasure(_) => true
+//           case _ => false
+//         }
+//       )
+//       .appendChild(
+//         model.overlay.ref match {
+//           case Token(value) =>
+//             Dom.element("span").appendText(value)
+//           case Highlight(c) =>
+//             Dom.element("div").addStyle("background-color", Colour.toHexString(c))
+//           case _ =>
+//             Dom.element("img")
+//               .addAttribute(alt(getOverlayLabel(model.overlay.ref)))
+//               .addAttribute(attribute("src", getOverlayImageName(model.overlay, model.coords)))
+//               .addAttribute(attribute("draggable", "false"))
+//         }
+//       )
+//       .map(
+//         model.overlay.ref match {
+//           case Treasure(Coin(i)) =>
+//             _.appendChild(
+//               Dom.element("span").appendText(String.valueOf(i))
+//             )
+//           case _ => identity
+//         }
+//       )
+//       .map(
+//         if (dragOverlays) {
+//           model.overlay.ref match {
+//             case Treasure(Coin(_)) =>
+//               if (model.coords.isEmpty) {
+//                 makeDraggable(OverlayType(model.overlay, None), model.coords, model.dragEvents)
+//               } else {
+//                 _.addAttribute(attribute("draggable", "false"))
+//               }
+//             case Treasure(Chest(_)) =>
+//               _.addAttribute(attribute("draggable", "false"))
+//             case Highlight(_) =>
+//               _.addAttribute(attribute("draggable", "false"))
+//             case Door(_, _) =>
+//               if (dragDoors) {
+//                 identity
+//               } else {
+//                 _.addAttribute(attribute("draggable", "false"))
+//               }
+//             case _ =>
+//               makeDraggable(OverlayType(model.overlay, None), model.coords, model
+
 
 // overlayToHtml : Bool -> Bool -> BoardOverlayModel Msg -> ( String, Dom.Element Msg )
 // overlayToHtml dragOverlays dragDoors model =
@@ -620,6 +797,54 @@ object BoardHtml {
 //            )
 //     )
 
+  def pieceToHtml(dragPiece: Boolean, model: PieceModel[Msg]): (String, dom.Element[Msg]) = {
+    def playerHtml(l: String, p: String, e: dom.Element[Msg]): dom.Element[Msg] = {
+      e.addClass("hex-mask").appendChild(
+        dom.html("img")
+          .setAttribute("alt", l)
+          .setAttribute("src", s"/img/characters/portraits/$p.png")
+      )
+    }
+
+    val label = getLabelForPiece(model.piece)
+    val element = dom.html("div")
+      .setAttribute("aria-label", model.coords match {
+        case Some((x, y)) => s"$label at $x, $y"
+        case None => s"Add New $label"
+      })
+      .addClass(getPieceType(model.piece.ref))
+      .addClass(getPieceName(model.piece.ref))
+      .addClassConditional("being-dragged", model.isDragging)
+      .appendChild(model.piece.ref match {
+        case Player(p) =>
+          playerHtml(label, characterToString.getOrElse(p, ""), dom.html("div"))
+        case AI(Enemy(m)) =>
+          enemyToHtml(m, label)
+        case AI(Summons(NormalSummons(i, colour))) =>
+          dom.html("div")
+            .appendChildList(Seq(
+              dom.html("img")
+                .setAttribute("alt", label)
+                .setAttribute("src", "/img/characters/summons.png")
+                .setAttribute("draggable", "false"),
+              dom.html("span").setTextContent(i.toString)
+            ))
+        case AI(Summons(BearSummons)) =>
+          playerHtml(label, "bear", dom.html("div").addClass("bear"))
+        case Game.None =>
+          dom.html("div").addClass("none")
+      })
+
+    if (dragPiece) {
+      makeDraggable(PieceType(model.piece), model.coords, model.dragEvents)(element)
+    } else {
+      element
+    }
+
+    (label, element)
+  }
+
+
 // pieceToHtml : Bool -> PieceModel Msg -> ( String, Dom.Element Msg )
 // pieceToHtml dragPiece model =
 //     let
@@ -684,6 +909,31 @@ object BoardHtml {
 //            )
 //     )
 
+  def scenarioMonsterToHtml(dragPiece: Boolean, model: ScenarioMonsterModel[Msg]): (String, Dom.Element[Msg]) = {
+    val monster = model.monster
+    val label = monster.monster.monster.map(monsterTypeToString).getOrElse("").replace("-", " ")
+    val pieceModel = PieceModel(ref = AI(Enemy(monster.monster)), x = monster.initialX, y = monster.initialY)
+    val ariaLabel = model.coords match {
+      case Some((x, y)) => s"$label at $x, $y"
+      case None => s"Add New $label"
+    }
+
+    (label,
+      Dom
+        .element("div")
+        .addAttribute(attribute("aria-label", ariaLabel))
+        .addClass("monster")
+        .addClass(monster.monster.monster.map(monsterTypeToString).getOrElse(""))
+        .addClassConditional("being-dragged", model.isDragging)
+        .appendChild(enemyToHtml(monster.monster, label))
+        .appendChild(scenarioMonsterVisibilityToHtml(monster.twoPlayer).addClass("two-player"))
+        .appendChild(scenarioMonsterVisibilityToHtml(monster.threePlayer).addClass("three-player"))
+        .appendChild(scenarioMonsterVisibilityToHtml(monster.fourPlayer).addClass("four-player"))
+        .map(if (dragPiece) makeDraggable(PieceType(pieceModel), model.coords, model.dragEvents) else identity)
+    )
+  }
+
+
 // scenarioMonsterToHtml : Bool -> ScenarioMonsterModel Msg -> ( String, Dom.Element Msg )
 // scenarioMonsterToHtml dragPiece model =
 //     let
@@ -736,6 +986,17 @@ object BoardHtml {
 //            )
 //     )
 
+  def cellValueToString(passable: Boolean, hidden: Boolean): String = {
+    if (hidden) {
+      "hidden"
+    } else if (passable) {
+      "passable"
+    } else {
+      "impassable"
+    }
+  }
+
+
 // cellValueToString : Bool -> Bool -> String
 // cellValueToString passable hidden =
 //     if hidden then
@@ -747,6 +1008,12 @@ object BoardHtml {
 //     else
 //         "impassable"
 
+  def getLabelForOverlay(overlay: BoardOverlay, coords: Option[(Int, Int)]): String = coords match {
+    case Some((x, y)) => s"${getOverlayLabel(overlay.ref)} at $x, $y"
+    case None => s"Add new ${getOverlayLabel(overlay.ref)}"
+  }
+
+
 // getLabelForOverlay : BoardOverlay -> Maybe ( Int, Int ) -> String
 // getLabelForOverlay overlay coords =
 //     case coords of
@@ -755,6 +1022,42 @@ object BoardHtml {
 
 //         Nothing ->
 //             "Add new " ++ getOverlayLabel overlay.ref
+
+  def getLabelForPiece(piece: Piece): String = {
+    piece.ref match {
+      case Player(p) =>
+        characterToString(p)
+          .getOrElse("")
+          .replace("-", " ")
+
+      case AI(t) =>
+        t match {
+          case Enemy(m) =>
+            (m.monster match {
+              case NormalType(_) =>
+                m.level match {
+                  case Elite => "Elite"
+                  case Normal => "Normal"
+                  case _ => ""
+                }
+              case BossType(_) => "Boss"
+            }) + " " +
+              monsterTypeToString(m.monster)
+                .getOrElse("")
+                .replace("-", " ") +
+              (if (m.id > 0) " (" + m.id.toString + ")" else "")
+
+          case Summons(NormalSummons(i, _)) =>
+            "Summons Number " + i.toString
+
+          case Summons(BearSummons) =>
+            "Beast Tyrant Bear Summons"
+        }
+
+      case Game.None => "None"
+    }
+  }
+
 
 // getLabelForPiece : Piece -> String
 // getLabelForPiece piece =
@@ -800,6 +1103,32 @@ object BoardHtml {
 
 //         Game.None ->
 //             "None"
+
+  def getOverlayImageName(overlay: BoardOverlay, coords: Option[(Int, Int)]): String = {
+    val path = "/img/overlays/"
+    val overlayName = getBoardOverlayName(overlay.ref).getOrElse("")
+    val extension = ".png"
+    val extendedOverlayName = overlay.direction match {
+      case Vertical | VerticalReverse =>
+        overlay.ref match {
+          case Door(Stone, _) => "-vert"
+          case Door(BreakableWall, _) => "-vert"
+          case Door(Wooden, _) => "-vert"
+          case Obstacle(Altar) => "-vert"
+          case _ => ""
+        }
+      case _ => ""
+    }
+    val segmentPart = coords match {
+      case Some((x, y)) =>
+        toIndexedList(overlay.cells)
+          .collectFirst { case (segment, (oX, oY)) if oX == x && oY == y => segment }
+          .map(segment => if (segment > 0) s"-${segment + 1}" else "")
+          .getOrElse("")
+      case None => ""
+    }
+    path + overlayName + extendedOverlayName + segmentPart + extension
+  }
 
 // getOverlayImageName : BoardOverlay -> Maybe ( Int, Int ) -> String
 // getOverlayImageName overlay coords =
@@ -853,6 +1182,33 @@ object BoardHtml {
 //     in
 //     path ++ overlayName ++ extendedOverlayName ++ segmentPart ++ extension
 
+  def enemyToHtml(monster: Monster, altText: String, element: dom.Element): dom.Element = {
+    val cssClass: String = monster.monster match {
+      case NormalType(_) => monster.level match {
+        case Elite => "elite"
+        case Normal => "normal"
+        case Monster.None => ""
+      }
+      case BossType(_) => "boss"
+    }
+
+    element
+      .classList.add(cssClass)
+      .classList.add("hex-mask")
+      .appendChild(
+        List(
+          dom.document.createElement("img")
+            .setAttribute("src", s"/img/monsters/${monsterTypeToString(monster.monster).getOrElse("")}.png")
+            .setAttribute("alt", altText),
+          dom.document.createElement("span")
+            .appendChild(dom.document.createTextNode(
+              if (monster.id == 0) "" else monster.id.toString
+            ))
+        ): _*
+      )
+  }
+
+
 // enemyToHtml : Monster -> String -> Element Msg -> Element Msg
 // enemyToHtml monster altText element =
 //     let
@@ -894,6 +1250,16 @@ object BoardHtml {
 //                         String.fromInt monster.id
 //                     )
 //             ]
+
+def scenarioMonsterVisibilityToHtml(level: MonsterLevel): Element[Msg] =
+  Dom.element("div")
+    .addClass("monster-visibility")
+    .addClass(level match {
+      case Normal => "normal"
+      case Elite => "elite"
+      case Monster.None => "none"
+    })
+
 
 // scenarioMonsterVisibilityToHtml : MonsterLevel -> Element Msg
 // scenarioMonsterVisibilityToHtml level =
@@ -1000,6 +1366,13 @@ object BoardHtml {
 //             ]
 //         ]
 
+  def formatNameString(name: String): String = {
+    name
+      .split("-")
+      .map(s => s.slice(0, 1).toUpperCase + s.slice(1))
+      .mkString(" ")
+  }
+
 // formatNameString : String -> String
 // formatNameString name =
 //     name
@@ -1010,6 +1383,35 @@ object BoardHtml {
 //                     ++ String.slice 1 (String.length s) s
 //             )
 //         |> String.join " "
+
+  def getTutorialHtml(tutorialText: String, stepNo: Int)(msg: Msg): (String, Html[Msg]) = {
+    ("tutorial", 
+      Dom
+        .element("div")
+        .addClass("tutorial")
+        .addClass(s"step-$stepNo")
+        .appendChild(
+          Dom
+            .element("div")
+            .addClass("body")
+            .appendText(tutorialText)
+        )
+        .appendChild(
+          Dom
+            .element("div")
+            .addClass("footer")
+            .addClass("button-wrapper")
+            .appendChild(
+              Dom
+                .element("button")
+                .appendText("Got it!")
+                .addActionStopPropagation("click", msg)
+            )
+        )
+        .render
+    )
+  }
+
 
 // getTutorialHtml : String -> Int -> Msg -> ( String, Html.Html Msg )
 // getTutorialHtml tutorialText stepNo[Msg] =
