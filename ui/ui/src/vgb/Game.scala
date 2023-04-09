@@ -1,51 +1,46 @@
 package vgb
 
-// object Game:
+object Game:
 
-  // empty : Game
-  // empty =
-  //     Game emptyState Scenario.empty (Random.initialSeed 0) [] Array.empty
+  val empty: Game =
+      Game(emptyState, Scenario.empty, 0, Nil, Nil)
 
-
-  // emptyState : GameState
-  // emptyState =
-  //     GameState (InbuiltScenario Gloomhaven 1) [] 0 [] [] [] Dict.empty ""
+  val emptyState: GameState =
+      GameState((InbuiltScenario(Gloomhaven(1))), Nil, 0, Nil, Nil, Nil, Map.empty, "")
 
 
-  // getPieceType : PieceType -> String
-  // getPieceType piece =
-  //     case piece of
-  //         Player _ ->
-  //             "player"
+  def getPieceType(piece: PieceType): String =
+      piece match
+          case Player(_) =>
+              "player"
 
-  //         AI t ->
-  //             case t of
-  //                 Summons _ ->
-  //                     "player"
+          case AI(t) =>
+              t match
+                  case Summons(_) =>
+                      "player"
 
-  //                 Enemy _ ->
-  //                     "monster"
+                  case Enemy(_) =>
+                      "monster"
 
-  //         None ->
-  //             ""
+          case None =>
+              ""
 
 
-  // getPieceName : PieceType -> String
-  // getPieceName piece =
-  //     case piece of
-  //         Player p ->
-  //             Maybe.withDefault "" (characterToString p)
+  def getPieceName(piece: PieceType): String =
+      piece match
+          case Player(p) =>
+              Character.characterToString(p).getOrElse("")
 
-  //         AI t ->
-  //             case t of
-  //                 Summons _ ->
-  //                     "summons"
+          case AI(t) =>
+              t match
+                  case Summons(_) =>
+                      "summons"
 
-  //                 Enemy e ->
-  //                     Maybe.withDefault "" (monsterTypeToString e.monster)
+                  case Enemy(e)=>
+                      Monster.monsterTypeToString(e.monster).getOrElse("")
 
-  //         None ->
-  //             ""
+          case None =>
+              ""
 
 
   // generateGameMap : GameStateScenario -> Scenario -> String -> List CharacterClass -> Seed -> Game
@@ -941,7 +936,7 @@ final case class Cell
 final case class Game
     ( state : GameState
     , scenario : Scenario
-    , seed : Random.Seed
+    , seed : Long
     , roomData : List[RoomData]
     , staticBoard : List[List[Cell]]
     )
