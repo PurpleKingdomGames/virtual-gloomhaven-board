@@ -5,101 +5,112 @@ object Scenario:
   val empty: Scenario =
     Scenario(0, "", MapTileData(MapTileRef.A1a, Nil, Nil, Nil, 0), 0, Nil)
 
-// mapTileDataToOverlayList : MapTileData -> Dict String ( List BoardOverlay, List ScenarioMonster )
-// mapTileDataToOverlayList data =
-//     let
-//         maxId =
-//             case
-//                 List.map (\o -> o.id) data.overlays
-//                     |> List.maximum
-//             of
-//                 Just i ->
-//                     i + 1
+  def mapTileDataToOverlayList(data: MapTileData): Map[String, (List[BoardOverlay], List[ScenarioMonster])] =
+    val maxId =
+      data.overlays.map(_.id).maxOption match
+        case Some(i) =>
+          i + 1
 
-//                 Nothing ->
-//                     1
+        case None =>
+          1
 
-//         initData =
-//             case refToString data.ref of
-//                 Just ref ->
-//                     ( data.overlays
-//                         ++ List.indexedMap
-//                             (\i d ->
-//                                 case d of
-//                                     DoorLink subType dir ( x, y ) _ l ->
-//                                         case subType of
-//                                             Corridor _ Two ->
-//                                                 let
-//                                                     turns =
-//                                                         case dir of
-//                                                             DiagonalLeft ->
-//                                                                 1
+    val initData: Map[String, (List[BoardOverlay], List[ScenarioMonster])] =
+      BoardMapTile.refToString(data.ref) match
+        case Some(ref) =>
+          val t =
+            (
+              data.overlays ++
+                data.doors.zipWithIndex.map { case (d, i) =>
+                  d match {
+                    case DoorData.DoorLink(subType, dir, (x, y), _, l) =>
+                      subType match {
+                        case DoorSubType.Corridor(_, CorridorSize.Two) =>
+                          val turns =
+                            dir match {
+                              case BoardOverlayDirectionType.DiagonalLeft =>
+                                1
 
-//                                                             DiagonalRight ->
-//                                                                 2
+                              case BoardOverlayDirectionType.DiagonalRight =>
+                                2
 
-//                                                             _ ->
-//                                                                 0
+                              case _ =>
+                                0
+                            }
 
-//                                                     coords2 =
-//                                                         rotate ( x + 1, y ) ( x, y ) turns
-//                                                 in
-//                                                 BoardOverlay (Door subType [ data.ref, l.ref ]) (maxId + i) dir [ ( x, y ), coords2 ]
+                          val coords2 =
+                            Hexagon.rotate((x + 1, y), (x, y), turns)
 
-//                                             _ ->
-//                                                 BoardOverlay (Door subType [ data.ref, l.ref ]) (maxId + i) dir [ ( x, y ) ]
-//                             )
-//                             data.doors
-//                     , data.monsters
-//                     )
-//                         |> singleton ref
+                          BoardOverlay(
+                            BoardOverlayType.Door(subType, List(data.ref, l.ref)),
+                            (maxId + i),
+                            dir,
+                            List((x, y), coords2)
+                          )
 
-//                 Nothing ->
-//                     Dict.empty
+                        case _ =>
+                          BoardOverlay(
+                            BoardOverlayType.Door(subType, List(data.ref, l.ref)),
+                            (maxId + i),
+                            dir,
+                            List((x, y))
+                          )
+                      }
+                  }
+                },
+              data.monsters
+            )
 
-//         doorData =
-//             List.map
-//                 (\d ->
-//                     case d of
-//                         DoorLink _ _ _ _ map ->
-//                             mapTileDataToOverlayList map
-//                 )
-//                 data.doors
-//                 |> List.foldl (\a b -> union a b) Dict.empty
-//     in
-//     union initData doorData
+          Map(ref -> t)
 
-// mapTileDataToList : MapTileData -> Maybe ( ( Int, Int ), ( Int, Int ) ) -> ( List MapTile, BoardBounds )
-// mapTileDataToList data maybeTurnAxis =
-//     let
-//         ( refPoint, origin ) =
-//             case maybeTurnAxis of
-//                 Just ( r, o ) ->
-//                     ( r, o )
+        case None =>
+          Map.empty
 
-//                 Nothing ->
-//                     ( ( 0, 0 ), ( 0, 0 ) )
+    val doorData =
+      data.doors
+        .map { case DoorData.DoorLink(_, _, _, _, map) =>
+          mapTileDataToOverlayList(map)
+        }
+        .foldLeft(Map.empty[String, (List[BoardOverlay], List[ScenarioMonster])]) { case (a, b) => a ++ b }
 
-//         mapTiles =
-//             (getMapTileListByRef data.ref
-//                 ++ getMapTileListByObstacle data data.overlays
-//             )
-//                 |> List.map (normaliseAndRotateMapTile data.turns refPoint origin)
+    initData ++ doorData
 
-//         doorTiles =
-//             List.map (mapDoorDataToList data.ref refPoint origin data.turns) data.doors
-//                 |> List.concat
+  def mapTileDataToList(
+      data: MapTileData,
+      maybeTurnAxis: Option[((Int, Int), (Int, Int))]
+  ): (List[MapTile], BoardBounds) =
+    val (refPoint, origin) =
+      maybeTurnAxis match
+        case Some(r, o) =>
+          (r, o)
 
-//         allTiles =
-//             mapTiles ++ doorTiles
+        case None =>
+          ((0, 0), (0, 0))
 
-//         boundingBox =
-//             List.map (\m -> BoardBounds m.x m.x m.y m.y) allTiles
-//                 |> List.foldl
-//                     (\a b -> BoardBounds (min a.minX b.minX) (max a.maxX b.maxX) (min a.minY b.minY) (max a.maxY b.maxY))
-//                     (BoardBounds 0 0 0 0)
-//     in
-//     ( allTiles, boundingBox )
+    val mapTiles =
+      (BoardMapTile.getMapTileListByRef(data.ref)
+        ++ getMapTileListByObstacle(data, data.overlays)).map(mapTile =>
+        normaliseAndRotateMapTile(data.turns, refPoint, origin, mapTile)
+      )
+
+    val doorTiles =
+      data.doors.flatMap(door => mapDoorDataToList(data.ref, refPoint, origin, data.turns, door))
+
+    val allTiles =
+      mapTiles ++ doorTiles
+
+    val boundingBox =
+      allTiles
+        .map(m => BoardBounds(m.x, m.x, m.y, m.y))
+        .foldLeft(BoardBounds(0, 0, 0, 0)) { case (a, b) =>
+          BoardBounds(
+            Math.min(a.minX, b.minX),
+            Math.max(a.maxX, b.maxX),
+            Math.min(a.minY, b.minY),
+            Math.max(a.maxY, b.maxY)
+          )
+        }
+
+    (allTiles, boundingBox)
 
   def getMapTileListByObstacle(mapTileData: MapTileData, boardOverlays: List[BoardOverlay]): List[MapTile] =
     boardOverlays
@@ -122,7 +133,7 @@ object Scenario:
         val doorTile =
           MapTile(prevRef, refPoint._1, refPoint._2, initTurns, r._1, r._2, true, true)
 
-        List(mapTileDataToList(mapTileData, (Option(refPoint, origin)))._1)
+        mapTileDataToList(mapTileData, (Option(refPoint, origin)))._1
           ++ List(doorTile)
 
   def normaliseAndRotateMapTile(turns: Int, refPoint: (Int, Int), origin: (Int, Int), mapTile: MapTile): MapTile =
