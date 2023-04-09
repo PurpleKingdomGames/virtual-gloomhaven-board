@@ -90,245 +90,264 @@ object BoardOverlay:
     )
   }
 
-// getBoardOverlayName : BoardOverlayType -> Maybe String
-// getBoardOverlayName overlay =
-//     let
-//         compare =
-//             case overlay of
-//                 Door d _ ->
-//                     Door d , Nil
+  def getBoardOverlayName(overlay: BoardOverlayType): Option[String] = {
+    val compare =
+      overlay match {
+        case BoardOverlayType.Door(d, _) =>
+          BoardOverlayType.Door(d, Nil)
+
+        case BoardOverlayType.Treasure(t) =>
+          t match {
+            case TreasureSubType.Chest(_) =>
+              BoardOverlayType.Treasure(TreasureSubType.Chest(ChestType.Locked))
+
+            case TreasureSubType.Coin(_) =>
+              BoardOverlayType.Treasure(TreasureSubType.Coin(1))
+          }
+
+        case _ =>
+          overlay
+      }
+
+    overlayDictionary.filter(_ == compare).keys.headOption
+  }
+
+  def getBoardOverlayType(overlayName: String): Option[BoardOverlayType] =
+    overlayDictionary.get(overlayName)
+
+  def getAllOverlayTypes: List[BoardOverlayType] =
+    overlayDictionary.values.toList
+
+  def getOverlayTypesWithLabel: Map[String, BoardOverlayType] =
+    overlayDictionary
+
+  def getOverlayLabel(overlay: BoardOverlayType): String = {
+    import BoardOverlayType.*
+    import DoorSubType.*
+    import CorridorSize.*
+    import CorridorMaterial.*
+    import DifficultTerrainSubType.*
+    import WallSubType.*
+    import ObstacleSubType.*
+    import HazardSubType.*
+    import TreasureSubType.*
+    import ChestType.*
+    import TrapSubType.*
 
-//                 Treasure t ->
-//                     case t of
-//                         Chest _ ->
-//                             Treasure (Chest Locked)
+    overlay match {
+      case Door(d, _) =>
+        d match {
+          case AltarDoor =>
+            "Altar"
 
-//                         Coin _ ->
-//                             Treasure (Coin 1)
+          case Stone =>
+            "Stone Door"
 
-//                 _ ->
-//                     overlay
-//     in
-//     overlayDictionary
-//         |> Dict.filter (\_ v -> v == compare)
-//         |> Dict.keys
-//         |> List.head
+          case Wooden =>
+            "Wooden Door"
 
-// def getBoardOverlayType(overlayName: String): Option[BoardOverlayType] =
-//   overlayDictionary.get(overlayName)
+          case BreakableWall =>
+            "Breakable Wall"
 
-// def getAllOverlayTypes: List[BoardOverlayType] =
-//   overlayDictionary.values.toList
+          case Corridor(c, _) =>
+            c match {
+              case Dark =>
+                "Dark Corridor"
 
-// def getOverlayTypesWithLabel: Map[String, BoardOverlayType] =
-//   overlayDictionary
+              case Earth =>
+                "Earth Corridor"
 
-// getOverlayLabel : BoardOverlayType -> String
-// getOverlayLabel overlay =
-//     case overlay of
-//         Door d _ ->
-//             case d of
-//                 AltarDoor ->
-//                     "Altar"
+              case ManmadeStone =>
+                "Manmade Stone Corridor"
 
-//                 Stone ->
-//                     "Stone Door"
+              case NaturalStone =>
+                "Natural Stone Corridor"
 
-//                 Wooden ->
-//                     "Wooden Door"
+              case PressurePlate =>
+                "Pressure Plate"
 
-//                 BreakableWall ->
-//                     "Breakable Wall"
+              case Wood =>
+                "Wooden Corridor"
+            }
 
-//                 Corridor c _ ->
-//                     case c of
-//                         Dark ->
-//                             "Dark Corridor"
+          case DarkFog =>
+            "Dark Fog"
 
-//                         Earth ->
-//                             "Earth Corridor"
+          case LightFog =>
+            "Light Fog"
+        }
 
-//                         ManmadeStone ->
-//                             "Manmade Stone Corridor"
+      case DifficultTerrain(d) =>
+        d match {
+          case Log =>
+            "Fallen Log"
 
-//                         NaturalStone ->
-//                             "Natural Stone Corridor"
+          case Rubble =>
+            "Rubble"
 
-//                         PressurePlate ->
-//                             "Pressure Plate"
+          case Stairs =>
+            "Stairs"
 
-//                         Wood ->
-//                             "Wooden Corridor"
+          case VerticalStairs =>
+            "Stairs"
 
-//                 DarkFog ->
-//                     "Dark Fog"
+          case Water =>
+            "Water"
+        }
 
-//                 LightFog ->
-//                     "Light Fog"
+      case Hazard(h) =>
+        h match {
+          case HotCoals =>
+            "Hot Coals"
 
-//         DifficultTerrain d ->
-//             case d of
-//                 Log ->
-//                     "Fallen Log"
+          case Thorns =>
+            "Thorns"
+        }
 
-//                 Rubble ->
-//                     "Rubble"
+      case Highlight(c) =>
+        c.toString ++ " Highlight"
 
-//                 Stairs ->
-//                     "Stairs"
+      case Obstacle(o) =>
+        o match {
+          case Altar =>
+            "Altar"
 
-//                 VerticalStairs ->
-//                     "Stairs"
+          case Barrel =>
+            "Barrel"
 
-//                 Water ->
-//                     "Water"
+          case Bookcase =>
+            "Bookcase"
 
-//         Hazard h ->
-//             case h of
-//                 HotCoals ->
-//                     "Hot Coals"
+          case Boulder1 =>
+            "Boulder"
 
-//                 Thorns ->
-//                     "Thorns"
+          case Boulder2 =>
+            "Boulder"
 
-//         Highlight c ->
-//             Colour.toString c ++ " Highlight"
+          case Boulder3 =>
+            "Boulder"
 
-//         Obstacle o ->
-//             case o of
-//                 Altar ->
-//                     "Altar"
+          case Bush =>
+            "Bush"
 
-//                 Barrel ->
-//                     "Barrel"
+          case Cabinet =>
+            "Cabinet"
 
-//                 Bookcase ->
-//                     "Bookcase"
+          case Crate =>
+            "Crate"
 
-//                 Boulder1 ->
-//                     "Boulder"
+          case Crystal =>
+            "Crystal"
 
-//                 Boulder2 ->
-//                     "Boulder"
+          case DarkPit =>
+            "Dark Pit"
 
-//                 Boulder3 ->
-//                     "Boulder"
+          case Fountain =>
+            "Fountain"
 
-//                 Bush ->
-//                     "Bush"
+          case Mirror =>
+            "Mirror"
 
-//                 Cabinet ->
-//                     "Cabinet"
+          case Nest =>
+            "Nest"
 
-//                 Crate ->
-//                     "Crate"
+          case Pillar =>
+            "Pillar"
 
-//                 Crystal ->
-//                     "Crystal"
+          case RockColumn =>
+            "Rock Column"
 
-//                 DarkPit ->
-//                     "Dark Pit"
+          case Sarcophagus =>
+            "Sarcophagus"
 
-//                 Fountain ->
-//                     "Fountain"
+          case Shelf =>
+            "Sheelves"
 
-//                 Mirror ->
-//                     "Mirror"
+          case Stalagmites =>
+            "Stalagmites"
 
-//                 Nest ->
-//                     "Nest"
+          case Stump =>
+            "Tree Stump"
 
-//                 Pillar ->
-//                     "Pillar"
+          case Table =>
+            "Table"
 
-//                 RockColumn ->
-//                     "Rock Column"
+          case Totem =>
+            "Totem"
 
-//                 Sarcophagus ->
-//                     "Sarcophagus"
+          case Tree3 =>
+            "Tree"
 
-//                 Shelf ->
-//                     "Sheelves"
+          case WallSection =>
+            "Wall"
+        }
 
-//                 Stalagmites ->
-//                     "Stalagmites"
+      case Rift =>
+        "Rift"
 
-//                 Stump ->
-//                     "Tree Stump"
+      case StartingLocation =>
+        "Starting Location"
 
-//                 Table ->
-//                     "Table"
+      case Trap(t) =>
+        t match {
+          case BearTrap =>
+            "Bear Trap"
 
-//                 Totem ->
-//                     "Totem"
+          case Spike =>
+            "Spike Trap"
 
-//                 Tree3 ->
-//                     "Tree"
+          case Poison =>
+            "Poison Trap"
+        }
 
-//                 WallSection ->
-//                     "Wall"
+      case Treasure(t) =>
+        t match {
+          case Chest(c) =>
+            "Treasure Chest "
+              ++ (c match {
+                case Goal =>
+                  "Goal"
 
-//         Rift ->
-//             "Rift"
+                case Locked =>
+                  "(locked)"
 
-//         StartingLocation ->
-//             "Starting Location"
+                case NormalChest(i) =>
+                  i.toString
+              })
 
-//         Trap t ->
-//             case t of
-//                 BearTrap ->
-//                     "Bear Trap"
+          case Coin(i) =>
+            i.toString
+              ++ (i match {
+                case 1 =>
+                  " Coin"
 
-//                 Spike ->
-//                     "Spike Trap"
+                case _ =>
+                  " Coins"
+              })
+        }
 
-//                 Poison ->
-//                     "Poison Trap"
+      case Token(t) =>
+        "Token (" ++ t ++ ")"
 
-//         Treasure t ->
-//             case t of
-//                 Chest c ->
-//                     "Treasure Chest "
-//                         ++ (case c of
-//                                 Goal ->
-//                                     "Goal"
+      case Wall(w) =>
+        w match {
+          case HugeRock =>
+            "Huge Rock Wall"
 
-//                                 Locked ->
-//                                     "(locked)"
+          case Iron =>
+            "Iron Wall"
 
-//                                 NormalChest i ->
-//                                     String.fromInt i
-//                            )
+          case LargeRock =>
+            "Large Rock Wall"
 
-//                 Coin i ->
-//                     String.fromInt i
-//                         ++ (case i of
-//                                 1 ->
-//                                     " Coin"
+          case ObsidianGlass =>
+            "Obsidian Glass Wall"
 
-//                                 _ ->
-//                                     " Coins"
-//                            )
-
-//         Token t ->
-//             "Token (" ++ t ++ ")"
-
-//         Wall w ->
-//             case w of
-//                 HugeRock ->
-//                     "Huge Rock Wall"
-
-//                 Iron ->
-//                     "Iron Wall"
-
-//                 LargeRock ->
-//                     "Large Rock Wall"
-
-//                 ObsidianGlass ->
-//                     "Obsidian Glass Wall"
-
-//                 Rock ->
-//                     "Rock Wall"
+          case Rock =>
+            "Rock Wall"
+        }
+    }
+  }
 
 enum BoardOverlayType:
   case DifficultTerrain(typ: DifficultTerrainSubType)
