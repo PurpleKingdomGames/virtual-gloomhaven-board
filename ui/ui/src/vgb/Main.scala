@@ -34,35 +34,6 @@ object Main extends TyrianApp[Msg, Model]:
   val menuTutorialStep: Int     = 2
   val lastTutorialStep: Int     = 3
 
-final case class Model(
-    game: Game,
-    config: Config,
-    currentLoadState: LoadingState,
-    currentScenarioType: Option[GameStateScenario],
-    currentScenarioInput: Option[String],
-    currentClientSettings: Option[TransientClientSettings],
-    currentPlayerList: Option[List[CharacterClass]],
-    currentSelectedFile: Option[(String, Option[(Either[String, Scenario])])],
-    currentSelectedCell: Option[(Int, Int)],
-    deadPlayerList: List[CharacterClass],
-    currentDraggable: Option[MoveablePiece],
-    connectionStatus: ConnectionStatus,
-    undoStack: List[GameState],
-    menuOpen: Boolean,
-    sideMenuOpen: Boolean,
-    fullscreen: Boolean,
-    lockScenario: Boolean,
-    lockPlayers: Boolean,
-    lockRoomCode: Boolean,
-    roomCodeSeed: Option[Int],
-    keysDown: List[String],
-    roomCodePassesServerCheck: Boolean,
-    tooltipTarget: Option[(Element, String)],
-    contextMenuState: ContextMenu,
-    contextMenuPosition: (Int, Int),
-    contextMenuAbsPosition: (Int, Int)
-)
-
 // Double definition
 // final case class PieceModel(isDragging: Boolean, coords: Option[(Int, Int)], piece: Piece)
 
@@ -87,65 +58,3 @@ enum ConnectionStatus:
   case Connected
   case Disconnected
   case Reconnecting
-
-enum Msg:
-  // case LoadedScenarioHttp Seed GameStateScenario (Maybe Game.GameState) Bool (Result Http.Error Scenario)
-  // case LoadedScenarioJson Seed GameStateScenario (Maybe Game.GameState) Bool (Result Decode.Error Scenario)
-  // case ReloadScenario
-  // case ChooseScenarioFile
-  // case ExtractScenarioFile File
-  // case LoadScenarioFile String
-  // case MoveStarted MoveablePiece (Maybe ( DragDrop.EffectAllowed, Decode.Value ))
-  // case MoveTargetChanged ( Int, Int ) (Maybe ( DragDrop.DropEffect, Decode.Value ))
-  // case MoveCanceled
-  // case MoveCompleted
-  // case TouchStart MoveablePiece
-  // case TouchMove ( Float, Float )
-  // case TouchCanceled
-  // case TouchEnd ( Float, Float )
-  // case CellFromPoint ( Int, Int, Bool )
-  // case GameStateUpdated Game.GameState
-  // case AddOverlay BoardOverlay
-  // case AddToken BoardOverlay
-  // case AddHighlight BoardOverlay
-  // case AddPiece Piece
-  // case RotateOverlay Int
-  // case RemoveOverlay BoardOverlay
-  // case RemovePiece Piece
-  // case PhasePiece Piece
-  // case ChangeGameMode GameModeType
-  // case ChangeAppMode AppModeType
-  // case RevealRoomMsg (List MapTileRef) ( Int, Int )
-  // case ChangeScenario GameStateScenario Bool
-  // case SelectCell ( Int, Int )
-  // case OpenContextMenu
-  // case ChangeContextMenuState ContextMenu
-  // case ChangeContextMenuAbsposition ( Int, Int )
-  // case ToggleCharacter CharacterClass Bool
-  // case ToggleBoardOnly Bool
-  // case ToggleFullscreen Bool
-  // case ToggleEnvelopeX Bool
-  // case ToggleMenu
-  // case ChangePlayerList
-  // case EnterScenarioType GameStateScenario
-  // case EnterScenarioNumber String
-  // case UpdateTutorialStep Int
-  // case ChangeRoomCodeInputStart String
-  // case ChangeRoomCodeInputEnd String
-  // case ChangeShowRoomCode Bool
-  // case ChangeSummonsColour String
-  // case ChangeClientSettings (Maybe TransientClientSettings)
-  // case GameSyncMsg GameSync.Msg
-  // case PushToUndoStack GameState
-  // case Undo
-  // case KeyDown String
-  // case KeyUp String
-  // case Paste String
-  // case VisibilityChanged Visibility
-  // case PushGameState Bool
-  // case InitTooltip String String
-  // case SetTooltip String (Result BrowserDom.Error BrowserDom.Element)
-  // case ResetTooltip
-  // case ExitFullscreen ()
-  // case Reconnect
-  case NoOp
