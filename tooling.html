@@ -1,0 +1,1642 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://vgb.purplekingdomgames.com/css/main.css?v=1.15.1">
+    <style>
+        .hexagon {
+            background-image: url('https://vgb.purplekingdomgames.com/img/hex-border-mask.png');
+            background-size: 90px;
+        }
+
+        .board {
+            width: 75vw;
+            overflow: hidden;
+            border: 1px solid;
+            display: inline-block;
+            position: relative;
+            padding-top: 23px;
+        }
+
+        .hexagon.selected {
+            background-color: rgba(0, 255, 0, 0.5);
+        }
+
+        aside {
+            display: block;
+            width: 25vw;
+            height: 100vh;
+            float: left;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        label {
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        .centerBtn {
+            margin-left: 15px;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        aside img {
+            width: 100%;
+        }
+
+        aside div {
+            padding: 10px;
+        }
+
+        button {
+            width: 30px;
+        }
+
+    </style>
+    <script>
+        addEventListener("load", function () {
+            const inputElement = document.getElementById("mapTile");
+            const canvasElement = document.getElementById("drawArea");
+            const ctx = canvasElement.getContext("2d");
+            const previewImage = document.getElementById("previewImg");
+            const cells = document.querySelectorAll('.hexagon');
+            const jsonData = document.getElementById("data")
+            const img = new Image;
+            let filename = '';
+            let scale, initialScale = 1.0;
+            let xOffset, initialXOffset = 0;
+            let yOffset, initialYOffset = 0;
+
+            inputElement.addEventListener("change", handleFiles, false);
+
+            cells.forEach(function (c) {
+                c.addEventListener('click', function (e) {
+                    e.target.classList.toggle('selected');
+                    updateJson();
+                    e.stopPropagation();
+                }, true)
+            })
+
+            document
+                .getElementById('scaleUp')
+                .addEventListener("click", () => scaleImage(0.01), false)
+                ;
+
+            document
+                .getElementById('scaleDown')
+                .addEventListener("click", () => scaleImage(-0.01), false)
+                ;
+
+            document
+                .getElementById('moveUp')
+                .addEventListener("click", () => moveImage(0, -1), false)
+                ;
+
+            document
+                .getElementById('moveDown')
+                .addEventListener("click", () => moveImage(0, 1), false)
+                ;
+
+            document
+                .getElementById('moveLeft')
+                .addEventListener("click", () => moveImage(-1, 0), false)
+                ;
+
+            document
+                .getElementById('moveRight')
+                .addEventListener("click", () => moveImage(1, 0), false)
+                ;
+
+            function handleFiles() {
+                if (this.files.length === 0)
+                    return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    scale = initialScale;
+                    xOffset = initialXOffset;
+                    yOffset = initialYOffset;
+                    moveImage(0, 0);
+
+                    img.src = e.target.result;
+                    img.onload = drawImage;
+                };
+
+                filename = this.files[0].name;
+                reader.readAsDataURL(this.files[0]);
+            }
+
+            function scaleImage(scaleBy) {
+                scale = Math.max(0.1, Math.min(1.5, scale + scaleBy));
+                drawImage();
+            }
+
+            function drawImage() {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.restore();
+
+                canvasElement.setAttribute('width', `${img.width * scale}px`);
+                canvasElement.setAttribute('height', `${img.height * scale}px`);
+
+                ctx.scale(scale, scale);
+                ctx.drawImage(img, 0, 0);
+
+                previewImage.setAttribute('src', canvasElement.toDataURL("image/png"))
+                updateJson();
+            }
+
+            function moveImage(x, y) {
+                xOffset += x;
+                yOffset += y;
+                canvasElement.setAttribute('style', `left: ${xOffset}px; top:${yOffset}px`)
+                updateJson();
+            }
+
+            function updateJson() {
+                const regex = /([a-z]{2})-([0-9]{2}[a-z]|[a-z][0-9][a-z])/i;
+                const matches = filename.match(regex);
+
+                if (matches === null) {
+                    jsonData.textContent = '';
+                    return;
+                }
+
+                const tileset = matches[1] == 'gh' ? 'gloomhaven' : 'frosthaven';
+                const mapRef = matches[2];
+                const selectedCells = [...document.querySelectorAll('.hexagon.selected')]
+                    .map(c => `{ x: ${c.dataset.cellX}, y: ${parseInt(c.dataset.cellY) - 1} }`)
+
+                const json = `{
+    tileset: "${tileset}",
+    mapRef: "${mapRef}",
+    offset: {
+        x: ${xOffset},
+        y: ${yOffset}
+    },
+    cells: [
+        ${selectedCells.join(",\r\n        ")}
+    ]
+}`
+
+                jsonData.textContent = json;
+            }
+        })
+    </script>
+</head>
+
+<body>
+    <aside>
+        <section>
+            <h2>Controls</h2>
+            <div>
+                <form>
+                    <label for="mapTile">Map Tile</label>
+                    <input type="file" accept="image/png, image/jpeg" id="mapTile" />
+                </form>
+            </div>
+            <div>
+                <b>Scale</b>
+                <button id="scaleDown">-</button>
+                <button id="scaleUp">+</button>
+            </div>
+            <div>
+                <b>Position</b>
+                <div class="centerBtn">
+                    <button id="moveUp">⭡</button>
+                </div>
+                <div>
+                    <button id="moveLeft">⭠</button>
+                    <button id="moveRight">⭢</button>
+                </div>
+                <div class="centerBtn">
+                    <button id="moveDown">⭣</button>
+                </div>
+            </div>
+        </section>
+        <hr />
+        <section>
+            <h2>Data</h2>
+            <img id="previewImg">
+            <div>
+                <pre>
+<code id="data"></code>
+                </pre>
+            </div>
+        </section>
+    </aside>
+    <main class="board">
+        <canvas id="drawArea"></canvas>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="1"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="1"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="1"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="1"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="1"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="1"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="1"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper" "="">
+        <div class=" cell">
+                <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="1"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="1">
+            </div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="1">
+            </div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="1">
+            </div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="1"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="1"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="1"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="1"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="1"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="1"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="1"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="1"></div>
+            </div>
+        </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="2"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="2"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="2"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="2"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="2"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="2"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="2"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper" "="">
+        <div class=" cell">
+                <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="2"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="2"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="2"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="2"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="2"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="2"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="2"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="2"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="2"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="2"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="2"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="2"></div>
+            </div>
+        </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="3"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="3"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="3"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="3"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="3"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="3"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="3"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper" "="">
+        <div class=" cell">
+                <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="3">
+                </div>
+            </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="3"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="3">
+            </div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="3"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="3">
+            </div>
+        </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="3"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="3"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="3"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="3"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="3"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="3"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="3"></div>
+            </div>
+        </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="4"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="4"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="4"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="4"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="4"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="4"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="4"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper" "="">
+        <div class=" cell">
+                <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="4">
+                </div>
+            </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="4"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="4"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="4"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="4"></div>
+        </div>
+        </div>
+        <div class="cell-wrapper" "="">
+        <div class=" cell">
+            <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="4">
+            </div>
+        </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="4"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="4"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="4"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="4"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="4"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="4"></div>
+            </div>
+        </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="5"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="5"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="5"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="5"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="5"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="5"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="5"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="5"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="5"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper" "="">
+        <div class=" cell">
+                <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="5">
+                </div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="5"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="5"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="5"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="5"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="5"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="5"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="5"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="5"></div>
+            </div>
+        </div>
+        <div class="cell-wrapper">
+            <div class="cell">
+                <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="5"></div>
+            </div>
+        </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="6"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="6"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="7">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="7"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="7"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="8">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="8"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="8"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="9">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="9">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="9"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="9"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="10">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="10">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="10">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="10"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="10"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="11">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="11">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="11">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="11">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="11">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="11">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="11"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="11"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="12">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="12"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="12"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="13">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="13">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="13"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="13">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="13"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="3" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="4" data-cell-y="14">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="5" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="6" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="7" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="8" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="9" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="10" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="11" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="12" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="13" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="14" data-cell-y="14">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="15" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="16" data-cell-y="14">
+                    </div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="17" data-cell-y="14"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="18" data-cell-y="14"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="0" data-cell-y="15"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="1" data-cell-y="15"></div>
+                </div>
+            </div>
+            <div class="cell-wrapper">
+                <div class="cell">
+                    <div class="hexagon hex-mask" data-cell-x="2" data-cell-y="15">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
