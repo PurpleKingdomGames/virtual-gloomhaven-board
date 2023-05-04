@@ -5,18 +5,19 @@ import indigoextras.geometry.Vertex
 import indigo.shared.scenegraph.Shape.Line
 import indigo.shared.scenegraph.Shape.Polygon
 import indigo.shared.scenegraph.Shape.Circle
+import indigo.shared.datatypes.Fill.Color
 
 object HexComponent:
+  val height              = 90
   private val sqrtThree   = Math.sqrt(3)
   private val baseQ       = sqrtThree / 3
   private val oneOver3    = 1.0 / 3
   private val twoOver3    = 2.0 / 3
   private val threeOver2  = 3.0 / 2
-  private val size        = 90
-  private val halfSize    = size * 0.5
-  private val quarterSize = size * 0.25
-  private val rectWidth   = sqrtThree * halfSize
-  private val halfWidth   = rectWidth * 0.5
+  private val halfSize    = height * 0.5
+  private val quarterSize = height * 0.25
+  val width               = sqrtThree * halfSize
+  private val halfWidth   = width * 0.5
   private val polygon = Polygon(
     Batch(
       Point(0, -Math.floor(halfSize).toInt),                              // Top tip
@@ -26,22 +27,22 @@ object HexComponent:
       Point(-Math.ceil(halfWidth).toInt, Math.ceil(quarterSize).toInt),   // Left-bottom corner of rectangle,
       Point(-Math.ceil(halfWidth).toInt, -Math.floor(quarterSize).toInt)  // Left-top corner of rectangle
     ),
-    Fill.Color(RGBA.Green),
+    Fill.Color(RGBA.None),
     Stroke.Black
   )
 
-  def render(position: Point): Group =
+  def render(position: Point, fill: RGBA = RGBA(0, 0, 0, 0)): Group =
     Group(
       polygon
+        .withFill(Fill.Color(fill))
         // 0,0 position is the top left
         .moveTo(oddRowToScreenPos(position))
         // For screen position to co-ordinates to work correctly, 0,0 needs to be centre
-        .moveBy((polygon.size.width * -0.5).toInt, (polygon.size.height * -0.5).toInt),
-      Circle(oddRowToScreenPos(position), 2, Fill.Color(RGBA.Red))
+        .moveBy((polygon.size.width * -0.5).toInt, (polygon.size.height * -0.5).toInt)
     )
 
   def screenPosToCube(pos: Point) = {
-    val q = (baseQ * pos.x.toDouble - (oneOver3 * pos.y.toDouble)) / halfSize.toDouble
+    val q = (baseQ * pos.x.toDouble + (oneOver3 * pos.y.toDouble)) / halfSize.toDouble
     val r = (twoOver3 * pos.y.toDouble) / halfSize.toDouble
     cubeRound(axialToCube(Vector2(q, r)))
   }
@@ -51,7 +52,7 @@ object HexComponent:
 
   def axialToScreenPos(pos: Vector2) =
     Point(
-      (halfSize * (sqrtThree * pos.x + (sqrtThree * 0.5) * pos.y)).toInt,
+      (halfSize * (sqrtThree * pos.x - (sqrtThree * 0.5) * pos.y)).toInt,
       (halfSize * threeOver2 * pos.y).toInt
     )
 
@@ -60,12 +61,12 @@ object HexComponent:
 
   def oddRowToAxial(pos: Point) =
     Vector2(
-      pos.x - (pos.y - (pos.y.toInt & 1)) * 0.5,
+      pos.x + (pos.y - (pos.y.toInt & 1)) * 0.5,
       pos.y
     )
 
   def cubeToOddRow(pos: Vector3) =
-    Vector2(pos.x + (pos.y - (pos.y.toInt & 1)) * 0.5, pos.y)
+    Vector2(pos.x - (pos.y - (pos.y.toInt & 1)) * 0.5, pos.y)
 
   def axialToCube(pos: Vector2) =
     Vector3(pos.x, pos.y, -pos.x - pos.y)

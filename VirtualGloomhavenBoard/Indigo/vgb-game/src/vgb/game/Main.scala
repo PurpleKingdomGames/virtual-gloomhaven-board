@@ -8,7 +8,7 @@ import vgb.common.*
 import vgb.game.scenes.*
 import vgb.game.models.GameModel
 import vgb.game.models.GameViewModel
-import vgb.game.models.components.HexComponent
+import indigo.shared.assets.AssetType
 
 final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
     extends IndigoGame[Size, Size, GameModel, GameViewModel] {
@@ -16,7 +16,7 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
   val magnification = 1
 
   def initialScene(bootData: Size): Option[SceneName] =
-    None
+    Some(SceneName("creator-scene"))
 
   def scenes(bootData: Size): NonEmptyList[Scene[Size, GameModel, GameViewModel]] =
     NonEmptyList(CreatorScene(tyrianSubSystem))
@@ -43,6 +43,10 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
         gameViewport.size / magnification
       )
         .withSubSystems(tyrianSubSystem)
+        .withAssets(
+          AssetType.Image(AssetName("a1a"), AssetPath("img/map-tiles/gloomhaven/a1a.png")),
+          AssetType.Image(AssetName("move-icon"), AssetPath("img/move-icon.webp"))
+        )
     )
 
   def setup(
@@ -76,26 +80,12 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
       model: GameModel,
       viewModel: GameViewModel
   ): GlobalEvent => Outcome[GameViewModel] =
-    case MouseEvent.Move(p) =>
-      IndigoLogger.consoleLog(HexComponent.screenPosToOddRow(p).toString)
-      Outcome(viewModel)
-    case _ => Outcome(viewModel)
+    _ => Outcome(viewModel)
 
   def present(
       context: FrameContext[Size],
       model: GameModel,
       viewModel: GameViewModel
   ): Outcome[SceneUpdateFragment] =
-    Outcome(
-      SceneUpdateFragment(
-        Batch.fromArray(
-          (0 until 10).toArray
-            .map(x =>
-              (0 until 10).toArray
-                .map(y => HexComponent.render(Point(x, y)))
-            )
-            .flatten
-        )
-      )
-    )
+    Outcome(SceneUpdateFragment.empty)
 }
