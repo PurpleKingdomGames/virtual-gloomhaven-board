@@ -56,6 +56,10 @@
         button {
             width: 30px;
         }
+
+        #cpy-btn {
+            width: auto;
+        }
     </style>
     <script>
         addEventListener("load", function () {
@@ -111,6 +115,11 @@
                         break;
                 }
             }, false)
+            document.getElementById('cpy-btn').addEventListener('click', function () {
+                navigator.clipboard.writeText(
+                    jsonData.textContent
+                );
+            }, false);
             inputElement.addEventListener("change", handleFiles, false);
 
             cells.forEach(function (c) {
@@ -239,6 +248,7 @@
             <h2>Data</h2>
             <img id="previewImg">
             <div>
+                <button id="cpy-btn">Copy JSON</button>
                 <pre>
 <code id="data"></code>
                 </pre>
