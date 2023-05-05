@@ -56,7 +56,6 @@
         button {
             width: 30px;
         }
-
     </style>
     <script>
         addEventListener("load", function () {
@@ -65,13 +64,53 @@
             const ctx = canvasElement.getContext("2d");
             const previewImage = document.getElementById("previewImg");
             const cells = document.querySelectorAll('.hexagon');
-            const jsonData = document.getElementById("data")
+            const jsonData = document.getElementById("data");
+            const moveUp = document.getElementById('moveUp');
+            const moveDown = document.getElementById('moveDown');
+            const moveLeft = document.getElementById('moveLeft');
+            const moveRight = document.getElementById('moveRight');
+            const scaleUp = document.getElementById('scaleUp');
+            const scaleDown = document.getElementById('scaleDown');
             const img = new Image;
+            const clickEvent = new MouseEvent("click", {
+                view: window,
+                bubbles: true,
+                cancelable: true,
+            });
             let filename = '';
             let scale, initialScale = 1.0;
             let xOffset, initialXOffset = 0;
             let yOffset, initialYOffset = 0;
 
+            document.addEventListener("keydown", function (e) {
+                switch (e.code.toLowerCase()) {
+                    case "arrowup":
+                        moveUp.dispatchEvent(clickEvent);
+                        e.preventDefault();
+                        break;
+                    case "arrowdown":
+                        moveDown.dispatchEvent(clickEvent);
+                        e.preventDefault();
+                        break;
+                    case "arrowleft":
+                        moveLeft.dispatchEvent(clickEvent);
+                        e.preventDefault();
+                        break;
+                    case "arrowright":
+                        moveRight.dispatchEvent(clickEvent);
+                        e.preventDefault();
+                        break;
+                    case "equal":
+                    case "plus":
+                        scaleUp.dispatchEvent(clickEvent);
+                        e.preventDefault();
+                        break;
+                    case "minus":
+                        scaleDown.dispatchEvent(clickEvent);
+                        e.preventDefault();
+                        break;
+                }
+            }, false)
             inputElement.addEventListener("change", handleFiles, false);
 
             cells.forEach(function (c) {
@@ -82,35 +121,12 @@
                 }, true)
             })
 
-            document
-                .getElementById('scaleUp')
-                .addEventListener("click", () => scaleImage(0.01), false)
-                ;
-
-            document
-                .getElementById('scaleDown')
-                .addEventListener("click", () => scaleImage(-0.01), false)
-                ;
-
-            document
-                .getElementById('moveUp')
-                .addEventListener("click", () => moveImage(0, -1), false)
-                ;
-
-            document
-                .getElementById('moveDown')
-                .addEventListener("click", () => moveImage(0, 1), false)
-                ;
-
-            document
-                .getElementById('moveLeft')
-                .addEventListener("click", () => moveImage(-1, 0), false)
-                ;
-
-            document
-                .getElementById('moveRight')
-                .addEventListener("click", () => moveImage(1, 0), false)
-                ;
+            scaleUp.addEventListener("click", () => scaleImage(0.01), false);
+            scaleDown.addEventListener("click", () => scaleImage(-0.01), false);
+            moveUp.addEventListener("click", () => moveImage(0, -1), false);
+            moveDown.addEventListener("click", () => moveImage(0, 1), false);
+            moveLeft.addEventListener("click", () => moveImage(-1, 0), false);
+            moveRight.addEventListener("click", () => moveImage(1, 0), false);
 
             function handleFiles() {
                 if (this.files.length === 0)
