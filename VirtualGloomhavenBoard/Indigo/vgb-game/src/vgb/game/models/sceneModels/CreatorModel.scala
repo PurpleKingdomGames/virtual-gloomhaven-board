@@ -1,4 +1,4 @@
-package vgb.game.models.components.sceneModels
+package vgb.game.models.sceneModels
 
 import indigo.*
 import vgb.game.models.Room

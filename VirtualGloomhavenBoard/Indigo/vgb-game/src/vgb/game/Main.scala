@@ -8,7 +8,11 @@ import vgb.common.*
 import vgb.game.scenes.*
 import vgb.game.models.GameModel
 import vgb.game.models.GameViewModel
+import vgb.game.models.sceneModels.CreatorModel
+import vgb.game.models.sceneModels.CreatorViewModel
 import indigo.shared.assets.AssetType
+import vgb.game.models.Room
+import vgb.game.models.RoomType
 
 final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
     extends IndigoGame[Size, Size, GameModel, GameViewModel] {
@@ -57,10 +61,24 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
     Outcome(Startup.Success(bootData))
 
   def initialModel(startupData: Size): Outcome[GameModel] =
-    Outcome(GameModel(startupData))
+    Outcome(
+      GameModel(
+        startupData,
+        CreatorModel(
+          Batch(
+            Room(RoomType.RoomA1A, Point.zero, 0)
+          )
+        )
+      )
+    )
 
   def initialViewModel(startupData: Size, model: GameModel): Outcome[GameViewModel] =
-    Outcome(GameViewModel(startupData))
+    Outcome(
+      GameViewModel(
+        startupData,
+        CreatorViewModel()
+      )
+    )
 
   def updateModel(
       context: FrameContext[Size],
