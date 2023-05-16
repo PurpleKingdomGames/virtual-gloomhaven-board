@@ -13,3 +13,7 @@ object GloomhavenMsg:
 enum GeneralMsgType extends GloomhavenMsg:
   case ShowContextMenu(position: Point, menu: ContextMenu)
   case CloseContextMenu
+
+enum CreatorMsgType extends GloomhavenMsg:
+  case RotateRoom(r: RoomType)
+  case RemoveRoom(r: RoomType)

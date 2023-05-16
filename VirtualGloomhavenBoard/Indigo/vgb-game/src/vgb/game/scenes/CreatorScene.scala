@@ -12,11 +12,12 @@ import vgb.game.models.components.HexComponent
 import vgb.game.models.sceneModels.CreatorModel
 import vgb.game.models.sceneModels.CreatorViewModel
 import vgb.game.models.Room
-import vgb.game.models.RoomType
+import vgb.common.RoomType
 import vgb.game.models.Hexagon
 import vgb.game.models.components.RoomComponent
 import vgb.game.MoveRoomStart
 import vgb.game.MoveRoomEnd
+import vgb.game.models.components.ContextMenuComponent
 
 /** Placeholder scene for the space station
   *
@@ -70,6 +71,13 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
             )
           )
       }
+    case tyrianSubSystem.TyrianEvent.Receive(msg) =>
+      msg match {
+        case msg: CreatorMsgType =>
+          updateModelFromTyrian(context, model, msg)
+        case _ =>
+          Outcome(model)
+      }
     case _ => Outcome(model)
   }
 
@@ -99,6 +107,20 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
           )
         case None => Outcome(viewModel)
       }
+    case MouseEvent.Click(p) =>
+      val hexPos = Hexagon.screenPosToOddRow(HexComponent.height, p + viewModel.camera.position).toPoint
+      Outcome(viewModel)
+        .addGlobalEvents(
+          tyrianSubSystem.TyrianEvent
+            .Send(
+              GeneralMsgType.ShowContextMenu(
+                p,
+                ContextMenuComponent.getForCreator(
+                  model.rooms.find(r => r.worldCells.exists(rp => rp == hexPos)).map(r => r.roomType)
+                )
+              )
+            )
+        )
     case _ =>
       Outcome(viewModel)
   }
@@ -150,3 +172,25 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         )
         .withCamera(viewModel.camera)
     )
+
+  def updateModelFromTyrian(
+      context: SceneContext[Size],
+      model: SceneModel,
+      msg: CreatorMsgType
+  ) =
+    msg match {
+      case CreatorMsgType.RemoveRoom(r) =>
+        Outcome(model.copy(rooms = model.rooms.filterNot(r1 => r == r1.roomType)))
+      case CreatorMsgType.RotateRoom(r) =>
+        model.rooms.filter(r1 => r1.roomType == r).headOption match {
+          case Some(room) =>
+            val rotatedOrigin =
+              Hexagon.oddRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1)
+            val newRoom = room.copy(
+              origin = rotatedOrigin.toPoint,
+              numRotations = if room.numRotations == 5 then 0 else (room.numRotations + 1).toByte
+            )
+            Outcome(model.copy(rooms = model.rooms.map(r1 => if r1 == room then newRoom else r1)))
+          case None => Outcome(model)
+        }
+    }

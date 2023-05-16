@@ -1,8 +1,10 @@
-package vgb.game.models
+package vgb.common
 
 import indigo.*
 
 enum RoomType(val baseGame: BaseGame, val mapRef: String, val offset: Point, val cells: Batch[Point], val size: Size):
+  override def toString(): String = mapRef.capitalize
+
   case RoomA1A
       extends RoomType(
         BaseGame.Gloomhaven,

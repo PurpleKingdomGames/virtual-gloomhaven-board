@@ -18,13 +18,17 @@ object RoomComponent:
     val origin =
       Hexagon.oddRowToScreenPos(HexComponent.height, room.origin)
 
+    val rotationPoint =
+      Hexagon.oddRowToScreenPos(HexComponent.height, room.rotationPoint)
+
     Layer(
       Batch(
         Graphic(room.roomType.size, Material.Bitmap(AssetName(room.roomType.mapRef)))
           .withRef(offset)
           .rotateTo(Radians.fromDegrees(60 * room.numRotations))
           .moveTo(origin),
-        Circle(origin, 2, Fill.Color(RGBA.Red))
+        Circle(origin, 2, Fill.Color(RGBA.Red)),
+        Circle(rotationPoint, 2, Fill.Color(RGBA.Blue))
       ) ++
         (if moveable then
            Batch(

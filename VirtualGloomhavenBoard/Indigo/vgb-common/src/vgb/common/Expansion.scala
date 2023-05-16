@@ -1,4 +1,5 @@
-package vgb.game.models
+package vgb.common
+import vgb.common.BaseGame
 
 enum Expansion(base: BaseGame):
   override def toString(): String =

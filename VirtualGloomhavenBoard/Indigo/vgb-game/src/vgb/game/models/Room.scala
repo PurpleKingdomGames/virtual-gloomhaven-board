@@ -1,6 +1,7 @@
 package vgb.game.models
 
 import indigo.*
+import vgb.common.RoomType
 
 final case class Room(roomType: RoomType, origin: Point, numRotations: Byte) {
   private val maxPoint   = roomType.cells.foldLeft(Point.zero)((max, p) => max.max(p))

@@ -12,7 +12,7 @@ import vgb.game.models.sceneModels.CreatorModel
 import vgb.game.models.sceneModels.CreatorViewModel
 import indigo.shared.assets.AssetType
 import vgb.game.models.Room
-import vgb.game.models.RoomType
+import vgb.common.RoomType
 
 final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
     extends IndigoGame[Size, Size, GameModel, GameViewModel] {
