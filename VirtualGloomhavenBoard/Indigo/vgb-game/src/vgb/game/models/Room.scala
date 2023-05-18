@@ -13,7 +13,7 @@ final case class Room(roomType: RoomType, origin: Point, numRotations: Byte) {
     roomType.cells
       .map(p =>
         Hexagon
-          .oddRowRotate(
+          .evenRowRotate(
             Vector2.fromPoint(p),
             Vector2.fromPoint(minPoint),
             numRotations

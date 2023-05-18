@@ -102,13 +102,13 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         case Some((_, r)) =>
           Outcome(
             viewModel.copy(dragging =
-              Some(Hexagon.screenPosToOddRow(HexComponent.height, p + viewModel.camera.position).toPoint, r)
+              Some(Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint, r)
             )
           )
         case None => Outcome(viewModel)
       }
     case MouseEvent.Click(p) =>
-      val hexPos = Hexagon.screenPosToOddRow(HexComponent.height, p + viewModel.camera.position).toPoint
+      val hexPos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
       Outcome(viewModel)
         .addGlobalEvents(
           tyrianSubSystem.TyrianEvent
@@ -185,7 +185,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         model.rooms.filter(r1 => r1.roomType == r).headOption match {
           case Some(room) =>
             val rotatedOrigin =
-              Hexagon.oddRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1)
+              Hexagon.evenRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1)
             val newRoom = room.copy(
               origin = rotatedOrigin.toPoint,
               numRotations = if room.numRotations == 5 then 0 else (room.numRotations + 1).toByte

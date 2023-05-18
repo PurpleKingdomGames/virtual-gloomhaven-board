@@ -11,15 +11,20 @@ import vgb.game.models.Hexagon
 object RoomComponent:
   def render(room: Room, camera: Camera, moveable: Boolean) =
     val offset =
-      Hexagon.oddRowToScreenPos(HexComponent.height, Point.zero) -
+      Hexagon.evenRowToScreenPos(HexComponent.height, Point.zero) -
         room.roomType.offset +
         Point(HexComponent.width.toInt, (HexComponent.height * 0.5).toInt)
 
     val origin =
-      Hexagon.oddRowToScreenPos(HexComponent.height, room.origin)
+      Hexagon.evenRowToScreenPos(HexComponent.height, room.origin)
 
     val rotationPoint =
-      Hexagon.oddRowToScreenPos(HexComponent.height, room.rotationPoint)
+      Hexagon.evenRowToScreenPos(HexComponent.height, room.rotationPoint)
+    val newRotation =
+      Hexagon.evenRowToScreenPos(
+        HexComponent.height,
+        Hexagon.evenRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1).toPoint
+      )
 
     Layer(
       Batch(
@@ -28,7 +33,8 @@ object RoomComponent:
           .rotateTo(Radians.fromDegrees(60 * room.numRotations))
           .moveTo(origin),
         Circle(origin, 2, Fill.Color(RGBA.Red)),
-        Circle(rotationPoint, 2, Fill.Color(RGBA.Blue))
+        Circle(rotationPoint, 2, Fill.Color(RGBA.Blue)),
+        Circle(newRotation, 2, Fill.Color(RGBA.Green))
       ) ++
         (if moveable then
            Batch(
