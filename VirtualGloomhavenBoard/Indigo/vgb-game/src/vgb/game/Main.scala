@@ -48,7 +48,8 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
       )
         .withSubSystems(tyrianSubSystem)
         .withAssets(
-          AssetType.Image(AssetName("a1a"), AssetPath("img/map-tiles/gloomhaven/a1a.png")),
+          AssetType.Image(AssetName("gh-a1a"), AssetPath("img/map-tiles/gloomhaven/a1a.png")),
+          AssetType.Image(AssetName("aesther-ashblade"), AssetPath("img/monsters/aesther-ashblade.png")),
           AssetType.Image(AssetName("move-icon"), AssetPath("img/move-icon.webp"))
         )
     )
@@ -64,11 +65,7 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
     Outcome(
       GameModel(
         startupData,
-        CreatorModel(
-          Batch(
-            Room(RoomType.RoomA1A, Point.zero, 0)
-          )
-        )
+        CreatorModel()
       )
     )
 

@@ -4,20 +4,19 @@ import cats.effect.IO
 import indigo.*
 import indigo.scenes.*
 import tyrian.TyrianSubSystem
+import indigo.shared.datatypes.RGBA
+import vgb.game.models.Room
 import vgb.common.*
 import vgb.game.models.GameModel
 import vgb.game.models.GameViewModel
-import indigo.shared.datatypes.RGBA
-import vgb.game.models.components.HexComponent
+import vgb.game.MoveStart
+import vgb.game.MoveEnd
+import vgb.game.models.Hexagon
+import vgb.game.models.ScenarioMonster
+import vgb.game.models.components.*
 import vgb.game.models.sceneModels.CreatorModel
 import vgb.game.models.sceneModels.CreatorViewModel
-import vgb.game.models.Room
-import vgb.common.RoomType
-import vgb.game.models.Hexagon
-import vgb.game.models.components.RoomComponent
-import vgb.game.MoveRoomStart
-import vgb.game.MoveRoomEnd
-import vgb.game.models.components.ContextMenuComponent
+import vgb.game.models.GameRules
 
 /** Placeholder scene for the space station
   *
@@ -59,13 +58,17 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       context: SceneContext[Size],
       model: SceneModel
   ): GlobalEvent => Outcome[SceneModel] = {
-    case MoveRoomEnd(p, r) =>
-      r match {
+    case MoveEnd(newPos, d) =>
+      d match {
+        case m: ScenarioMonster =>
+          Outcome(
+            model.copy(monsters = GameRules.MoveMonster(newPos, m, model.monsters))
+          )
         case r: RoomType =>
           Outcome(
             model.copy(rooms =
               model.rooms.map(room =>
-                if room.roomType == r then room.copy(origin = p)
+                if room.roomType == r then room.copy(origin = newPos)
                 else room
               )
             )
@@ -86,15 +89,28 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       model: SceneModel,
       viewModel: SceneViewModel
   ): GlobalEvent => Outcome[SceneViewModel] = {
-    case MoveRoomStart(p, r) =>
-      Outcome(viewModel.copy(dragging = Some((p, r))))
-    case MouseEvent.MouseUp(_, _) =>
+    case MoveStart(p, r) =>
       viewModel.dragging match {
-        case Some((p, r)) =>
+        case None => Outcome(viewModel.copy(dragging = Some((p, r))))
+        case _    => Outcome(viewModel)
+      }
+    case MouseEvent.MouseDown(p, MouseButton.LeftMouseButton) =>
+      viewModel.dragging match {
+        case None =>
+          val pos  = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
+          val data = model.monsters.find(m => m.initialPosition == pos)
+
+          data match {
+            case Some(d) => Outcome(viewModel.copy(dragging = Some((p, d))))
+            case None    => Outcome(viewModel)
+          }
+        case _ => Outcome(viewModel)
+      }
+    case MouseEvent.MouseUp(_, MouseButton.LeftMouseButton) =>
+      viewModel.dragging match {
+        case Some((p, d)) =>
           Outcome(viewModel.copy(dragging = None))
-            .addGlobalEvents(r match {
-              case r: RoomType => MoveRoomEnd(p, r)
-            })
+            .addGlobalEvents(MoveEnd(p, d))
         case None => Outcome(viewModel)
       }
     case MouseEvent.Move(p) =>
@@ -102,7 +118,10 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         case Some((_, r)) =>
           Outcome(
             viewModel.copy(dragging =
-              Some(Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint, r)
+              Some(
+                Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint,
+                r
+              )
             )
           )
         case None => Outcome(viewModel)
@@ -137,8 +156,8 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
           model.rooms
             .filter(r =>
               viewModel.dragging match {
-                case Some((_, r1)) => r1 != r.roomType
-                case None          => true
+                case Some((_, r1: RoomType)) => r1 != r.roomType
+                case _                       => true
               }
             )
             .map(r => RoomComponent.render(r, viewModel.camera, true))
@@ -146,14 +165,34 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         .addLayer(
           viewModel.dragging match {
             case Some((p, r: RoomType)) =>
-              model.rooms.filter(r1 => r1.roomType == r).headOption match {
+              model.rooms.find(r1 => r1.roomType == r) match {
                 case Some(r) => RoomComponent.render(r.copy(origin = p), viewModel.camera, false)
                 case None    => Layer()
               }
-            case None => Layer()
+            case _ => Layer()
           }
         )
+        .addLayers(
+          model.monsters
+            .filter(m =>
+              viewModel.dragging match {
+                case Some((_, m1: ScenarioMonster)) => m1 != m
+                case _                              => true
+              }
+            )
+            .map(m => Layer(MonsterComponent.render(m)))
+        )
         .addLayer(
+          viewModel.dragging match {
+            case Some((p, m: ScenarioMonster)) =>
+              model.monsters.find(m1 => m1 == m) match {
+                case Some(m) => Layer(MonsterComponent.render(m.copy(initialPosition = p)))
+                case None    => Layer()
+              }
+            case _ => Layer()
+          }
+        )
+        /*.addLayer(
           Layer(
             Batch.fromArray(
               (0 until 10).toArray
@@ -169,7 +208,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                 .flatten
             )
           )
-        )
+        )*/
         .withCamera(viewModel.camera)
     )
 
@@ -182,7 +221,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       case CreatorMsgType.RemoveRoom(r) =>
         Outcome(model.copy(rooms = model.rooms.filterNot(r1 => r == r1.roomType)))
       case CreatorMsgType.RotateRoom(r) =>
-        model.rooms.filter(r1 => r1.roomType == r).headOption match {
+        model.rooms.find(r1 => r1.roomType == r) match {
           case Some(room) =>
             val rotatedOrigin =
               Hexagon.evenRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1)

@@ -5,7 +5,7 @@ import vgb.game.models.Room
 import indigo.shared.scenegraph.Shape.Circle
 import indigo.shared.scenegraph.Shape.Box
 import org.scalajs.dom.PointerEvent
-import vgb.game.MoveRoomStart
+import vgb.game.MoveStart
 import vgb.game.models.Hexagon
 
 object RoomComponent:
@@ -28,7 +28,7 @@ object RoomComponent:
 
     Layer(
       Batch(
-        Graphic(room.roomType.size, Material.Bitmap(AssetName(room.roomType.mapRef)))
+        Graphic(room.roomType.size, Material.Bitmap(room.roomType.assetName))
           .withRef(offset)
           .rotateTo(Radians.fromDegrees(60 * room.numRotations))
           .moveTo(origin),
@@ -45,7 +45,7 @@ object RoomComponent:
                .withEventHandler((g, e) =>
                  e match {
                    case MouseEvent.MouseDown(p, _) if g.bounds.contains(p + camera.position) =>
-                     Some(MoveRoomStart(room.origin, room.roomType))
+                     Some(MoveStart(room.origin, room.roomType))
                    case _ => None
                  }
                )

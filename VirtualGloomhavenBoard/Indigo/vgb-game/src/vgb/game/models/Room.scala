@@ -8,8 +8,7 @@ final case class Room(roomType: RoomType, origin: Point, numRotations: Byte) {
   private val minPoint   = roomType.cells.foldLeft(maxPoint)((min, p) => min.min(p))
   lazy val rotationPoint = Point((maxPoint.x * 0.5).toInt, (maxPoint.y * 0.5).toInt)
 
-  val worldCells = {
-    IndigoLogger.consoleLog(origin.toString())
+  val worldCells =
     roomType.cells
       .map(p =>
         Hexagon
@@ -22,5 +21,4 @@ final case class Room(roomType: RoomType, origin: Point, numRotations: Byte) {
           + origin
           + (if (origin.y & 1) == 1 && (p.y & 1) == 1 then Point(-1, 0) else Point.zero)
       )
-  }
 }
