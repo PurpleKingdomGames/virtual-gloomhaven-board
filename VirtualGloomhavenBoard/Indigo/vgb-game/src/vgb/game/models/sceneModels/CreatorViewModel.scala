@@ -1,11 +1,9 @@
 package vgb.game.models.sceneModels
 
 import indigo.*
-import vgb.game.models.Room
-import vgb.common.RoomType
-import vgb.game.models.ScenarioMonster
+import vgb.game.models.DragData
 
-final case class CreatorViewModel(dragging: Option[(Point, RoomType | ScenarioMonster)]) {
+final case class CreatorViewModel(dragging: Option[DragData]) {
   val camera = Camera.Fixed(Point(-200, -200))
 }
 

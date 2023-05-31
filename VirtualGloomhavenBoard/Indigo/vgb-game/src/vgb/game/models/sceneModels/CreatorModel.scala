@@ -7,9 +7,11 @@ import vgb.game.models.ScenarioMonster
 // Remove these later
 import vgb.common.RoomType
 import vgb.common.MonsterType
+import vgb.common.Obstacle
 import vgb.game.models.MonsterLevel
+import vgb.game.models.BoardOverlay
 
-final case class CreatorModel(rooms: Batch[Room], monsters: Batch[ScenarioMonster])
+final case class CreatorModel(rooms: Batch[Room], monsters: Batch[ScenarioMonster], overlays: Batch[BoardOverlay])
 
 object CreatorModel:
   def apply(): CreatorModel =
@@ -20,10 +22,13 @@ object CreatorModel:
       Batch(
         ScenarioMonster(
           MonsterType.AestherAshblade,
-          Point(1, 0),
+          Point(2, 2),
           MonsterLevel.None,
           MonsterLevel.Normal,
           MonsterLevel.Elite
         )
+      ),
+      Batch(
+        BoardOverlay(1, Obstacle.Boulder2, Point(0, 0), 0)
       )
     )

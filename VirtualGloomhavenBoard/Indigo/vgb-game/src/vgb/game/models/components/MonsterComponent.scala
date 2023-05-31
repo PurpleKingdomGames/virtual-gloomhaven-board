@@ -11,8 +11,6 @@ object MonsterComponent:
       Hexagon.evenRowToScreenPos(HexComponent.height, pos)
     val size = Size(180, 180)
 
-    IndigoLogger.consoleLog(Vector2(size.height.toDouble / HexComponent.height.toDouble).toString())
-
     Graphic(size, Material.Bitmap(monster.assetName))
       .withRef((size / 2).toPoint)
       .moveTo(origin)
@@ -20,5 +18,5 @@ object MonsterComponent:
 
   def render(monster: ScenarioMonster): Group =
     Group(
-      this.render(monster.`type`, monster.initialPosition)
+      this.render(monster.monsterType, monster.initialPosition)
     )

@@ -15,5 +15,7 @@ enum GeneralMsgType extends GloomhavenMsg:
   case CloseContextMenu
 
 enum CreatorMsgType extends GloomhavenMsg:
+  case RotateOverlay(id: Int, o: BoardOverlayType)
+  case RemoveOverlay(id: Int, o: BoardOverlayType)
   case RotateRoom(r: RoomType)
   case RemoveRoom(r: RoomType)

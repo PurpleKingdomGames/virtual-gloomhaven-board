@@ -8,15 +8,23 @@ import tyrian.Html.*
 import vgb.common.MenuItem
 import vgb.common.MenuSeparator
 import vgb.ui.Msg
+import indigo.shared.IndigoLogger
 
 object ContextMenuComponent:
   def render(pos: Point, menu: ContextMenu): Html[Msg] =
+    val hasItems = menu.items.exists(i =>
+      i match {
+        case _: MenuItem => true
+        case _           => false
+      }
+    )
+    IndigoLogger.consoleLog(menu.items.toString())
     div(
       attributes(
-        ("class", s"""context-menu ${if menu.items.isEmpty then "closed" else "open"}"""),
+        ("class", s"""context-menu ${if hasItems then "open" else "closed"}"""),
         ("aria-live", "polite"),
         ("aria-atomic", "true"),
-        ("aria-hidden", if menu.items.isEmpty then "true" else "false")
+        ("aria-hidden", if hasItems then "false" else "true")
       )
     )(
       nav(

@@ -17,6 +17,8 @@ import vgb.game.models.components.*
 import vgb.game.models.sceneModels.CreatorModel
 import vgb.game.models.sceneModels.CreatorViewModel
 import vgb.game.models.GameRules
+import vgb.game.models.BoardOverlay
+import vgb.game.models.DragData
 
 /** Placeholder scene for the space station
   *
@@ -60,6 +62,10 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
   ): GlobalEvent => Outcome[SceneModel] = {
     case MoveEnd(newPos, d) =>
       d match {
+        case o: BoardOverlay =>
+          Outcome(
+            model.copy(overlays = GameRules.MoveOverlay(newPos, o, model.overlays))
+          )
         case m: ScenarioMonster =>
           Outcome(
             model.copy(monsters = GameRules.MoveMonster(newPos, m, model.monsters))
@@ -89,57 +95,68 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       model: SceneModel,
       viewModel: SceneViewModel
   ): GlobalEvent => Outcome[SceneViewModel] = {
-    case MoveStart(p, r) =>
+    case MoveStart(p, d) =>
       viewModel.dragging match {
-        case None => Outcome(viewModel.copy(dragging = Some((p, r))))
+        case None => Outcome(viewModel.copy(dragging = Some(DragData(p, p, d))))
         case _    => Outcome(viewModel)
       }
     case MouseEvent.MouseDown(p, MouseButton.LeftMouseButton) =>
-      viewModel.dragging match {
-        case None =>
-          val pos  = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
-          val data = model.monsters.find(m => m.initialPosition == pos)
+      (
+        viewModel.dragging match {
+          case None =>
+            val pos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
+            val data = model.monsters.find(m => m.initialPosition == pos) match {
+              case Some(v) => Some(v)
+              case None    => model.overlays.find(o => o.worldCells.contains(pos))
+            }
 
-          data match {
-            case Some(d) => Outcome(viewModel.copy(dragging = Some((p, d))))
-            case None    => Outcome(viewModel)
-          }
-        case _ => Outcome(viewModel)
-      }
+            data match {
+              case Some(d) => Outcome(viewModel.copy(dragging = Some(DragData(pos, pos, d))))
+              case None    => Outcome(viewModel)
+            }
+          case _ => Outcome(viewModel)
+        }
+      ).addGlobalEvents(
+        tyrianSubSystem.TyrianEvent
+          .Send(GeneralMsgType.CloseContextMenu)
+      )
     case MouseEvent.MouseUp(_, MouseButton.LeftMouseButton) =>
       viewModel.dragging match {
-        case Some((p, d)) =>
+        case Some(d) if d.originalPos != d.pos =>
           Outcome(viewModel.copy(dragging = None))
-            .addGlobalEvents(MoveEnd(p, d))
-        case None => Outcome(viewModel)
+            .addGlobalEvents(MoveEnd(d.pos, d.dragger))
+        case Some(_) => Outcome(viewModel.copy(dragging = None))
+        case None    => Outcome(viewModel)
       }
     case MouseEvent.Move(p) =>
       viewModel.dragging match {
-        case Some((_, r)) =>
+        case Some(d) =>
+          val pos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
           Outcome(
-            viewModel.copy(dragging =
-              Some(
-                Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint,
-                r
-              )
-            )
+            viewModel.copy(dragging = Some(d.copy(pos = pos)))
           )
         case None => Outcome(viewModel)
       }
     case MouseEvent.Click(p) =>
-      val hexPos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
-      Outcome(viewModel)
-        .addGlobalEvents(
-          tyrianSubSystem.TyrianEvent
-            .Send(
-              GeneralMsgType.ShowContextMenu(
-                p,
-                ContextMenuComponent.getForCreator(
-                  model.rooms.find(r => r.worldCells.exists(rp => rp == hexPos)).map(r => r.roomType)
+      viewModel.dragging match {
+        case Some(_) => Outcome(viewModel)
+        case None =>
+          val hexPos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
+          Outcome(viewModel)
+            .addGlobalEvents(
+              tyrianSubSystem.TyrianEvent
+                .Send(
+                  GeneralMsgType.ShowContextMenu(
+                    p,
+                    ContextMenuComponent.getForCreator(
+                      model.rooms.find(r => r.worldCells.exists(rp => rp == hexPos)).map(r => r.roomType),
+                      model.monsters.find(m => m.initialPosition == hexPos),
+                      model.overlays.filter(o => o.worldCells.contains(hexPos))
+                    )
+                  )
                 )
-              )
             )
-        )
+      }
     case _ =>
       Outcome(viewModel)
   }
@@ -156,38 +173,63 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
           model.rooms
             .filter(r =>
               viewModel.dragging match {
-                case Some((_, r1: RoomType)) => r1 != r.roomType
-                case _                       => true
+                case Some(d) if d.originalPos != d.pos =>
+                  d.dragger match {
+                    case r1: RoomType => r1 != r.roomType
+                    case _            => true
+                  }
+                case _ => true
               }
             )
             .map(r => RoomComponent.render(r, viewModel.camera, true))
-        )
-        .addLayer(
-          viewModel.dragging match {
-            case Some((p, r: RoomType)) =>
-              model.rooms.find(r1 => r1.roomType == r) match {
-                case Some(r) => RoomComponent.render(r.copy(origin = p), viewModel.camera, false)
-                case None    => Layer()
-              }
-            case _ => Layer()
-          }
         )
         .addLayers(
           model.monsters
             .filter(m =>
               viewModel.dragging match {
-                case Some((_, m1: ScenarioMonster)) => m1 != m
-                case _                              => true
+                case Some(d) if d.originalPos != d.pos =>
+                  d.dragger match {
+                    case m1: ScenarioMonster => m1 != m
+                    case _                   => true
+                  }
+                case _ => true
               }
             )
             .map(m => Layer(MonsterComponent.render(m)))
         )
+        .addLayers(
+          model.overlays
+            .filter(o =>
+              viewModel.dragging match {
+                case Some(d) if d.originalPos != d.pos =>
+                  d.dragger match {
+                    case o1: BoardOverlay => o1.id != o.id
+                    case _                => true
+                  }
+                case _ => true
+              }
+            )
+            .map(o => BoardOverlayComponent.render(o))
+        )
         .addLayer(
           viewModel.dragging match {
-            case Some((p, m: ScenarioMonster)) =>
-              model.monsters.find(m1 => m1 == m) match {
-                case Some(m) => Layer(MonsterComponent.render(m.copy(initialPosition = p)))
-                case None    => Layer()
+            case Some(d) if d.originalPos != d.pos =>
+              d.dragger match {
+                case m: ScenarioMonster =>
+                  model.monsters.find(m1 => m1 == m) match {
+                    case Some(m) => Layer(MonsterComponent.render(m.copy(initialPosition = d.pos)))
+                    case None    => Layer()
+                  }
+                case o: BoardOverlay =>
+                  model.overlays.find(o1 => o1.id == o.id) match {
+                    case Some(o) => BoardOverlayComponent.render(o.copy(origin = d.pos))
+                    case None    => Layer()
+                  }
+                case r: RoomType =>
+                  model.rooms.find(r1 => r1.roomType == r) match {
+                    case Some(r) => RoomComponent.render(r.copy(origin = d.pos), viewModel.camera, false)
+                    case None    => Layer()
+                  }
               }
             case _ => Layer()
           }
@@ -218,6 +260,28 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       msg: CreatorMsgType
   ) =
     msg match {
+      case CreatorMsgType.RemoveOverlay(id, o) =>
+        Outcome(model.copy(overlays = model.overlays.filterNot(o1 => id == o1.id && o == o1.overlayType)))
+      case CreatorMsgType.RotateOverlay(id, o) =>
+        model.overlays.find(o1 => id == o1.id && o == o1.overlayType) match {
+          case Some(overlay) =>
+            val rotatedOrigin =
+              Hexagon.evenRowRotate(Vector2.fromPoint(overlay.origin), Vector2.fromPoint(overlay.rotationPoint), 1)
+            val newOverlay = overlay.copy(
+              origin = rotatedOrigin.toPoint,
+              numRotations = if overlay.numRotations == 5 then 0 else (overlay.numRotations + 1).toByte
+            )
+            Outcome(
+              model.copy(overlays =
+                model.overlays
+                  .map(o =>
+                    if id == o.id && overlay.overlayType == o.overlayType then newOverlay
+                    else o
+                  )
+              )
+            )
+          case None => Outcome(model)
+        }
       case CreatorMsgType.RemoveRoom(r) =>
         Outcome(model.copy(rooms = model.rooms.filterNot(r1 => r == r1.roomType)))
       case CreatorMsgType.RotateRoom(r) =>

@@ -50,6 +50,8 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
         .withAssets(
           AssetType.Image(AssetName("gh-a1a"), AssetPath("img/map-tiles/gloomhaven/a1a.webp")),
           AssetType.Image(AssetName("aesther-ashblade"), AssetPath("img/monsters/aesther-ashblade.webp")),
+          AssetType.Image(AssetName("gh-Boulder2"), AssetPath("img/overlays/obstacle-boulder-2.webp")),
+          AssetType.Image(AssetName("gh-Boulder3"), AssetPath("img/overlays/obstacle-boulder-3.webp")),
           AssetType.Image(AssetName("move-icon"), AssetPath("img/move-icon.webp"))
         )
     )

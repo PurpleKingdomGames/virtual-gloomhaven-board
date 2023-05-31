@@ -5,6 +5,6 @@ import indigo.*
 enum MonsterClass:
   case Normal, Boss
 
-enum MonsterType(name: String, `class`: MonsterClass, bucketSize: Byte):
+enum MonsterType(val baseGame: BaseGame, val name: String, val monsterClass: MonsterClass, val bucketSize: Byte):
   val assetName = AssetName(name.toLowerCase().replace(" ", "-"))
-  case AestherAshblade extends MonsterType("Aesther Ashblade", MonsterClass.Normal, 4)
+  case AestherAshblade extends MonsterType(BaseGame.Gloomhaven, "Aesther Ashblade", MonsterClass.Normal, 4)
