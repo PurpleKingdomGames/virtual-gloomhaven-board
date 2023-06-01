@@ -5,7 +5,7 @@ import indigo.shared.scenegraph.Shape.Box
 import vgb.common.MonsterType
 import vgb.game.models.Hexagon
 import vgb.game.models.ScenarioMonster
-import vgb.game.models.MonsterLevel
+import vgb.common.MonsterLevel
 import indigo.shared.datatypes.Rectangle
 
 object MonsterComponent:

@@ -15,6 +15,7 @@ enum GeneralMsgType extends GloomhavenMsg:
   case CloseContextMenu
 
 enum CreatorMsgType extends GloomhavenMsg:
+  case ChangeMonsterLevel(pos: Point, m: MonsterType, playerNum: Byte, monsterLevel: MonsterLevel)
   case RemoveMonster(pos: Point, m: MonsterType)
   case RotateOverlay(id: Int, o: BoardOverlayType)
   case RemoveOverlay(id: Int, o: BoardOverlayType)

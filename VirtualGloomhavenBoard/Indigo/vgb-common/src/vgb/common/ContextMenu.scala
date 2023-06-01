@@ -27,6 +27,9 @@ final case class MenuItem(
     subItems: Batch[MenuItem | MenuSeparator]
 ) {
   val hasSubMenu = !subItems.isEmpty
+
+  def withSelected(s: Boolean) =
+    this.copy(selected = s)
 }
 
 final case class MenuSeparator()

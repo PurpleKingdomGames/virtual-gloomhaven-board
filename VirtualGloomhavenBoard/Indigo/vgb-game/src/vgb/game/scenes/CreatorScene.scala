@@ -254,6 +254,18 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       msg: CreatorMsgType
   ) =
     msg match {
+      case CreatorMsgType.ChangeMonsterLevel(p, m, playerNum, level) =>
+        model.monsters.find(m1 => p == m1.initialPosition && m == m1.monsterType) match {
+          case Some(m) =>
+            val newMonster = m.copy(
+              twoPlayerLevel = if playerNum == 2 then level else m.twoPlayerLevel,
+              threePlayerLevel = if playerNum == 3 then level else m.threePlayerLevel,
+              fourPlayerLevel = if playerNum == 4 then level else m.fourPlayerLevel
+            )
+
+            Outcome(model.copy(monsters = model.monsters.map(m1 => if m1 == m then newMonster else m1)))
+          case _ => Outcome(model)
+        }
       case CreatorMsgType.RemoveMonster(p, m) =>
         Outcome(model.copy(monsters = model.monsters.filterNot(m1 => p == m1.initialPosition && m == m1.monsterType)))
       case CreatorMsgType.RemoveOverlay(id, o) =>

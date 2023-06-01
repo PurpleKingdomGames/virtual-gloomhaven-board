@@ -8,7 +8,7 @@ import vgb.game.models.ScenarioMonster
 import vgb.common.RoomType
 import vgb.common.MonsterType
 import vgb.common.Obstacle
-import vgb.game.models.MonsterLevel
+import vgb.common.MonsterLevel
 import vgb.game.models.BoardOverlay
 
 final case class CreatorModel(rooms: Batch[Room], monsters: Batch[ScenarioMonster], overlays: Batch[BoardOverlay])
