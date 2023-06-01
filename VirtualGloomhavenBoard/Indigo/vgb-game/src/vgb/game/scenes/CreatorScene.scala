@@ -120,14 +120,6 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         tyrianSubSystem.TyrianEvent
           .Send(GeneralMsgType.CloseContextMenu)
       )
-    case MouseEvent.MouseUp(_, MouseButton.LeftMouseButton) =>
-      viewModel.dragging match {
-        case Some(d) if d.originalPos != d.pos =>
-          Outcome(viewModel.copy(dragging = None))
-            .addGlobalEvents(MoveEnd(d.pos, d.dragger))
-        case Some(_) => Outcome(viewModel.copy(dragging = None))
-        case None    => Outcome(viewModel)
-      }
     case MouseEvent.Move(p) =>
       viewModel.dragging match {
         case Some(d) =>
@@ -139,10 +131,12 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       }
     case MouseEvent.Click(p) =>
       viewModel.dragging match {
-        case Some(_) => Outcome(viewModel)
-        case None =>
+        case Some(d) if d.originalPos != d.pos =>
+          Outcome(viewModel.copy(dragging = None))
+            .addGlobalEvents(MoveEnd(d.pos, d.dragger))
+        case _ =>
           val hexPos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
-          Outcome(viewModel)
+          Outcome(viewModel.copy(dragging = None))
             .addGlobalEvents(
               tyrianSubSystem.TyrianEvent
                 .Send(
