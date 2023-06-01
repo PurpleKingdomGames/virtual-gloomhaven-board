@@ -234,7 +234,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
             case _ => Layer()
           }
         )
-        /*.addLayer(
+        .addLayer(
           Layer(
             Batch.fromArray(
               (0 until 10).toArray
@@ -250,7 +250,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                 .flatten
             )
           )
-        )*/
+        )
         .withCamera(viewModel.camera)
     )
 
@@ -260,6 +260,8 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       msg: CreatorMsgType
   ) =
     msg match {
+      case CreatorMsgType.RemoveMonster(p, m) =>
+        Outcome(model.copy(monsters = model.monsters.filterNot(m1 => p == m1.initialPosition && m == m1.monsterType)))
       case CreatorMsgType.RemoveOverlay(id, o) =>
         Outcome(model.copy(overlays = model.overlays.filterNot(o1 => id == o1.id && o == o1.overlayType)))
       case CreatorMsgType.RotateOverlay(id, o) =>

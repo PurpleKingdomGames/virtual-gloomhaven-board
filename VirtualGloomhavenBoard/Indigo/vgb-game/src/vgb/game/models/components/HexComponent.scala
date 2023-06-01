@@ -8,12 +8,12 @@ import indigo.shared.datatypes.Fill.Color
 import vgb.game.models.Hexagon
 
 object HexComponent:
-  val height              = 90
-  private val sqrtThree   = Math.sqrt(3)
-  private val halfSize    = height * 0.5
-  private val quarterSize = height * 0.25
-  val width               = sqrtThree * halfSize
-  private val halfWidth   = width * 0.5
+  val height            = 90
+  private val sqrtThree = Math.sqrt(3)
+  val halfSize          = height * 0.5
+  val quarterSize       = height * 0.25
+  val width             = sqrtThree * halfSize
+  val halfWidth         = width * 0.5
   private val polygon = Polygon(
     Batch(
       Point(0, -Math.floor(halfSize).toInt),                              // Top tip

@@ -30,6 +30,15 @@ object ContextMenuComponent:
       .add(room.map(r => MenuItem(s"""Rotate ${r}""", CreatorMsgType.RotateRoom(r))))
       .add(MenuSeparator())
       .add(
+        monster
+          .map(m =>
+            MenuItem(
+              s"""Remove ${m.monsterType.name}""",
+              CreatorMsgType.RemoveMonster(m.initialPosition, m.monsterType)
+            )
+          )
+      )
+      .add(
         overlays
           .map(o => MenuItem(s"""Remove ${o.overlayType}""", CreatorMsgType.RemoveOverlay(o.id, o.overlayType)))
       )
