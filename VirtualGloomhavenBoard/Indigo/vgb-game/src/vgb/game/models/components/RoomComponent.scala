@@ -7,6 +7,7 @@ import indigo.shared.scenegraph.Shape.Box
 import org.scalajs.dom.PointerEvent
 import vgb.game.MoveStart
 import vgb.game.models.Hexagon
+import vgb.game.models.LayerDepths
 
 object RoomComponent:
   def render(room: Room, camera: Camera, moveable: Boolean) =
@@ -48,4 +49,4 @@ object RoomComponent:
                )
            )
          else Batch.empty)
-    )
+    ).withDepth(LayerDepths.Room)

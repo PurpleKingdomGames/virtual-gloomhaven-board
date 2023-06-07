@@ -124,9 +124,14 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       viewModel.dragging match {
         case Some(d) =>
           val pos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
-          Outcome(
-            viewModel.copy(dragging = Some(d.copy(pos = pos)))
-          )
+          val isValid = d.dragger match {
+            case r: RoomType        => true
+            case o: BoardOverlay    => GameRules.IsValidOverlayPos(pos, o, model.overlays)
+            case m: ScenarioMonster => GameRules.IsValidMonsterPos(pos, m, model.monsters)
+          }
+
+          if isValid then Outcome(viewModel.copy(dragging = Some(d.copy(pos = pos))))
+          else Outcome(viewModel)
         case None => Outcome(viewModel)
       }
     case MouseEvent.Click(p) =>
@@ -160,7 +165,6 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       model: SceneModel,
       viewModel: SceneViewModel
   ): Outcome[SceneUpdateFragment] =
-    val cells = model.rooms.map(r => r.worldCells).flatten
     Outcome(
       SceneUpdateFragment.empty
         .addLayers(
@@ -189,7 +193,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                 case _ => true
               }
             )
-            .map(m => Layer(MonsterComponent.render(m)))
+            .map(m => MonsterComponent.render(m, model.cellMap))
         )
         .addLayers(
           model.overlays
@@ -211,8 +215,9 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
               d.dragger match {
                 case m: ScenarioMonster =>
                   model.monsters.find(m1 => m1 == m) match {
-                    case Some(m) => Layer(MonsterComponent.render(m.copy(initialPosition = d.pos)))
-                    case None    => Layer()
+                    case Some(m) =>
+                      MonsterComponent.render(m.copy(initialPosition = d.pos), model.cellMap)
+                    case None => Layer()
                   }
                 case o: BoardOverlay =>
                   model.overlays.find(o1 => o1.id == o.id) match {
@@ -237,7 +242,13 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                     .map(y =>
                       HexComponent.render(
                         Point(x, y),
-                        if cells.contains(Point(x, y)) then RGBA(0, 1, 0, 0.5) else RGBA.Zero
+                        model.cellMap.get(Point(x, y)) match {
+                          case Some(flags) =>
+                            if (flags & Flag.Monster.value) != 0 then RGBA(1, 0, 0, 0.5)
+                            else if (flags & Flag.Obstacle.value) != 0 then RGBA(0, 0, 1, 0.5)
+                            else RGBA(0, 1, 0, 0.5)
+                          case None => RGBA.Zero
+                        }
                       )
                     )
                 )

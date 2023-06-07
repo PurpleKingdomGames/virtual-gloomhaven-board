@@ -4,6 +4,9 @@ import indigo.*
 import vgb.game.models.BoardOverlay
 import vgb.game.models.Hexagon
 import indigo.shared.scenegraph.Shape.Circle
+import vgb.game.models.LayerDepths
+import vgb.common.Treasure
+import vgb.common.Token
 
 object BoardOverlayComponent:
   def render(boardOverlay: BoardOverlay): Layer =
@@ -28,9 +31,14 @@ object BoardOverlayComponent:
         Graphic(Size(156, 90), Material.Bitmap(boardOverlay.overlayType.assetName))
           .withRef(offset)
           .rotateTo(Radians.fromDegrees(60 * boardOverlay.numRotations))
-          .moveTo(origin),
-        Circle(offset, 2, Fill.Color(RGBA.Red))
-        /*Circle(rotationPoint, 2, Fill.Color(RGBA.Blue)),
-        Circle(newRotation, 2, Fill.Color(RGBA.Green))*/
+          .moveTo(origin)
       )
-    )
+    ).withDepth(boardOverlay.overlayType match {
+      case t: Treasure =>
+        t match {
+          case _: Treasure.Coin => LayerDepths.CoinOrToken
+          case _                => LayerDepths.Overlay
+        }
+      case t: Token => LayerDepths.CoinOrToken
+      case _        => LayerDepths.Overlay
+    })

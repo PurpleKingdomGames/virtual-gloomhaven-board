@@ -7,19 +7,18 @@ import vgb.game.models.Hexagon
 import vgb.game.models.ScenarioMonster
 import vgb.common.MonsterLevel
 import indigo.shared.datatypes.Rectangle
+import vgb.game.models.LayerDepths
+import vgb.common.Flag
 
 object MonsterComponent:
-  def render(monster: MonsterType, pos: Point): Graphic[Material.Bitmap] =
-    val origin =
-      Hexagon.evenRowToScreenPos(HexComponent.height, pos)
-    val size = Size(180, 180)
+  val actualImageSize = Size(180, 180)
+  val borderAsset     = AssetName("hex-border")
+  def render(monster: MonsterType): Graphic[Material.Bitmap] =
+    Graphic(actualImageSize, Material.Bitmap(monster.assetName))
+      .withRef((actualImageSize / 2).toPoint)
+      .scaleBy(Vector2(HexComponent.height.toDouble / actualImageSize.height.toDouble))
 
-    Graphic(size, Material.Bitmap(monster.assetName))
-      .withRef((size / 2).toPoint)
-      .moveTo(origin)
-      .scaleBy(Vector2(HexComponent.height.toDouble / size.height.toDouble))
-
-  def render(monster: ScenarioMonster): Group =
+  def render(monster: ScenarioMonster, cellMap: Map[Point, Int]): Layer =
     val origin =
       Hexagon.evenRowToScreenPos(HexComponent.height, monster.initialPosition)
     val quarterSize = Math.ceil(HexComponent.halfWidth * 0.5).toInt
@@ -31,28 +30,56 @@ object MonsterComponent:
       Fill.None
     )
       .withRef(Point(quarterSize, quarterSize))
-      .withPosition(origin)
-    Group(
-      this.render(monster.monsterType, monster.initialPosition),
-      playerMarker
-        .withRotation(Radians.fromDegrees(32))
-        .moveBy(Point(-Math.ceil(HexComponent.halfWidth).toInt, -Math.floor(HexComponent.quarterSize).toInt))
-        .moveBy(Point(-5, -5))
-        .withFill(getFillForLevel(monster.twoPlayerLevel)),
-      playerMarker
-        .withRotation(Radians.fromDegrees(60))
-        .moveBy(Point(Math.ceil(HexComponent.halfWidth).toInt, -Math.floor(HexComponent.quarterSize).toInt))
-        .moveBy(Point(10, -5))
-        .withFill(getFillForLevel(monster.threePlayerLevel)),
-      playerMarker
-        .moveBy(Point(0, Math.ceil(HexComponent.halfSize).toInt))
-        .moveBy(Point(0, 10))
-        .withFill(getFillForLevel(monster.fourPlayerLevel))
-    )
+    Layer(
+      Group.empty
+        .addChildren(
+          Batch(
+            this.render(monster.monsterType),
+            playerMarker
+              .withRotation(Radians.fromDegrees(32))
+              .moveBy(Point(-Math.ceil(HexComponent.halfWidth).toInt, -Math.floor(HexComponent.quarterSize).toInt))
+              .moveBy(Point(-5, -5))
+              .withFill(getFillForLevel(monster.twoPlayerLevel)),
+            playerMarker
+              .withRotation(Radians.fromDegrees(60))
+              .moveBy(Point(Math.ceil(HexComponent.halfWidth).toInt, -Math.floor(HexComponent.quarterSize).toInt))
+              .moveBy(Point(5, -5))
+              .withFill(getFillForLevel(monster.threePlayerLevel)),
+            playerMarker
+              .moveBy(Point(0, Math.ceil(HexComponent.halfSize).toInt))
+              .moveBy(Point(0, 7))
+              .withFill(getFillForLevel(monster.fourPlayerLevel)),
+            Graphic(
+              actualImageSize,
+              Material.Bitmap(borderAsset).toImageEffects.withTint(RGBA.fromHexString("#bc1717"))
+            )
+              .withRef((actualImageSize / 2).toPoint)
+              .scaleBy(Vector2(HexComponent.height.toDouble / actualImageSize.height.toDouble))
+          )
+        )
+        .withPosition(origin)
+        .withScale(Vector2(getScale(monster.initialPosition, cellMap)))
+    ).withDepth(LayerDepths.Monster)
 
   private def getFillForLevel(level: MonsterLevel) =
     level match {
       case MonsterLevel.None   => Fill.Color(RGBA.Black)
       case MonsterLevel.Normal => Fill.Color(RGBA.White)
       case MonsterLevel.Elite  => Fill.Color(RGBA.fromHexString("#d9c200"))
+    }
+
+  private def getScale(pos: Point, cellMap: Map[Point, Int]): Double =
+    cellMap.get(pos) match {
+      case Some(v) =>
+        val flags =
+          Flag.All
+            - Flag.Room.value
+            - Flag.Corridor.value
+            - Flag.Coin.value
+            - Flag.Token.value
+            - Flag.Monster.value
+            - Flag.Character.value
+        if (flags & v) == 0 then 1
+        else 0.85
+      case None => 1
     }
