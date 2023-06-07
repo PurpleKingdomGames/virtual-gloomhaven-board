@@ -165,6 +165,10 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       model: SceneModel,
       viewModel: SceneViewModel
   ): Outcome[SceneUpdateFragment] =
+    val cellMap = viewModel.dragging
+      .map(d => d.getCellMap(model.cellMap, model.rooms, model.monsters, model.overlays))
+      .getOrElse(model.cellMap)
+
     Outcome(
       SceneUpdateFragment.empty
         .addLayers(
@@ -193,7 +197,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                 case _ => true
               }
             )
-            .map(m => MonsterComponent.render(m, model.cellMap))
+            .map(m => MonsterComponent.render(m, cellMap))
         )
         .addLayers(
           model.overlays
@@ -216,7 +220,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                 case m: ScenarioMonster =>
                   model.monsters.find(m1 => m1 == m) match {
                     case Some(m) =>
-                      MonsterComponent.render(m.copy(initialPosition = d.pos), model.cellMap)
+                      MonsterComponent.render(m.copy(initialPosition = d.pos), cellMap)
                     case None => Layer()
                   }
                 case o: BoardOverlay =>
@@ -242,11 +246,12 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                     .map(y =>
                       HexComponent.render(
                         Point(x, y),
-                        model.cellMap.get(Point(x, y)) match {
+                        cellMap.get(Point(x, y)) match {
                           case Some(flags) =>
                             if (flags & Flag.Monster.value) != 0 then RGBA(1, 0, 0, 0.5)
                             else if (flags & Flag.Obstacle.value) != 0 then RGBA(0, 0, 1, 0.5)
-                            else RGBA(0, 1, 0, 0.5)
+                            else if (flags & Flag.Room.value) != 0 then RGBA(0, 1, 0, 0.5)
+                            else RGBA.Zero
                           case None => RGBA.Zero
                         }
                       )
