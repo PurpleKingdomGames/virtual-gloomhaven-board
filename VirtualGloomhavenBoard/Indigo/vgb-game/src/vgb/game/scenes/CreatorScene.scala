@@ -64,11 +64,11 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       d match {
         case o: BoardOverlay =>
           Outcome(
-            model.copy(overlays = GameRules.MoveOverlay(newPos, o, model.overlays))
+            model.copy(overlays = GameRules.MoveOverlay(newPos, o, model.overlays, model.cellMap))
           )
         case m: ScenarioMonster =>
           Outcome(
-            model.copy(monsters = GameRules.MoveMonster(newPos, m, model.monsters))
+            model.copy(monsters = GameRules.MoveMonster(newPos, m, model.monsters, model.cellMap))
           )
         case r: RoomType =>
           Outcome(
@@ -97,7 +97,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
   ): GlobalEvent => Outcome[SceneViewModel] = {
     case MoveStart(p, d) =>
       viewModel.dragging match {
-        case None => Outcome(viewModel.copy(dragging = Some(DragData(p, p, d))))
+        case None => Outcome(viewModel.copy(dragging = Some(DragData(p, p, d, false))))
         case _    => Outcome(viewModel)
       }
     case MouseEvent.MouseDown(p, MouseButton.LeftMouseButton) =>
@@ -111,7 +111,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
             }
 
             data match {
-              case Some(d) => Outcome(viewModel.copy(dragging = Some(DragData(pos, pos, d))))
+              case Some(d) => Outcome(viewModel.copy(dragging = Some(DragData(pos, pos, d, false))))
               case None    => Outcome(viewModel)
             }
           case _ => Outcome(viewModel)
@@ -126,11 +126,14 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
           val pos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
           val isValid = d.dragger match {
             case r: RoomType        => true
-            case o: BoardOverlay    => GameRules.IsValidOverlayPos(pos, o, model.overlays)
-            case m: ScenarioMonster => GameRules.IsValidMonsterPos(pos, m, model.monsters)
+            case o: BoardOverlay    => GameRules.IsValidOverlayPos(pos, o, model.cellMap)
+            case m: ScenarioMonster => GameRules.IsValidMonsterPos(pos, m, model.cellMap)
           }
 
-          if isValid then Outcome(viewModel.copy(dragging = Some(d.copy(pos = pos))))
+          if isValid then
+            Outcome(
+              viewModel.copy(dragging = Some(d.copy(pos = pos, hasMoved = d.hasMoved || (d.originalPos != d.pos))))
+            )
           else Outcome(viewModel)
         case None => Outcome(viewModel)
       }
@@ -139,6 +142,8 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         case Some(d) if d.originalPos != d.pos =>
           Outcome(viewModel.copy(dragging = None))
             .addGlobalEvents(MoveEnd(d.pos, d.dragger))
+        case Some(d) if d.hasMoved =>
+          Outcome(viewModel.copy(dragging = None))
         case _ =>
           val hexPos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
           Outcome(viewModel.copy(dragging = None))
@@ -166,7 +171,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       viewModel: SceneViewModel
   ): Outcome[SceneUpdateFragment] =
     val cellMap = viewModel.dragging
-      .map(d => d.getCellMap(model.cellMap, model.rooms, model.monsters, model.overlays))
+      .map(d => d.getCellMap(model.cellMap, model.rooms))
       .getOrElse(model.cellMap)
 
     Outcome(

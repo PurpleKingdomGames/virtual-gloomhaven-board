@@ -49,9 +49,17 @@ object CreatorModel:
           MonsterLevel.None,
           MonsterLevel.Normal,
           MonsterLevel.Elite
+        ),
+        ScenarioMonster(
+          MonsterType.AestherAshblade,
+          Point(3, 2),
+          MonsterLevel.None,
+          MonsterLevel.Normal,
+          MonsterLevel.Elite
         )
       ),
       Batch(
-        BoardOverlay(1, Obstacle.Boulder2, Point(0, 0), 0)
+        BoardOverlay(1, Obstacle.Boulder2, Point(0, 0), 0),
+        BoardOverlay(2, Obstacle.Boulder2, Point(2, 0), 0)
       )
     )
