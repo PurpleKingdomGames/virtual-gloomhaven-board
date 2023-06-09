@@ -18,6 +18,7 @@ enum Flag(val value: Int):
   case Monster          extends Flag(16384)
   case Character        extends Flag(32768)
   case Summons          extends Flag(65536)
+  case Hidden           extends Flag(131072)
 
 object Flag:
   lazy val All = Flag.values.foldLeft(0)((v, f) => v | f.value)

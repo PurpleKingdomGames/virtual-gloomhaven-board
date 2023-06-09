@@ -64,11 +64,11 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       d match {
         case o: BoardOverlay =>
           Outcome(
-            model.copy(overlays = GameRules.MoveOverlay(newPos, o, model.overlays, model.cellMap))
+            model.copy(overlays = GameRules.moveOverlay(newPos, o, model.overlays, model.cellMap))
           )
         case m: ScenarioMonster =>
           Outcome(
-            model.copy(monsters = GameRules.MoveMonster(newPos, m, model.monsters, model.cellMap))
+            model.copy(monsters = GameRules.moveMonster(newPos, m, model.monsters, model.cellMap))
           )
         case r: RoomType =>
           Outcome(
@@ -126,8 +126,8 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
           val pos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
           val isValid = d.dragger match {
             case r: RoomType        => true
-            case o: BoardOverlay    => GameRules.IsValidOverlayPos(pos, o, model.cellMap)
-            case m: ScenarioMonster => GameRules.IsValidMonsterPos(pos, m, model.cellMap)
+            case o: BoardOverlay    => GameRules.isValidOverlayPos(pos, o, model.cellMap)
+            case m: ScenarioMonster => GameRules.isValidMonsterPos(pos, m, model.cellMap)
           }
 
           if isValid then
@@ -294,20 +294,8 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       case CreatorMsgType.RotateOverlay(id, o) =>
         model.overlays.find(o1 => id == o1.id && o == o1.overlayType) match {
           case Some(overlay) =>
-            val rotatedOrigin =
-              Hexagon.evenRowRotate(Vector2.fromPoint(overlay.origin), Vector2.fromPoint(overlay.rotationPoint), 1)
-            val newOverlay = overlay.copy(
-              origin = rotatedOrigin.toPoint,
-              numRotations = if overlay.numRotations == 5 then 0 else (overlay.numRotations + 1).toByte
-            )
             Outcome(
-              model.copy(overlays =
-                model.overlays
-                  .map(o =>
-                    if id == o.id && overlay.overlayType == o.overlayType then newOverlay
-                    else o
-                  )
-              )
+              model.copy(overlays = GameRules.rotateOverlay(overlay, model.overlays, model.cellMap))
             )
           case None => Outcome(model)
         }
