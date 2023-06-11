@@ -60,10 +60,15 @@ enum Trap(val baseGame: BaseGame, val cells: Batch[Point]) extends BoardOverlayT
   val flag: Flag = Flag.Trap
   case BearTrap extends Trap(BaseGame.Gloomhaven, Batch(Point(0, 0)))
 
-enum Treasure(val baseGame: BaseGame, val flag: Flag) extends BoardOverlayType:
+enum Treasure(val flag: Flag) extends BoardOverlayType:
   val cells: Batch[Point] = Batch(Point(0, 0))
-  case Chest(val treasureType: TreasureChestType) extends Treasure(BaseGame.Gloomhaven, Flag.TreasureChest)
-  case Coin(val amount: Byte)                     extends Treasure(BaseGame.Gloomhaven, Flag.Coin)
+
+  override def toString(): String = this match
+    case Chest(_, _) => "Chest"
+    case Coin(_, _)  => "Coin"
+
+  case Chest(val baseGame: BaseGame, val treasureType: TreasureChestType) extends Treasure(Flag.TreasureChest)
+  case Coin(val baseGame: BaseGame, val amount: Byte)                     extends Treasure(Flag.Coin)
 
 final case class Token(val baseGame: BaseGame, val letter: Char) extends BoardOverlayType:
   val cells: Batch[Point] = Batch(Point(0, 0))

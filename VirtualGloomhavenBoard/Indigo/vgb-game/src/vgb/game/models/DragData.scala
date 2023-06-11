@@ -22,8 +22,8 @@ final case class DragData(
           case m: ScenarioMonster =>
             Batch((m.initialPosition, -Flag.Monster.value), (pos, Flag.Monster.value))
           case o: BoardOverlay =>
-            o.worldCells.map(c => (c, -Flag.Obstacle.value)) ++
-              o.copy(origin = pos).worldCells.map(c => (c, Flag.Obstacle.value))
+            o.worldCells.map(c => (c, -o.overlayType.flag.value)) ++
+              o.copy(origin = pos).worldCells.map(c => (c, o.overlayType.flag.value))
           case r: RoomType =>
             rooms.find(r1 => r1.roomType == r) match {
               case Some(r) =>

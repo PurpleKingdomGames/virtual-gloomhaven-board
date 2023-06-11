@@ -8,9 +8,11 @@ import vgb.game.models.ScenarioMonster
 import vgb.common.RoomType
 import vgb.common.MonsterType
 import vgb.common.Obstacle
+import vgb.common.Treasure
 import vgb.common.MonsterLevel
 import vgb.game.models.BoardOverlay
 import vgb.common.Flag
+import vgb.common.BaseGame
 
 final case class CreatorModel(rooms: Batch[Room], monsters: Batch[ScenarioMonster], overlays: Batch[BoardOverlay]) {
   val cellMap: Map[Point, Int] = (rooms
@@ -60,6 +62,7 @@ object CreatorModel:
       ),
       Batch(
         BoardOverlay(1, Obstacle.Boulder2, Point(0, 0), 0),
-        BoardOverlay(2, Obstacle.Boulder2, Point(2, 0), 0)
+        BoardOverlay(2, Obstacle.Boulder2, Point(2, 0), 0),
+        BoardOverlay(3, Treasure.Coin(BaseGame.Gloomhaven, 1), Point(1, 3), 0)
       )
     )

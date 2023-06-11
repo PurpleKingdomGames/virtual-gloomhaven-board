@@ -216,7 +216,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                 case _ => true
               }
             )
-            .map(o => BoardOverlayComponent.render(o))
+            .map(o => BoardOverlayComponent.render(o, cellMap))
         )
         .addLayer(
           viewModel.dragging match {
@@ -230,7 +230,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                   }
                 case o: BoardOverlay =>
                   model.overlays.find(o1 => o1.id == o.id) match {
-                    case Some(o) => BoardOverlayComponent.render(o.copy(origin = d.pos))
+                    case Some(o) => BoardOverlayComponent.render(o.copy(origin = d.pos), cellMap)
                     case None    => Layer()
                   }
                 case r: RoomType =>
@@ -242,7 +242,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
             case _ => Layer()
           }
         )
-        .addLayer(
+        /*.addLayer(
           Layer(
             Batch.fromArray(
               (0 until 10).toArray
@@ -265,7 +265,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                 .flatten
             )
           )
-        )
+        )*/
         .withCamera(viewModel.camera)
     )
 
