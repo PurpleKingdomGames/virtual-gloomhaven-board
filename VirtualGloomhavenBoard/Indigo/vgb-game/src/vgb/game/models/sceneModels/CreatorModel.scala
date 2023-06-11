@@ -9,6 +9,7 @@ import vgb.common.RoomType
 import vgb.common.MonsterType
 import vgb.common.Obstacle
 import vgb.common.Treasure
+import vgb.common.Token
 import vgb.common.MonsterLevel
 import vgb.game.models.BoardOverlay
 import vgb.common.Flag
@@ -63,6 +64,7 @@ object CreatorModel:
       Batch(
         BoardOverlay(1, Obstacle.Boulder2, Point(0, 0), 0),
         BoardOverlay(2, Obstacle.Boulder2, Point(2, 0), 0),
-        BoardOverlay(3, Treasure.Coin(BaseGame.Gloomhaven, 1), Point(1, 3), 0)
+        BoardOverlay(3, Treasure.Coin(BaseGame.Gloomhaven, 1), Point(1, 3), 0),
+        BoardOverlay(4, Token(BaseGame.Gloomhaven, 'a'), Point(3, 3), 0)
       )
     )

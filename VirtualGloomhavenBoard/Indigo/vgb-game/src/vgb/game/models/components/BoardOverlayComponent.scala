@@ -28,45 +28,67 @@ object BoardOverlayComponent:
           .toPoint
       )
 
-    val graphicGroup = Group(
-      Graphic(
-        boardOverlay.overlayType match {
-          case t: Treasure.Coin => Size(90, 90)
-          case _                => Size(156, 90)
-        },
-        Material.Bitmap(boardOverlay.overlayType.assetName)
-      )
-    )
-      .withRef(offset)
-      .rotateTo(Radians.fromDegrees(60 * boardOverlay.numRotations))
-      .moveTo(origin)
-    Layer(
-      boardOverlay.overlayType match {
-        case t: Treasure.Coin =>
-          val textSize    = 33
-          val textPadding = 5
-          var coinGraphic = graphicGroup
-            .addChild(
-              TextBox(t.amount.toString(), HexComponent.width.toInt, HexComponent.height)
-                .withFontFamily(FontFamily("PirateOne"))
-                .withFontSize(Pixels(textSize))
-                .withColor(RGBA.fromHexString("#353535"))
-                .withStroke(TextStroke(RGBA.White, Pixels(2)))
-                .alignCenter
-                .moveBy(0, (HexComponent.halfSize - ((textSize * 0.75) - textPadding)).toInt)
-            )
+    (boardOverlay.overlayType match {
+      case Token(_, char) =>
+        val minimise = cellMap.get(boardOverlay.origin) match {
+          case Some(v) if (v & Flag.MinimiseToken) != 0 =>
+            true
+          case _ => false
+        }
+        val graphicGroup = Group(
+          Circle(Point(0, 0), (HexComponent.halfWidth * 0.75).toInt, Fill.Color(RGBA.White)),
+          Circle(Point(0, 0), (HexComponent.halfWidth * 0.75 * 0.85).toInt, Fill.Color(RGBA.fromHexString("#913a3d")))
+        )
+        val token = renderToken(
+          graphicGroup,
+          offset,
+          char.toString(),
+          RGBA.White,
+          false,
+          minimise
+        ).moveTo(origin)
+        Layer(
+          if minimise then
+            token
+              .moveBy(Point(HexComponent.quarterSize.toInt, -HexComponent.quarterSize.toInt))
+          else token
+        )
+      case _ =>
+        val graphicGroup =
+          Graphic(
+            boardOverlay.overlayType match {
+              case t: Treasure.Coin => Size(90, 90)
+              case _                => Size(156, 90)
+            },
+            Material.Bitmap(boardOverlay.overlayType.assetName)
+          )
+            .withRef(offset)
+            .rotateTo(Radians.fromDegrees(60 * boardOverlay.numRotations))
+        Layer(
+          boardOverlay.overlayType match {
+            case t: Treasure.Coin =>
+              val minimise = cellMap.get(boardOverlay.origin) match {
+                case Some(v) if (v & Flag.MinimiseCoin) != 0 =>
+                  true
+                case _ => false
+              }
+              val token = renderToken(
+                graphicGroup,
+                offset,
+                t.amount.toString(),
+                RGBA.fromHexString("#353535"),
+                true,
+                minimise
+              ).moveTo(origin)
 
-          cellMap.get(boardOverlay.origin) match {
-            case Some(v)
-                if (v & (Flag.All - Flag.Coin.value - Flag.Room.value - Flag.Hidden.value - Flag.Highlight.value)) != 0 =>
-              coinGraphic
-                .withScale(Vector2(0.5))
-                .moveBy(Point(HexComponent.quarterSize.toInt, HexComponent.quarterSize.toInt))
-            case _ => coinGraphic
+              if minimise then
+                token
+                  .moveBy(Point(HexComponent.quarterSize.toInt, HexComponent.quarterSize.toInt))
+              else token
+            case _ => graphicGroup
           }
-        case _ => graphicGroup
-      }
-    ).withDepth(boardOverlay.overlayType match {
+        )
+    }).withDepth(boardOverlay.overlayType match {
       case t: Treasure =>
         t match {
           case _: Treasure.Coin => LayerDepths.CoinOrToken
@@ -75,3 +97,30 @@ object BoardOverlayComponent:
       case t: Token => LayerDepths.CoinOrToken
       case _        => LayerDepths.Overlay
     })
+
+  private def renderToken(
+      graphic: Group | Graphic[Material.Bitmap],
+      hexOffset: Point,
+      text: String,
+      colour: RGBA,
+      addOutline: Boolean,
+      minimise: Boolean
+  ) =
+    val textSize = 33
+    var tokenText =
+      TextBox(text, HexComponent.width.toInt, HexComponent.height)
+        .withFontFamily(FontFamily("PirateOne"))
+        .withFontSize(Pixels(textSize))
+        .withColor(colour)
+        .withStroke(TextStroke(if addOutline then RGBA.White else RGBA.Zero, Pixels(2)))
+        .alignCenter
+        .withPosition(Point(-hexOffset.x, -HexComponent.quarterSize.toInt))
+    if minimise then
+      Group(
+        graphic
+          .withScale(Vector2(0.5)),
+        tokenText
+          .withFontSize(Pixels((textSize * 0.5).toInt))
+          .moveBy(0, (HexComponent.quarterSize * 0.5).toInt)
+      )
+    else Group(graphic, tokenText)

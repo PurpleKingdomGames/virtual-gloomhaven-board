@@ -22,6 +22,8 @@ enum Flag(val value: Int):
 
 object Flag:
   lazy val All = Flag.values.foldLeft(0)((v, f) => v | f.value)
+  lazy val MinimiseCoin = (Flag.All - Flag.Coin.value - Flag.Token.value - Flag.Room.value - Flag.Hidden.value - Flag.Highlight.value)
+  lazy val MinimiseToken = (Flag.Coin.value | Flag.TreasureChest.value | Flag.Monster.value | Flag.Character.value)
 
 implicit class FlagOps(left: Int) {
   def +(right: Flag): Int =
