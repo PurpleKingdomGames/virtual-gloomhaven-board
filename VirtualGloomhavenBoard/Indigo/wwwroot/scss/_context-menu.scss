@@ -1,0 +1,114 @@
+.context-menu {
+    position: absolute;
+    border-image: url('../static/img/border.webp') 0 fill;
+    background-color: transparent;
+    border-style: solid;
+    padding: 1.4rem;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s;
+    visibility: hidden;
+    width: 14rem;
+    transition: 0.15s opacity;
+
+    &.open {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    nav {
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0.8rem 0 0 0;
+
+            li {
+                padding: 0.2rem 1rem;
+                border-radius: 0.2rem;
+                position: relative;
+
+                &:hover {
+                    cursor: pointer;
+                    background-color: rgba(0, 0, 0, 0.2)
+                }
+
+                &.has-sub-menu {
+                    &:after {
+                        content: '\25BA';
+                        font-size: 0.6rem;
+                        position: absolute;
+                        right: 0.6rem;
+                        top: 0.4rem;
+                    }
+
+                    div {
+                        visibility: hidden;
+                        position: absolute;
+                        right: -7.1rem;
+                        border-image: url('../static/img/border.webp') 0 fill;
+                        background-color: transparent;
+                        border-style: solid;
+                        padding: 1.4rem;
+                        z-index: 2;
+                        top: -0.9rem;
+                        border-radius: 0.2rem;
+                        max-height: 15rem;
+
+                        ul {
+                            max-height: 11rem;
+                            overflow-y: auto;
+                            min-width: 5rem;
+
+                            li {
+                                padding: 0.2rem 1.3rem;
+
+                                &:hover {
+                                    cursor: pointer;
+                                    background-color: rgba(0, 0, 0, 0.2)
+                                }
+
+                                &.selected {
+                                    &:after {
+                                        content: '\2713';
+                                        font-size: 1.1rem;
+                                        position: absolute;
+                                        left: 0rem;
+                                        top: 0.2rem;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    &:hover {
+                        div {
+                            visibility: visible;
+                        }
+                    }
+                }
+
+                &.cancel {
+                    display: none;
+                }
+
+                &.cancel-menu,
+                ul li.cancel-menu,
+                &:not([class^="remove"])+[class^="remove"] {
+                    margin-top: 0.7rem;
+
+                    &:before {
+                        content: " ";
+                        display: block;
+                        height: 1px;
+                        width: 75%;
+                        border: 1px solid #888;
+                        background-color: #333;
+                        position: absolute;
+                        left: 1rem;
+                        top: -0.4rem;
+                    }
+                }
+            }
+        }
+    }
+}

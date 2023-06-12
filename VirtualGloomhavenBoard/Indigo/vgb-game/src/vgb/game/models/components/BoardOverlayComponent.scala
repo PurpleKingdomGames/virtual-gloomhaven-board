@@ -37,7 +37,7 @@ object BoardOverlayComponent:
         }
         val graphicGroup = Group(
           Circle(Point(0, 0), (HexComponent.halfWidth * 0.75).toInt, Fill.Color(RGBA.White)),
-          Circle(Point(0, 0), (HexComponent.halfWidth * 0.75 * 0.85).toInt, Fill.Color(RGBA.fromHexString("#913a3d")))
+          Circle(Point(0, 0), (HexComponent.halfWidth * 0.75 * 0.9).toInt, Fill.Color(RGBA.fromHexString("#913a3d")))
         )
         val token = renderToken(
           graphicGroup,

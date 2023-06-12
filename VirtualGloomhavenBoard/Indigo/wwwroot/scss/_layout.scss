@@ -1,0 +1,635 @@
+@use 'mixins';
+
+@font-face {
+    font-family: 'PirateOne';
+    src: url('../static/fonts/PirataOne-Gloomhaven.eot');
+    src: url('../static/fonts/PirataOne-Gloomhaven.woff2') format('woff2'), url('../static/fonts/PirataOne-Gloomhaven.woff') format('woff'), url('../static/fonts/PirataOne-Gloomhaven.ttf') format('truetype'), url('../static/fonts/PirataOne-Gloomhaven.svg') format('svg');
+}
+
+:root {
+    font-size: 1rem;
+}
+
+html {
+    font-family: 'PirateOne', Nyala, Georgia, serif;
+
+    &,
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+
+    a {
+        text-decoration: none;
+        color: #fff;
+        transition: 0.5s;
+
+        &:hover {
+            color: #be514f;
+        }
+    }
+
+    .content {
+        display: flex;
+        width: 100vw;
+        flex-direction: column;
+        height: 100vh;
+
+        .cell-details {
+            top: 0;
+            left: -2px;
+            width: 1px;
+            height: 1px;
+            position: absolute;
+            overflow: hidden;
+        }
+
+        .header {
+            position: absolute;
+            display: flex;
+            background-image: url('../static/img/plank.webp');
+            border-bottom: 1px solid black;
+            box-shadow: 0 5px 40px 0 black;
+            background-size: contain;
+            z-index: 4;
+            height: 3.4rem;
+            top: 0;
+            transition: top 0.2s;
+            width: 100%;
+
+            .menu {
+                &:before {
+                    content: "";
+                    color: #ccc;
+                    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                    cursor: pointer;
+                    position: relative;
+                    left: 1rem;
+                    top: 0.3rem;
+                    font-family: serif;
+                    display: block;
+                    width: 45px;
+                    height: 45px;
+                    background-image: url("../static/img/icons.webp");
+                    background-size: 256px;
+                    background-position: -90px -45px;
+                    filter: invert(100%) drop-shadow(2px 1px 0 black);
+                    transition: 0.2s;
+                    z-index: 5;
+                }
+
+                nav {
+                    position: absolute;
+                    z-index: 4;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: 0.3s;
+                    background-image: url('../static/img/plank.webp');
+                    border: 2px solid #222;
+                    background-size: 190%;
+                    top: 4rem;
+                    left: 1.2rem;
+                    font-size: 1.4rem;
+                    color: #aaa;
+                    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                    padding: 1rem;
+                    border-radius: 0.5rem;
+
+                    &:after {
+                        content: '';
+                        border: solid #222;
+                        border-width: 0 3px 3px 0;
+                        display: inline-block;
+                        padding: 0.2rem;
+                        transform: rotate(225deg);
+                        width: 0.3rem;
+                        position: absolute;
+                        left: 0.7rem;
+                        height: 0.3rem;
+                        top: -0.5rem;
+                        background-image: url("../static/img/plank.webp");
+                    }
+
+                    ul {
+                        list-style: none;
+                        padding: 0;
+                        margin: 0;
+
+                        li {
+                            cursor: pointer;
+                            margin-bottom: 0.4rem;
+                            position: relative;
+                            padding-right: 3.1rem;
+
+                            .shortcut {
+                                font-family: Arial, Helvetica, sans-serif;
+                                position: absolute;
+                                right: -0.9rem;
+                                display: flex;
+                                top: 0;
+                                font-size: 0.7rem;
+
+                                .key {
+                                    padding: 0.3rem 0.3rem;
+                                    display: inline-block;
+                                    border: 1px solid black;
+                                    margin-right: 0.2rem;
+                                    text-align: center;
+                                    background-color: rgba(128, 128, 128, 0.5);
+                                    color: white;
+                                    border-radius: 4px;
+                                    transition: 0.2s;
+                                    min-width: 1.5rem;
+                                }
+                            }
+
+                            a {
+                                color: #aaa;
+                                display: inline-block;
+                                width: 100%;
+                                transition: 0s;
+                            }
+
+                            a:hover,
+                            &:hover {
+                                color: #fff;
+
+                                .shortcut {
+                                    .key {
+                                        background-color: rgba(128, 128, 128, 1);
+                                    }
+                                }
+                            }
+
+                            &.section-end {
+                                &:after {
+                                    content: "";
+                                    width: 100%;
+                                    background-color: #333;
+                                    border-bottom: 1px solid #666;
+                                    height: 1px;
+                                    display: block;
+                                    position: absolute;
+                                    bottom: -5px;
+                                }
+
+                                margin-bottom: 0.65rem;
+                            }
+                        }
+                    }
+                }
+
+                &.show {
+                    &:before {
+                        filter: invert(75%) drop-shadow(2px 1px 0 black);
+                    }
+
+                    nav {
+                        opacity: 1;
+                        visibility: visible;
+                    }
+                }
+            }
+
+            header {
+                flex: 1;
+                text-align: center;
+                align-self: center;
+                font-size: 2rem;
+                color: #aaa;
+                text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                position: relative;
+
+                .number {
+                    margin-right: 1rem;
+
+                    &:before {
+                        content: '# ';
+                        speak: never;
+                    }
+
+                    &:empty {
+                        &:before {
+                            display: none;
+                        }
+                    }
+                }
+            }
+
+            .roomCode {
+                font-size: 1.1rem;
+                color: #aaa;
+                text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                display: flex;
+                flex-direction: column;
+                padding: 0.3rem 2rem 0 0;
+
+                span {
+                    &:last-child {
+                        font-family: Arial, Helvetica, sans-serif;
+                        speak-as: literal-punctuation;
+                    }
+                }
+            }
+        }
+
+        .main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            margin-top: 3.4rem;
+            margin-bottom: 4.01rem;
+            transition: margin-top 0.2s, margin-bottom 0.2s;
+
+            .action-list {
+                flex-grow: 1;
+                flex-shrink: 0;
+                height: 100%;
+                display: flex;
+                position: absolute;
+                overflow: visible;
+                background-image: url("../static/img/bg.webp");
+                box-shadow: 10px 0px 40px 10px rgba(0, 0, 0, 0.75);
+                z-index: 2;
+                left: 0;
+                width: 9.2rem;
+                transition: left 0.2s;
+
+                .side-toggle {
+                    width: 2.5rem;
+                    height: 3rem;
+                    position: absolute;
+                    top: 50vh;
+                    right: -2.5rem;
+                    bottom: 50vh;
+                    background-image: url('../static/img/plank.webp');
+                    display: none;
+                    transition: right 0.5s;
+
+                    &:before {
+                        content: '>';
+                        color: white;
+                        display: block;
+                        font-family: serif;
+                        line-height: 2.9rem;
+                        font-size: 1.3rem;
+                        text-align: center;
+                        font-weight: bold;
+                    }
+                }
+
+                &.show {
+                    .side-toggle {
+                        &:before {
+                            content: '<';
+                        }
+                    }
+                }
+
+                .sidebar-wrapper {
+                    z-index: 3;
+                    box-shadow: 25px 0px 25px -5px rgba(0, 0, 0, 0.75);
+                    margin-right: 15px;
+                    width: 85px;
+
+                    nav {
+                        width: 110px;
+                        height: 100%;
+                        overflow: hidden;
+                        background-image: url("../static/img/bg.webp");
+                        background-repeat: repeat;
+                        background-attachment: local;
+                        @include mixins.mask(url('../static/img/page-mask.webp'), alpha, top right);
+                        @include mixins.mask-repeat(repeat-y);
+
+                        ul {
+                            list-style: none;
+                            padding: 0 0 0 17px;
+                            margin: 0;
+                            height: 100%;
+                            width: 90px;
+                            overflow: auto;
+                            overflow-x: hidden;
+                            scrollbar-width: thin;
+
+                            li {
+                                display: inline-block;
+                                padding: 5px 10px;
+                                transition: all 0.25s;
+                                background-image: url('../static/img/icons.webp');
+                                font-size: 0;
+                                text-indent: -9999rem;
+                                width: 45px;
+                                height: 45px;
+                                background-size: 256px;
+                                cursor: pointer;
+
+                                &:hover {
+                                    filter: drop-shadow(0 0 5px #aaa);
+                                }
+
+                                &.active {
+                                    filter: drop-shadow(0 0 5px #93292e);
+                                }
+
+                                &.move-piece {
+                                    background-position: -45px -45px;
+                                }
+
+                                &.kill-piece {
+                                    background-position: -135px 0;
+                                }
+
+                                &.loot {
+                                    background-position: 0 -45px;
+                                }
+
+                                &.move-overlay {
+                                    background-position: -180px 0;
+                                }
+
+                                &.destroy-overlay {
+                                    background-position: -45px 0;
+                                }
+
+                                &.reveal-room {
+                                    background-position: 0 0;
+                                }
+
+                                &.add-piece {
+                                    background-position: -90px 0;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .new-piece-wrapper {
+                    width: 110px;
+                    margin-left: -100px;
+                    height: 100%;
+                    overflow: hidden;
+                    box-shadow: 50px 0px 40px 10px rgba(0, 0, 0, 0.75);
+                    margin-right: 9px;
+                    transition: 0.5s;
+                    overflow: visible;
+
+                    &.show {
+                        margin-left: 10px;
+                        box-shadow: 49px 0px 40px 10px rgba(0, 0, 0, 0.75);
+
+                        .new-piece-list {
+                            ul {
+                                overflow: auto;
+                                overflow-x: hidden;
+                            }
+                        }
+
+                        &+.side-toggle {
+                            right: -10.1rem;
+                        }
+                    }
+
+                    .new-piece-list {
+                        height: 100%;
+                        width: 140px;
+                        @include mixins.mask(url('../static/img/page-mask.webp'), alpha, bottom right);
+                        @include mixins.mask-repeat(repeat-y);
+                        padding-right: 16px;
+                        background-image: url("../static/img/bg.webp");
+                        background-repeat: repeat;
+                        background-attachment: local;
+
+                        ul {
+                            list-style: none;
+                            width: 120px;
+                            padding: 0;
+                            margin: 0;
+                            height: 100%;
+                            overflow: hidden;
+                            overflow-x: hidden;
+                            background-image: url("../static/img/bg.webp");
+                            background-repeat: repeat;
+                            background-attachment: local;
+                            scrollbar-width: thin;
+
+                            li {
+                                display: inline-block;
+                                padding: 5px 10px;
+
+                                [draggable] {
+                                    transition: opacity 0.2s;
+
+                                    &.being-dragged {
+                                        visibility: visible;
+                                        opacity: 0.5;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            .board-wrapper {
+                height: 100%;
+                width: 100%;
+                overflow: auto;
+                background-image: radial-gradient(circle, rgba(241, 236, 232, 0.5) 31%, rgba(156, 124, 108, 0.3) 85%, rgba(81, 64, 30, 0.1) 100%), url("../static/img/bg.webp");
+                background-repeat: repeat;
+                background-attachment: local;
+                scrollbar-width: thin;
+                position: relative;
+                padding: 40px;
+
+                .map-bg {
+                    position: absolute;
+                    top: 0;
+                    right: -175px;
+                    background-image: url('../static/img/compass.webp');
+                    width: 175px;
+                    height: 254px;
+                    opacity: 0.55;
+                }
+            }
+
+            .connectionStatus,
+            .errorStatus {
+                position: absolute;
+                left: 50%;
+                right: 50%;
+                width: 27rem;
+                background-color: #a6192b;
+                padding: 0.5rem 1rem;
+                display: flex;
+                justify-content: space-between;
+                transform: translate(-50%, 0);
+                font-size: 1.4rem;
+                transition: top 0.5s;
+                top: -3rem;
+                -webkit-box-shadow: -1px 3px 5px 0px rgba(0, 0, 0, 0.75);
+                -moz-box-shadow: -1px 3px 5px 0px rgba(0, 0, 0, 0.75);
+                box-shadow: -1px 3px 5px 0px rgba(0, 0, 0, 0.75);
+                z-index: 1;
+
+                span {
+                    display: inline-block;
+                    width: 100%;
+                    max-height: 2rem;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                }
+
+                &.show {
+                    top: 0;
+                }
+
+                &:before,
+                &:after {
+                    content: '';
+                    width: 4rem;
+                    height: 2.9rem;
+                    position: absolute;
+                    top: -1rem;
+                    background-color: #a6192b;
+                    z-index: -1;
+                }
+
+                &:before {
+                    transform: rotate(45deg);
+                    left: -2.4rem;
+                }
+
+                &:after {
+                    transform: rotate(-45deg);
+                    right: -2.4rem;
+                }
+
+                a {
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 1rem;
+                    line-height: 1.8rem;
+                    cursor: pointer;
+                }
+            }
+        }
+
+        footer {
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #aaa;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            font-size: 0.75rem;
+            background-image: url("../static/img/plank.webp");
+            background-size: contain;
+            border-top: 1px solid black;
+            box-shadow: 0 -5px 40px 0 black;
+            z-index: 4;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 4rem;
+            transition: bottom 0.2s;
+
+            .credits {
+                display: flex;
+                flex-direction: column;
+                padding: 1rem;
+
+                .gloomCopy {
+                    margin-bottom: 0.4rem;
+                }
+            }
+
+            .pkg {
+                padding: 1rem;
+                display: flex;
+                ;
+                flex-wrap: wrap;
+                justify-content: end;
+
+                .copy-wrapper {
+                    width: 100%;
+                    display: flex;
+                    text-align: right;
+                    align-items: center;
+                    position: relative;
+                    justify-content: flex-end;
+                    margin-bottom: 0.3rem;
+
+                    .sponsor {
+                        position: relative;
+
+                        .sponsor-button {
+                            height: 35px;
+                            width: 128px;
+                            display: block;
+                            border: none;
+                            transform: scale(.65);
+                        }
+                    }
+                }
+
+                .version {
+                    width: 100%;
+                    padding-right: 1.7rem;
+                    position: relative;
+                    top: -0.4rem;
+                    text-align: right;
+
+                    a {
+                        margin-right: 10.3rem;
+                    }
+                }
+            }
+        }
+
+        &.board-only {
+            .header {
+                top: -3.4rem;
+
+                .menu {
+                    &:before {
+                        top: 4rem;
+                    }
+
+                    nav {
+                        top: 7.5rem;
+                    }
+                }
+            }
+
+            .main {
+                margin-top: 0;
+                margin-bottom: 0;
+
+                .action-list {
+                    left: - 9.2rem;
+
+                    .new-piece-wrapper {
+                        display: none;
+                    }
+                }
+
+                .board-wrapper {
+                    margin-left: 0;
+                }
+            }
+
+            footer {
+                bottom: -4rem;
+            }
+        }
+    }
+}
