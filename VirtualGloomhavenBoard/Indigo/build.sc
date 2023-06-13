@@ -5,9 +5,6 @@ import mill.scalajslib._
 import mill.scalajslib.api._
 import $file.gamedata.gameData
 
-import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.2`
-import io.github.davidgregory084.TpolecatModule
-
 object `vgb-common` extends VgbModule
 
 object `vgb-game` extends VgbModule {
@@ -49,17 +46,17 @@ object `vgb-ui` extends VgbModule {
     T.command {
       T {
         compile()
-        fastOpt()
+        fastLinkJS()
       }
     }
 }
 
-trait VgbModule extends ScalaJSModule with TpolecatModule {
-  def scalaVersion   = "3.2.2"
+trait VgbModule extends ScalaJSModule {
+  def scalaVersion   = "3.3.0"
   def scalaJSVersion = "1.13.1"
 
-  val indigoVersion = "0.14.0"
-  val tyrianVersion = "0.6.1"
+  val indigoVersion = "0.15.0-RC2"
+  val tyrianVersion = "0.7.1"
 
   def ivyDeps =
     Agg(
@@ -73,7 +70,7 @@ trait VgbModule extends ScalaJSModule with TpolecatModule {
 
   override def moduleKind = T(mill.scalajslib.api.ModuleKind.CommonJSModule)
 
-  object test extends Tests with TestModule.Munit {
+  object test extends ScalaJSTests with TestModule.Munit {
 
     def ivyDeps = Agg(
       ivy"org.scalameta::munit::1.0.0-M7"

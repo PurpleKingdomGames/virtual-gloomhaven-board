@@ -8,10 +8,13 @@ import vgb.game.{Main => VgbGame}
 import vgb.common.*
 
 import scala.scalajs.js.annotation.*
+import scala.concurrent.duration.DurationDouble
 import vgb.ui.models.components.ContextMenuComponent
 import indigo.shared.collections.Batch
 
 enum Msg:
+  case NoOp
+  case RetryIndigo
   case IndigoReceive(msg: GloomhavenMsg) extends Msg
   case IndigoSend(msg: GloomhavenMsg)    extends Msg
   case StartIndigo                       extends Msg
@@ -23,6 +26,8 @@ object Main extends TyrianApp[Msg, Model]:
   val gameDivId  = "board"
   val appVersion = "2.0.0-alpha"
 
+  def router: Location => Msg = Routing.none(Msg.NoOp)
+
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) =
     (Model(), Cmd.Emit(Msg.StartIndigo))
 
@@ -32,17 +37,22 @@ object Main extends TyrianApp[Msg, Model]:
     case Msg.IndigoSend(msg) =>
       (model, model.bridge.publish(IndigoGameId(gameDivId), msg))
     case Msg.StartIndigo =>
-      (
-        model,
-        Cmd.SideEffect {
-          VgbGame(model.bridge.subSystem(IndigoGameId(gameDivId)))
-            .launch(
-              gameDivId,
-              "width"  -> "1620",
-              "height" -> "800"
-            )
+      val task: IO[Msg] =
+        IO {
+          if gameDivExists(gameDivId) then
+            VgbGame(model.bridge.subSystem(IndigoGameId(gameDivId)))
+              .launch(
+                gameDivId,
+                "width"  -> "1620",
+                "height" -> "800"
+              )
+            Msg.NoOp
+          else Msg.RetryIndigo
         }
-      )
+
+      (model, Cmd.Run(task))
+    case Msg.RetryIndigo =>
+      (model, Cmd.emitAfterDelay(Msg.StartIndigo, 0.25.seconds))
     case Msg.CloseContextMenu =>
       (
         model.copy(sceneModel = model.sceneModel.updateContextMenu(None)),
@@ -58,6 +68,7 @@ object Main extends TyrianApp[Msg, Model]:
           )
         case None => (model, Cmd.None)
       }
+    case Msg.NoOp => (model, Cmd.None)
 
   def view(model: Model): Html[Msg] =
     div(id := "content", `class` := "content")(
@@ -150,3 +161,7 @@ object Main extends TyrianApp[Msg, Model]:
           case _ => item
         }
       )
+
+  @SuppressWarnings(Array("scalafix:DisableSyntax.null"))
+  private def gameDivExists(id: String): Boolean =
+    document.getElementById(id) != null

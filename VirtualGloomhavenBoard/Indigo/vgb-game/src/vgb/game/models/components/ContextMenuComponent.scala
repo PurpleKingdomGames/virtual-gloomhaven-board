@@ -27,8 +27,8 @@ object ContextMenuComponent:
         overlays
           .filter(o =>
             o.overlayType match {
-              case _: Treasure => false
-              case _           => true
+              case _: (Treasure | Token) => false
+              case _                     => true
             }
           )
           .map(o => MenuItem(s"""Rotate ${o.overlayType}""", CreatorMsgType.RotateOverlay(o.id, o.overlayType)))

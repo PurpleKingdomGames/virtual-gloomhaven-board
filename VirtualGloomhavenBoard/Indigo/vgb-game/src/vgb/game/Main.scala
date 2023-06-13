@@ -42,7 +42,7 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
       BootResult(
         GameConfig.default
           .withMagnification(magnification)
-          .withClearColor(RGBA.White)
+          .withTransparentBackground(true)
           .withViewport(gameViewport),
         gameViewport.size / magnification
       )

@@ -71,8 +71,9 @@ enum Treasure(val flag: Flag) extends BoardOverlayType:
   case Coin(val baseGame: BaseGame, val amount: Byte)                     extends Treasure(Flag.Coin)
 
 final case class Token(val baseGame: BaseGame, val letter: Char) extends BoardOverlayType:
-  val cells: Batch[Point] = Batch(Point(0, 0))
-  val flag: Flag          = Flag.Token
+  val cells: Batch[Point]         = Batch(Point(0, 0))
+  val flag: Flag                  = Flag.Token
+  override def toString(): String = s"""Token (${letter})"""
 
 enum Wall(val baseGame: BaseGame, val cells: Batch[Point]) extends BoardOverlayType:
   val flag: Flag = Flag.Wall
