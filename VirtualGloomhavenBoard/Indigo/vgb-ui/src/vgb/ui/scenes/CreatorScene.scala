@@ -4,10 +4,13 @@ import cats.effect.IO
 import indigo.shared.datatypes.Point
 import tyrian.*
 import tyrian.Html.*
+import vgb.common.CreatorMsgType
 import vgb.common.GloomhavenMsg
-import vgb.common.ContextMenu
+import vgb.common.Menu
 import vgb.ui.Model
 import vgb.ui.models.UiModel
+import vgb.common.MenuItem
+import vgb.common.MenuSeparator
 
 object CreatorScene extends TyrianScene {
   type SceneModel = CreatorModel
@@ -24,16 +27,32 @@ object CreatorScene extends TyrianScene {
         (model, Cmd.None)
     }
 
-  def header(model: CreatorModel): Html[GloomhavenMsg] =
-    div()
+  def getHeader(model: CreatorModel): List[Html[GloomhavenMsg]] = List(
+    header(
+      attribute("aria-label", "Scenario Title")
+    )(span(`class` := "title")(input(`type` := "text", placeholder := "Enter Scenario Title", maxLength := 30)))
+  )
 }
 
 final case class CreatorModel(
-    contextMenu: Option[(Point, ContextMenu)]
+    mainMenu: Menu,
+    showMainMenu: Boolean,
+    contextMenu: Option[(Point, Menu)]
 ) extends UiModel {
-  def updateContextMenu(menu: Option[(Point, ContextMenu)]): UiModel =
+  def updateContextMenu(menu: Option[(Point, Menu)]): UiModel =
     this.copy(contextMenu = menu)
+  def toggleMainMenu(): UiModel =
+    this.copy(showMainMenu = showMainMenu != true)
 }
 
 object CreatorModel:
-  def apply(): CreatorModel = CreatorModel(None)
+  def apply(): CreatorModel = CreatorModel(
+    Menu()
+      .add(Some(MenuItem("Create New", CreatorMsgType.CreateNewScenario)))
+      .add(MenuSeparator())
+      .add(Some(MenuItem("Export", CreatorMsgType.ShowExportDialog)))
+      .add(Some(MenuItem("Import", CreatorMsgType.ShowImportDialog)))
+      .add(MenuSeparator()),
+    false,
+    None
+  )

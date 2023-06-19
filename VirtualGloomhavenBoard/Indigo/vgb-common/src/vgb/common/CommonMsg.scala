@@ -5,13 +5,11 @@ import indigo.Point
 /** A message from the VGB app
   */
 trait GloomhavenMsg
-object GloomhavenMsg:
-  given CanEqual[GloomhavenMsg, GloomhavenMsg] = CanEqual.derived
 
-  /** General messages that can be used across many scenes
-    */
+/** General messages that can be used across many scenes
+  */
 enum GeneralMsgType extends GloomhavenMsg:
-  case ShowContextMenu(position: Point, menu: ContextMenu)
+  case ShowContextMenu(position: Point, menu: Menu)
   case CloseContextMenu
 
 enum CreatorMsgType extends GloomhavenMsg:
@@ -21,3 +19,6 @@ enum CreatorMsgType extends GloomhavenMsg:
   case RemoveOverlay(id: Int, o: BoardOverlayType)
   case RotateRoom(r: RoomType)
   case RemoveRoom(r: RoomType)
+  case CreateNewScenario
+  case ShowImportDialog
+  case ShowExportDialog

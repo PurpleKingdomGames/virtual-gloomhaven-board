@@ -4,14 +4,15 @@ import indigo.*
 import vgb.common.*
 import vgb.game.models.ScenarioMonster
 import vgb.game.models.BoardOverlay
+import vgb.common.{MenuSeparator, MenuItem}
 
 object ContextMenuComponent:
   def getForCreator(
       room: Option[RoomType],
       monster: Option[ScenarioMonster],
       overlays: Batch[BoardOverlay]
-  ): ContextMenu =
-    ContextMenu()
+  ): Menu =
+    Menu()
       .add(
         monster
           .map(m =>

@@ -4,22 +4,29 @@ import cats.effect.IO
 import tyrian.*
 import tyrian.Html.*
 import org.scalajs.dom.document
+import org.scalajs.dom.window
 import vgb.game.{Main => VgbGame}
 import vgb.common.*
 
 import scala.scalajs.js.annotation.*
 import scala.concurrent.duration.DurationDouble
 import vgb.ui.models.components.ContextMenuComponent
+import vgb.ui.models.components.MainMenuComponent
 import indigo.shared.collections.Batch
+import indigo.shared.datatypes.Point
+import vgb.common.{MenuItem, MenuSeparator}
+import vgb.ui.models.UiModel
 
 enum Msg:
   case NoOp
   case RetryIndigo
-  case IndigoReceive(msg: GloomhavenMsg) extends Msg
-  case IndigoSend(msg: GloomhavenMsg)    extends Msg
-  case StartIndigo                       extends Msg
-  case OpenContextItem(item: MenuItem)   extends Msg
-  case CloseContextMenu                  extends Msg
+  case IndigoReceive(msg: GloomhavenMsg)
+  case IndigoSend(msg: GloomhavenMsg)
+  case StartIndigo
+  case OpenContextItem(itemId: Byte)
+  case CloseContextItem(itemId: Byte)
+  case CloseContextMenu
+  case ToggleMainMenu
 
 @JSExportTopLevel("TyrianApp")
 object Main extends TyrianApp[Msg, Model]:
@@ -52,16 +59,27 @@ object Main extends TyrianApp[Msg, Model]:
 
       (model, Cmd.Run(task))
     case Msg.RetryIndigo =>
-      (model, Cmd.emitAfterDelay(Msg.StartIndigo, 0.25.seconds))
+      (model, Cmd.emitAfterDelay(Msg.StartIndigo, 0.1.seconds))
     case Msg.CloseContextMenu =>
       (
         model.copy(sceneModel = model.sceneModel.updateContextMenu(None)),
         Cmd.None
       )
-    case Msg.OpenContextItem(item) =>
+    case Msg.OpenContextItem(i) =>
       model.sceneModel.contextMenu match {
         case Some((p, menu)) =>
-          val newMenu = (p, menu.copy(items = updateContextMenuItem(menu.items, item)))
+          val newMenu = (p, menu.updateItems(updateContextMenuItem(menu.items, i, true)))
+          (
+            model.copy(sceneModel = model.sceneModel.updateContextMenu(Some(newMenu))),
+            Cmd.None
+          )
+        case None => (model, Cmd.None)
+      }
+
+    case Msg.CloseContextItem(i) =>
+      model.sceneModel.contextMenu match {
+        case Some((p, menu)) =>
+          val newMenu = (p, menu.updateItems(updateContextMenuItem(menu.items, i, false)))
           (
             model.copy(sceneModel = model.sceneModel.updateContextMenu(Some(newMenu))),
             Cmd.None
@@ -69,16 +87,26 @@ object Main extends TyrianApp[Msg, Model]:
         case None => (model, Cmd.None)
       }
     case Msg.NoOp => (model, Cmd.None)
+    case Msg.ToggleMainMenu =>
+      (
+        model.copy(sceneModel = model.sceneModel.toggleMainMenu()),
+        Cmd.None
+      )
 
   def view(model: Model): Html[Msg] =
+    val sceneModel = model.scene.getModel(model)
+
     div(id := "content", `class` := "content")(
       div(`class` := "header")(
-        model.scene
-          .header(model.scene.getModel(model))
-          .map(Msg.IndigoSend(_))
+        List(
+          MainMenuComponent.render(sceneModel.mainMenu, sceneModel.showMainMenu)
+        ) ++
+          model.scene
+            .getHeader(sceneModel)
+            .map(e => e.map(Msg.IndigoSend(_)))
       ),
       div(`class` := "main", attribute("aria-label", "Gloomhaven board layout"))(
-        model.sceneModel.contextMenu match {
+        sceneModel.contextMenu match {
           case Some(m) =>
             m match {
               case (pos, menu) =>
@@ -139,8 +167,26 @@ object Main extends TyrianApp[Msg, Model]:
       case (msg: GeneralMsgType, _) =>
         msg match {
           case GeneralMsgType.ShowContextMenu(p, m) =>
-            val newMenu = if m.items.isEmpty then None else Some(p, m)
-            (model.copy(sceneModel = model.sceneModel.updateContextMenu(newMenu)), Cmd.None)
+            val newMenu =
+              if m.items.isEmpty then None
+              else
+                val newMenu = Menu()
+                  .add(
+                    m.items.map(i =>
+                      i match {
+                        case i: MenuItem => assignCancelButtons(i)
+                        case _           => i
+                      }
+                    )
+                  )
+                  .add(MenuSeparator())
+                  .add(MenuItem("Cancel", Batch.empty))
+
+                Some(getContextPosition(p), newMenu)
+            (
+              model.copy(sceneModel = model.sceneModel.updateContextMenu(newMenu)),
+              Cmd.None
+            )
           case GeneralMsgType.CloseContextMenu =>
             (model.copy(sceneModel = model.sceneModel.updateContextMenu(None)), Cmd.None)
         }
@@ -150,14 +196,18 @@ object Main extends TyrianApp[Msg, Model]:
     }
 
   def updateContextMenuItem(
-      items: Batch[MenuItem | MenuSeparator],
-      selectedItem: MenuItem
-  ): Batch[MenuItem | MenuSeparator] =
+      items: Batch[MenuItemTrait | MenuSeparator],
+      idToFind: Byte,
+      opened: Boolean
+  ): Batch[MenuItemTrait | MenuSeparator] =
     items
       .map(item =>
         item match {
           case i: MenuItem =>
-            i.copy(selected = i == selectedItem, subItems = updateContextMenuItem(i.subItems, selectedItem))
+            i.copy(
+              open = (i.id == idToFind) && opened,
+              subItems = updateContextMenuItem(i.subItems, idToFind, opened)
+            )
           case _ => item
         }
       )
@@ -165,3 +215,32 @@ object Main extends TyrianApp[Msg, Model]:
   @SuppressWarnings(Array("scalafix:DisableSyntax.null"))
   private def gameDivExists(id: String): Boolean =
     document.getElementById(id) != null
+
+  private def getContextPosition(p: Point) =
+    document.getElementById(gameDivId) match {
+      case null => p
+      case gameWrapper =>
+        val padding = 22
+        Point(
+          (p.x + padding - gameWrapper.scrollLeft).toInt,
+          (p.y + padding - gameWrapper.scrollTop).toInt
+        )
+    }
+
+  private def assignCancelButtons(item: MenuItem): MenuItem =
+    if item.hasSubMenu then
+      val subItems = item.subItems
+        .map(item =>
+          item match {
+            case i: MenuItem => assignCancelButtons(i)
+            case _           => item
+          }
+        )
+
+      item
+        .copy(subItems =
+          subItems :+
+            MenuSeparator() :+
+            MenuItem("Cancel", Batch.empty)
+        )
+    else item

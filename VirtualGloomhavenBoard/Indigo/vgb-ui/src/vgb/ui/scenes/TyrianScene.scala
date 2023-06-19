@@ -12,4 +12,4 @@ trait TyrianScene:
 
   def getModel(model: Model): SceneModel
   def update(msg: GloomhavenMsg, model: SceneModel): (SceneModel, Cmd[IO, GloomhavenMsg])
-  def header(model: SceneModel): Html[GloomhavenMsg]
+  def getHeader(model: SceneModel): List[Html[GloomhavenMsg]]

@@ -68,6 +68,10 @@ trait VgbModule extends ScalaJSModule {
       ivy"org.scala-js:scalajs-java-securerandom_sjs1_2.13:1.0.0"
     )
 
+  override def esFeatures: T[ESFeatures] = T {
+    ESFeatures.Defaults.withESVersion(ESVersion.ES2015)
+  }
+
   override def moduleKind = T(mill.scalajslib.api.ModuleKind.CommonJSModule)
 
   object test extends ScalaJSTests with TestModule.Munit {

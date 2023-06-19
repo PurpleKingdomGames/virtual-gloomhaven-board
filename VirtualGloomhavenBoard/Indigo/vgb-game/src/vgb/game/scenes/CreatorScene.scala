@@ -313,4 +313,6 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
             Outcome(model.copy(rooms = model.rooms.map(r1 => if r1 == room then newRoom else r1)))
           case None => Outcome(model)
         }
+
+      case _ => Outcome(model)
     }

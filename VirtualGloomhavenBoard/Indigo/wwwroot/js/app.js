@@ -1,5 +1,5 @@
 //require('@microsoft/signalr')
-import * as t from '../../out/vgb-ui/fastLinkJs.dest/main.js';
+import * as t from '../../out/vgb-ui/fastLinkJS.dest/main.js';
 t.TyrianApp.launch("main")
 /*
 const conn = new signalR
