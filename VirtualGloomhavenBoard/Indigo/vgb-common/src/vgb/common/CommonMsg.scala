@@ -22,3 +22,4 @@ enum CreatorMsgType extends GloomhavenMsg:
   case CreateNewScenario
   case ShowImportDialog
   case ShowExportDialog
+  case ChangeScenarioTitle(title: String)

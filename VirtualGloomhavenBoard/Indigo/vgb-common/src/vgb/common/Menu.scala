@@ -4,7 +4,10 @@ import indigo.Batch
 
 final case class Menu(private val internalItems: Batch[MenuItemTrait | MenuSeparator]) {
   val items: Batch[MenuItemTrait | MenuSeparator] = assignIds(internalItems, -1)._1;
-
+  val isEmpty: Boolean = items.isEmpty || items.exists(_ match {
+    case _: MenuItemTrait => true
+    case _                => false
+  }) == false
   def updateItems(items: Batch[MenuItemTrait | MenuSeparator]) =
     this.copy(internalItems = items)
 

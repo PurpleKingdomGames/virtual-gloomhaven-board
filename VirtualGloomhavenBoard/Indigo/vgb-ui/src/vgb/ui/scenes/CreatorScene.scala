@@ -11,6 +11,7 @@ import vgb.ui.Model
 import vgb.ui.models.UiModel
 import vgb.common.MenuItem
 import vgb.common.MenuSeparator
+import vgb.ui.Msg
 
 object CreatorScene extends TyrianScene {
   type SceneModel = CreatorModel
@@ -23,18 +24,31 @@ object CreatorScene extends TyrianScene {
 
   def update(msg: vgb.common.GloomhavenMsg, model: CreatorModel): (CreatorModel, Cmd[IO, GloomhavenMsg]) =
     msg match {
+      case CreatorMsgType.ChangeScenarioTitle(t) => (model.copy(scenarioTitle = t), Cmd.None)
       case _ =>
         (model, Cmd.None)
     }
 
-  def getHeader(model: CreatorModel): List[Html[GloomhavenMsg]] = List(
+  def getHeader(model: CreatorModel): List[Html[Msg]] = List(
     header(
       attribute("aria-label", "Scenario Title")
-    )(span(`class` := "title")(input(`type` := "text", placeholder := "Enter Scenario Title", maxLength := 30)))
+    )(
+      span(`class` := "title")(
+        input(
+          `type`      := "text",
+          placeholder := "Enter Scenario Title",
+          maxLength   := 30,
+          onInput(_ match {
+            case t => Msg.IndigoReceive(CreatorMsgType.ChangeScenarioTitle(t))
+          })
+        )
+      )
+    )
   )
 }
 
 final case class CreatorModel(
+    scenarioTitle: String,
     mainMenu: Menu,
     showMainMenu: Boolean,
     contextMenu: Option[(Point, Menu)]
@@ -47,6 +61,7 @@ final case class CreatorModel(
 
 object CreatorModel:
   def apply(): CreatorModel = CreatorModel(
+    "",
     Menu()
       .add(Some(MenuItem("Create New", CreatorMsgType.CreateNewScenario)))
       .add(MenuSeparator())

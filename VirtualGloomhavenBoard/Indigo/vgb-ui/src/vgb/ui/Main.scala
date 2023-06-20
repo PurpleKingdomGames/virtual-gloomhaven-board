@@ -16,6 +16,8 @@ import indigo.shared.collections.Batch
 import indigo.shared.datatypes.Point
 import vgb.common.{MenuItem, MenuSeparator}
 import vgb.ui.models.UiModel
+import vgb.ui.scenes.CreatorModel
+import tyrian.cmds.Logger
 
 enum Msg:
   case NoOp
@@ -96,14 +98,19 @@ object Main extends TyrianApp[Msg, Model]:
   def view(model: Model): Html[Msg] =
     val sceneModel = model.scene.getModel(model)
 
-    div(id := "content", `class` := "content")(
+    div(
+      id := "content",
+      `class` := s"""content ${sceneModel match {
+          case _: CreatorModel => "scenario-creator"
+          case _               => ""
+        }}"""
+    )(
       div(`class` := "header")(
         List(
           MainMenuComponent.render(sceneModel.mainMenu, sceneModel.showMainMenu)
         ) ++
           model.scene
             .getHeader(sceneModel)
-            .map(e => e.map(Msg.IndigoSend(_)))
       ),
       div(`class` := "main", attribute("aria-label", "Gloomhaven board layout"))(
         sceneModel.contextMenu match {
@@ -167,8 +174,8 @@ object Main extends TyrianApp[Msg, Model]:
       case (msg: GeneralMsgType, _) =>
         msg match {
           case GeneralMsgType.ShowContextMenu(p, m) =>
-            val newMenu =
-              if m.items.isEmpty then None
+            val someMenu =
+              if m.isEmpty then None
               else
                 val newMenu = Menu()
                   .add(
@@ -184,7 +191,7 @@ object Main extends TyrianApp[Msg, Model]:
 
                 Some(getContextPosition(p), newMenu)
             (
-              model.copy(sceneModel = model.sceneModel.updateContextMenu(newMenu)),
+              model.copy(sceneModel = model.sceneModel.updateContextMenu(someMenu)),
               Cmd.None
             )
           case GeneralMsgType.CloseContextMenu =>

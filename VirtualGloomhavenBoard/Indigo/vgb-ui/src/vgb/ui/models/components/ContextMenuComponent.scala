@@ -12,13 +12,7 @@ import vgb.ui.Msg
 
 object ContextMenuComponent:
   def render(pos: Point, menu: Menu): Html[Msg] =
-    val hasItems = menu.items.exists(i =>
-      i match {
-        case _: MenuItem => true
-        case _           => false
-      }
-    )
-
+    val hasItems = menu.isEmpty == false
     val isSubMenuOpen = menu.items.exists(i =>
       i match {
         case i: MenuItem =>

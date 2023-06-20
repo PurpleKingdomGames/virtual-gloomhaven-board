@@ -6,10 +6,11 @@ import tyrian.Html
 import vgb.common.GloomhavenMsg
 import vgb.ui.Model
 import vgb.ui.models.UiModel
+import vgb.ui.Msg
 
 trait TyrianScene:
   type SceneModel <: UiModel
 
   def getModel(model: Model): SceneModel
   def update(msg: GloomhavenMsg, model: SceneModel): (SceneModel, Cmd[IO, GloomhavenMsg])
-  def getHeader(model: SceneModel): List[Html[GloomhavenMsg]]
+  def getHeader(model: SceneModel): List[Html[Msg]]
