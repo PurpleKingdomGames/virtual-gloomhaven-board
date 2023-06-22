@@ -13,4 +13,5 @@ trait TyrianScene:
 
   def getModel(model: Model): SceneModel
   def update(msg: GloomhavenMsg, model: SceneModel): (SceneModel, Cmd[IO, GloomhavenMsg])
+  def getBoardAdditions(model: SceneModel): List[Html[Msg]]
   def getHeader(model: SceneModel): List[Html[Msg]]

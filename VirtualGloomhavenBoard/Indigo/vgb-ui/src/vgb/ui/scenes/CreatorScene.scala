@@ -45,6 +45,11 @@ object CreatorScene extends TyrianScene {
       )
     )
   )
+
+  def getBoardAdditions(model: CreatorModel): List[Html[Msg]] = List(
+    div(`class` := "page-shadow")(),
+    div(`class` := "action-list")()
+  )
 }
 
 final case class CreatorModel(

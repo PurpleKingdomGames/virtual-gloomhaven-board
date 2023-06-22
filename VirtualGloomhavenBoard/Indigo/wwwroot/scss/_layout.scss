@@ -250,6 +250,17 @@ html {
             margin-bottom: 4.01rem;
             transition: margin-top 0.2s, margin-bottom 0.2s;
 
+            .map-bg {
+                position: absolute;
+                top: 0;
+                right: 0;
+                background-image: url('../static/img/compass.webp');
+                width: 175px;
+                height: 254px;
+                opacity: 0.55;
+                z-index: 1;
+            }
+
             .action-list {
                 flex-grow: 1;
                 flex-shrink: 0;
@@ -451,14 +462,9 @@ html {
                 position: relative;
                 padding: 40px;
 
-                .map-bg {
-                    position: absolute;
-                    top: 0;
-                    right: -175px;
-                    background-image: url('../static/img/compass.webp');
-                    width: 175px;
-                    height: 254px;
-                    opacity: 0.55;
+                canvas {
+                    position: relative;
+                    z-index: 1;
                 }
             }
 
@@ -553,44 +559,37 @@ html {
             }
 
             .pkg {
-                padding: 1rem;
-                display: flex;
-                ;
-                flex-wrap: wrap;
-                justify-content: end;
+                padding: 0.7rem 1rem 1rem 1rem;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-gap: 0.3rem;
 
-                .copy-wrapper {
-                    width: 100%;
-                    display: flex;
-                    text-align: right;
-                    align-items: center;
-                    position: relative;
-                    justify-content: flex-end;
-                    margin-bottom: 0.3rem;
+                .pkgCopy {
+                    line-height: 1.4rem;
 
-                    .sponsor {
-                        position: relative;
-
-                        .sponsor-button {
-                            height: 35px;
-                            width: 128px;
-                            display: block;
-                            border: none;
-                            transform: scale(.65);
-                        }
+                    a {
+                        padding-left: 0.5rem;
                     }
                 }
 
-                .version {
-                    width: 100%;
-                    padding-right: 1.7rem;
+                .sponsor {
+                    justify-self: end;
                     position: relative;
-                    top: -0.4rem;
-                    text-align: right;
 
-                    a {
-                        margin-right: 10.3rem;
+                    .sponsor-button {
+                        height: 35px;
+                        width: 128px;
+                        display: block;
+                        border: none;
+                        position: absolute;
+                        right: -23px;
+                        transform: scale(.65);
+                        top: -0.4rem;
                     }
+                }
+
+                span {
+                    justify-self: end;
                 }
             }
         }

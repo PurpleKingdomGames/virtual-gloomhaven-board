@@ -113,17 +113,23 @@ object Main extends TyrianApp[Msg, Model]:
             .getHeader(sceneModel)
       ),
       div(`class` := "main", attribute("aria-label", "Gloomhaven board layout"))(
-        sceneModel.contextMenu match {
-          case Some(m) =>
-            m match {
-              case (pos, menu) =>
-                List(
-                  div(id := gameDivId, `class` := "board-wrapper")(),
-                  ContextMenuComponent.render(pos, menu)
-                )
+        List(div(`class` := "map-bg")()) ++
+          model.scene
+            .getBoardAdditions(sceneModel)
+          ++
+          (
+            sceneModel.contextMenu match {
+              case Some(m) =>
+                m match {
+                  case (pos, menu) =>
+                    List(
+                      div(id := gameDivId, `class` := "board-wrapper")(),
+                      ContextMenuComponent.render(pos, menu)
+                    )
+                }
+              case None => List(div(id := gameDivId, `class` := "board-wrapper")())
             }
-          case None => List(div(id := gameDivId, `class` := "board-wrapper")())
-        }
+          )
       ),
       footer(
         div(`class` := "credits")(
@@ -137,27 +143,23 @@ object Main extends TyrianApp[Msg, Model]:
           )
         ),
         div(`class` := "pkg")(
-          div(`class` := "copy-wrapper")(
-            span(`class` := "pkgCopy")(
-              text("Developed by"),
-              a(href := "https://purplekingdomgames.com/")("Purple Kingdom Games")
-            ),
-            div(`class` := "sponsor")(
-              iframe(
-                `class` := "sponsor-button",
-                src     := "https://github.com/sponsors/PurpleKingdomGames/button",
-                title   := "Sponsor Purple Kingdom Games",
-                attribute("aria-hidden", "true")
-              )()
-            )
+          span(`class` := "pkgCopy")(
+            text("Developed by"),
+            a(href := "https://purplekingdomgames.com/")("Purple Kingdom Games")
           ),
-          div(`class` := "version")(
-            a(
-              target := "_new",
-              href   := "https://github.com/PurpleKingdomGames/virtual-gloomhaven-board/issues/new/choose"
-            )("Report a bug"),
-            span(s"""Version ${appVersion}""")
-          )
+          div(`class` := "sponsor")(
+            iframe(
+              `class` := "sponsor-button",
+              src     := "https://github.com/sponsors/PurpleKingdomGames/button",
+              title   := "Sponsor Purple Kingdom Games",
+              attribute("aria-hidden", "true")
+            )()
+          ),
+          a(
+            target := "_new",
+            href   := "https://github.com/PurpleKingdomGames/virtual-gloomhaven-board/issues/new/choose"
+          )("Report a bug"),
+          span(s"""Version ${appVersion}""")
         )
       )
     )

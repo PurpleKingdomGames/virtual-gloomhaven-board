@@ -204,7 +204,23 @@
 
 
 // Medium devices (tablets, 768px and up)
-@media (max-width: 991px) {}
+@media (max-width: 991px) {
+    html {
+        .content {
+            footer {
+                font-size: 0.8rem;
+
+                .pkg {
+                    padding-top: 1rem;
+
+                    .pkgCopy {
+                        line-height: 0.9rem;
+                    }
+                }
+            }
+        }
+    }
+}
 
 // 4k+
 @media (min-width: 2800px) {
