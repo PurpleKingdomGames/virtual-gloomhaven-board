@@ -97,6 +97,8 @@ html {
 
                         li {
                             padding: 0.2rem 1.2rem;
+                            user-select: none;
+                            -webkit-user-select: none;
 
                             img {
                                 max-width: 45px;

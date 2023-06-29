@@ -1,7 +1,7 @@
 package vgb.game.models
 
 import indigo.*
-import vgb.common.RoomType
+import vgb.game.models.Room
 import vgb.game.models.ScenarioMonster
 import vgb.game.models.BoardOverlay
 import vgb.common.Flag
@@ -9,7 +9,7 @@ import vgb.common.Flag
 final case class DragData(
     val originalPos: Point,
     val pos: Point,
-    val dragger: RoomType | ScenarioMonster | BoardOverlay,
+    val dragger: Room | ScenarioMonster | BoardOverlay,
     val hasMoved: Boolean
 ) {
   def getCellMap(
@@ -24,13 +24,9 @@ final case class DragData(
           case o: BoardOverlay =>
             o.worldCells.map(c => (c, -o.overlayType.flag.value)) ++
               o.copy(origin = pos).worldCells.map(c => (c, o.overlayType.flag.value))
-          case r: RoomType =>
-            rooms.find(r1 => r1.roomType == r) match {
-              case Some(r) =>
-                r.worldCells.map(c => (c, -Flag.Room.value)) ++
-                  r.copy(origin = pos).worldCells.map(c => (c, Flag.Room.value))
-              case None => Batch.empty
-            }
+          case r: Room =>
+            r.worldCells.map(c => (c, -Flag.Room.value)) ++
+              r.copy(origin = pos).worldCells.map(c => (c, Flag.Room.value))
         }
 
       cells.foldLeft(map)((m, c) =>

@@ -85,7 +85,7 @@ object BoardOverlayComponent:
                 token
                   .moveBy(Point(HexComponent.quarterSize.toInt, HexComponent.quarterSize.toInt))
               else token
-            case _ => graphicGroup
+            case _ => graphicGroup.moveTo(origin)
           }
         )
     }).withDepth(boardOverlay.overlayType match {

@@ -57,6 +57,7 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
           AssetType.Font(AssetName("PirateOne"), AssetPath("fonts/PirataOne-Gloomhaven.woff2"))
         )
     )
+      .addGlobalEvents(SceneEvent.SceneChange(SceneName("creator-scene"), SceneName("creator-scene"), Seconds(0)))
 
   def setup(
       bootData: Size,

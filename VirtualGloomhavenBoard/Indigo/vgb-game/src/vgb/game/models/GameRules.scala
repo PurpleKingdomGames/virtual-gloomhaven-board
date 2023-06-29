@@ -12,7 +12,8 @@ object GameRules:
       cellMap: Map[Point, Int]
   ): Batch[ScenarioMonster] =
     if (isValidMonsterPos(newPos, monster, cellMap))
-      monsters.map(m => if m == monster then m.copy(initialPosition = newPos) else m)
+      monsters.filter(m => m != monster)
+        :+ monster.copy(initialPosition = newPos)
     else
       monsters
 
@@ -23,7 +24,8 @@ object GameRules:
       cellMap: Map[Point, Int]
   ): Batch[BoardOverlay] =
     if (isValidOverlayPos(newPos, overlay, cellMap))
-      overlays.map(o => if o.id == overlay.id then o.copy(origin = newPos) else o)
+      overlays.filter(o => o.id != overlay.id)
+        :+ overlay.copy(origin = newPos, id = if overlay.id == 0 then overlays.length + 1 else overlay.id)
     else
       overlays
 

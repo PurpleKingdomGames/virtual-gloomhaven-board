@@ -43,7 +43,7 @@ object RoomComponent:
                .withEventHandler((g, e) =>
                  e match {
                    case MouseEvent.MouseDown(p, _) if g.bounds.contains(p + camera.position) =>
-                     Some(MoveStart(room.origin, room.roomType))
+                     Some(MoveStart(room.origin, room))
                    case _ => None
                  }
                )

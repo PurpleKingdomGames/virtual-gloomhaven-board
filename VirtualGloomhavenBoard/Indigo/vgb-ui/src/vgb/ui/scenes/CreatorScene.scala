@@ -12,6 +12,12 @@ import vgb.ui.models.UiModel
 import vgb.common.MenuItem
 import vgb.common.MenuSeparator
 import vgb.ui.Msg
+import vgb.common.DragDropSection
+import indigo.shared.collections.Batch
+import vgb.common.GeneralMsgType
+import vgb.common.MonsterType
+import vgb.common.BoardOverlayType
+import vgb.common.RoomType
 
 object CreatorScene extends TyrianScene {
   type SceneModel = CreatorModel
@@ -24,7 +30,18 @@ object CreatorScene extends TyrianScene {
 
   def update(msg: vgb.common.GloomhavenMsg, model: CreatorModel): (CreatorModel, Cmd[IO, GloomhavenMsg]) =
     msg match {
-      case CreatorMsgType.ChangeScenarioTitle(t) => (model.copy(scenarioTitle = t), Cmd.None)
+      case CreatorMsgType.SetSelectedDragSection(s) => (model.copy(dragMenuSelect = s), Cmd.None)
+      case CreatorMsgType.ChangeScenarioTitle(t)    => (model.copy(scenarioTitle = t), Cmd.None)
+      case CreatorMsgType.UpdateDragMenu(menu) =>
+        (
+          model.copy(
+            dragMenu = menu,
+            dragMenuSelect =
+              if model.dragMenuSelect == "" then menu.headOption.map(s => s.name).getOrElse("")
+              else model.dragMenuSelect
+          ),
+          Cmd.None
+        )
       case _ =>
         (model, Cmd.None)
     }
@@ -48,7 +65,33 @@ object CreatorScene extends TyrianScene {
 
   def getBoardAdditions(model: CreatorModel): List[Html[Msg]] = List(
     div(`class` := "page-shadow")(),
-    div(`class` := "action-list")()
+    div(`class` := "action-list")(
+      model.dragMenu
+        .map(s =>
+          section(`class` := (if s.name == model.dragMenuSelect then "active" else ""))(
+            header(onClick(Msg.IndigoReceive(CreatorMsgType.SetSelectedDragSection(s.name))))(s.name),
+            ul(`class` := s.name.toLowerCase().replace(".", ""))(
+              s.items
+                .map(i =>
+                  li(
+                    draggable := true,
+                    `class`   := (if i.dragging then "dragging" else ""),
+                    onDragStart(Msg.IndigoSend(CreatorMsgType.NewDragStart(i.item))),
+                    onDragEnd(Msg.IndigoSend(CreatorMsgType.DragEnd))
+                  )(
+                    i.item match {
+                      case m: MonsterType      => m.name
+                      case o: BoardOverlayType => o.toString()
+                      case r: RoomType         => s"""Map tile ${i.item.toString()}"""
+                    }
+                  )
+                )
+                .toList
+            )
+          )
+        )
+        .toList
+    )
   )
 }
 
@@ -56,6 +99,8 @@ final case class CreatorModel(
     scenarioTitle: String,
     mainMenu: Menu,
     showMainMenu: Boolean,
+    dragMenu: Batch[DragDropSection],
+    dragMenuSelect: String,
     contextMenu: Option[(Point, Menu)]
 ) extends UiModel {
   def updateContextMenu(menu: Option[(Point, Menu)]): UiModel =
@@ -74,5 +119,7 @@ object CreatorModel:
       .add(Some(MenuItem("Import", CreatorMsgType.ShowImportDialog)))
       .add(MenuSeparator()),
     false,
+    Batch.empty,
+    "",
     None
   )

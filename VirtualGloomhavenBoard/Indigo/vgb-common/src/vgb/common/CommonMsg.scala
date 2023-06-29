@@ -1,6 +1,7 @@
 package vgb.common
 
 import indigo.Point
+import indigo.shared.collections.Batch
 
 /** A message from the VGB app
   */
@@ -23,3 +24,7 @@ enum CreatorMsgType extends GloomhavenMsg:
   case ShowImportDialog
   case ShowExportDialog
   case ChangeScenarioTitle(title: String)
+  case UpdateDragMenu(sections: Batch[DragDropSection])
+  case SetSelectedDragSection(sectionName: String)
+  case NewDragStart(dragItem: RoomType | BoardOverlayType | MonsterType)
+  case DragEnd

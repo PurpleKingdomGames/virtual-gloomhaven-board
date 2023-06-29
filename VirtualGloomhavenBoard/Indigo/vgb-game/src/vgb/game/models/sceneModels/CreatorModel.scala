@@ -42,29 +42,7 @@ final case class CreatorModel(rooms: Batch[Room], monsters: Batch[ScenarioMonste
 object CreatorModel:
   def apply(): CreatorModel =
     CreatorModel(
-      Batch(
-        Room(RoomType.RoomA1A, Point.zero, 0)
-      ),
-      Batch(
-        ScenarioMonster(
-          MonsterType.AestherAshblade,
-          Point(2, 2),
-          MonsterLevel.None,
-          MonsterLevel.Normal,
-          MonsterLevel.Elite
-        ),
-        ScenarioMonster(
-          MonsterType.AestherAshblade,
-          Point(3, 2),
-          MonsterLevel.None,
-          MonsterLevel.Normal,
-          MonsterLevel.Elite
-        )
-      ),
-      Batch(
-        BoardOverlay(1, Obstacle.Boulder2, Point(0, 0), 0),
-        BoardOverlay(2, Obstacle.Boulder2, Point(2, 0), 0),
-        BoardOverlay(3, Treasure.Coin(BaseGame.Gloomhaven, 1), Point(1, 3), 0),
-        BoardOverlay(4, Token(BaseGame.Gloomhaven, 'a'), Point(3, 3), 0)
-      )
+      Batch.empty,
+      Batch.empty,
+      Batch.empty
     )
