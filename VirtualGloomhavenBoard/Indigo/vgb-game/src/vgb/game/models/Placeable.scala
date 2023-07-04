@@ -3,7 +3,7 @@ package vgb.game.models
 import indigo.*
 
 trait Placeable:
-  val numRotations: Byte
+  val rotation: TileRotation
   val origin: Point
   val minPoint: Point
   val maxPoint: Point
@@ -17,7 +17,7 @@ trait Placeable:
       .evenRowRotate(
         Vector2.fromPoint(localPoint),
         Vector2.fromPoint(minPoint),
-        numRotations
+        rotation.toByte()
       )
       .toPoint
 

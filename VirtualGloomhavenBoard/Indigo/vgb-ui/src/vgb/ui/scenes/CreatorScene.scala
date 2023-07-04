@@ -55,8 +55,9 @@ object CreatorScene extends TyrianScene {
           `type`      := "text",
           placeholder := "Enter Scenario Title",
           maxLength   := 30,
+          value       := model.scenarioTitle,
           onInput(_ match {
-            case t => Msg.IndigoReceive(CreatorMsgType.ChangeScenarioTitle(t))
+            case t => Msg.IndigoSend(CreatorMsgType.ChangeScenarioTitle(t))
           })
         )
       )
@@ -81,7 +82,7 @@ object CreatorScene extends TyrianScene {
                   )(
                     i.item match {
                       case m: MonsterType      => m.name
-                      case o: BoardOverlayType => o.toString()
+                      case o: BoardOverlayType => o.name
                       case r: RoomType         => s"""Map tile ${i.item.toString()}"""
                     }
                   )

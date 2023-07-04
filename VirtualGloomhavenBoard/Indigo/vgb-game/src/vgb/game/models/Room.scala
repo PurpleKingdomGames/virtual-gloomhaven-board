@@ -6,7 +6,7 @@ import vgb.common.RoomType
 final case class Room(
     roomType: RoomType,
     origin: Point,
-    numRotations: Byte
+    rotation: TileRotation
 ) extends Placeable {
   val maxPoint   = roomType.cells.foldLeft(Point.zero)((max, p) => max.max(p))
   val minPoint   = roomType.cells.foldLeft(maxPoint)((min, p) => min.min(p))
@@ -17,6 +17,6 @@ final case class Room(
       Hexagon.evenRowRotate(Vector2.fromPoint(origin), Vector2.fromPoint(rotationPoint), 1)
     this.copy(
       origin = rotatedOrigin.toPoint,
-      numRotations = if numRotations == 5 then 0 else (numRotations + 1).toByte
+      rotation = rotation.nextRotation(false)
     )
 }

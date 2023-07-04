@@ -26,6 +26,7 @@
                 padding: 0.2rem 1rem;
                 border-radius: 0.2rem;
                 position: relative;
+                user-select: none;
 
                 &:hover {
                     cursor: pointer;

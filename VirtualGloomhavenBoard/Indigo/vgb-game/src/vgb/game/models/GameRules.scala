@@ -25,7 +25,10 @@ object GameRules:
   ): Batch[BoardOverlay] =
     if (isValidOverlayPos(newPos, overlay, cellMap))
       overlays.filter(o => o.id != overlay.id)
-        :+ overlay.copy(origin = newPos, id = if overlay.id == 0 then overlays.length + 1 else overlay.id)
+        :+ overlay.copy(
+          origin = newPos,
+          id = if overlay.id == 0 then (overlays.foldLeft(0)((i, o) => Math.max(o.id, i))) + 1 else overlay.id
+        )
     else
       overlays
 
@@ -42,7 +45,7 @@ object GameRules:
       }
     )
 
-    val newOverlay = nextValidOverlayRotation(overlay.numRotations, overlay, newMap)
+    val newOverlay = nextValidOverlayRotation(overlay.rotation, overlay, newMap)
     overlays.map(o => if o.id == overlay.id then newOverlay else o)
 
   def isValidMonsterPos(newPos: Point, monster: ScenarioMonster, cellMap: Map[Point, Int]): Boolean =
@@ -69,10 +72,13 @@ object GameRules:
 
     canPlaceOverlay(overlay.copy(origin = newPos), newMap)
 
-  def nextValidOverlayRotation(initialRotation: Byte, overlay: BoardOverlay, cellMap: Map[Point, Int]): BoardOverlay =
+  def nextValidOverlayRotation(
+      initialRotation: TileRotation,
+      overlay: BoardOverlay,
+      cellMap: Map[Point, Int]
+  ): BoardOverlay =
     val rotatedOverlay = overlay.rotate()
-    if rotatedOverlay.overlayType.flag == Flag.Coin || initialRotation == rotatedOverlay.numRotations then
-      rotatedOverlay
+    if rotatedOverlay.overlayType.flag == Flag.Coin || initialRotation == rotatedOverlay.rotation then rotatedOverlay
     else if canPlaceOverlay(rotatedOverlay, cellMap) then rotatedOverlay
     else nextValidOverlayRotation(initialRotation, rotatedOverlay, cellMap)
 

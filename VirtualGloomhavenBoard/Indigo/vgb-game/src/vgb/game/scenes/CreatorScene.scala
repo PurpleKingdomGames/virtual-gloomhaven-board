@@ -13,6 +13,7 @@ import vgb.game.MoveStart
 import vgb.game.MoveEnd
 import vgb.game.models.Hexagon
 import vgb.game.models.ScenarioMonster
+import vgb.game.models.TileRotation
 import vgb.game.models.components.*
 import vgb.game.models.sceneModels.CreatorModel
 import vgb.game.models.sceneModels.CreatorViewModel
@@ -30,7 +31,8 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
   type SceneModel     = CreatorModel
   type SceneViewModel = CreatorViewModel
 
-  val name: SceneName = SceneName("creator-scene")
+  val name: SceneName  = SceneName("creator-scene")
+  val saveSlot: String = "creator"
 
   val modelLens: Lens[GameModel, CreatorModel] =
     Lens(
@@ -90,10 +92,21 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
           tyrianSubSystem.TyrianEvent
             .Send(CreatorMsgType.UpdateDragMenu(DragMenuComponent.getForModel(newModel)))
         )
+        .addGlobalEvents(StorageEvent.Save(saveSlot, newModel.toString()))
     case tyrianSubSystem.TyrianEvent.Receive(msg) =>
       msg match {
         case msg: CreatorMsgType =>
-          updateModelFromTyrian(context, model, msg)
+          val outcome = updateModelFromTyrian(context, model, msg)
+
+          outcome.flatMap(m =>
+            Outcome(m)
+              .addGlobalEvents(
+                if m != model then
+                  outcome.globalEventsOrNil :+
+                    StorageEvent.Save(saveSlot, m.toString())
+                else outcome.globalEventsOrNil
+              )
+          )
         case _ =>
           Outcome(model)
       }
@@ -137,16 +150,16 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
           viewModel.initialDragger match {
             case Some(d) =>
               val item = d match {
-                case r: RoomType => Room(r, pos, 0)
+                case r: RoomType => Room(r, pos, TileRotation.Default)
                 case m: MonsterType =>
                   ScenarioMonster(
                     m,
                     pos,
-                    MonsterLevel.None,
-                    MonsterLevel.None,
-                    MonsterLevel.None
+                    MonsterLevel.Normal,
+                    MonsterLevel.Normal,
+                    MonsterLevel.Normal
                   )
-                case o: BoardOverlayType => BoardOverlay(0, o, pos, 0)
+                case o: BoardOverlayType => BoardOverlay(0, o, pos, TileRotation.Default)
               }
               Some(DragData(pos, pos, item, true))
             case None => None
@@ -260,7 +273,6 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
                 case m: ScenarioMonster =>
                   MonsterComponent.render(m.copy(initialPosition = d.pos), cellMap)
                 case o: BoardOverlay =>
-                  IndigoLogger.consoleLog(d.pos.toString())
                   BoardOverlayComponent.render(o.copy(origin = d.pos), cellMap)
                 case r: Room =>
                   RoomComponent.render(r.copy(origin = d.pos), viewModel.camera, false)
@@ -277,6 +289,13 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       msg: CreatorMsgType
   ) =
     msg match {
+      case CreatorMsgType.ChangeScenarioTitle(t) =>
+        val newTitle = t.slice(0, 30)
+        Outcome(model.copy(scenarioTitle = newTitle))
+          .addGlobalEvents(
+            tyrianSubSystem.TyrianEvent.Send(CreatorMsgType.ChangeScenarioTitle(newTitle))
+          )
+
       case CreatorMsgType.ChangeMonsterLevel(p, m, playerNum, level) =>
         model.monsters.find(m1 => p == m1.initialPosition && m == m1.monsterType) match {
           case Some(m) =>
@@ -310,7 +329,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
               Hexagon.evenRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1)
             val newRoom = room.copy(
               origin = rotatedOrigin.toPoint,
-              numRotations = if room.numRotations == 5 then 0 else (room.numRotations + 1).toByte
+              rotation = room.rotation.nextRotation(false)
             )
             Outcome(model.copy(rooms = model.rooms.map(r1 => if r1 == room then newRoom else r1)))
           case None => Outcome(model)

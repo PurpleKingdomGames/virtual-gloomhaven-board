@@ -57,6 +57,7 @@ trait VgbModule extends ScalaJSModule {
 
   val indigoVersion = "0.15.0-RC2"
   val tyrianVersion = "0.7.1"
+  val circeVersion  = "0.14.1"
 
   def ivyDeps =
     Agg(
@@ -65,7 +66,10 @@ trait VgbModule extends ScalaJSModule {
       ivy"io.indigoengine::indigo-json-circe::$indigoVersion",
       ivy"io.indigoengine::indigo::$indigoVersion",
       ivy"io.indigoengine::indigo-extras::$indigoVersion",
-      ivy"org.scala-js:scalajs-java-securerandom_sjs1_2.13:1.0.0"
+      ivy"org.scala-js:scalajs-java-securerandom_sjs1_2.13:1.0.0",
+      ivy"io.circe::circe-core::$circeVersion",
+      ivy"io.circe::circe-generic::$circeVersion",
+      ivy"io.circe::circe-parser::$circeVersion"
     )
 
   override def esFeatures: T[ESFeatures] = T {

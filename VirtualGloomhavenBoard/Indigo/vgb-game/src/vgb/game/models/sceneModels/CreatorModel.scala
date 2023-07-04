@@ -1,21 +1,23 @@
 package vgb.game.models.sceneModels
 
+import io.circe.*
+import io.circe.generic.auto.*
+import io.circe.parser.*
+import io.circe.syntax.*
 import indigo.*
+import vgb.common.*
+import vgb.game.models.BoardOverlay
 import vgb.game.models.Room
 import vgb.game.models.ScenarioMonster
+import vgb.game.models.storage.CreatorStorage
 
-// Remove these later
-import vgb.common.RoomType
-import vgb.common.MonsterType
-import vgb.common.Obstacle
-import vgb.common.Treasure
-import vgb.common.Token
-import vgb.common.MonsterLevel
-import vgb.game.models.BoardOverlay
-import vgb.common.Flag
-import vgb.common.BaseGame
-
-final case class CreatorModel(rooms: Batch[Room], monsters: Batch[ScenarioMonster], overlays: Batch[BoardOverlay]) {
+final case class CreatorModel(
+    scenarioTitle: String,
+    baseGame: BaseGame,
+    rooms: Batch[Room],
+    monsters: Batch[ScenarioMonster],
+    overlays: Batch[BoardOverlay]
+) {
   val cellMap: Map[Point, Int] = (rooms
     .foldLeft(Batch.empty[(Point, Int)])((batch, room) =>
       room.worldCells
@@ -37,11 +39,16 @@ final case class CreatorModel(rooms: Batch[Room], monsters: Batch[ScenarioMonste
           }
       }
     )
+
+  override def toString(): String =
+    CreatorStorage.fromModel(this).asJson.deepDropNullValues.noSpaces
 }
 
 object CreatorModel:
   def apply(): CreatorModel =
     CreatorModel(
+      "",
+      BaseGame.Gloomhaven,
       Batch.empty,
       Batch.empty,
       Batch.empty

@@ -3,6 +3,7 @@ package vgb.game.models.components
 import indigo.*
 import vgb.game.models.BoardOverlay
 import vgb.game.models.Hexagon
+import vgb.game.models.TileRotation
 import indigo.shared.scenegraph.Shape.Circle
 import vgb.game.models.LayerDepths
 import vgb.common.Treasure
@@ -60,10 +61,16 @@ object BoardOverlayComponent:
               case t: Treasure.Coin => Size(90, 90)
               case _                => Size(156, 90)
             },
-            Material.Bitmap(boardOverlay.overlayType.assetName)
+            Material.Bitmap(
+              (boardOverlay.rotation, boardOverlay.overlayType.verticalAssetName) match {
+                case (TileRotation.Vertical, Some(verticalAsset))        => verticalAsset
+                case (TileRotation.VerticalReverse, Some(verticalAsset)) => verticalAsset
+                case _                                                   => boardOverlay.overlayType.assetName
+              }
+            )
           )
             .withRef(offset)
-            .rotateTo(Radians.fromDegrees(60 * boardOverlay.numRotations))
+            .rotateTo(Radians.fromDegrees(60 * boardOverlay.rotation.toByte()))
         Layer(
           boardOverlay.overlayType match {
             case t: Treasure.Coin =>

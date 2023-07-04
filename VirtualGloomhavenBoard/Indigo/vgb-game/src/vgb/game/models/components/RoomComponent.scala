@@ -31,7 +31,7 @@ object RoomComponent:
       Batch(
         Graphic(room.roomType.size, Material.Bitmap(room.roomType.assetName))
           .withRef(offset)
-          .rotateTo(Radians.fromDegrees(60 * room.numRotations))
+          .rotateTo(Radians.fromDegrees(60 * room.rotation.toByte()))
           .moveTo(origin)
       ) ++
         (if moveable then
