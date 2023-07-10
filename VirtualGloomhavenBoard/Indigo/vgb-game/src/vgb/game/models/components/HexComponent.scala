@@ -5,7 +5,7 @@ import indigo.shared.scenegraph.Shape.Line
 import indigo.shared.scenegraph.Shape.Polygon
 import indigo.shared.scenegraph.Shape.Circle
 import indigo.shared.datatypes.Fill.Color
-import vgb.game.models.Hexagon
+import vgb.common.Hexagon
 
 object HexComponent:
   val height            = 90
@@ -32,7 +32,7 @@ object HexComponent:
       polygon
         .withFill(Fill.Color(fill))
         // 0,0 position is the top left
-        .moveTo(Hexagon.evenRowToScreenPos(height, position))
+        .moveTo(Hexagon.oddRowToScreenPos(height, position))
         // For screen position to co-ordinates to work correctly, 0,0 needs to be centre
         .moveBy((polygon.size.width * -0.5).toInt, (polygon.size.height * -0.5).toInt)
     )

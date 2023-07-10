@@ -1,6 +1,7 @@
 package vgb.game.models
 
 import indigo.*
+import vgb.common.Hexagon
 
 trait Placeable:
   val rotation: TileRotation
@@ -14,7 +15,7 @@ trait Placeable:
 
   def localToWorld(localPoint: Point) =
     val rotatedPoint = Hexagon
-      .evenRowRotate(
+      .oddRowRotate(
         Vector2.fromPoint(localPoint),
         Vector2.fromPoint(minPoint),
         rotation.toByte()

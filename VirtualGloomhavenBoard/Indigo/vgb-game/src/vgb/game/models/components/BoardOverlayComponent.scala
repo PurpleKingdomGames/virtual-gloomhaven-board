@@ -2,7 +2,7 @@ package vgb.game.models.components
 
 import indigo.*
 import vgb.game.models.BoardOverlay
-import vgb.game.models.Hexagon
+import vgb.common.Hexagon
 import vgb.game.models.TileRotation
 import indigo.shared.scenegraph.Shape.Circle
 import vgb.game.models.LayerDepths
@@ -13,19 +13,19 @@ import vgb.common.Flag
 object BoardOverlayComponent:
   def render(boardOverlay: BoardOverlay, cellMap: Map[Point, Int]): Layer =
     val offset =
-      Hexagon.evenRowToScreenPos(HexComponent.height, Point.zero) +
+      Hexagon.oddRowToScreenPos(HexComponent.height, Point.zero) +
         Point((HexComponent.width * 0.5).toInt, (HexComponent.height * 0.5).toInt)
 
     val origin =
-      Hexagon.evenRowToScreenPos(HexComponent.height, boardOverlay.origin)
+      Hexagon.oddRowToScreenPos(HexComponent.height, boardOverlay.origin)
 
     val rotationPoint =
-      Hexagon.evenRowToScreenPos(HexComponent.height, boardOverlay.rotationPoint)
+      Hexagon.oddRowToScreenPos(HexComponent.height, boardOverlay.rotationPoint)
     val newRotation =
-      Hexagon.evenRowToScreenPos(
+      Hexagon.oddRowToScreenPos(
         HexComponent.height,
         Hexagon
-          .evenRowRotate(Vector2.fromPoint(boardOverlay.origin), Vector2.fromPoint(boardOverlay.rotationPoint), 1)
+          .oddRowRotate(Vector2.fromPoint(boardOverlay.origin), Vector2.fromPoint(boardOverlay.rotationPoint), 1)
           .toPoint
       )
 

@@ -1,30 +1,30 @@
 package vgb.game.models.components
 
 import indigo.*
-import vgb.game.models.Room
+import vgb.common.Hexagon
 import indigo.shared.scenegraph.Shape.Circle
 import indigo.shared.scenegraph.Shape.Box
 import org.scalajs.dom.PointerEvent
 import vgb.game.MoveStart
-import vgb.game.models.Hexagon
 import vgb.game.models.LayerDepths
+import vgb.game.models.Room
 
 object RoomComponent:
   def render(room: Room, camera: Camera, moveable: Boolean) =
     val offset =
-      Hexagon.evenRowToScreenPos(HexComponent.height, Point.zero) +
+      Hexagon.oddRowToScreenPos(HexComponent.height, Point.zero) +
         Point(HexComponent.width.toInt, (HexComponent.height * 0.5).toInt) -
         room.roomType.offset
 
     val origin =
-      Hexagon.evenRowToScreenPos(HexComponent.height, room.origin)
+      Hexagon.oddRowToScreenPos(HexComponent.height, room.origin)
 
     val rotationPoint =
-      Hexagon.evenRowToScreenPos(HexComponent.height, room.rotationPoint)
+      Hexagon.oddRowToScreenPos(HexComponent.height, room.rotationPoint)
     val newRotation =
-      Hexagon.evenRowToScreenPos(
+      Hexagon.oddRowToScreenPos(
         HexComponent.height,
-        Hexagon.evenRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1).toPoint
+        Hexagon.oddRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1).toPoint
       )
 
     Layer(

@@ -1,4 +1,4 @@
-package vgb.game.models
+package vgb.common
 
 import indigo.shared.datatypes.Point
 import indigo.shared.datatypes.Vector2
@@ -21,8 +21,8 @@ object Hexagon:
     )
   }
 
-  def screenPosToEvenRow(size: Int, pos: Point) =
-    axialToEvenRow(screenPosToAxial(size, pos))
+  def screenPosToOddRow(size: Int, pos: Point) =
+    axialToOddRow(screenPosToAxial(size, pos))
 
   def axialToScreenPos(size: Int, pos: Vector2) =
     val halfSize = size * 0.5;
@@ -31,26 +31,26 @@ object Hexagon:
       (halfSize * threeOver2 * pos.y).toInt
     )
 
-  def evenRowToScreenPos(size: Int, pos: Point) =
-    axialToScreenPos(size, evenRowToAxial(Vector2.fromPoint(pos)))
+  def oddRowToScreenPos(size: Int, pos: Point) =
+    axialToScreenPos(size, oddRowToAxial(Vector2.fromPoint(pos)))
 
-  def axialToEvenRow(pos: Vector2) =
+  def axialToOddRow(pos: Vector2) =
     Vector2(
-      pos.x + (pos.y + (pos.y.toInt & 1)) * 0.5,
+      pos.x + (pos.y - (pos.y.toInt & 1)) * 0.5,
       pos.y
     )
 
-  def evenRowToAxial(pos: Vector2) =
+  def oddRowToAxial(pos: Vector2) =
     Vector2(
-      pos.x - (pos.y + (pos.y.toInt & 1)) * 0.5,
+      pos.x - (pos.y - (pos.y.toInt & 1)) * 0.5,
       pos.y
     )
 
-  def cubeToEvenRow(pos: Vector3) =
-    Vector2(pos.x + (pos.y + (pos.y.toInt & 1)) * 0.5, pos.y)
+  def cubeToOddRow(pos: Vector3) =
+    Vector2(pos.x + (pos.y - (pos.y.toInt & 1)) * 0.5, pos.y)
 
-  def evenRowToCube(pos: Vector2) =
-    val newX = pos.x - (pos.y + (pos.y.toInt & 1)) * 0.5
+  def oddRowToCube(pos: Vector2) =
+    val newX = pos.x - (pos.y - (pos.y.toInt & 1)) * 0.5
     Vector3(newX, pos.y, -newX - pos.y)
 
   def cubeToAxial(pos: Vector3) =
@@ -74,22 +74,22 @@ object Hexagon:
       else Vector3(q, r, -q - r)
   }
 
-  def evenRowRotate(origin: Vector2, rotationPoint: Vector2, numTurns: Byte): Vector2 =
-    val rotateResult = evenRowSingleRotate(origin, rotationPoint)
+  def oddRowRotate(origin: Vector2, rotationPoint: Vector2, numTurns: Byte): Vector2 =
+    val rotateResult = oddRowSingleRotate(origin, rotationPoint)
     numTurns match
       case 0 => origin
       case 1 => rotateResult
       case other if other < 0 =>
-        evenRowRotate(rotateResult, rotationPoint, (other + 1).toByte)
+        oddRowRotate(rotateResult, rotationPoint, (other + 1).toByte)
       case other =>
-        evenRowRotate(rotateResult, rotationPoint, (other - 1).toByte)
+        oddRowRotate(rotateResult, rotationPoint, (other - 1).toByte)
 
-  def evenRowSingleRotate(origin: Vector2, rotationPoint: Vector2): Vector2 =
-    val (originX, originY, originZ) = evenRowToCube(origin) match
+  def oddRowSingleRotate(origin: Vector2, rotationPoint: Vector2): Vector2 =
+    val (originX, originY, originZ) = oddRowToCube(origin) match
       case v => (v.x, v.y, v.z)
-    val (rotateX, rotateY, rotateZ) = evenRowToCube(rotationPoint) match
+    val (rotateX, rotateY, rotateZ) = oddRowToCube(rotationPoint) match
       case v => (v.x, v.y, v.z)
     val (rX, rY, rZ) =
       (-(originY - rotateY), -(originZ - rotateZ), -(originX - rotateX))
 
-    cubeToEvenRow(Vector3(rX + rotateX, rY + rotateY, rZ + rotateZ))
+    cubeToOddRow(Vector3(rX + rotateX, rY + rotateY, rZ + rotateZ))

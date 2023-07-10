@@ -3,8 +3,26 @@ package vgb.common
 import indigo.*
 
 enum TreasureChestType:
+  override def toString(): String = this match {
+    case Goal      => "goal"
+    case Locked    => "locked"
+    case Normal(i) => i.toString()
+  }
+
   case Normal(val number: Byte) extends TreasureChestType
   case Goal, Locked
+
+object TreasureChestType:
+  def fromString(str: String) =
+    str.toLowerCase() match {
+      case "goal"   => Goal
+      case "locked" => Locked
+      case _ =>
+        str.toByteOption match {
+          case Some(b) => Normal(b)
+          case None    => Normal(0)
+        }
+    }
 
 trait BoardOverlayType:
   val baseGame: BaseGame
@@ -16,7 +34,8 @@ trait BoardOverlayType:
     .toCharArray()
     .foldLeft("")((s, c) => if c >= '0' && c <= 'Z' then s + " " + c else s + c)
     .trim()
-  val assetName: AssetName = AssetName(s"""${baseGame.shortName}-${name.toLowerCase().replace(" ", "-")}""")
+  val codedName            = name.toLowerCase().replace(" ", "-")
+  val assetName: AssetName = AssetName(s"""${baseGame.shortName}-${codedName}""")
 
 enum DifficultTerrain(
     val baseGame: BaseGame,
@@ -48,16 +67,18 @@ enum Hazard(val baseGame: BaseGame, val cells: Batch[Point]) extends BoardOverla
   case HotCoals extends Hazard(BaseGame.Gloomhaven, Batch(Point(0, 0)))
   case Thorns   extends Hazard(BaseGame.Gloomhaven, Batch(Point(0, 0)))
 
-enum Highlight(val baseGame: BaseGame, val colour: RGB) extends BoardOverlayType:
+final case class Highlight(val baseGame: BaseGame, val colour: RGB) extends BoardOverlayType:
   val cells: Batch[Point] = Batch(Point(0, 0))
   val flag: Flag          = Flag.Highlight
   val verticalAssetName   = None
-  case Red    extends Highlight(BaseGame.Gloomhaven, RGB.Red)
-  case Orange extends Highlight(BaseGame.Gloomhaven, RGB.Orange)
-  case Yellow extends Highlight(BaseGame.Gloomhaven, RGB.Yellow)
-  case Green  extends Highlight(BaseGame.Gloomhaven, RGB.Green)
-  case Blue   extends Highlight(BaseGame.Gloomhaven, RGB.Blue)
-  case Indigo extends Highlight(BaseGame.Gloomhaven, RGB.Indigo)
+
+object Highlight:
+  val Red    = Highlight(BaseGame.Gloomhaven, RGB.Red)
+  val Orange = Highlight(BaseGame.Gloomhaven, RGB.Orange)
+  val Yellow = Highlight(BaseGame.Gloomhaven, RGB.Yellow)
+  val Green  = Highlight(BaseGame.Gloomhaven, RGB.Green)
+  val Blue   = Highlight(BaseGame.Gloomhaven, RGB.Blue)
+  val Indigo = Highlight(BaseGame.Gloomhaven, RGB.Indigo)
 
 enum Obstacle(val baseGame: BaseGame, val cells: Batch[Point]) extends BoardOverlayType:
   val flag: Flag        = Flag.Obstacle

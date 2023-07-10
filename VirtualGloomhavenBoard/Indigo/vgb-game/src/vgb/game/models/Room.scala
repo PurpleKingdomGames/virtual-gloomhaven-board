@@ -1,6 +1,7 @@
 package vgb.game.models
 
 import indigo.*
+import vgb.common.Hexagon
 import vgb.common.RoomType
 
 final case class Room(
@@ -14,7 +15,7 @@ final case class Room(
 
   def rotate() =
     val rotatedOrigin =
-      Hexagon.evenRowRotate(Vector2.fromPoint(origin), Vector2.fromPoint(rotationPoint), 1)
+      Hexagon.oddRowRotate(Vector2.fromPoint(origin), Vector2.fromPoint(rotationPoint), 1)
     this.copy(
       origin = rotatedOrigin.toPoint,
       rotation = rotation.nextRotation(false)

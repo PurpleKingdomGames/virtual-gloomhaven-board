@@ -52,3 +52,10 @@ object TileRotation:
       case "diagonal-right-reverse" => DiagonalRightReverse
       case _                        => Default
     }
+
+  def fromByte(i: Byte) =
+    TileRotation.values
+      // We can't discern vertical just from the byte, so don't try
+      .filter(t => t != Vertical && t != VerticalReverse)
+      .find(t => t.toByte() == i)
+      .getOrElse(Default)

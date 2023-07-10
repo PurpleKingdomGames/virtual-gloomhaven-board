@@ -11,15 +11,15 @@ enum RoomType(val baseGame: BaseGame, val mapRef: String, val offset: Point, val
         "a1a",
         Point(-13, -34),
         Batch(
-          Point(0, 0),
-          Point(1, 0),
-          Point(2, 0),
-          Point(3, 0),
           Point(0, 1),
           Point(1, 1),
           Point(2, 1),
           Point(3, 1),
-          Point(4, 1)
+          Point(0, 2),
+          Point(1, 2),
+          Point(2, 2),
+          Point(3, 2),
+          Point(4, 2)
         ),
         Size(432, 244)
       )

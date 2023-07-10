@@ -53,3 +53,9 @@ object CreatorModel:
       Batch.empty,
       Batch.empty
     )
+
+  def fromJson(json: String): Either[String, CreatorModel] =
+    decode[CreatorStorage](json) match {
+      case Right(value) => value.toModel()
+      case Left(err)    => Left(err.getMessage())
+    }

@@ -2,14 +2,22 @@
 
 set -e
 
-cd ui
+cd VirtualGloomhavenBoard/Indigo
 
-mill clean ui
-mill ui.compile
-mill ui.checkFormat
-mill ui.fix
-mill ui.fastLinkJS
-mill ui.test
+mill clean vgb-common
+mill vgb-common.compile
+mill vgb-common.fastLinkJS
+mill vgb-common.test
+
+mill clean vgb-game
+mill vgb-game.compile
+mill vgb-game.fastLinkJS
+mill vgb-game.test
+
+mill clean vgb-ui
+mill vgb-ui.compile
+mill vgb-ui.fastLinkJS
+mill vgb-ui.test
 
 cd ..
 

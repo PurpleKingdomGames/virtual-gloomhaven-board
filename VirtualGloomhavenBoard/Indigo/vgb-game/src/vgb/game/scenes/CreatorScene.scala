@@ -11,7 +11,7 @@ import vgb.game.models.GameModel
 import vgb.game.models.GameViewModel
 import vgb.game.MoveStart
 import vgb.game.MoveEnd
-import vgb.game.models.Hexagon
+import vgb.common.Hexagon
 import vgb.game.models.ScenarioMonster
 import vgb.game.models.TileRotation
 import vgb.game.models.components.*
@@ -69,7 +69,29 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
             tyrianSubSystem.TyrianEvent
               .Send(CreatorMsgType.UpdateDragMenu(DragMenuComponent.getForModel(model)))
           )
+          .addGlobalEvents(StorageEvent.Load(saveSlot))
       else Outcome(model)
+    case StorageEvent.Loaded(key, data) =>
+      data match {
+        case Some(d) =>
+          CreatorModel.fromJson(d) match {
+            case Right(m) =>
+              Outcome(m)
+                .addGlobalEvents(
+                  tyrianSubSystem.TyrianEvent
+                    .Send(CreatorMsgType.UpdateDragMenu(DragMenuComponent.getForModel(m)))
+                )
+                .addGlobalEvents(
+                  tyrianSubSystem.TyrianEvent
+                    .Send(CreatorMsgType.ChangeScenarioTitle(m.scenarioTitle))
+                )
+            case Left(e) =>
+              IndigoLogger.consoleLog(e)
+              Outcome(model)
+          }
+        case None => Outcome(model)
+      }
+
     case MoveEnd(newPos, d) =>
       val newModel =
         d match {
@@ -127,7 +149,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       (
         viewModel.dragging match {
           case None =>
-            val pos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
+            val pos = Hexagon.screenPosToOddRow(HexComponent.height, p + viewModel.camera.position).toPoint
             val data = model.monsters.find(m => m.initialPosition == pos) match {
               case Some(v) => Some(v)
               case None    => model.overlays.find(o => o.worldCells.contains(pos))
@@ -144,7 +166,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
           .Send(GeneralMsgType.CloseContextMenu)
       )
     case MouseEvent.Move(p) =>
-      val pos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
+      val pos = Hexagon.screenPosToOddRow(HexComponent.height, p + viewModel.camera.position).toPoint
       val draggingData =
         viewModel.dragging.orElse(
           viewModel.initialDragger match {
@@ -191,7 +213,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         case Some(d) if d.hasMoved =>
           Outcome(viewModel.copy(dragging = None))
         case _ =>
-          val hexPos = Hexagon.screenPosToEvenRow(HexComponent.height, p + viewModel.camera.position).toPoint
+          val hexPos = Hexagon.screenPosToOddRow(HexComponent.height, p + viewModel.camera.position).toPoint
           Outcome(viewModel.copy(dragging = None))
             .addGlobalEvents(
               tyrianSubSystem.TyrianEvent
@@ -280,6 +302,31 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
             case _ => Layer()
           }
         )
+        .addLayer(
+          Layer(
+            Batch
+              .fromArray(
+                (0 until 10).toArray
+                  .map(x =>
+                    (0 until 10).toArray
+                      .map(y =>
+                        HexComponent.render(
+                          Point(x, y),
+                          cellMap.get(Point(x, y)) match {
+                            case Some(flags) =>
+                              if (flags & Flag.Monster.value) != 0 then RGBA(1, 0, 0, 0.5)
+                              else if (flags & Flag.Obstacle.value) != 0 then RGBA(0, 0, 1, 0.5)
+                              else if (flags & Flag.Room.value) != 0 then RGBA(0, 1, 0, 0.5)
+                              else RGBA.Zero
+                            case None => RGBA.Zero
+                          }
+                        )
+                      )
+                  )
+                  .flatten
+              )
+          )
+        )
         .withCamera(viewModel.camera)
     )
 
@@ -326,7 +373,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         model.rooms.find(r1 => r1.roomType == r) match {
           case Some(room) =>
             val rotatedOrigin =
-              Hexagon.evenRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1)
+              Hexagon.oddRowRotate(Vector2.fromPoint(room.origin), Vector2.fromPoint(room.rotationPoint), 1)
             val newRoom = room.copy(
               origin = rotatedOrigin.toPoint,
               rotation = room.rotation.nextRotation(false)

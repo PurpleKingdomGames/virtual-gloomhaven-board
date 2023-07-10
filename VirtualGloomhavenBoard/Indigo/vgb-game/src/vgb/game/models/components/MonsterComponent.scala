@@ -3,7 +3,7 @@ package vgb.game.models.components
 import indigo.*
 import indigo.shared.scenegraph.Shape.Box
 import vgb.common.MonsterType
-import vgb.game.models.Hexagon
+import vgb.common.Hexagon
 import vgb.game.models.ScenarioMonster
 import vgb.common.MonsterLevel
 import indigo.shared.datatypes.Rectangle
@@ -20,7 +20,7 @@ object MonsterComponent:
 
   def render(monster: ScenarioMonster, cellMap: Map[Point, Int]): Layer =
     val origin =
-      Hexagon.evenRowToScreenPos(HexComponent.height, monster.initialPosition)
+      Hexagon.oddRowToScreenPos(HexComponent.height, monster.initialPosition)
     val quarterSize = Math.ceil(HexComponent.halfWidth * 0.5).toInt
     val playerMarker = Box(
       Rectangle(
