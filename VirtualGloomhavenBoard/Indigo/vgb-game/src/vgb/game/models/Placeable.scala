@@ -14,14 +14,16 @@ trait Placeable:
   )
 
   def localToWorld(localPoint: Point) =
-    val rotatedPoint = Hexagon
+    val worldPoint = localPoint + origin
+    val offset = Point(
+      if (localPoint.y & 1) == 1 && (worldPoint.y & 1) == 0 then 1
+      else 0,
+      0
+    )
+    Hexagon
       .oddRowRotate(
-        Vector2.fromPoint(localPoint),
-        Vector2.fromPoint(minPoint),
+        Vector2.fromPoint(worldPoint + offset),
+        Vector2.fromPoint(origin),
         rotation.toByte()
       )
       .toPoint
-
-    rotatedPoint
-      + origin
-      + (if (origin.y & 1) == 1 && (rotatedPoint.y & 1) == 1 then Point(-1, 0) else Point.zero)

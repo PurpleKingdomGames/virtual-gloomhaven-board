@@ -86,6 +86,19 @@ class HexagonTests extends munit.FunSuite {
       Vector2(-1, 5),
       Hexagon.oddRowRotate(Vector2(-1, 6), Vector2(0, 6), 1)
     )
+  }
 
+  test("should rotate (1, 1) 1 turns around 0, 1") {
+    assertEquals(
+      Vector2(1, 2),
+      Hexagon.oddRowRotate(Vector2(1, 1), Vector2(0, 1), 1)
+    )
+  }
+
+  test("should rotate (1, 1) 2 turns around 0, 1") {
+    assertEquals(
+      Vector2(0, 2),
+      Hexagon.oddRowRotate(Vector2(1, 1), Vector2(0, 1), 2)
+    )
   }
 }

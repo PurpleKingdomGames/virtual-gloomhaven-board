@@ -21,7 +21,8 @@ object HexComponent:
       Point(Math.floor(halfWidth).toInt, Math.ceil(quarterSize).toInt),   // Right-bottom corner of rectangle
       Point(0, Math.ceil(halfSize).toInt),                                // Bottom tip
       Point(-Math.ceil(halfWidth).toInt, Math.ceil(quarterSize).toInt),   // Left-bottom corner of rectangle,
-      Point(-Math.ceil(halfWidth).toInt, -Math.floor(quarterSize).toInt)  // Left-top corner of rectangle
+      Point(-Math.ceil(halfWidth).toInt, -Math.floor(quarterSize).toInt), // Left-top corner of rectangle
+      Point(0, -Math.floor(halfSize).toInt)                               // Top tip
     ),
     Fill.Color(RGBA.None),
     Stroke.Black
@@ -34,5 +35,6 @@ object HexComponent:
         // 0,0 position is the top left
         .moveTo(Hexagon.oddRowToScreenPos(height, position))
         // For screen position to co-ordinates to work correctly, 0,0 needs to be centre
-        .moveBy((polygon.size.width * -0.5).toInt, (polygon.size.height * -0.5).toInt)
+        .moveBy((polygon.size.width * -0.5).toInt, (polygon.size.height * -0.5).toInt),
+      Circle(Point(0, 0), 2, Fill.Color(RGBA.Red)).moveTo(Hexagon.oddRowToScreenPos(height, position))
     )

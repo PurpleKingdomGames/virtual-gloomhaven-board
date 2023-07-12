@@ -9,7 +9,7 @@ enum RoomType(val baseGame: BaseGame, val mapRef: String, val offset: Point, val
       extends RoomType(
         BaseGame.Gloomhaven,
         "a1a",
-        Point(-13, -34),
+        Point(27, 33),
         Batch(
           Point(0, 1),
           Point(1, 1),

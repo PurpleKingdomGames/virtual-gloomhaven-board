@@ -78,7 +78,8 @@ object GameRules:
       cellMap: Map[Point, Int]
   ): BoardOverlay =
     val rotatedOverlay = overlay.rotate()
-    if rotatedOverlay.overlayType.flag == Flag.Coin || initialRotation == rotatedOverlay.rotation then rotatedOverlay
+    if rotatedOverlay.overlayType.flag == Flag.Coin || initialRotation == rotatedOverlay.rotation then
+      rotatedOverlay
     else if canPlaceOverlay(rotatedOverlay, cellMap) then rotatedOverlay
     else nextValidOverlayRotation(initialRotation, rotatedOverlay, cellMap)
 

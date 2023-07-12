@@ -37,7 +37,7 @@ object RoomComponent:
         (if moveable then
            Batch(
              Graphic(Size(45, 45), Material.Bitmap(AssetName("move-icon")))
-               .moveTo(origin)
+               .moveTo(origin - room.localToWorld(room.minPoint))
                .moveBy(Point(-(HexComponent.width * 0.5).toInt - 22, -(HexComponent.height * 0.5).toInt - 28))
                .enableEvents
                .withEventHandler((g, e) =>
