@@ -7,6 +7,7 @@ import vgb.game.models.TileRotation
 import indigo.shared.scenegraph.Shape.Circle
 import vgb.game.models.LayerDepths
 import vgb.common.Treasure
+import vgb.common.Door
 import vgb.common.Token
 import vgb.common.Flag
 
@@ -58,7 +59,8 @@ object BoardOverlayComponent:
         val graphicGroup =
           Graphic(
             boardOverlay.overlayType match {
-              case t: Treasure.Coin => Size(90, 90)
+              case _: Treasure.Coin => Size(90, 90)
+              case _: Door          => Size(79, 90)
               case _                => Size(156, 90)
             },
             Material.Bitmap(

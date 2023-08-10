@@ -43,15 +43,18 @@ final case class Main(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg])
         GameConfig.default
           .withMagnification(magnification)
           .withTransparentBackground(true)
-          .withViewport(gameViewport),
+          .withViewport(gameViewport)
+          .withResizePolicy(ResizePolicy.NoResize),
         gameViewport.size / magnification
       )
         .withSubSystems(tyrianSubSystem)
         .withAssets(
           AssetType.Image(AssetName("gh-a1a"), AssetPath("img/map-tiles/gloomhaven/a1a.webp")),
+          AssetType.Image(AssetName("gh-a1b"), AssetPath("img/map-tiles/gloomhaven/a1a.webp")),
           AssetType.Image(AssetName("aesther-ashblade"), AssetPath("img/monsters/aesther-ashblade.webp")),
           AssetType.Image(AssetName("gh-boulder-2"), AssetPath("img/overlays/obstacle-boulder-2.webp")),
           AssetType.Image(AssetName("gh-coin"), AssetPath("img/overlays/treasure-coin.webp")),
+          AssetType.Image(AssetName("gh-altar"), AssetPath("img/overlays/door-altar.webp")),
           AssetType.Image(AssetName("move-icon"), AssetPath("img/move-icon.webp")),
           AssetType.Image(AssetName("hex-border"), AssetPath("img/hex-border.webp")),
           AssetType.Font(AssetName("PirateOne"), AssetPath("fonts/PirataOne-Gloomhaven.woff2"))

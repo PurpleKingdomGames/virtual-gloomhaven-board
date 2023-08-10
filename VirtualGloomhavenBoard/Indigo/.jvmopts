@@ -2,3 +2,4 @@
 -Xms1G
 -Xmx8G
 -XX:+UseG1GC
+-Xmax-inlines:64

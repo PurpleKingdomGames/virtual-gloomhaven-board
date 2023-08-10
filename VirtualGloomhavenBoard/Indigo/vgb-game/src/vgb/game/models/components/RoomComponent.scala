@@ -4,10 +4,10 @@ import indigo.*
 import vgb.common.Hexagon
 import indigo.shared.scenegraph.Shape.Circle
 import indigo.shared.scenegraph.Shape.Box
-import org.scalajs.dom.PointerEvent
 import vgb.game.MoveStart
 import vgb.game.models.LayerDepths
 import vgb.game.models.Room
+import indigo.shared.events.PointerEvent
 
 object RoomComponent:
   def render(room: Room, camera: Camera, moveable: Boolean) =
@@ -42,7 +42,7 @@ object RoomComponent:
                .enableEvents
                .withEventHandler((g, e) =>
                  e match {
-                   case MouseEvent.MouseDown(p, _) if g.bounds.contains(p + camera.position) =>
+                   case e: PointerEvent.PointerDown if g.bounds.contains(e.position + camera.position) =>
                      Some(MoveStart(room.origin, room))
                    case _ => None
                  }

@@ -23,6 +23,24 @@ enum RoomType(val baseGame: BaseGame, val mapRef: String, val offset: Point, val
         ),
         Size(432, 244)
       )
+  case RoomA1B
+      extends RoomType(
+        BaseGame.Gloomhaven,
+        "a1b",
+        Point(27, 33),
+        Batch(
+          Point(0, 1),
+          Point(1, 1),
+          Point(2, 1),
+          Point(3, 1),
+          Point(0, 2),
+          Point(1, 2),
+          Point(2, 2),
+          Point(3, 2),
+          Point(4, 2)
+        ),
+        Size(432, 244)
+      )
 
 /*
 {

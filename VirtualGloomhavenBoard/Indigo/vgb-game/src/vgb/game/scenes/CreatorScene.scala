@@ -20,6 +20,7 @@ import vgb.game.models.sceneModels.CreatorViewModel
 import vgb.game.models.GameRules
 import vgb.game.models.BoardOverlay
 import vgb.game.models.DragData
+import vgb.game.models.storage.ScenarioStorage
 
 /** Placeholder scene for the space station
   *
@@ -145,11 +146,13 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         case None => Outcome(viewModel.copy(dragging = Some(DragData(p, p, d, false))))
         case _    => Outcome(viewModel)
       }
-    case MouseEvent.MouseDown(p, MouseButton.LeftMouseButton) =>
+    case _: PointerEvent.PointerLeave =>
+      Outcome(viewModel.copy(dragging = None, initialDragger = None))
+    case e: PointerEvent.PointerDown if e.button == Some(MouseButton.LeftMouseButton) =>
       (
         viewModel.dragging match {
           case None =>
-            val pos = Hexagon.screenPosToOddRow(HexComponent.height, p + viewModel.camera.position).toPoint
+            val pos = Hexagon.screenPosToOddRow(HexComponent.height, e.position + viewModel.camera.position).toPoint
             val data = model.monsters.find(m => m.initialPosition == pos) match {
               case Some(v) => Some(v)
               case None    => model.overlays.find(o => o.worldCells.contains(pos))
@@ -165,8 +168,8 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         tyrianSubSystem.TyrianEvent
           .Send(GeneralMsgType.CloseContextMenu)
       )
-    case MouseEvent.Move(p) =>
-      val pos = Hexagon.screenPosToOddRow(HexComponent.height, p + viewModel.camera.position).toPoint
+    case e: PointerEvent.PointerMove =>
+      val pos = Hexagon.screenPosToOddRow(HexComponent.height, e.position + viewModel.camera.position).toPoint
       val draggingData =
         viewModel.dragging.orElse(
           viewModel.initialDragger match {
@@ -205,7 +208,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
           else Outcome(viewModel)
         case None => Outcome(viewModel)
       }
-    case MouseEvent.MouseUp(p, MouseButton.LeftMouseButton) =>
+    case e: PointerEvent.PointerUp if e.button == Some(MouseButton.LeftMouseButton) =>
       viewModel.dragging match {
         case Some(d) if d.originalPos != d.pos =>
           Outcome(viewModel.copy(dragging = None))
@@ -213,13 +216,13 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
         case Some(d) if d.hasMoved =>
           Outcome(viewModel.copy(dragging = None))
         case _ =>
-          val hexPos = Hexagon.screenPosToOddRow(HexComponent.height, p + viewModel.camera.position).toPoint
+          val hexPos = Hexagon.screenPosToOddRow(HexComponent.height, e.position + viewModel.camera.position).toPoint
           Outcome(viewModel.copy(dragging = None))
             .addGlobalEvents(
               tyrianSubSystem.TyrianEvent
                 .Send(
                   GeneralMsgType.ShowContextMenu(
-                    p,
+                    e.position,
                     ContextMenuComponent.getForCreator(
                       model.rooms.find(r => r.worldCells.exists(rp => rp == hexPos)).map(r => r.roomType),
                       model.monsters.find(m => m.initialPosition == hexPos),
@@ -334,7 +337,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
       context: SceneContext[Size],
       model: SceneModel,
       msg: CreatorMsgType
-  ) =
+  ): Outcome[SceneModel] =
     msg match {
       case CreatorMsgType.ChangeScenarioTitle(t) =>
         val newTitle = t.slice(0, 30)
@@ -381,9 +384,16 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
             Outcome(model.copy(rooms = model.rooms.map(r1 => if r1 == room then newRoom else r1)))
           case None => Outcome(model)
         }
-
-      case _ =>
+      case CreatorMsgType.ExportFile =>
         Outcome(model)
+          .addGlobalEvents(
+            tyrianSubSystem.TyrianEvent.Send(
+              CreatorMsgType.ExportFileString(
+                model.scenarioTitle,
+                ScenarioStorage.fromModel(model).toString()
+              )
+            )
+          )
     }
 
   def updateViewModelFromTyrian(

@@ -4,6 +4,7 @@ import cats.effect.IO
 import indigo.shared.datatypes.Point
 import tyrian.*
 import tyrian.Html.*
+import tyrian.cmds.File
 import vgb.common.CreatorMsgType
 import vgb.common.GloomhavenMsg
 import vgb.common.Menu
@@ -18,6 +19,7 @@ import vgb.common.GeneralMsgType
 import vgb.common.MonsterType
 import vgb.common.BoardOverlayType
 import vgb.common.RoomType
+import org.scalajs.dom
 
 object CreatorScene extends TyrianScene {
   type SceneModel = CreatorModel
@@ -42,6 +44,11 @@ object CreatorScene extends TyrianScene {
           ),
           Cmd.None
         )
+      case CreatorMsgType.ShowImportDialog =>
+        (model, File.select(Array("application/json"))(f => CreatorMsgType.ImportFileSelected(f)))
+      case CreatorMsgType.ExportFileString(title, json) =>
+        (model, Download.string(title, "application/json", json))
+
       case _ =>
         (model, Cmd.None)
     }
@@ -116,7 +123,7 @@ object CreatorModel:
     Menu()
       .add(Some(MenuItem("Create New", CreatorMsgType.CreateNewScenario)))
       .add(MenuSeparator())
-      .add(Some(MenuItem("Export", CreatorMsgType.ShowExportDialog)))
+      .add(Some(MenuItem("Export", CreatorMsgType.ExportFile)))
       .add(Some(MenuItem("Import", CreatorMsgType.ShowImportDialog)))
       .add(MenuSeparator()),
     false,

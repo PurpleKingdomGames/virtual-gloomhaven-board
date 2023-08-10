@@ -79,8 +79,6 @@ object Hexagon:
     numTurns match
       case 0 => origin
       case 1 => rotateResult
-      case other if other < 0 =>
-        oddRowRotate(rotateResult, rotationPoint, (other + 1).toByte)
       case other =>
         oddRowRotate(rotateResult, rotationPoint, (other - 1).toByte)
 

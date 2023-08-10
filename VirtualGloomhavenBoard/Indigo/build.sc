@@ -55,8 +55,8 @@ trait VgbModule extends ScalaJSModule {
   def scalaVersion   = "3.3.0"
   def scalaJSVersion = "1.13.1"
 
-  val indigoVersion = "0.15.0-RC2"
-  val tyrianVersion = "0.7.1"
+  val indigoVersion = "0.15.0-RC4"
+  val tyrianVersion = "0.7.2-SNAPSHOT"
   val circeVersion  = "0.14.1"
 
   def ivyDeps =
