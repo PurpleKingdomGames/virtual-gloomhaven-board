@@ -4,6 +4,7 @@ import cats.effect.IO
 import indigo.shared.datatypes.Point
 import tyrian.*
 import tyrian.Html.*
+import tyrian.cmds.Download
 import tyrian.cmds.File
 import vgb.common.CreatorMsgType
 import vgb.common.GloomhavenMsg
@@ -20,6 +21,7 @@ import vgb.common.MonsterType
 import vgb.common.BoardOverlayType
 import vgb.common.RoomType
 import org.scalajs.dom
+import indigo.shared.IndigoLogger
 
 object CreatorScene extends TyrianScene {
   type SceneModel = CreatorModel
@@ -47,7 +49,7 @@ object CreatorScene extends TyrianScene {
       case CreatorMsgType.ShowImportDialog =>
         (model, File.select(Array("application/json"))(f => CreatorMsgType.ImportFileSelected(f)))
       case CreatorMsgType.ExportFileString(title, json) =>
-        (model, Download.string(title, "application/json", json))
+        (model, Download.fromString(title + ".json", "application/json", json))
 
       case _ =>
         (model, Cmd.None)

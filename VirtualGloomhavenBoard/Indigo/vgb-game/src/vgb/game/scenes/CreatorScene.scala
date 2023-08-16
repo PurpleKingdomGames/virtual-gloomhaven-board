@@ -394,6 +394,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
               )
             )
           )
+      case _ => Outcome(model)
     }
 
   def updateViewModelFromTyrian(

@@ -17,12 +17,9 @@ final case class BoardOverlay(
   val worldCells = overlayType.cells.map(localToWorld)
 
   def rotate() =
-    IndigoLogger.consoleLog(Vector2.fromPoint(rotationPoint).toString())
-
     val rotatedOrigin =
       Hexagon.oddRowRotate(Vector2.fromPoint(origin), Vector2.fromPoint(rotationPoint), 1)
 
-    IndigoLogger.consoleLog(rotatedOrigin.toString())
     this.copy(
       origin = rotatedOrigin.toPoint,
       rotation = rotation.nextRotation(overlayType.verticalAssetName != None)

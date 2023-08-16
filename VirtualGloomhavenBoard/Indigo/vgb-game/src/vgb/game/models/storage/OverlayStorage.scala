@@ -8,6 +8,8 @@ import indigo.shared.collections.Batch
 import indigo.shared.datatypes.RGB
 import vgb.game.models.TileRotation
 import indigo.shared.datatypes.Point
+import vgb.game.models.GameRules.rotateOverlay
+import vgb.game.models.Room
 
 final case class OverlayStorage(
     ref: OverlayStorageRef,
@@ -219,6 +221,22 @@ object OverlayStorage:
       overlay.id,
       overlay.rotation.toString(),
       overlay.worldCells.map(c => CellStorage.fromPoint(c).toList).toList
+    )
+
+  def fromModel(overlay: BoardOverlay, room: Room) =
+    val newRotation =
+      Math.max(overlay.rotation.toByte(), room.rotation.toByte()) -
+        Math.min(overlay.rotation.toByte(), room.rotation.toByte())
+
+    OverlayStorage(
+      getRefForType(overlay),
+      overlay.id,
+      overlay.rotation.toString(),
+      overlay
+        .copy(rotation = TileRotation.fromByte(newRotation.toByte))
+        .worldCells
+        .map(c => CellStorage.fromPoint(c).toList)
+        .toList
     )
 
   private def getRefForType(overlay: BoardOverlay) =

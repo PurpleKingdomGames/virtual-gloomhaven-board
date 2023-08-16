@@ -1,7 +1,7 @@
 package vgb.game.models.storage
 
+import indigo.*
 import vgb.game.models.Room
-import indigo.shared.collections.Batch
 import vgb.common.RoomType
 import vgb.game.models.BoardOverlay
 import vgb.game.models.ScenarioMonster
@@ -43,6 +43,28 @@ object DoorStorage:
           case o: (RoomType, BoardOverlay) => (cols._1, cols._2 :+ o)
         }
       )
+
+    IndigoLogger.consoleLog("door?")
+    IndigoLogger.consoleLog(
+      doorsForRoom
+        .flatMap(d =>
+          d.linkedRooms match {
+            case Some(links) =>
+              Batch.fromArray(
+                links
+                  .filter(l => room.roomType != l)
+                  .toArray
+                  .flatMap(l =>
+                    allRooms
+                      .find(r => r.roomType == l)
+                      .map(r => (d, r))
+                  )
+              )
+            case None => Batch.empty
+          }
+        )
+        .toString()
+    )
 
     doorsForRoom
       .flatMap(d =>

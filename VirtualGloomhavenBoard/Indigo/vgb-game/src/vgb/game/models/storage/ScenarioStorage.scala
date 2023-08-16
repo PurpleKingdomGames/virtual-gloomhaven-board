@@ -1,7 +1,6 @@
 package vgb.game.models.storage
 
-import indigo.shared.collections.Batch
-import indigo.shared.datatypes.Point
+import indigo.*
 import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
@@ -50,7 +49,7 @@ object ScenarioStorage:
 
     orderedRooms match {
       case head :: tail =>
-        val scenario = ScenarioStorage(
+        ScenarioStorage(
           model.scenarioTitle,
           head,
           overlays,
@@ -83,7 +82,7 @@ object ScenarioStorage:
           overlays,
           monsters,
           rooms :+ startingRoom,
-          rooms
+          rooms :+ startingRoom
         )._1
       ),
       0,
