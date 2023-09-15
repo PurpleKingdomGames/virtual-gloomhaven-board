@@ -14,6 +14,7 @@ trait GloomhavenMsg
 enum GeneralMsgType extends GloomhavenMsg:
   case ShowContextMenu(position: Point, menu: Menu)
   case CloseContextMenu
+  case ShowImportDialog(msg: (String, String, String) => GloomhavenMsg)
 
 enum CreatorMsgType extends GloomhavenMsg:
   case ChangeMonsterLevel(pos: Point, m: MonsterType, playerNum: Byte, monsterLevel: MonsterLevel)
@@ -23,13 +24,11 @@ enum CreatorMsgType extends GloomhavenMsg:
   case RotateRoom(r: RoomType)
   case RemoveRoom(r: RoomType)
   case CreateNewScenario
-  case ShowImportDialog
-  case ImportFileSelected(file: dom.File)
   case ChangeScenarioTitle(title: String)
   case UpdateDragMenu(sections: Batch[DragDropSection])
   case SetSelectedDragSection(sectionName: String)
   case NewDragStart(dragItem: RoomType | BoardOverlayType | MonsterType)
   case DragEnd
-  case SelectFile
+  case ImportFile(name: String, path: String, data: String)
   case ExportFile
   case ExportFileString(title: String, json: String)

@@ -9,6 +9,7 @@ import vgb.common.MenuLink
 import vgb.common.MenuSeparator
 import indigo.shared.collections.Batch
 import vgb.common.MenuItemTrait
+import vgb.common.GeneralMsgType
 
 object MenuComponent:
   def render(menu: Menu, visible: Boolean): Html[Msg] =
@@ -84,7 +85,8 @@ object MenuComponent:
         (item match {
           case item: MenuItem =>
             List(onClick(item.cmd match {
-              case Some(c) => Msg.IndigoSend(c)
+              case Some(m: GeneralMsgType.ShowImportDialog) => Msg.IndigoReceive(m)
+              case Some(c)                                  => Msg.IndigoSend(c)
               case None =>
                 parentItem match {
                   case Some(p) => Msg.CloseContextItem(p.id)

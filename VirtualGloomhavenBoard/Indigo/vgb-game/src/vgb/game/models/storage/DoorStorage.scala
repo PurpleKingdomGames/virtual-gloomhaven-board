@@ -7,6 +7,7 @@ import vgb.game.models.BoardOverlay
 import vgb.game.models.ScenarioMonster
 import vgb.common.Door
 import vgb.common.Corridor
+import vgb.common.BaseGame
 
 final case class DoorStorage(
     subType: String,
@@ -18,7 +19,27 @@ final case class DoorStorage(
     room2X: Int,
     room2Y: Int,
     mapTileData: MapTileDataStorage
-)
+):
+  def toModel(baseGame: BaseGame) =
+    OverlayStorage(
+      this.toOverlayStorageRef(),
+      0,
+      this.direction,
+      List(List(this.room1X, this.room1Y))
+    ).toModel(baseGame)
+
+  def toOverlayStorageRef() =
+    OverlayStorageRef(
+      "door",
+      Some(subType),
+      material,
+      size,
+      Some(List(mapTileData.ref)),
+      None,
+      None,
+      None,
+      None
+    )
 
 object DoorStorage:
   def fromRooms(
@@ -43,28 +64,6 @@ object DoorStorage:
           case o: (RoomType, BoardOverlay) => (cols._1, cols._2 :+ o)
         }
       )
-
-    IndigoLogger.consoleLog("door?")
-    IndigoLogger.consoleLog(
-      doorsForRoom
-        .flatMap(d =>
-          d.linkedRooms match {
-            case Some(links) =>
-              Batch.fromArray(
-                links
-                  .filter(l => room.roomType != l)
-                  .toArray
-                  .flatMap(l =>
-                    allRooms
-                      .find(r => r.roomType == l)
-                      .map(r => (d, r))
-                  )
-              )
-            case None => Batch.empty
-          }
-        )
-        .toString()
-    )
 
     doorsForRoom
       .flatMap(d =>

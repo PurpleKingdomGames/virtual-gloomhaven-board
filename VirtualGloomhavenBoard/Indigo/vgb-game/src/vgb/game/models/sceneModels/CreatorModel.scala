@@ -54,6 +54,15 @@ object CreatorModel:
       Batch.empty
     )
 
+  def apply(scenarioTitle: String, baseGame: BaseGame): CreatorModel =
+    CreatorModel(
+      scenarioTitle,
+      baseGame,
+      Batch.empty,
+      Batch.empty,
+      Batch.empty
+    )
+
   def fromJson(json: String): Either[String, CreatorModel] =
     decode[CreatorStorage](json) match {
       case Right(value) => value.toModel()

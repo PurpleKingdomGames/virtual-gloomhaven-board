@@ -14,16 +14,92 @@ import vgb.common.Corridor
 import vgb.common.Hexagon
 import vgb.common.Door
 import vgb.common.StartingLocation
+import vgb.common.BaseGame
+import vgb.game.models.TileRotation
 
 final case class ScenarioStorage(
     id: Int,
     title: String,
+    baseGame: Option[String],
     mapTileData: Option[MapTileDataStorage],
     angle: Float,
     additionalMonsters: List[String]
 ) {
   override def toString(): String =
     this.asJson.deepDropNullValues.noSpaces
+
+  def toCreatorModel(): Either[String, CreatorModel] =
+    val baseGame = this.baseGame match {
+      case Some(value) =>
+        BaseGame.values.find(g => g.toString().toLowerCase() == value) match {
+          case Some(bg) => bg
+          case None     => BaseGame.Gloomhaven
+        }
+      case None => BaseGame.Gloomhaven
+    }
+
+    val model = CreatorModel(this.title, baseGame)
+
+    this.mapTileData match {
+      case Some(data) => decodeMapTileData(Point.zero, Point.zero, data, model)
+      case None       => Right(model)
+    }
+
+  private def decodeMapTileData(
+      origin: Point,
+      localOffset: Point,
+      data: MapTileDataStorage,
+      model: CreatorModel
+  ): Either[String, CreatorModel] =
+    RoomType.fromRef(model.baseGame, data.ref) match {
+      case Some(roomType) =>
+        val room     = Room(roomType, origin.moveBy(localOffset), TileRotation.fromByte(data.turns))
+        val overlays = data.overlays.map(o => o.toModel(model.baseGame).map(o => o.copy(origin = room.localToWorld(o.origin))))
+        val monsters = data.monsters.map(m => m.toModel(model.baseGame).map(m => m.copy(initialPosition = room.localToWorld(m.initialPosition))))
+
+        val errors =
+          overlays.collect { case Left(e) => e } ++
+            monsters.collect { case Left(e) => e }
+
+        errors.headOption match {
+          case Some(value) => Left(value)
+          case _ =>
+            val newModel = model.copy(
+              rooms =
+                if model.rooms.exists(r => r.roomType == roomType) then model.rooms
+                else model.rooms :+ room,
+              overlays = model.overlays ++ Batch.fromList(overlays.collect { case Right(o) => o }),
+              monsters = model.monsters ++ Batch.fromList(monsters.collect { case Right(m) => m })
+            )
+
+            decodeDoorData(room, data.doors, newModel)
+        }
+
+      case None => Left(s"""Map tile ${data.ref} does not exist for ${baseGame}""")
+    }
+
+  private def decodeDoorData(room: Room, doors: List[DoorStorage], model: CreatorModel): Either[String, CreatorModel] =
+    doors
+      .foldLeft(Right(model).asInstanceOf[Either[String, CreatorModel]])((m, d) =>
+        m match {
+          case Right(newModel) =>
+            val door = d
+              .toModel(model.baseGame)
+              .map(d1 => d1.copy(origin = room.localToWorld(Point(d.room1X, d.room1Y))))
+
+            door match {
+              case Right(d2) =>
+                decodeMapTileData(
+                  d2.origin,
+                  Point(d.room2X, d.room2Y),
+                  d.mapTileData,
+                  newModel.copy(overlays = newModel.overlays :+ d2)
+                )
+              case Left(d2) => Left(d2)
+            }
+          case Left(_) => m
+        }
+      )
 }
 
 object ScenarioStorage:
@@ -51,6 +127,7 @@ object ScenarioStorage:
       case head :: tail =>
         ScenarioStorage(
           model.scenarioTitle,
+          model.baseGame,
           head,
           overlays,
           monsters,
@@ -60,6 +137,10 @@ object ScenarioStorage:
         ScenarioStorage(
           0,
           model.scenarioTitle,
+          model.baseGame match {
+            case BaseGame.Gloomhaven => None
+            case _                   => Some(model.baseGame.toString().toLowerCase())
+          },
           None,
           0,
           List.empty
@@ -68,6 +149,7 @@ object ScenarioStorage:
 
   def apply(
       title: String,
+      baseGame: BaseGame,
       startingRoom: Room,
       overlays: Batch[(RoomType, BoardOverlay)],
       monsters: Batch[(RoomType, ScenarioMonster)],
@@ -76,6 +158,10 @@ object ScenarioStorage:
     ScenarioStorage(
       0,
       title,
+      baseGame match {
+        case BaseGame.Gloomhaven => None
+        case _                   => Some(baseGame.toString().toLowerCase())
+      },
       Some(
         MapTileDataStorage(
           startingRoom,
@@ -88,6 +174,12 @@ object ScenarioStorage:
       0,
       List.empty
     )
+
+  def fromJson(json: String): Either[String, ScenarioStorage] =
+    decode[ScenarioStorage](json) match {
+      case Right(value) => Right(value)
+      case Left(err)    => Left(err.getMessage())
+    }
 
   private def assignOverlaysToRoom(
       overlays: Batch[BoardOverlay],

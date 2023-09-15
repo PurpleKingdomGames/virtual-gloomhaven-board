@@ -34,9 +34,7 @@ final case class OverlayStorage(
         .foldLeft(Option.empty[Point])((p, c) => p.map(c.min).orElse(Some(c)))
         .getOrElse(Point.zero)
 
-      val o = overlay.copy(origin = minCell - minPoint)
-      IndigoLogger.consoleLog(o.worldCells.toString())
-      o
+      overlay.copy(origin = minCell - minPoint)
     }
 
   private def decodeOverlay(baseGame: BaseGame) =

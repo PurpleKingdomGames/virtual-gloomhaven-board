@@ -22,6 +22,8 @@ import vgb.common.BoardOverlayType
 import vgb.common.RoomType
 import org.scalajs.dom
 import indigo.shared.IndigoLogger
+import scala.util.matching.Regex
+import java.util.Base64
 
 object CreatorScene extends TyrianScene {
   type SceneModel = CreatorModel
@@ -46,8 +48,15 @@ object CreatorScene extends TyrianScene {
           ),
           Cmd.None
         )
-      case CreatorMsgType.ShowImportDialog =>
-        (model, File.select(Array("application/json"))(f => CreatorMsgType.ImportFileSelected(f)))
+      case CreatorMsgType.ImportFile(name, path, data) =>
+        val regex = "^data:([a-z\\/]+);base64,".r
+        val decodedData = Base64
+          .getDecoder()
+          .decode(regex.replaceAllIn(data, _ => ""))
+          .map(_.toChar)
+          .mkString
+
+        (model, Cmd.Emit(CreatorMsgType.ImportFile(name, path, decodedData)))
       case CreatorMsgType.ExportFileString(title, json) =>
         (model, Download.fromString(title + ".json", "application/json", json))
 
@@ -126,7 +135,7 @@ object CreatorModel:
       .add(Some(MenuItem("Create New", CreatorMsgType.CreateNewScenario)))
       .add(MenuSeparator())
       .add(Some(MenuItem("Export", CreatorMsgType.ExportFile)))
-      .add(Some(MenuItem("Import", CreatorMsgType.ShowImportDialog)))
+      .add(Some(MenuItem("Import", GeneralMsgType.ShowImportDialog(CreatorMsgType.ImportFile.apply))))
       .add(MenuSeparator()),
     false,
     Batch.empty,

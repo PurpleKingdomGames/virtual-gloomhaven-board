@@ -57,7 +57,7 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
     EventFilters.AllowAll
 
   val subSystems: Set[SubSystem] =
-    Set(tyrianSubSystem)
+    Set()
 
   def updateModel(
       context: SceneContext[Size],
@@ -394,6 +394,16 @@ final case class CreatorScene(tyrianSubSystem: TyrianSubSystem[IO, GloomhavenMsg
               )
             )
           )
+      case CreatorMsgType.ImportFile(_, _, data) =>
+        ScenarioStorage.fromJson(data) match {
+          case Right(scenario) =>
+            scenario.toCreatorModel() match {
+              case Right(newModel) =>
+                Outcome(newModel).addGlobalEvents(StorageEvent.Save(saveSlot, newModel.toString()))
+              case _ => Outcome(model)
+            }
+          case _ => Outcome(model)
+        }
       case _ => Outcome(model)
     }
 

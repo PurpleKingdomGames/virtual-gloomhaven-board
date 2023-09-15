@@ -28,6 +28,17 @@ implicit val encodeMapTileDataStorage: Encoder[MapTileDataStorage] = new Encoder
   )
 }
 
+implicit val decodeMapTileDataStorage: Decoder[MapTileDataStorage] = new Decoder[MapTileDataStorage] {
+  final def apply(c: HCursor): Decoder.Result[MapTileDataStorage] =
+    for {
+      ref      <- c.downField("ref").as[String]
+      doors    <- c.downField("doors").as[List[DoorStorage]]
+      overlays <- c.downField("overlays").as[List[OverlayStorage]]
+      monsters <- c.downField("monsters").as[List[ScenarioMonsterStorage]]
+      turns    <- c.downField("turns").as[Byte]
+    } yield new MapTileDataStorage(ref, doors, overlays, monsters, turns)
+}
+
 object MapTileDataStorage:
   def apply(
       room: Room,

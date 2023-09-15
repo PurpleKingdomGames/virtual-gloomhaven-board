@@ -13,15 +13,12 @@ final case class RoomStorage(
     rotationPoint: CellStorage
 ) {
   def toModel(baseGame: BaseGame): Either[String, Room] =
-    val roomType = RoomType.values
-      .find(r => r.baseGame == baseGame && r.mapRef.toLowerCase() == data.ref.toLowerCase())
-    roomType match {
+    RoomType.fromRef(baseGame, data.ref) match {
       case Some(roomType) =>
         Right(
           Room(roomType, Point(data.origin.x, data.origin.y), TileRotation.fromByte(data.turns))
         )
       case None => Left(s"""Map tile ${data.ref} does not exist for ${baseGame}""")
-
     }
 }
 

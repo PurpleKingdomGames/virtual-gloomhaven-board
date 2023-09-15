@@ -18,6 +18,11 @@ import vgb.common.{MenuItem, MenuSeparator}
 import vgb.ui.models.UiModel
 import vgb.ui.scenes.CreatorModel
 import tyrian.cmds.Logger
+import tyrian.cmds.File
+import indigo.shared.IndigoLogger
+import tyrian.cmds.FileReader
+
+import org.scalajs.dom
 
 enum Msg:
   case NoOp
@@ -29,6 +34,8 @@ enum Msg:
   case CloseContextItem(itemId: Byte)
   case CloseContextMenu
   case ToggleMainMenu
+  case ReadFile(file: dom.File, msg: (String, String, String) => GloomhavenMsg)
+  case FileRead(file: FileReader.Result[String], msg: (String, String, String) => GloomhavenMsg)
 
 @JSExportTopLevel("TyrianApp")
 object Main extends TyrianApp[Msg, Model]:
@@ -93,6 +100,19 @@ object Main extends TyrianApp[Msg, Model]:
       (
         model.copy(sceneModel = model.sceneModel.toggleMainMenu()),
         Cmd.None
+      )
+    case Msg.ReadFile(file, msg) =>
+      (
+        model,
+        FileReader.readText(file)(r => Msg.FileRead(r, msg))
+      )
+    case Msg.FileRead(fileResult, msg) =>
+      update(model)(
+        fileResult match {
+          case _: FileReader.Result.Error[String] => Msg.NoOp
+          case FileReader.Result.File(name, path, data) =>
+            Msg.IndigoReceive(msg(name, path, data))
+        }
       )
 
   def view(model: Model): Html[Msg] =
@@ -198,6 +218,8 @@ object Main extends TyrianApp[Msg, Model]:
             )
           case GeneralMsgType.CloseContextMenu =>
             (model.copy(sceneModel = model.sceneModel.updateContextMenu(None)), Cmd.None)
+          case GeneralMsgType.ShowImportDialog(msg) =>
+            (model, File.select(Array("application/json"))(f => Msg.ReadFile(f, msg)))
         }
       case _ =>
         val (sceneModel, cmd) = model.scene.update(msg, model.scene.getModel(model))

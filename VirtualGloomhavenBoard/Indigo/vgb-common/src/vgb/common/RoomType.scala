@@ -41,7 +41,6 @@ enum RoomType(val baseGame: BaseGame, val mapRef: String, val offset: Point, val
         ),
         Size(432, 244)
       )
-
 /*
 {
     tileset: "gloomhaven",
@@ -71,3 +70,11 @@ enum RoomType(val baseGame: BaseGame, val mapRef: String, val offset: Point, val
     ]
 }
  */
+
+object RoomType:
+  def fromRef(baseGame: BaseGame, ref: String): Option[RoomType] =
+    RoomType.values
+      .find(r =>
+        r.baseGame == baseGame &&
+          r.mapRef.toLowerCase() == ref.toLowerCase()
+      )
