@@ -1,0 +1,344 @@
+@media // Extra small devices (portrait phones, less than 576px)
+
+(max-width: 575px),
+// Small devices (landscape phones, 576px and up)
+(max-width: 767px) {
+    :root {
+        font-size: 0.9rem;
+    }
+
+    html {
+        i {
+            &.icon {
+                height: 5.4rem;
+
+                &:before {
+                    transform: scale(0.75);
+                    top: 1rem;
+                }
+
+                &.brute:before {
+                    top: 0.9rem;
+                }
+            }
+        }
+
+        .content {
+            .header {
+                header {
+                    font-size: 1.5rem;
+
+                    .title {
+                        input {
+                            width: 50%;
+                        }
+                    }
+                }
+
+                .roomCode {
+                    display: none;
+                }
+
+                .menu {
+                    nav {
+                        ul {
+                            li {
+                                .shortcut {
+                                    display: none;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            .main {
+                margin-bottom: 0;
+
+                .action-list {
+                    .side-toggle {
+                        display: block;
+                    }
+
+                    .new-piece-wrapper {
+                        .new-piece-list {
+                            ul {
+                                li {
+                                    transform: scale(0.8);
+                                    transform-origin: top;
+
+                                    :first-child {
+                                        margin-top: 1rem;
+                                    }
+
+                                    &:not(:first-child) {
+                                        margin: -1.3rem 0;
+                                    }
+
+                                    .summons {
+                                        span {
+                                            line-height: 3.5rem;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .board-wrapper {
+                    margin-left: 0;
+
+                    .map-bg {
+                        display: none;
+                    }
+
+                    .mapTiles,
+                    .board {
+                        transform: scale(0.8);
+                        transform-origin: top;
+                    }
+                }
+
+                .action-list.show {
+                    &+.board-wrapper {
+                        margin-left: 9.2rem;
+                    }
+                }
+
+                .connectionStatus {
+                    width: 75vw;
+                    font-size: 1rem;
+                    height: 3rem;
+
+                    a {
+                        line-height: 1.2rem;
+                    }
+                }
+            }
+
+            .context-menu {
+
+                &,
+                li ul {
+                    width: 110%;
+                    height: 110%;
+                    position: absolute;
+                    top: -5% !important;
+                    left: -5% !important;
+                    padding: 2.8em 2em;
+                    font-size: 1.5em;
+                    transition: 0.25s left, 0.25s opacity;
+                    z-index: 2;
+                }
+
+                li.has-sub-menu {
+                    position: initial;
+
+                    ul {
+                        left: 95% !important;
+                        padding: 3.8em 2em;
+                        font-size: 1em;
+                        overflow: auto;
+
+                        &.open {
+                            visibility: visible;
+                        }
+                    }
+                }
+
+                &.sub-menu-open {
+                    left: -110% !important
+                }
+
+                .cancel {
+                    display: block;
+                }
+            }
+
+            footer {
+                display: none;
+            }
+
+            &.scenario-creator {
+                .main {
+                    .board-wrapper {
+                        margin-left: 8rem;
+                    }
+                }
+            }
+        }
+
+        .tutorial {
+            display: none;
+        }
+
+        .overlay-dialog {
+            .dialog {
+                border: none;
+                width: 100vw;
+                height: 100vh;
+                background-image: radial-gradient(circle, rgba(241, 236, 232, 0.3) 31%, rgba(156, 124, 108, 0.4) 85%, rgba(81, 64, 30, 0.3) 100%), url("../static/img/bg.webp");
+                display: flex;
+                align-items: center;
+                overflow-x: scroll;
+                padding: 1.2rem;
+
+                &>div {
+                    width: 100%;
+                }
+
+                .character-form {
+                    width: 100%;
+                    padding: 0;
+                    justify-content: center;
+
+                    .button-wrapper {
+                        width: 100%;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// Medium devices (tablets, 768px and up)
+@media (max-width: 991px) {
+    html {
+        .content {
+            footer {
+                font-size: 0.8rem;
+
+                .pkg {
+                    padding-top: 1rem;
+
+                    .pkgCopy {
+                        line-height: 0.9rem;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 4k+
+@media (min-width: 2800px) {
+    :root {
+        font-size: 1.5rem;
+    }
+
+    html {
+        i {
+            &.icon {
+                height: 2.6rem;
+
+                &:before {
+                    top: 0.2rem;
+                }
+
+                &.brute:before {
+                    top: 0.1rem;
+                }
+            }
+        }
+
+        .content {
+            .header {
+                .menu {
+                    &:before {
+                        transform: scale(1.5);
+                        transform-origin: top;
+                    }
+                }
+            }
+
+            .main {
+                .board-wrapper {
+                    padding-left: 8rem;
+                    transform: scale(1.25);
+                    transform-origin: top left;
+
+                    .overlay {
+                        &.token {
+                            line-height: 1.5rem;
+                        }
+                    }
+                }
+            }
+
+            footer {
+                .pkg {
+                    .copy-wrapper {
+                        .sponsor {
+                            .sponsor-button {
+                                transform: scale(0.85);
+                            }
+                        }
+                    }
+
+                    .version {
+                        a {
+                            margin-right: 7.6rem;
+                        }
+                    }
+                }
+            }
+
+            &.scenario-creator {
+                .main {
+                    .action-list {
+                        width: 10.2rem;
+                        transform: scale(1.25);
+                        transform-origin: top left;
+                        padding-bottom: 16rem;
+
+                        section {
+                            ul {
+                                li {
+                                    padding: 0.2rem 2.2rem;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .summons {
+            span {
+                font-size: 0.75rem;
+            }
+        }
+
+        .monster {
+            span {
+                font-size: 0.75rem;
+            }
+        }
+
+        .tutorial {
+            &.step-2 {
+                top: 4rem;
+            }
+        }
+
+        .input-wrapper {
+            label {
+                &.checkbox {
+                    &::after {
+                        top: 0.3rem;
+                        right: 0.2rem;
+                    }
+                }
+
+                input {
+                    &[type="color"] {
+                        width: 1.3rem;
+                        height: 1.3rem;
+                    }
+                }
+            }
+        }
+    }
+}

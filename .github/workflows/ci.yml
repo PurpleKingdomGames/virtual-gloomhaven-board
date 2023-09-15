@@ -1,0 +1,15 @@
+name: CI
+on: [workflow_dispatch, push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: olafurpg/setup-scala@v14
+      with:
+        java-version: adopt@1.11
+    - uses: jodersky/setup-mill@master
+      with:
+        mill-version: 0.11.1
+    - name: Compile & Test
+      run: bash ci.sh

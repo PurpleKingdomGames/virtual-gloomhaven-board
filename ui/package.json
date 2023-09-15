@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "start": "mill ui.buildSite && parcel index.html --no-cache --dist-dir dist --log-level info",
+    "build": "mill clean ui && mill ui.buildSite && parcel build index.html --dist-dir dist --log-level info"
+  },
+  "devDependencies": {
+    "parcel": "^2.1.0"
+  }
+}
